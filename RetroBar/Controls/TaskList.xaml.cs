@@ -139,7 +139,8 @@ namespace RetroBar.Controls
                 e.PropertyName == nameof(Settings.TaskbarAssignments) ||
                 e.PropertyName == nameof(Settings.AdditionalEdges) ||
                 e.PropertyName == nameof(Settings.Edge) ||
-                e.PropertyName == nameof(Settings.DefaultTaskEdge))
+                e.PropertyName == nameof(Settings.DefaultTaskEdge) ||
+                e.PropertyName == nameof(Settings.TaskOrder))
             {
                 try
                 {
