@@ -219,10 +219,18 @@ namespace RetroBar.Controls
         private static extern int GetUserDefaultLCID();
 
         private Point? _pressPosition;
+        private bool _shellFlyoutWasForegroundAtPress;
 
         private void Clock_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             _pressPosition = e.GetPosition(this);
+
+            // Capture this before the click itself can steal focus away from an already-open
+            // flyout (real shell flyouts like Action Center dismiss themselves on focus loss).
+            IntPtr hwndForeground = ManagedShell.Interop.NativeMethods.GetForegroundWindow();
+            StringBuilder foregroundClass = new StringBuilder(256);
+            ManagedShell.Interop.NativeMethods.GetClassName(hwndForeground, foregroundClass, foregroundClass.Capacity);
+            _shellFlyoutWasForegroundAtPress = foregroundClass.ToString() == "Windows.UI.Core.CoreWindow";
         }
 
         private void Clock_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -267,6 +275,14 @@ namespace RetroBar.Controls
                     ClockFlyoutLauncher.ShowAeroClockFlyout(hWnd);
                     break;
                 case ClockClickOption.OpenNotificationCenter:
+                    if (_shellFlyoutWasForegroundAtPress)
+                    {
+                        // Already open when this click started — clicking the clock just took
+                        // focus away from it, which dismisses it on its own. Calling Show again
+                        // here would immediately reopen it instead of leaving it closed.
+                        break;
+                    }
+
                     if (EnvironmentHelper.IsWindows10RS4OrBetter)
                     {
                         ImmersiveShellHelper.ShowActionCenter();
