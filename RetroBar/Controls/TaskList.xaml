@@ -22,40 +22,48 @@
                              RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
             </DockPanel.Dock>
         </Thumb>
-        <ScrollViewer Style="{DynamicResource TaskListScrollViewer}"
-                      x:Name="TasksScrollViewer"
-                      Focusable="False"
-                      PreviewMouseWheel="TasksScrollViewer_PreviewMouseWheel"
-                      VerticalScrollBarVisibility="Disabled">
-            <ItemsControl x:Name="TasksList"
+        <Grid>
+            <ScrollViewer Style="{DynamicResource TaskListScrollViewer}"
+                          x:Name="TasksScrollViewer"
                           Focusable="False"
-                          HorizontalAlignment="Stretch">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <WrapPanel Style="{DynamicResource TaskListWrapPanel}">
-                            <WrapPanel.Orientation>
-                                <Binding Converter="{StaticResource orientationConverter}"
-                                         Path="Orientation"
-                                         RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
-                            </WrapPanel.Orientation>
-                        </WrapPanel>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <ItemContainerTemplate>
-                        <local:TaskButton Host="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:TaskList}}">
-                            <local:TaskButton.Width>
-                                <MultiBinding Converter="{StaticResource taskButtonWidthConverter}">
-                                    <Binding Path="(ItemsControl.AlternationIndex)" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=ContentPresenter}" />
-                                    <Binding Path="ButtonWidth" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}" />
-                                    <Binding Path="ExtraWidthCount" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}" />
-                                    <Binding Path="ButtonsPerRow" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}" />
-                                </MultiBinding>
-                            </local:TaskButton.Width>
-                        </local:TaskButton>
-                    </ItemContainerTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+                          PreviewMouseWheel="TasksScrollViewer_PreviewMouseWheel"
+                          VerticalScrollBarVisibility="Disabled">
+                <ItemsControl x:Name="TasksList"
+                              Focusable="False"
+                              HorizontalAlignment="Stretch">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Style="{DynamicResource TaskListWrapPanel}">
+                                <WrapPanel.Orientation>
+                                    <Binding Converter="{StaticResource orientationConverter}"
+                                             Path="Orientation"
+                                             RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
+                                </WrapPanel.Orientation>
+                            </WrapPanel>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <ItemContainerTemplate>
+                            <local:TaskButton Host="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:TaskList}}">
+                                <local:TaskButton.Width>
+                                    <MultiBinding Converter="{StaticResource taskButtonWidthConverter}">
+                                        <Binding Path="(ItemsControl.AlternationIndex)" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=ContentPresenter}" />
+                                        <Binding Path="ButtonWidth" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}" />
+                                        <Binding Path="ExtraWidthCount" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}" />
+                                        <Binding Path="ButtonsPerRow" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}" />
+                                    </MultiBinding>
+                                </local:TaskButton.Width>
+                            </local:TaskButton>
+                        </ItemContainerTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+            <Canvas x:Name="InsertionOverlay"
+                    IsHitTestVisible="False">
+                <Border x:Name="InsertionIndicator"
+                        Background="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"
+                        Visibility="Collapsed" />
+            </Canvas>
+        </Grid>
     </DockPanel>
 </UserControl>

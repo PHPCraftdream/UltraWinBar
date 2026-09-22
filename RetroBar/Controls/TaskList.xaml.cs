@@ -1,6 +1,7 @@
 ﻿using ManagedShell.AppBar;
 using ManagedShell.WindowsTasks;
 using ManagedShell.Common.Helpers;
+using ManagedShell.Common.Logging;
 using RetroBar.Utilities;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace RetroBar.Controls
 {
@@ -338,24 +340,10 @@ namespace RetroBar.Controls
                     }
                 }
 
-                bool vertical = HostEdge == AppBarEdge.Left || HostEdge == AppBarEdge.Right;
-
                 int insertIndex = visibleWindows.Count;
-                for (int i = 0; i < TasksList.Items.Count; i++)
+                if (TryGetTaskInsertionTarget(screenPoint, out TaskInsertionTarget target))
                 {
-                    if (!(TasksList.ItemContainerGenerator.ContainerFromIndex(i) is TaskButton container))
-                    {
-                        continue;
-                    }
-
-                    Point topLeft = container.PointToScreen(new Point(0, 0));
-                    Point center = new Point(topLeft.X + container.ActualWidth / 2, topLeft.Y + container.ActualHeight / 2);
-
-                    if (vertical ? screenPoint.Y < center.Y : screenPoint.X < center.X)
-                    {
-                        insertIndex = i;
-                        break;
-                    }
+                    insertIndex = Math.Min(target.InsertIndex, visibleWindows.Count);
                 }
 
                 string draggedId = TaskOrderIdentifier.Get(window, Tasks);
@@ -380,6 +368,7 @@ namespace RetroBar.Controls
                 }
 
                 Settings.Instance.SetTaskOrderForEdge(HostEdge, newOrder);
+                ShellLogger.Debug($"Task reorder: edge={HostEdge}; from={visibleWindows.IndexOf(window)}; insert={insertIndex}; count={visibleWindows.Count}");
 
                 // Apply the resort to this panel directly instead of relying on a
                 // Settings.PropertyChanged broadcast: every open TaskList reacting to
@@ -387,11 +376,159 @@ namespace RetroBar.Controls
                 // re-triggering itself (froze the UI thread). Only the panel that owns
                 // this drop needs an immediate visual update.
                 taskbarItems.Refresh();
+                ShellLogger.Debug($"Task reorder: refresh complete on {HostEdge}");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Best-effort — a transient failure here must never break the task list.
+                ShellLogger.Error($"Task reorder failed on {HostEdge}: {ex}");
             }
+        }
+
+        internal void ShowTaskInsertionIndicator(Point screenPoint)
+        {
+            try
+            {
+                if (!TryGetTaskInsertionTarget(screenPoint, out TaskInsertionTarget target))
+                {
+                    HideTaskInsertionIndicator();
+                    return;
+                }
+
+                Point topLeft = InsertionOverlay.PointFromScreen(target.ScreenTopLeft);
+                Point bottomRight = InsertionOverlay.PointFromScreen(target.ScreenBottomRight);
+                double left = Math.Min(topLeft.X, bottomRight.X);
+                double top = Math.Min(topLeft.Y, bottomRight.Y);
+                double right = Math.Max(topLeft.X, bottomRight.X);
+                double bottom = Math.Max(topLeft.Y, bottomRight.Y);
+                const double thickness = 2;
+
+                if (IsVertical)
+                {
+                    InsertionIndicator.Width = Math.Max(thickness, right - left);
+                    InsertionIndicator.Height = thickness;
+                    Canvas.SetLeft(InsertionIndicator, left);
+                    Canvas.SetTop(InsertionIndicator, target.Before ? top : Math.Max(top, bottom - thickness));
+                }
+                else
+                {
+                    bool leadingIsLeft = TasksList.FlowDirection != FlowDirection.RightToLeft;
+                    bool useLeftEdge = target.Before == leadingIsLeft;
+
+                    InsertionIndicator.Width = thickness;
+                    InsertionIndicator.Height = Math.Max(thickness, bottom - top);
+                    Canvas.SetLeft(InsertionIndicator, useLeftEdge ? left : Math.Max(left, right - thickness));
+                    Canvas.SetTop(InsertionIndicator, top);
+                }
+
+                InsertionIndicator.Visibility = Visibility.Visible;
+            }
+            catch (Exception ex)
+            {
+                HideTaskInsertionIndicator();
+                ShellLogger.Error($"Task drag indicator failed on {HostEdge}: {ex}");
+            }
+        }
+
+        internal void HideTaskInsertionIndicator()
+        {
+            InsertionIndicator.Visibility = Visibility.Collapsed;
+        }
+
+        private bool IsVertical => HostEdge == AppBarEdge.Left || HostEdge == AppBarEdge.Right;
+
+        private bool TryGetTaskInsertionTarget(Point screenPoint, out TaskInsertionTarget target)
+        {
+            target = null;
+            double bestDistance = double.MaxValue;
+
+            for (int i = 0; i < TasksList.Items.Count; i++)
+            {
+                TaskButton container = GetTaskButtonContainer(i);
+                if (container == null ||
+                    container.ActualWidth <= 0 || container.ActualHeight <= 0)
+                {
+                    continue;
+                }
+
+                Point firstCorner = container.PointToScreen(new Point(0, 0));
+                Point secondCorner = container.PointToScreen(new Point(container.ActualWidth, container.ActualHeight));
+                double left = Math.Min(firstCorner.X, secondCorner.X);
+                double top = Math.Min(firstCorner.Y, secondCorner.Y);
+                double right = Math.Max(firstCorner.X, secondCorner.X);
+                double bottom = Math.Max(firstCorner.Y, secondCorner.Y);
+                double dx = screenPoint.X < left ? left - screenPoint.X : screenPoint.X > right ? screenPoint.X - right : 0;
+                double dy = screenPoint.Y < top ? top - screenPoint.Y : screenPoint.Y > bottom ? screenPoint.Y - bottom : 0;
+                double distance = dx * dx + dy * dy;
+
+                if (distance >= bestDistance)
+                {
+                    continue;
+                }
+
+                bool before;
+                if (IsVertical)
+                {
+                    before = screenPoint.Y < (top + bottom) / 2;
+                }
+                else if (TasksList.FlowDirection == FlowDirection.RightToLeft)
+                {
+                    before = screenPoint.X > (left + right) / 2;
+                }
+                else
+                {
+                    before = screenPoint.X < (left + right) / 2;
+                }
+
+                bestDistance = distance;
+                target = new TaskInsertionTarget
+                {
+                    InsertIndex = i + (before ? 0 : 1),
+                    Before = before,
+                    ScreenTopLeft = new Point(left, top),
+                    ScreenBottomRight = new Point(right, bottom)
+                };
+            }
+
+            return target != null;
+        }
+
+        private TaskButton GetTaskButtonContainer(int index)
+        {
+            DependencyObject container = TasksList.ItemContainerGenerator.ContainerFromIndex(index);
+            return container as TaskButton ?? FindVisualChild<TaskButton>(container);
+        }
+
+        private static T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+        {
+            if (parent == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T match)
+                {
+                    return match;
+                }
+
+                T descendant = FindVisualChild<T>(child);
+                if (descendant != null)
+                {
+                    return descendant;
+                }
+            }
+
+            return null;
+        }
+
+        private sealed class TaskInsertionTarget
+        {
+            public int InsertIndex { get; set; }
+            public bool Before { get; set; }
+            public Point ScreenTopLeft { get; set; }
+            public Point ScreenBottomRight { get; set; }
         }
 
         private void TaskList_OnSizeChanged(object sender, SizeChangedEventArgs e)

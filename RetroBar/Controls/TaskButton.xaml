@@ -15,10 +15,12 @@
     </UserControl.Resources>
     <Button Name="AppButton"
             Click="AppButton_OnClick"
-            MouseUp="AppButton_OnMouseUp"
-            MouseWheel="AppButton_OnMouseWheel"
-            PreviewMouseDown="AppButton_OnPreviewMouseDown"
-            ContextMenuOpening="AppButton_OnContextMenuOpening"
+             MouseUp="AppButton_OnMouseUp"
+             MouseWheel="AppButton_OnMouseWheel"
+             PreviewMouseDown="AppButton_OnPreviewMouseDown"
+             PreviewMouseMove="AppButton_OnPreviewMouseMove"
+             PreviewMouseLeftButtonUp="AppButton_OnPreviewMouseLeftButtonUp"
+             ContextMenuOpening="AppButton_OnContextMenuOpening"
             DragEnter="AppButton_OnDragEnter"
             DragLeave="AppButton_OnDragLeave"
             ToolTipService.ShowDuration="60000">

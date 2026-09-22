@@ -10,6 +10,7 @@ using System.Windows.Input;
 using System.Windows.Media.Animation;
 using ManagedShell.AppBar;
 using ManagedShell.Common.Helpers;
+using ManagedShell.Common.Logging;
 using ManagedShell.Interop;
 using ManagedShell.WindowsTasks;
 using RetroBar.Converters;
@@ -37,9 +38,10 @@ namespace RetroBar.Controls
         private DelayedActivationHandler dragHandler;
         private bool _isLoaded;
 
-        private LowLevelMouseHook _dragHook;
-        private LowLevelMouseHook.POINT _dragStartScreenPos;
+        private bool _isTaskDragArmed;
+        private System.Drawing.Point _dragStartScreenPos;
         private bool _isDraggingToTaskbar;
+        private TaskList _dragFeedbackTaskList;
 
         public TaskButton()
         {
@@ -148,7 +150,7 @@ namespace RetroBar.Controls
 
             Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
             dragHandler?.Dispose();
-            StopTaskDragHook();
+            CancelTaskDrag();
 
             if (Window != null)
             {
@@ -302,96 +304,70 @@ namespace RetroBar.Controls
             if (e.ChangedButton == MouseButton.Left)
             {
                 PressedWindowState = Window.State;
-
-                // Needed both to move a task to a different panel (requires >1 edge) and to
-                // reorder it within its own panel (works with just one), so always arm it.
-                StartTaskDragHook();
+                _dragStartScreenPos = System.Windows.Forms.Cursor.Position;
+                _isTaskDragArmed = true;
+                _isDraggingToTaskbar = false;
+                bool captured = Mouse.Capture(AppButton, CaptureMode.Element);
+                ShellLogger.Debug($"Task drag: down at {_dragStartScreenPos.X},{_dragStartScreenPos.Y}; captured={captured}");
             }
         }
 
-        #region Cross-taskbar drag
-        // gong-wpf-dragdrop's OLE-based drag never completes a Drop for this scenario
-        // (task buttons are Buttons, which capture the mouse on press; that capture
-        // seems to swallow the eventual mouse-up before OLE's drag loop sees it, so
-        // Drop never fires — even reordering within one taskbar). A low-level mouse
-        // hook sidesteps WPF/OLE drag entirely, the same way Taskbar's own edge-drag
-        // resize already does, and lets us explicitly release the button's capture
-        // once a real drag starts.
-        private void StartTaskDragHook()
+        #region Task drag
+        private void AppButton_OnPreviewMouseMove(object sender, MouseEventArgs e)
         {
-            if (_dragHook != null)
+            if (!_isTaskDragArmed)
             {
                 return;
             }
 
-            _dragStartScreenPos = new LowLevelMouseHook.POINT
+            if (e.LeftButton != MouseButtonState.Pressed)
             {
-                X = System.Windows.Forms.Cursor.Position.X,
-                Y = System.Windows.Forms.Cursor.Position.Y
-            };
+                CancelTaskDrag();
+                return;
+            }
+
+            System.Drawing.Point screenPoint = System.Windows.Forms.Cursor.Position;
+            if (!_isDraggingToTaskbar)
+            {
+                if (Math.Abs(screenPoint.X - _dragStartScreenPos.X) <= SystemParameters.MinimumHorizontalDragDistance &&
+                    Math.Abs(screenPoint.Y - _dragStartScreenPos.Y) <= SystemParameters.MinimumVerticalDragDistance)
+                {
+                    return;
+                }
+
+                _isDraggingToTaskbar = true;
+                ShellLogger.Debug($"Task drag: threshold at {screenPoint.X},{screenPoint.Y}");
+            }
+
+            UpdateTaskDragFeedback(screenPoint);
+            e.Handled = true;
+        }
+
+        private void AppButton_OnPreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (!_isTaskDragArmed)
+            {
+                return;
+            }
+
+            bool wasDragging = _isDraggingToTaskbar;
+            System.Drawing.Point screenPoint = System.Windows.Forms.Cursor.Position;
+            ShellLogger.Debug($"Task drag: up at {screenPoint.X},{screenPoint.Y}; dragging={wasDragging}");
+            _isTaskDragArmed = false;
             _isDraggingToTaskbar = false;
+            ClearTaskDragFeedback();
 
-            LowLevelMouseHook hook = new LowLevelMouseHook();
-            hook.LowLevelMouseEvent += DragHook_LowLevelMouseEvent;
-
-            if (!hook.Initialize())
+            if (!wasDragging)
             {
-                // Hook install failed (e.g. transient OS/security-software interference).
-                // Leaving _dragHook non-null here would permanently block every future drag
-                // on this button, since no hook event would ever arrive to call
-                // StopTaskDragHook. Stay null so the next press retries.
-                hook.LowLevelMouseEvent -= DragHook_LowLevelMouseEvent;
-                hook.Dispose();
                 return;
             }
 
-            _dragHook = hook;
+            e.Handled = true;
+            AppButton.ReleaseMouseCapture();
+            CompleteDragToTaskbar(screenPoint);
         }
 
-        private void DragHook_LowLevelMouseEvent(object sender, LowLevelMouseHook.LowLevelMouseEventArgs e)
-        {
-            switch (e.Message)
-            {
-                case NativeMethods.WM.MOUSEMOVE:
-                    if (!_isDraggingToTaskbar)
-                    {
-                        if (Math.Abs(e.HookStruct.pt.X - _dragStartScreenPos.X) <= SystemParameters.MinimumHorizontalDragDistance &&
-                            Math.Abs(e.HookStruct.pt.Y - _dragStartScreenPos.Y) <= SystemParameters.MinimumVerticalDragDistance)
-                        {
-                            return;
-                        }
-
-                        _isDraggingToTaskbar = true;
-
-                        // Release WPF's own mouse capture so the button's press/click
-                        // state machine stops fighting over subsequent mouse-up.
-                        Dispatcher.BeginInvoke(() => AppButton.ReleaseMouseCapture());
-                    }
-
-                    Dispatcher.BeginInvoke(() =>
-                    {
-                        Cursor = FindTaskbarAtScreenPoint(e.HookStruct.pt) != null ? Cursors.Hand : Cursors.No;
-                    });
-                    break;
-                case NativeMethods.WM.LBUTTONUP:
-                    bool wasDragging = _isDraggingToTaskbar;
-                    LowLevelMouseHook.MSLLHOOKSTRUCT hookStruct = e.HookStruct;
-                    StopTaskDragHook();
-
-                    if (wasDragging)
-                    {
-                        Dispatcher.BeginInvoke(() => CompleteDragToTaskbar(hookStruct.pt));
-                    }
-                    break;
-                case NativeMethods.WM.RBUTTONUP:
-                case NativeMethods.WM.MBUTTONUP:
-                case NativeMethods.WM.XBUTTONUP:
-                    StopTaskDragHook();
-                    break;
-            }
-        }
-
-        private Taskbar FindTaskbarAtScreenPoint(LowLevelMouseHook.POINT pt)
+        private Taskbar FindTaskbarAtScreenPoint(System.Drawing.Point pt)
         {
             foreach (Taskbar taskbar in System.Windows.Application.Current.Windows.OfType<Taskbar>())
             {
@@ -410,11 +386,39 @@ namespace RetroBar.Controls
             return null;
         }
 
-        private void CompleteDragToTaskbar(LowLevelMouseHook.POINT pt)
+        private void UpdateTaskDragFeedback(System.Drawing.Point screenPoint)
         {
-            Cursor = Cursors.Arrow;
+            Taskbar targetTaskbar = FindTaskbarAtScreenPoint(screenPoint);
+            TaskList targetTaskList = targetTaskbar?.FindName("TaskListControl") as TaskList;
 
+            if (!ReferenceEquals(_dragFeedbackTaskList, targetTaskList))
+            {
+                _dragFeedbackTaskList?.HideTaskInsertionIndicator();
+                _dragFeedbackTaskList = targetTaskList;
+                ShellLogger.Debug($"Task drag: feedback target={targetTaskbar?.AppBarEdge.ToString() ?? "none"}");
+            }
+
+            if (targetTaskList == null)
+            {
+                Mouse.OverrideCursor = Cursors.No;
+                return;
+            }
+
+            targetTaskList.ShowTaskInsertionIndicator(new Point(screenPoint.X, screenPoint.Y));
+            Mouse.OverrideCursor = Cursors.Hand;
+        }
+
+        private void ClearTaskDragFeedback()
+        {
+            _dragFeedbackTaskList?.HideTaskInsertionIndicator();
+            _dragFeedbackTaskList = null;
+            Mouse.OverrideCursor = null;
+        }
+
+        private void CompleteDragToTaskbar(System.Drawing.Point pt)
+        {
             Taskbar targetTaskbar = FindTaskbarAtScreenPoint(pt);
+            ShellLogger.Debug($"Task drag: drop target={targetTaskbar?.AppBarEdge.ToString() ?? "none"} at {pt.X},{pt.Y}");
 
             if (targetTaskbar == null || Window == null)
             {
@@ -442,17 +446,16 @@ namespace RetroBar.Controls
             TaskAssignmentManager.AssignToEdge(Window, targetEdge, mode);
         }
 
-        private void StopTaskDragHook()
+        private void CancelTaskDrag()
         {
-            if (_dragHook == null)
-            {
-                return;
-            }
-
-            _dragHook.LowLevelMouseEvent -= DragHook_LowLevelMouseEvent;
-            _dragHook.Dispose();
-            _dragHook = null;
+            _isTaskDragArmed = false;
             _isDraggingToTaskbar = false;
+            ClearTaskDragFeedback();
+
+            if (Mouse.Captured == AppButton)
+            {
+                AppButton.ReleaseMouseCapture();
+            }
         }
         #endregion
 
