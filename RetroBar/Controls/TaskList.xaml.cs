@@ -263,7 +263,11 @@ namespace RetroBar.Controls
         private void GroupedWindows_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             SetTaskButtonWidth();
-            SaveTaskOrder();
+
+            // Deferred: enumerating taskbarItems synchronously from inside its own
+            // CollectionChanged handler risks "collection was modified during enumeration"
+            // if this fired mid-refresh. Running after the current dispatch frame avoids that.
+            Dispatcher.BeginInvoke(new Action(SaveTaskOrder));
         }
 
         // Records the current visible order for this edge so it can be restored on the next
@@ -277,21 +281,29 @@ namespace RetroBar.Controls
                 return;
             }
 
-            List<string> identifiers = new List<string>();
-
-            foreach (object obj in taskbarItems)
+            try
             {
-                if (obj is ApplicationWindow window)
+                List<string> identifiers = new List<string>();
+
+                foreach (object obj in taskbarItems)
                 {
-                    string identifier = TaskAssignmentManager.GetIdentifier(window, TaskAssignmentMode.WindowClassAndTitle);
-                    if (identifier != null)
+                    if (obj is ApplicationWindow window)
                     {
-                        identifiers.Add(identifier);
+                        string identifier = TaskAssignmentManager.GetIdentifier(window, TaskAssignmentMode.WindowClassAndTitle);
+                        if (identifier != null)
+                        {
+                            identifiers.Add(identifier);
+                        }
                     }
                 }
-            }
 
-            Settings.Instance.SetTaskOrderForEdge(HostEdge, identifiers);
+                Settings.Instance.SetTaskOrderForEdge(HostEdge, identifiers);
+            }
+            catch (Exception)
+            {
+                // Best-effort persistence only — a transient failure here must never affect
+                // what's actually shown in the task list.
+            }
         }
 
         private void TaskList_OnSizeChanged(object sender, SizeChangedEventArgs e)
