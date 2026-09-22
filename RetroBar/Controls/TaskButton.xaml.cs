@@ -303,10 +303,9 @@ namespace RetroBar.Controls
             {
                 PressedWindowState = Window.State;
 
-                if (Settings.Instance.EnabledEdges.Count > 1)
-                {
-                    StartTaskDragHook();
-                }
+                // Needed both to move a task to a different panel (requires >1 edge) and to
+                // reorder it within its own panel (works with just one), so always arm it.
+                StartTaskDragHook();
             }
         }
 
@@ -332,9 +331,21 @@ namespace RetroBar.Controls
             };
             _isDraggingToTaskbar = false;
 
-            _dragHook = new LowLevelMouseHook();
-            _dragHook.LowLevelMouseEvent += DragHook_LowLevelMouseEvent;
-            _dragHook.Initialize();
+            LowLevelMouseHook hook = new LowLevelMouseHook();
+            hook.LowLevelMouseEvent += DragHook_LowLevelMouseEvent;
+
+            if (!hook.Initialize())
+            {
+                // Hook install failed (e.g. transient OS/security-software interference).
+                // Leaving _dragHook non-null here would permanently block every future drag
+                // on this button, since no hook event would ever arrive to call
+                // StopTaskDragHook. Stay null so the next press retries.
+                hook.LowLevelMouseEvent -= DragHook_LowLevelMouseEvent;
+                hook.Dispose();
+                return;
+            }
+
+            _dragHook = hook;
         }
 
         private void DragHook_LowLevelMouseEvent(object sender, LowLevelMouseHook.LowLevelMouseEventArgs e)
