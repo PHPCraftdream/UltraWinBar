@@ -317,6 +317,76 @@ namespace RetroBar.Controls
             }
         }
 
+        // Reorders a task within this panel by nearest-neighbor screen position, driven by
+        // TaskButton's own LowLevelMouseHook drag when it's dropped back on its own taskbar
+        // (same mechanism as Toolbar.ReorderQuickLaunchItem for Quick Launch icons).
+        public void ReorderTask(ApplicationWindow window, Point screenPoint)
+        {
+            if (Host == null || taskbarItems == null || window == null)
+            {
+                return;
+            }
+
+            try
+            {
+                List<ApplicationWindow> visibleWindows = new List<ApplicationWindow>();
+                foreach (object obj in taskbarItems)
+                {
+                    if (obj is ApplicationWindow w)
+                    {
+                        visibleWindows.Add(w);
+                    }
+                }
+
+                bool vertical = HostEdge == AppBarEdge.Left || HostEdge == AppBarEdge.Right;
+
+                int insertIndex = visibleWindows.Count;
+                for (int i = 0; i < TasksList.Items.Count; i++)
+                {
+                    if (!(TasksList.ItemContainerGenerator.ContainerFromIndex(i) is TaskButton container))
+                    {
+                        continue;
+                    }
+
+                    Point topLeft = container.PointToScreen(new Point(0, 0));
+                    Point center = new Point(topLeft.X + container.ActualWidth / 2, topLeft.Y + container.ActualHeight / 2);
+
+                    if (vertical ? screenPoint.Y < center.Y : screenPoint.X < center.X)
+                    {
+                        insertIndex = i;
+                        break;
+                    }
+                }
+
+                string draggedId = TaskOrderIdentifier.Get(window, Tasks);
+                List<string> newOrder = new List<string>();
+
+                for (int i = 0; i < visibleWindows.Count; i++)
+                {
+                    if (i == insertIndex)
+                    {
+                        newOrder.Add(draggedId);
+                    }
+
+                    if (!ReferenceEquals(visibleWindows[i], window))
+                    {
+                        newOrder.Add(TaskOrderIdentifier.Get(visibleWindows[i], Tasks));
+                    }
+                }
+
+                if (insertIndex >= visibleWindows.Count)
+                {
+                    newOrder.Add(draggedId);
+                }
+
+                Settings.Instance.SetTaskOrderForEdge(HostEdge, newOrder);
+            }
+            catch (Exception)
+            {
+                // Best-effort — a transient failure here must never break the task list.
+            }
+        }
+
         private void TaskList_OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
             SetTaskButtonWidth();

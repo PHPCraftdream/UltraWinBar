@@ -415,6 +415,11 @@ namespace RetroBar.Controls
 
             if (targetEdge == currentEdge)
             {
+                // Same panel — reorder in place instead of a no-op.
+                if (targetTaskbar.FindName("TaskListControl") is TaskList taskList)
+                {
+                    taskList.ReorderTask(Window, new Point(pt.X, pt.Y));
+                }
                 return;
             }
 
