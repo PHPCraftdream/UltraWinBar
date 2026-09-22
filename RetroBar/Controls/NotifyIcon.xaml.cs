@@ -83,6 +83,15 @@ namespace RetroBar.Controls
                     return;
                 }
 
+                // Icons can briefly have no bitmap yet when this control is first created —
+                // e.g. many icons loading at once the first time the overflow popup opens.
+                // Hide until a real icon arrives instead of flashing a blank/broken image.
+                if (TrayIcon.Icon == null)
+                {
+                    NotifyIconImage.Visibility = Visibility.Hidden;
+                    TrayIcon.PropertyChanged += TrayIcon_OnPropertyChanged;
+                }
+
                 applyEffects();
 
                 TrayIcon.NotificationBalloonShown += TrayIcon_NotificationBalloonShown;
@@ -105,8 +114,18 @@ namespace RetroBar.Controls
             if (TrayIcon != null)
             {
                 TrayIcon.NotificationBalloonShown -= TrayIcon_NotificationBalloonShown;
+                TrayIcon.PropertyChanged -= TrayIcon_OnPropertyChanged;
             }
             isLoaded = false;
+        }
+
+        private void TrayIcon_OnPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ManagedShell.WindowsTray.NotifyIcon.Icon) && TrayIcon?.Icon != null)
+            {
+                NotifyIconImage.Visibility = Visibility.Visible;
+                TrayIcon.PropertyChanged -= TrayIcon_OnPropertyChanged;
+            }
         }
 
         private void TrayIcon_NotificationBalloonShown(object sender, NotificationBalloonEventArgs e)
