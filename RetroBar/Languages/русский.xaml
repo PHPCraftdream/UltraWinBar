@@ -163,6 +163,7 @@
     <s:String x:Key="hide">Скрыть</s:String>
 
     <s:String x:Key="open_folder">&amp;Открыть папку</s:String>
+    <s:String x:Key="move_to_taskbar_format">Переместить на панель «{0}»</s:String>
 
     <s:String x:Key="ime_input_tip_enabled">Нажмите правой кнопкой мыши для настройки IME</s:String>
     <s:String x:Key="ime_input_tip_disabled">IME отключён</s:String>

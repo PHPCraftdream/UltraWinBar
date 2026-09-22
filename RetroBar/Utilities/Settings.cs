@@ -556,6 +556,15 @@ namespace RetroBar.Utilities
             set => Set(ref _taskbarAssignments, value);
         }
 
+        // Which taskbar each Quick Launch shortcut is shown on. Order within an edge is
+        // still governed by QuickLaunchOrder below; this only controls edge membership.
+        private List<QuickLaunchAssignment> _quickLaunchAssignments = [];
+        public List<QuickLaunchAssignment> QuickLaunchAssignments
+        {
+            get => _quickLaunchAssignments;
+            set => Set(ref _quickLaunchAssignments, value);
+        }
+
         // Edges the user has explicitly "stretched", most-recent first. An edge here
         // registers with the OS AppBar API before edges not listed, so it keeps its full
         // length and neighboring taskbars shrink to make room for it instead.
@@ -700,6 +709,42 @@ namespace RetroBar.Utilities
             EdgeSizes = edges;
             OnPropertyChanged(nameof(PrimaryRowCount));
             OnPropertyChanged(nameof(PrimaryTaskbarWidth));
+        }
+
+        /// <summary>
+        /// Which taskbar a Quick Launch shortcut is shown on, falling back to the "main"
+        /// taskbar (see DefaultTaskEdge / "Make main") if it hasn't been moved yet.
+        /// </summary>
+        public AppBarEdge GetQuickLaunchEdge(string path)
+        {
+            foreach (QuickLaunchAssignment assignment in QuickLaunchAssignments)
+            {
+                if (assignment.Path == path)
+                {
+                    return EnabledEdges.Contains(assignment.Edge) ? assignment.Edge : ResolvedDefaultTaskEdge;
+                }
+            }
+
+            return ResolvedDefaultTaskEdge;
+        }
+
+        public void SetQuickLaunchEdge(string path, AppBarEdge edge)
+        {
+            List<QuickLaunchAssignment> assignments = new List<QuickLaunchAssignment>(QuickLaunchAssignments);
+            int index = assignments.FindIndex(assignment => assignment.Path == path);
+
+            if (index >= 0)
+            {
+                QuickLaunchAssignment assignment = assignments[index];
+                assignment.Edge = edge;
+                assignments[index] = assignment;
+            }
+            else
+            {
+                assignments.Add(new QuickLaunchAssignment { Path = path, Edge = edge });
+            }
+
+            QuickLaunchAssignments = assignments;
         }
 
         /// <summary>
@@ -850,6 +895,12 @@ namespace RetroBar.Utilities
     {
         public AppBarEdge Edge { get; set; }
         public int Size { get; set; }
+    }
+
+    public struct QuickLaunchAssignment
+    {
+        public string Path { get; set; }
+        public AppBarEdge Edge { get; set; }
     }
     #endregion
 }

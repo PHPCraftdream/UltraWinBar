@@ -24,7 +24,9 @@ namespace RetroBar.Controls
 
         private enum MenuItem : uint
         {
-            OpenParentFolder = CommonContextMenuItem.Paste + 1
+            OpenParentFolder = CommonContextMenuItem.Paste + 1,
+            // 4 consecutive UIDs, one per AppBarEdge value (Left/Top/Right/Bottom).
+            MoveToEdgeBase = CommonContextMenuItem.Paste + 2
         }
 
         public static DependencyProperty PathProperty = DependencyProperty.Register(nameof(Path), typeof(string), typeof(Toolbar), new PropertyMetadata(OnPathChanged));
@@ -84,6 +86,12 @@ namespace RetroBar.Controls
             {
                 Refresh();
             }
+            else if (e.PropertyName == nameof(Settings.QuickLaunchAssignments) ||
+                     e.PropertyName == nameof(Settings.DefaultTaskEdge) ||
+                     e.PropertyName == nameof(Settings.AdditionalEdges))
+            {
+                Refresh();
+            }
         }
 
         private void Refresh()
@@ -116,22 +124,43 @@ namespace RetroBar.Controls
                 ToolbarItems.ItemsSource = Folder.Files;
                 ListCollectionView cvs = (ListCollectionView)CollectionViewSource.GetDefaultView(Folder.Files);
                 cvs.CustomSort = new ToolbarSorter(this);
+                cvs.Filter = IsOwnQuickLaunchItem;
             }
+        }
+
+        private bool IsOwnQuickLaunchItem(object item)
+        {
+            return Host != null && item is ShellFile file &&
+                   Settings.Instance.GetQuickLaunchEdge(file.Path) == Host.AppBarEdge;
         }
 
         public void SaveItemOrder()
         {
-            List<string> itemPaths = new List<string>();
+            List<string> visiblePaths = new List<string>();
 
             foreach (ShellFile file in ((ListCollectionView)CollectionViewSource.GetDefaultView(Folder.Files)).OfType<ShellFile>())
             {
-                itemPaths.Add(file.Path);
+                visiblePaths.Add(file.Path);
+            }
+
+            // The view is filtered to this panel's own items, so only reorder those —
+            // append the other panels' items afterward, preserving their relative order,
+            // instead of dropping them from the shared QuickLaunchOrder list entirely.
+            HashSet<string> visibleSet = new HashSet<string>(visiblePaths);
+            List<string> mergedOrder = new List<string>(visiblePaths);
+
+            foreach (string existingPath in Settings.Instance.QuickLaunchOrder)
+            {
+                if (!visibleSet.Contains(existingPath))
+                {
+                    mergedOrder.Add(existingPath);
+                }
             }
 
             // small optimization, only other toolbars with this folder need to reload when the setting is saved.
             _ignoreNextUpdate = true;
 
-            Settings.Instance.QuickLaunchOrder = itemPaths;
+            Settings.Instance.QuickLaunchOrder = mergedOrder;
         }
 
         public void AddToSource(StringCollection filesToAdd)
@@ -266,7 +295,36 @@ namespace RetroBar.Controls
                 UID = (uint)MenuItem.OpenParentFolder
             });
 
+            if (Host != null)
+            {
+                foreach (ManagedShell.AppBar.AppBarEdge edge in Settings.Instance.EnabledEdges)
+                {
+                    if (edge == Host.AppBarEdge)
+                    {
+                        continue;
+                    }
+
+                    builder.AddCommand(new ShellMenuCommand
+                    {
+                        Flags = MFT.BYCOMMAND,
+                        Label = string.Format((string)FindResource("move_to_taskbar_format"), (string)FindResource(EdgeLocationResourceKey(edge))),
+                        UID = (uint)MenuItem.MoveToEdgeBase + (uint)edge
+                    });
+                }
+            }
+
             return builder;
+        }
+
+        private static string EdgeLocationResourceKey(ManagedShell.AppBar.AppBarEdge edge)
+        {
+            switch (edge)
+            {
+                case ManagedShell.AppBar.AppBarEdge.Left: return "location_left";
+                case ManagedShell.AppBar.AppBarEdge.Top: return "location_top";
+                case ManagedShell.AppBar.AppBarEdge.Right: return "location_right";
+                default: return "location_bottom";
+            }
         }
 
         private bool InvokeContextMenu(ShellFile file, bool isInteractive)
@@ -285,6 +343,22 @@ namespace RetroBar.Controls
             if (action == ((uint)MenuItem.OpenParentFolder).ToString())
             {
                 ShellHelper.StartProcess(Folder.Path);
+                return true;
+            }
+
+            if (uint.TryParse(action, out uint actionUid) &&
+                actionUid >= (uint)MenuItem.MoveToEdgeBase && actionUid <= (uint)MenuItem.MoveToEdgeBase + 3)
+            {
+                ManagedShell.AppBar.AppBarEdge targetEdge = (ManagedShell.AppBar.AppBarEdge)(actionUid - (uint)MenuItem.MoveToEdgeBase);
+
+                foreach (ShellItem item in items)
+                {
+                    if (item is ShellFile file)
+                    {
+                        Settings.Instance.SetQuickLaunchEdge(file.Path, targetEdge);
+                    }
+                }
+
                 return true;
             }
 
