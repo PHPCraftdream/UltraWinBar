@@ -73,6 +73,16 @@ namespace RetroBar.Controls
                     return;
                 }
 
+                // Icons are only ever removed via an explicit NIM_DELETE from the owning
+                // app; one that crashed/was killed without sending it leaves a dead entry
+                // (clicking it does nothing useful, e.g. tries to relaunch a stale path).
+                // Hide those instead of showing them like Explorer's own tray would not.
+                if (TrayIcon.HWnd == IntPtr.Zero || !NativeMethods.IsWindow(TrayIcon.HWnd))
+                {
+                    Visibility = Visibility.Collapsed;
+                    return;
+                }
+
                 applyEffects();
 
                 TrayIcon.NotificationBalloonShown += TrayIcon_NotificationBalloonShown;
