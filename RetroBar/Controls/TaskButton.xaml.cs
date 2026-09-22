@@ -411,7 +411,7 @@ namespace RetroBar.Controls
             }
 
             AppBarEdge targetEdge = targetTaskbar.AppBarEdge;
-            AppBarEdge currentEdge = TaskAssignmentManager.GetAssignedEdge(Window) ?? Settings.Instance.Edge;
+            AppBarEdge currentEdge = TaskAssignmentManager.GetAssignedEdge(Window) ?? Settings.Instance.ResolvedDefaultTaskEdge;
 
             if (targetEdge == currentEdge)
             {

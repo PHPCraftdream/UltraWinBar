@@ -8,6 +8,7 @@ using RetroBar.Utilities;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -88,6 +89,7 @@ namespace RetroBar
 
             UpdateStartButton();
             UpdateTrayVisibility();
+            UpdateClockVisibility();
 
             AutoHideElement = TaskbarContentControl;
 
@@ -174,11 +176,16 @@ namespace RetroBar
                 AppBarEdge = Settings.Instance.Edge;
                 UpdatePosition();
                 UpdateTrayVisibility();
+                UpdateClockVisibility();
                 UpdateStartButton();
             }
             else if (e.PropertyName == nameof(Settings.TrayEdge))
             {
                 UpdateTrayVisibility();
+            }
+            else if (e.PropertyName == nameof(Settings.ClockEdge))
+            {
+                UpdateClockVisibility();
             }
             else if (e.PropertyName == nameof(Settings.StartButtonEdge))
             {
@@ -298,6 +305,7 @@ namespace RetroBar
                 Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
                 _startMenuMonitor.StartMenuVisibilityChanged -= StartMenuMonitor_StartMenuVisibilityChanged;
                 _shellManager.TasksService.WindowActivated -= TasksService_WindowActivated;
+                StopElementDragHook();
             }
         }
 
@@ -416,6 +424,10 @@ namespace RetroBar
             }
 
             StretchMenuItem.Visibility = Settings.Instance.EnabledEdges.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
+
+            MakeMainMenuItem.Visibility = Settings.Instance.EnabledEdges.Count > 1 && Settings.Instance.ResolvedDefaultTaskEdge != AppBarEdge
+                ? Visibility.Visible
+                : Visibility.Collapsed;
         }
 
         private void StretchMenuItem_OnClick(object sender, RoutedEventArgs e)
@@ -424,6 +436,11 @@ namespace RetroBar
             priority.Remove(AppBarEdge);
             priority.Insert(0, AppBarEdge);
             Settings.Instance.EdgePriority = priority;
+        }
+
+        private void MakeMainMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            Settings.Instance.DefaultTaskEdge = AppBarEdge;
         }
 
         private void SetTimeMenuItem_OnClick(object sender, RoutedEventArgs e)
@@ -574,14 +591,24 @@ namespace RetroBar
         }
 
         /// <summary>
-        /// The notification area and clock live on exactly one taskbar per screen.
+        /// The notification area lives on exactly one taskbar per screen.
         /// </summary>
         public bool HostsTray => AppBarEdge == Settings.Instance.ResolvedTrayEdge;
+
+        /// <summary>
+        /// The clock lives on exactly one taskbar per screen, independent of the tray.
+        /// </summary>
+        public bool HostsClock => AppBarEdge == Settings.Instance.ResolvedClockEdge;
 
         /// <summary>
         /// The start button lives on exactly one taskbar per screen.
         /// </summary>
         public bool HostsStartButton => AppBarEdge == Settings.Instance.ResolvedStartButtonEdge;
+
+        private void UpdateClockVisibility()
+        {
+            ClockGroupBox.Visibility = HostsClock ? Visibility.Visible : Visibility.Collapsed;
+        }
 
         private void UpdateTrayVisibility()
         {
@@ -888,6 +915,133 @@ namespace RetroBar
             {
                 Cursor = Cursors.Arrow;
             }
+        }
+        #endregion
+
+        #region Clock/tray drag between taskbars
+        private LowLevelMouseHook _elementDragHook;
+        private LowLevelMouseHook.POINT _elementDragStartScreenPos;
+        private bool _isDraggingElement;
+        private Action<AppBarEdge> _elementDragTarget;
+
+        private void ClockGroupBox_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            StartElementDragHook(edge => Settings.Instance.ClockEdge = edge);
+        }
+
+        private void TrayGroupBox_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            StartElementDragHook(edge => Settings.Instance.TrayEdge = edge);
+        }
+
+        // Same LowLevelMouseHook approach as TaskButton's cross-taskbar drag: sidesteps
+        // WPF/OLE drag entirely, letting the clock/tray blocks move between taskbars by
+        // just watching raw screen coordinates.
+        private void StartElementDragHook(Action<AppBarEdge> onDroppedOnEdge)
+        {
+            if (Settings.Instance.EnabledEdges.Count < 2 || _elementDragHook != null)
+            {
+                return;
+            }
+
+            _elementDragTarget = onDroppedOnEdge;
+            _elementDragStartScreenPos = new LowLevelMouseHook.POINT
+            {
+                X = System.Windows.Forms.Cursor.Position.X,
+                Y = System.Windows.Forms.Cursor.Position.Y
+            };
+            _isDraggingElement = false;
+
+            _elementDragHook = new LowLevelMouseHook();
+            _elementDragHook.LowLevelMouseEvent += ElementDragHook_LowLevelMouseEvent;
+            _elementDragHook.Initialize();
+        }
+
+        private void ElementDragHook_LowLevelMouseEvent(object sender, LowLevelMouseHook.LowLevelMouseEventArgs e)
+        {
+            switch (e.Message)
+            {
+                case NativeMethods.WM.MOUSEMOVE:
+                    if (!_isDraggingElement)
+                    {
+                        if (Math.Abs(e.HookStruct.pt.X - _elementDragStartScreenPos.X) <= SystemParameters.MinimumHorizontalDragDistance &&
+                            Math.Abs(e.HookStruct.pt.Y - _elementDragStartScreenPos.Y) <= SystemParameters.MinimumVerticalDragDistance)
+                        {
+                            return;
+                        }
+
+                        _isDraggingElement = true;
+                    }
+
+                    Dispatcher.BeginInvoke(() =>
+                    {
+                        Cursor = FindTaskbarAtScreenPoint(e.HookStruct.pt) != null ? Cursors.Hand : Cursors.No;
+                    });
+                    break;
+                case NativeMethods.WM.LBUTTONUP:
+                    bool wasDragging = _isDraggingElement;
+                    LowLevelMouseHook.MSLLHOOKSTRUCT hookStruct = e.HookStruct;
+                    Action<AppBarEdge> callback = _elementDragTarget;
+                    StopElementDragHook();
+
+                    if (wasDragging)
+                    {
+                        Dispatcher.BeginInvoke(() => CompleteElementDrag(hookStruct.pt, callback));
+                    }
+                    break;
+                case NativeMethods.WM.RBUTTONUP:
+                case NativeMethods.WM.MBUTTONUP:
+                case NativeMethods.WM.XBUTTONUP:
+                    StopElementDragHook();
+                    break;
+            }
+        }
+
+        private Taskbar FindTaskbarAtScreenPoint(LowLevelMouseHook.POINT pt)
+        {
+            foreach (Taskbar taskbar in Application.Current.Windows.OfType<Taskbar>())
+            {
+                double scale = taskbar.DpiScale;
+                double left = taskbar.Left * scale;
+                double top = taskbar.Top * scale;
+                double right = left + (taskbar.ActualWidth * scale);
+                double bottom = top + (taskbar.ActualHeight * scale);
+
+                if (pt.X >= left && pt.X < right && pt.Y >= top && pt.Y < bottom)
+                {
+                    return taskbar;
+                }
+            }
+
+            return null;
+        }
+
+        private void CompleteElementDrag(LowLevelMouseHook.POINT pt, Action<AppBarEdge> onDroppedOnEdge)
+        {
+            Cursor = Cursors.Arrow;
+
+            Taskbar targetTaskbar = FindTaskbarAtScreenPoint(pt);
+
+            if (targetTaskbar == null)
+            {
+                return;
+            }
+
+            onDroppedOnEdge(targetTaskbar.AppBarEdge);
+        }
+
+        private void StopElementDragHook()
+        {
+            if (_elementDragHook == null)
+            {
+                return;
+            }
+
+            _elementDragHook.LowLevelMouseEvent -= ElementDragHook_LowLevelMouseEvent;
+            _elementDragHook.Dispose();
+            _elementDragHook = null;
+            _isDraggingElement = false;
+            _elementDragTarget = null;
         }
         #endregion
     }

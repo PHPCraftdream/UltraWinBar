@@ -131,7 +131,8 @@ namespace RetroBar.Controls
             if (e.PropertyName == nameof(Settings.MultiMonMode) ||
                 e.PropertyName == nameof(Settings.TaskbarAssignments) ||
                 e.PropertyName == nameof(Settings.AdditionalEdges) ||
-                e.PropertyName == nameof(Settings.Edge))
+                e.PropertyName == nameof(Settings.Edge) ||
+                e.PropertyName == nameof(Settings.DefaultTaskEdge))
             {
                 taskbarItems?.Refresh();
             }
@@ -230,7 +231,7 @@ namespace RetroBar.Controls
                 return true;
             }
 
-            AppBarEdge targetEdge = TaskAssignmentManager.GetAssignedEdge(window) ?? Settings.Instance.Edge;
+            AppBarEdge targetEdge = TaskAssignmentManager.GetAssignedEdge(window) ?? Settings.Instance.ResolvedDefaultTaskEdge;
             return HostEdge == targetEdge;
         }
 

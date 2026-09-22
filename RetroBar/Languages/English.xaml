@@ -83,11 +83,13 @@
     <s:String x:Key="location_right">Right</s:String>
     <s:String x:Key="location_bottom">Bottom</s:String>
     <s:String x:Key="tray_location_text">_Notification area on:</s:String>
+    <s:String x:Key="clock_location_text">_Clock on:</s:String>
     <s:String x:Key="start_button_location_text">Sta_rt button on:</s:String>
     <s:String x:Key="language_location_text">_Language indicator on:</s:String>
     <s:String x:Key="task_assignment_hint">Drag a task button to another taskbar to move its whole application; hold Ctrl while dragging to move just that window instead. Right-click a task button to reset its assignment.</s:String>
     <s:String x:Key="reset_task_assignments">Reset all taskbar assignments</s:String>
     <s:String x:Key="stretch">_Stretch</s:String>
+    <s:String x:Key="make_main">_Make main</s:String>
     <s:String x:Key="reset_task_assignment">Reset taskbar assig_nment</s:String>
     <s:String x:Key="taskbar_scale">Taskbar scale</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>

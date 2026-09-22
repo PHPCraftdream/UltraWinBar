@@ -89,8 +89,13 @@ namespace RetroBar.Controls
             Host?.SetTrayHost();
             Host?.SetStartMenuOpen(true);
             pendingOpenTimer.Start();
-            if (Host != null && StartMenuMonitor != null && Settings.Instance.ShowMultiMon && Settings.Instance.ShowStartButtonMultiMon)
+            if (Host != null && StartMenuMonitor != null)
             {
+                // Anchors the menu to this taskbar's handle instead of falling back to a
+                // plain Win-key press, which lets Windows pick wherever it thinks the
+                // (hidden) system taskbar is — usually a different corner from ours, and
+                // with the full Start experience's opening animation instead of an
+                // instant switch.
                 StartMenuMonitor.ShowStartMenu(Host.Handle);
             }
             else

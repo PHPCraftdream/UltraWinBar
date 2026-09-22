@@ -77,11 +77,13 @@
     <s:String x:Key="location_right">Справа</s:String>
     <s:String x:Key="location_bottom">Внизу</s:String>
     <s:String x:Key="tray_location_text">_Область уведомлений на:</s:String>
+    <s:String x:Key="clock_location_text">_Часы на:</s:String>
     <s:String x:Key="start_button_location_text">Кнопка «_Пуск» на:</s:String>
     <s:String x:Key="language_location_text">_Индикатор языка на:</s:String>
     <s:String x:Key="task_assignment_hint">Перетащите кнопку задачи на другую панель, чтобы перенести всё приложение; с зажатым Ctrl — перенесётся только это окно. Правый клик по кнопке задачи — сбросить привязку.</s:String>
     <s:String x:Key="reset_task_assignments">Сбросить все привязки к панелям</s:String>
     <s:String x:Key="stretch">_Растянуть</s:String>
+    <s:String x:Key="make_main">Сделать _главной</s:String>
     <s:String x:Key="reset_task_assignment">Сбросить прив_язку</s:String>
     <s:String x:Key="taskbar_scale">Масштаб панели задач</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>

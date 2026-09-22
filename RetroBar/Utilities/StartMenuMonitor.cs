@@ -4,6 +4,7 @@ using ManagedShell.Common.Logging;
 using ManagedShell.Common.SupportingClasses;
 using ManagedShell.UWPInterop;
 using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
@@ -183,8 +184,20 @@ namespace RetroBar.Utilities
             GetWindowRect(hStartMenu, out ManagedShell.Interop.NativeMethods.Rect startMenuRect);
             GetWindowRect(_taskbarHwndActivated, out ManagedShell.Interop.NativeMethods.Rect taskbarRect);
 
+            // Use the edge of whichever taskbar the button was actually pressed on, not
+            // the primary one — with multiple taskbars they can differ.
+            AppBarEdge edge = Settings.Instance.Edge;
+            foreach (RetroBar.Taskbar taskbar in Application.Current.Windows.OfType<RetroBar.Taskbar>())
+            {
+                if (taskbar.Handle == _taskbarHwndActivated)
+                {
+                    edge = taskbar.AppBarEdge;
+                    break;
+                }
+            }
+
             int x = 0, y = 0;
-            switch (Settings.Instance.Edge)
+            switch (edge)
             {
                 case AppBarEdge.Left:
                     // Top right of taskbar is menu top left

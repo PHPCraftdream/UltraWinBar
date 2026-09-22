@@ -85,7 +85,34 @@
                              RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
                 </DockPanel.Dock>
             </controls:ShowDesktopButton>
-            <GroupBox x:Name="TrayGroupBox" Style="{DynamicResource Tray}">
+            <GroupBox x:Name="ClockGroupBox"
+                      Style="{DynamicResource Tray}"
+                      MouseLeftButtonDown="ClockGroupBox_OnMouseLeftButtonDown">
+                <GroupBox.ContextMenu>
+                    <ContextMenu>
+                        <TextOptions.TextRenderingMode>
+                            <Binding Source="{x:Static utilities:Settings.Instance}" Path="AllowFontSmoothingMenu" Converter="{StaticResource menuTextRenderingModeConverter}" />
+                        </TextOptions.TextRenderingMode>
+                        <StaticResourceExtension ResourceKey="SetTimeMenuItem" />
+                        <Separator />
+                        <StaticResourceExtension ResourceKey="TaskManagerMenuItem" />
+                        <Separator />
+                        <StaticResourceExtension ResourceKey="LockTaskbarMenuItem" />
+                        <StaticResourceExtension ResourceKey="PropertiesMenuItem" />
+                        <StaticResourceExtension ResourceKey="ExitMenuItem" />
+                    </ContextMenu>
+                </GroupBox.ContextMenu>
+                <DockPanel.Dock>
+                    <Binding Converter="{StaticResource dockOrientationConverter}"
+                             ConverterParameter="trailing"
+                             Path="Orientation"
+                             RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
+                </DockPanel.Dock>
+                <controls:Clock VerticalAlignment="Center" />
+            </GroupBox>
+            <GroupBox x:Name="TrayGroupBox"
+                      Style="{DynamicResource Tray}"
+                      MouseLeftButtonDown="TrayGroupBox_OnMouseLeftButtonDown">
                 <GroupBox.ContextMenu>
                     <ContextMenu>
                         <TextOptions.TextRenderingMode>
@@ -93,7 +120,6 @@
                         </TextOptions.TextRenderingMode>
                         <!--StaticResourceExtension ResourceKey="ToolbarsItem" />
                         <Separator /-->
-                        <StaticResourceExtension ResourceKey="SetTimeMenuItem" />
                         <StaticResourceExtension ResourceKey="CustomizeNotificationsMenuItem" />
                         <Separator />
                         <StaticResourceExtension ResourceKey="TaskManagerMenuItem" />
@@ -109,15 +135,7 @@
                              Path="Orientation"
                              RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
                 </DockPanel.Dock>
-                <StackPanel>
-                    <StackPanel.Orientation>
-                        <Binding Converter="{StaticResource edgeOrientationConverter}"
-                                 Path="Orientation"
-                                 RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
-                    </StackPanel.Orientation>
-                    <controls:NotifyIconList NotificationArea="{Binding NotificationArea}" />
-                    <controls:Clock VerticalAlignment="Center" />
-                </StackPanel>
+                <controls:NotifyIconList NotificationArea="{Binding NotificationArea}" />
             </GroupBox>
             <controls:InputLanguage VerticalAlignment="Stretch"
                                     HorizontalAlignment="Stretch"
@@ -153,6 +171,9 @@
             <MenuItem x:Name="StretchMenuItem"
                       Header="{DynamicResource stretch}"
                       Click="StretchMenuItem_OnClick" />
+            <MenuItem x:Name="MakeMainMenuItem"
+                      Header="{DynamicResource make_main}"
+                      Click="MakeMainMenuItem_OnClick" />
             <StaticResourceExtension ResourceKey="PropertiesMenuItem" />
             <MenuItem x:Name="RestartMenuItem"
                       Header="{DynamicResource restart_retrobar}"

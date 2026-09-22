@@ -499,12 +499,20 @@ namespace RetroBar.Utilities
             set => Set(ref _additionalEdges, value);
         }
 
-        // Taskbar hosting the notification area and clock. There is only ever one.
+        // Taskbar hosting the notification area. There is only ever one.
         private AppBarEdge _trayEdge = AppBarEdge.Bottom;
         public AppBarEdge TrayEdge
         {
             get => _trayEdge;
             set => SetEnum(ref _trayEdge, value);
+        }
+
+        // Taskbar hosting the clock. There is only ever one, independent of the tray.
+        private AppBarEdge _clockEdge = AppBarEdge.Bottom;
+        public AppBarEdge ClockEdge
+        {
+            get => _clockEdge;
+            set => SetEnum(ref _clockEdge, value);
         }
 
         // Taskbar hosting the start button. There is only ever one.
@@ -521,6 +529,16 @@ namespace RetroBar.Utilities
         {
             get => _languageEdge;
             set => SetEnum(ref _languageEdge, value);
+        }
+
+        // Taskbar new, unpinned windows open on by default ("Make main" on a taskbar's
+        // context menu sets this). Independent of Edge, which is the primary taskbar's
+        // physical location, not where unassigned windows land.
+        private AppBarEdge _defaultTaskEdge = AppBarEdge.Bottom;
+        public AppBarEdge DefaultTaskEdge
+        {
+            get => _defaultTaskEdge;
+            set => SetEnum(ref _defaultTaskEdge, value);
         }
 
         // Which taskbar each window/application is pinned to, once dragged there by the
@@ -576,6 +594,11 @@ namespace RetroBar.Utilities
         public AppBarEdge ResolvedTrayEdge => EnabledEdges.Contains(TrayEdge) ? TrayEdge : Edge;
 
         /// <summary>
+        /// ClockEdge, falling back to the primary edge if that taskbar isn't open.
+        /// </summary>
+        public AppBarEdge ResolvedClockEdge => EnabledEdges.Contains(ClockEdge) ? ClockEdge : Edge;
+
+        /// <summary>
         /// StartButtonEdge, falling back to the primary edge if that taskbar isn't open.
         /// </summary>
         public AppBarEdge ResolvedStartButtonEdge => EnabledEdges.Contains(StartButtonEdge) ? StartButtonEdge : Edge;
@@ -584,6 +607,11 @@ namespace RetroBar.Utilities
         /// LanguageEdge, falling back to the primary edge if that taskbar isn't open.
         /// </summary>
         public AppBarEdge ResolvedLanguageEdge => EnabledEdges.Contains(LanguageEdge) ? LanguageEdge : Edge;
+
+        /// <summary>
+        /// DefaultTaskEdge, falling back to the primary edge if that taskbar isn't open.
+        /// </summary>
+        public AppBarEdge ResolvedDefaultTaskEdge => EnabledEdges.Contains(DefaultTaskEdge) ? DefaultTaskEdge : Edge;
 
         /// <summary>
         /// The order taskbars should register with the OS AppBar API on each screen.

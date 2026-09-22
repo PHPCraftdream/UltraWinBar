@@ -331,6 +331,15 @@
                             </DockPanel>
                             <DockPanel>
                                 <Label VerticalAlignment="Center"
+                                       Target="{Binding ElementName=cboClockEdge}">
+                                    <AccessText Text="{DynamicResource clock_location_text}" />
+                                </Label>
+                                <ComboBox x:Name="cboClockEdge"
+                                          ItemsSource="{DynamicResource location_values}"
+                                          SelectedIndex="{Binding Source={x:Static Settings:Settings.Instance}, Path=ClockEdge, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource enumConverter}}" />
+                            </DockPanel>
+                            <DockPanel>
+                                <Label VerticalAlignment="Center"
                                        Target="{Binding ElementName=cboStartButtonEdge}">
                                     <AccessText Text="{DynamicResource start_button_location_text}" />
                                 </Label>
