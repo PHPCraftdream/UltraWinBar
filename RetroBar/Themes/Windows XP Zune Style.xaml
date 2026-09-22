@@ -239,51 +239,14 @@
     <Thickness x:Key="TrayToggleArrowPadding" Left="3" Top="3" Right="5" Bottom="3" />
 
     <SolidColorBrush x:Key="TaskButtonTopBorder" Color="#5f5f5f" />
-    <LinearGradientBrush x:Key="TaskButtonLeftBorder"
-                         StartPoint="0,0"
-                         EndPoint="0,1">
-        <GradientStop Color="#5b5b5b"
-                      Offset="0.0" />
-        <GradientStop Color="#404040"
-                      Offset="0.4" />
-        <GradientStop Color="#2f2f2f"
-                      Offset="0.6" />
-        <GradientStop Color="#212121"
-                      Offset="1" />
-    </LinearGradientBrush>
-    <LinearGradientBrush x:Key="TaskButtonRightBorder"
-                         StartPoint="0,0"
-                         EndPoint="0,1">
-        <GradientStop Color="#5b5b5b"
-                      Offset="0.0" />
-        <GradientStop Color="#404040"
-                      Offset="0.4" />
-        <GradientStop Color="#2f2f2f"
-                      Offset="0.6" />
-        <GradientStop Color="#212121"
-                      Offset="1" />
-    </LinearGradientBrush>
+    <SolidColorBrush x:Key="TaskButtonLeftBorder" Color="#2f2f2f" />
+    <SolidColorBrush x:Key="TaskButtonRightBorder" Color="#2f2f2f" />
     <SolidColorBrush x:Key="TaskButtonBottomBorder" Color="#0b0b0b" />
     <SolidColorBrush x:Key="TaskButtonInnerLeftBorder" Color="Transparent" />
     <SolidColorBrush x:Key="TaskButtonInnerRightBorder" Color="Transparent" />
     <SolidColorBrush x:Key="TaskButtonInnerBottomBorder" Color="#252525" />
 
-    <LinearGradientBrush x:Key="TaskButtonBackground"
-                         StartPoint="0,0"
-                         EndPoint="0,1">
-        <GradientStop Color="#7d7d7d"
-                      Offset="0.0" />
-        <GradientStop Color="#7d7d7d"
-                      Offset="0.03" />
-        <GradientStop Color="#747474"
-                      Offset="0.03" />
-        <GradientStop Color="#626262"
-                      Offset="0.50" />
-        <GradientStop Color="#4c4c4c"
-                      Offset="0.50" />
-        <GradientStop Color="#343434"
-                      Offset="1.0" />
-    </LinearGradientBrush>
+    <SolidColorBrush x:Key="TaskButtonBackground" Color="#4c4c4c" />
 
     <SolidColorBrush x:Key="TaskButtonBackgroundHighlight" Color="Transparent" />
 
