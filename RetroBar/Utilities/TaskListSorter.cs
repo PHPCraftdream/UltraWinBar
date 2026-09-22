@@ -27,8 +27,8 @@ namespace RetroBar.Utilities
                 {
                     List<string> desiredOrder = Settings.Instance.GetTaskOrderForEdge(_taskList.HostEdge);
 
-                    string idA = TaskAssignmentManager.GetIdentifier(a, TaskAssignmentMode.WindowClassAndTitle);
-                    string idB = TaskAssignmentManager.GetIdentifier(b, TaskAssignmentMode.WindowClassAndTitle);
+                    string idA = TaskOrderIdentifier.Get(a, _taskList.Tasks);
+                    string idB = TaskOrderIdentifier.Get(b, _taskList.Tasks);
 
                     int indexA = idA != null ? desiredOrder.IndexOf(idA) : -1;
                     int indexB = idB != null ? desiredOrder.IndexOf(idB) : -1;

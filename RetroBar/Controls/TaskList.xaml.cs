@@ -289,7 +289,7 @@ namespace RetroBar.Controls
                 {
                     if (obj is ApplicationWindow window)
                     {
-                        string identifier = TaskAssignmentManager.GetIdentifier(window, TaskAssignmentMode.WindowClassAndTitle);
+                        string identifier = TaskOrderIdentifier.Get(window, Tasks);
                         if (identifier != null)
                         {
                             identifiers.Add(identifier);
