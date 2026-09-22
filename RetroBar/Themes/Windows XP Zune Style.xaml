@@ -50,24 +50,7 @@
         <GradientStop Color="#1b1b1b"
                       Offset="1.0" />
     </LinearGradientBrush>
-    <LinearGradientBrush x:Key="TaskbarVerticalBackground"
-                         StartPoint="0,0"
-                         EndPoint="1,0">
-        <GradientStop Color="#6c6c6c"
-                      Offset="0.0" />
-        <GradientStop Color="#6c6c6c"
-                      Offset="0.1" />
-        <GradientStop Color="#5b5b5b"
-                      Offset="0.2" />
-        <GradientStop Color="#383838"
-                      Offset="0.2" />
-        <GradientStop Color="#383838"
-                      Offset="0.8" />
-        <GradientStop Color="#2b2b2b"
-                      Offset="0.95" />
-        <GradientStop Color="#292929"
-                      Offset="1.0" />
-    </LinearGradientBrush>
+    <SolidColorBrush x:Key="TaskbarVerticalBackground" Color="#383838" />
     <SolidColorBrush x:Key="TaskbarBorder" Color="#252525" />
 
     <SolidColorBrush x:Key="TaskbarUnlockedBorderTop" Color="#000000" />
