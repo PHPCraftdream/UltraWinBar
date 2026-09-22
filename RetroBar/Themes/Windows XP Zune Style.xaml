@@ -53,14 +53,8 @@
     <LinearGradientBrush x:Key="TaskbarVerticalBackground"
                          StartPoint="0,0"
                          EndPoint="1,0">
-        <GradientStop Color="#858585"
-                      Offset="0.0" />
-        <GradientStop Color="#858585"
-                      Offset="0.01" />
-        <GradientStop Color="#6f6f6f"
-                      Offset="0.01" />
         <GradientStop Color="#6c6c6c"
-                      Offset="0.03" />
+                      Offset="0.0" />
         <GradientStop Color="#6c6c6c"
                       Offset="0.1" />
         <GradientStop Color="#5b5b5b"
