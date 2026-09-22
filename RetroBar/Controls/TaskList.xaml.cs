@@ -139,8 +139,7 @@ namespace RetroBar.Controls
                 e.PropertyName == nameof(Settings.TaskbarAssignments) ||
                 e.PropertyName == nameof(Settings.AdditionalEdges) ||
                 e.PropertyName == nameof(Settings.Edge) ||
-                e.PropertyName == nameof(Settings.DefaultTaskEdge) ||
-                e.PropertyName == nameof(Settings.TaskOrder))
+                e.PropertyName == nameof(Settings.DefaultTaskEdge))
             {
                 try
                 {
@@ -381,6 +380,13 @@ namespace RetroBar.Controls
                 }
 
                 Settings.Instance.SetTaskOrderForEdge(HostEdge, newOrder);
+
+                // Apply the resort to this panel directly instead of relying on a
+                // Settings.PropertyChanged broadcast: every open TaskList reacting to
+                // TaskOrder changes fed back into SaveTaskOrder's own write, which kept
+                // re-triggering itself (froze the UI thread). Only the panel that owns
+                // this drop needs an immediate visual update.
+                taskbarItems.Refresh();
             }
             catch (Exception)
             {
