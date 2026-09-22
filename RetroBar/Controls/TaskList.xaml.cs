@@ -3,9 +3,11 @@ using ManagedShell.WindowsTasks;
 using ManagedShell.Common.Helpers;
 using RetroBar.Utilities;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 
 namespace RetroBar.Controls
@@ -71,7 +73,7 @@ namespace RetroBar.Controls
         }
 
         // The edge of the taskbar hosting this list, which may differ from the primary edge.
-        private AppBarEdge HostEdge => Host?.AppBarEdge ?? Settings.Instance.Edge;
+        internal AppBarEdge HostEdge => Host?.AppBarEdge ?? Settings.Instance.Edge;
 
         private void SetStyles()
         {
@@ -107,6 +109,11 @@ namespace RetroBar.Controls
                 {
                     taskbarItems.CollectionChanged += GroupedWindows_CollectionChanged;
                     taskbarItems.Filter = Tasks_Filter;
+
+                    if (taskbarItems is ListCollectionView taskbarItemsView)
+                    {
+                        taskbarItemsView.CustomSort = new TaskListSorter(this);
+                    }
                 }
 
                 TasksList.ItemsSource = taskbarItems;
@@ -256,6 +263,35 @@ namespace RetroBar.Controls
         private void GroupedWindows_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             SetTaskButtonWidth();
+            SaveTaskOrder();
+        }
+
+        // Records the current visible order for this edge so it can be restored on the next
+        // launch for whichever of these windows/apps are still running. Not driven by any
+        // drag-reorder (there isn't one for task buttons) — just remembers whatever order
+        // naturally results, so a RetroBar restart doesn't shuffle already-open windows.
+        private void SaveTaskOrder()
+        {
+            if (Host == null || taskbarItems == null)
+            {
+                return;
+            }
+
+            List<string> identifiers = new List<string>();
+
+            foreach (object obj in taskbarItems)
+            {
+                if (obj is ApplicationWindow window)
+                {
+                    string identifier = TaskAssignmentManager.GetIdentifier(window, TaskAssignmentMode.WindowClassAndTitle);
+                    if (identifier != null)
+                    {
+                        identifiers.Add(identifier);
+                    }
+                }
+            }
+
+            Settings.Instance.SetTaskOrderForEdge(HostEdge, identifiers);
         }
 
         private void TaskList_OnSizeChanged(object sender, SizeChangedEventArgs e)

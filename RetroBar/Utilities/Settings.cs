@@ -556,6 +556,16 @@ namespace RetroBar.Utilities
             set => Set(ref _taskbarAssignments, value);
         }
 
+        // Per-edge task button order, keyed by TaskAssignmentManager's WindowClassAndTitle
+        // identifier. Relative position among entries sharing an Edge defines that edge's
+        // order; entries for other edges may be interleaved.
+        private List<TaskOrderEntry> _taskOrder = [];
+        public List<TaskOrderEntry> TaskOrder
+        {
+            get => _taskOrder;
+            set => Set(ref _taskOrder, value);
+        }
+
         // Which taskbar each Quick Launch shortcut is shown on. Order within an edge is
         // still governed by QuickLaunchOrder below; this only controls edge membership.
         private List<QuickLaunchAssignment> _quickLaunchAssignments = [];
@@ -709,6 +719,47 @@ namespace RetroBar.Utilities
             EdgeSizes = edges;
             OnPropertyChanged(nameof(PrimaryRowCount));
             OnPropertyChanged(nameof(PrimaryTaskbarWidth));
+        }
+
+        /// <summary>
+        /// The saved task button order for one edge, as a list of identifiers.
+        /// </summary>
+        public List<string> GetTaskOrderForEdge(AppBarEdge edge)
+        {
+            List<string> result = new List<string>();
+
+            foreach (TaskOrderEntry entry in TaskOrder)
+            {
+                if (entry.Edge == edge)
+                {
+                    result.Add(entry.Identifier);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Replaces the saved order for one edge, preserving other edges' entries untouched.
+        /// </summary>
+        public void SetTaskOrderForEdge(AppBarEdge edge, List<string> identifiers)
+        {
+            List<TaskOrderEntry> entries = new List<TaskOrderEntry>();
+
+            foreach (TaskOrderEntry entry in TaskOrder)
+            {
+                if (entry.Edge != edge)
+                {
+                    entries.Add(entry);
+                }
+            }
+
+            foreach (string identifier in identifiers)
+            {
+                entries.Add(new TaskOrderEntry { Edge = edge, Identifier = identifier });
+            }
+
+            TaskOrder = entries;
         }
 
         /// <summary>
@@ -901,6 +952,12 @@ namespace RetroBar.Utilities
     {
         public string Path { get; set; }
         public AppBarEdge Edge { get; set; }
+    }
+
+    public struct TaskOrderEntry
+    {
+        public AppBarEdge Edge { get; set; }
+        public string Identifier { get; set; }
     }
     #endregion
 }
