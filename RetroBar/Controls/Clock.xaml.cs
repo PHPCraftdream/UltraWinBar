@@ -218,8 +218,32 @@ namespace RetroBar.Controls
         [DllImport("kernel32.dll")]
         private static extern int GetUserDefaultLCID();
 
+        private Point? _pressPosition;
+
         private void Clock_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            _pressPosition = e.GetPosition(this);
+        }
+
+        private void Clock_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (_pressPosition == null)
+            {
+                return;
+            }
+
+            Point pressPosition = _pressPosition.Value;
+            _pressPosition = null;
+
+            Point releasePosition = e.GetPosition(this);
+            if (Math.Abs(releasePosition.X - pressPosition.X) > SystemParameters.MinimumHorizontalDragDistance ||
+                Math.Abs(releasePosition.Y - pressPosition.Y) > SystemParameters.MinimumVerticalDragDistance)
+            {
+                // Moved past the click threshold since mouse-down — this was a drag
+                // (e.g. to another taskbar), not a click, so don't act on it.
+                return;
+            }
+
             if (Settings.Instance.ClockClickAction == ClockClickOption.DoNothing)
             {
                 return;
