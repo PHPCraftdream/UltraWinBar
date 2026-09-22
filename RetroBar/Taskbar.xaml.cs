@@ -935,6 +935,11 @@ namespace RetroBar
             StartElementDragHook(edge => Settings.Instance.TrayEdge = edge);
         }
 
+        private void InputLanguageGroup_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            StartElementDragHook(edge => Settings.Instance.LanguageEdge = edge);
+        }
+
         // Same LowLevelMouseHook approach as TaskButton's cross-taskbar drag: sidesteps
         // WPF/OLE drag entirely, letting the clock/tray blocks move between taskbars by
         // just watching raw screen coordinates.
