@@ -88,6 +88,10 @@
                     </MenuItem.Icon>
                 </MenuItem>
                 <Separator />
+                <MenuItem Header="{DynamicResource reset_task_assignment}"
+                          Click="ResetTaskAssignmentMenuItem_OnClick"
+                          Name="ResetTaskAssignmentMenuItem" />
+                <Separator />
                 <MenuItem Header="{DynamicResource end_task}"
                           Click="EndTaskMenuItem_OnClick"
                           Name="EndTaskMenuItem"

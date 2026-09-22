@@ -313,6 +313,47 @@
                             </DockPanel>
                         </StackPanel>
                     </GroupBox>
+                    <GroupBox Header="{DynamicResource multiple_taskbars_heading}">
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="{DynamicResource additional_taskbars_text}" TextWrapping="Wrap" Margin="0,0,0,4" />
+                            <CheckBox x:Name="cbEdgeLeft" Content="{DynamicResource location_left}" Checked="EdgeCheckBox_Changed" Unchecked="EdgeCheckBox_Changed" />
+                            <CheckBox x:Name="cbEdgeTop" Content="{DynamicResource location_top}" Checked="EdgeCheckBox_Changed" Unchecked="EdgeCheckBox_Changed" />
+                            <CheckBox x:Name="cbEdgeRight" Content="{DynamicResource location_right}" Checked="EdgeCheckBox_Changed" Unchecked="EdgeCheckBox_Changed" />
+                            <CheckBox x:Name="cbEdgeBottom" Content="{DynamicResource location_bottom}" Checked="EdgeCheckBox_Changed" Unchecked="EdgeCheckBox_Changed" />
+                            <DockPanel Margin="0,6,0,0">
+                                <Label VerticalAlignment="Center"
+                                       Target="{Binding ElementName=cboTrayEdge}">
+                                    <AccessText Text="{DynamicResource tray_location_text}" />
+                                </Label>
+                                <ComboBox x:Name="cboTrayEdge"
+                                          ItemsSource="{DynamicResource location_values}"
+                                          SelectedIndex="{Binding Source={x:Static Settings:Settings.Instance}, Path=TrayEdge, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource enumConverter}}" />
+                            </DockPanel>
+                            <DockPanel>
+                                <Label VerticalAlignment="Center"
+                                       Target="{Binding ElementName=cboStartButtonEdge}">
+                                    <AccessText Text="{DynamicResource start_button_location_text}" />
+                                </Label>
+                                <ComboBox x:Name="cboStartButtonEdge"
+                                          ItemsSource="{DynamicResource location_values}"
+                                          SelectedIndex="{Binding Source={x:Static Settings:Settings.Instance}, Path=StartButtonEdge, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource enumConverter}}" />
+                            </DockPanel>
+                            <DockPanel>
+                                <Label VerticalAlignment="Center"
+                                       Target="{Binding ElementName=cboLanguageEdge}">
+                                    <AccessText Text="{DynamicResource language_location_text}" />
+                                </Label>
+                                <ComboBox x:Name="cboLanguageEdge"
+                                          ItemsSource="{DynamicResource location_values}"
+                                          SelectedIndex="{Binding Source={x:Static Settings:Settings.Instance}, Path=LanguageEdge, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource enumConverter}}" />
+                            </DockPanel>
+                            <TextBlock Text="{DynamicResource task_assignment_hint}" TextWrapping="Wrap" Margin="0,6,0,0" />
+                            <Button HorizontalAlignment="Left"
+                                    Margin="0,6,0,0"
+                                    Content="{DynamicResource reset_task_assignments}"
+                                    Click="ResetTaskAssignments_OnClick" />
+                        </StackPanel>
+                    </GroupBox>
                     <GroupBox Header="{DynamicResource taskbar_scale}">
                         <StackPanel Orientation="Vertical">
                             <DockPanel Margin="20,0">

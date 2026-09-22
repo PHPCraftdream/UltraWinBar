@@ -47,9 +47,16 @@ namespace RetroBar
         public WindowManager windowManager;
         public HotkeyManager hotkeyManager;
 
-        public Taskbar(WindowManager windowManager, DictionaryManager dictionaryManager, ShellManager shellManager, StartMenuMonitor startMenuMonitor, Updater updater, HotkeyManager hotkeyManager, AppBarScreen screen, AppBarEdge edge, AppBarMode mode)
+        /// <summary>
+        /// True for the taskbar on Settings.Edge. Additional taskbars own their edge
+        /// independently and must not follow changes to the primary edge.
+        /// </summary>
+        public bool IsPrimaryEdge { get; }
+
+        public Taskbar(WindowManager windowManager, DictionaryManager dictionaryManager, ShellManager shellManager, StartMenuMonitor startMenuMonitor, Updater updater, HotkeyManager hotkeyManager, AppBarScreen screen, AppBarEdge edge, AppBarMode mode, bool isPrimaryEdge = true)
             : base(shellManager.AppBarManager, shellManager.ExplorerHelper, shellManager.FullScreenHelper, screen, edge, mode, 0)
         {
+            IsPrimaryEdge = isPrimaryEdge;
             _dictionaryManager = dictionaryManager;
             _shellManager = shellManager;
             _startMenuMonitor = startMenuMonitor;
@@ -80,6 +87,7 @@ namespace RetroBar
             }
 
             UpdateStartButton();
+            UpdateTrayVisibility();
 
             AutoHideElement = TaskbarContentControl;
 
@@ -156,9 +164,25 @@ namespace RetroBar
             }
             else if (e.PropertyName == nameof(Settings.Edge))
             {
+                // Additional taskbars own their edge; only the primary one follows this setting.
+                if (!IsPrimaryEdge)
+                {
+                    return;
+                }
+
                 PeekDuringAutoHide();
                 AppBarEdge = Settings.Instance.Edge;
                 UpdatePosition();
+                UpdateTrayVisibility();
+                UpdateStartButton();
+            }
+            else if (e.PropertyName == nameof(Settings.TrayEdge))
+            {
+                UpdateTrayVisibility();
+            }
+            else if (e.PropertyName == nameof(Settings.StartButtonEdge))
+            {
+                UpdateStartButton();
             }
             else if (e.PropertyName == nameof(Settings.Language))
             {
@@ -390,6 +414,16 @@ namespace RetroBar
             {
                 RestartMenuItem.Visibility = Visibility.Collapsed;
             }
+
+            StretchMenuItem.Visibility = Settings.Instance.EnabledEdges.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void StretchMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            var priority = new System.Collections.Generic.List<AppBarEdge>(Settings.Instance.EdgePriority);
+            priority.Remove(AppBarEdge);
+            priority.Insert(0, AppBarEdge);
+            Settings.Instance.EdgePriority = priority;
         }
 
         private void SetTimeMenuItem_OnClick(object sender, RoutedEventArgs e)
@@ -533,14 +567,40 @@ namespace RetroBar
 
         private void UpdateTrayPosition()
         {
-            if (Screen.Primary)
+            if (Screen.Primary && HostsTray)
             {
                 SetTrayHost();
             }
         }
 
+        /// <summary>
+        /// The notification area and clock live on exactly one taskbar per screen.
+        /// </summary>
+        public bool HostsTray => AppBarEdge == Settings.Instance.ResolvedTrayEdge;
+
+        /// <summary>
+        /// The start button lives on exactly one taskbar per screen.
+        /// </summary>
+        public bool HostsStartButton => AppBarEdge == Settings.Instance.ResolvedStartButtonEdge;
+
+        private void UpdateTrayVisibility()
+        {
+            TrayGroupBox.Visibility = HostsTray ? Visibility.Visible : Visibility.Collapsed;
+
+            if (HostsTray)
+            {
+                UpdateTrayPosition();
+            }
+        }
+
         private void UpdateStartButton()
         {
+            if (!HostsStartButton)
+            {
+                StartButton.Visibility = Visibility.Collapsed;
+                return;
+            }
+
             if (!Screen.Primary && !Settings.Instance.ShowStartButtonMultiMon)
             {
                 StartButton.Visibility = Visibility.Collapsed;
@@ -713,7 +773,7 @@ namespace RetroBar
                     AppBarEdge newEdge = DragCoordsToScreenEdge(e.HookStruct.pt.X, e.HookStruct.pt.Y);
                     if (newEdge != AppBarEdge)
                     {
-                        Settings.Instance.Edge = newEdge;
+                        MoveToEdge(newEdge);
                     }
                     break;
                 case NativeMethods.WM.LBUTTONUP:
@@ -727,6 +787,39 @@ namespace RetroBar
                     StopMouseDragHook();
                     break;
             }
+        }
+
+        /// <summary>
+        /// Moves this taskbar to another edge, updating whichever setting owns this
+        /// taskbar's edge. Edges already occupied by another taskbar are rejected.
+        /// </summary>
+        private void MoveToEdge(AppBarEdge newEdge)
+        {
+            if (Settings.Instance.EnabledEdges.Contains(newEdge))
+            {
+                return;
+            }
+
+            if (IsPrimaryEdge)
+            {
+                Settings.Instance.Edge = newEdge;
+                return;
+            }
+
+            var edges = new System.Collections.Generic.List<AppBarEdge>(Settings.Instance.AdditionalEdges);
+            int index = edges.IndexOf(AppBarEdge);
+
+            if (index >= 0)
+            {
+                edges[index] = newEdge;
+            }
+            else
+            {
+                edges.Add(newEdge);
+            }
+
+            // Assigning a new list instance notifies WindowManager, which reopens the taskbars.
+            Settings.Instance.AdditionalEdges = edges;
         }
 
         private void StartMouseDragHook()

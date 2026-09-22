@@ -43,7 +43,13 @@ namespace RetroBar.Utilities
 
         private void Settings_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(Settings.ShowMultiMon))
+            if (e.PropertyName == nameof(Settings.AdditionalEdges) || e.PropertyName == nameof(Settings.EdgePriority))
+            {
+                // Adding/removing a taskbar, or restretching one, requires re-registering
+                // all of them so the OS AppBar API recomputes who shrinks for whom.
+                ReopenTaskbars();
+            }
+            else if (e.PropertyName == nameof(Settings.ShowMultiMon))
             {
                 // Update screen state in case it has changed since last checked
                 _screenState = AppBarScreen.FromAllScreens();
@@ -143,19 +149,32 @@ namespace RetroBar.Utilities
             {
                 foreach (var screen in _screenState)
                 {
-                    openTaskbar(screen);
+                    openTaskbarsOnScreen(screen);
                 }
             }
             else
             {
-                openTaskbar(AppBarScreen.FromPrimaryScreen());
+                openTaskbarsOnScreen(AppBarScreen.FromPrimaryScreen());
             }
         }
 
-        private void openTaskbar(AppBarScreen screen)
+        private void openTaskbarsOnScreen(AppBarScreen screen)
         {
-            ShellLogger.Debug($"WindowManager: Opening taskbar on screen {screen.DeviceName}");
-            Taskbar taskbar = new Taskbar(this, _dictionaryManager, _shellManager, _startMenuMonitor, _updater, _hotkeyManager, screen, Settings.Instance.Edge, Settings.Instance.AutoHide ? AppBarMode.AutoHide : AppBarMode.Normal);
+            AppBarEdge primaryEdge = Settings.Instance.Edge;
+
+            // Registration order matters: the OS AppBar API shrinks each new bar to avoid
+            // ones already registered, so ResolvedEdgeOrder (not just EnabledEdges) decides
+            // who keeps full length and who yields.
+            foreach (AppBarEdge edge in Settings.Instance.ResolvedEdgeOrder)
+            {
+                openTaskbar(screen, edge, edge == primaryEdge);
+            }
+        }
+
+        private void openTaskbar(AppBarScreen screen, AppBarEdge edge, bool isPrimaryEdge)
+        {
+            ShellLogger.Debug($"WindowManager: Opening taskbar on screen {screen.DeviceName} at edge {edge}");
+            Taskbar taskbar = new Taskbar(this, _dictionaryManager, _shellManager, _startMenuMonitor, _updater, _hotkeyManager, screen, edge, Settings.Instance.AutoHide ? AppBarMode.AutoHide : AppBarMode.Normal, isPrimaryEdge);
             taskbar.Show();
 
             _taskbars.Add(taskbar);

@@ -85,7 +85,7 @@
                              RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
                 </DockPanel.Dock>
             </controls:ShowDesktopButton>
-            <GroupBox Style="{DynamicResource Tray}">
+            <GroupBox x:Name="TrayGroupBox" Style="{DynamicResource Tray}">
                 <GroupBox.ContextMenu>
                     <ContextMenu>
                         <TextOptions.TextRenderingMode>
@@ -150,6 +150,9 @@
                       FontWeight="Bold"
                       Visibility="Collapsed" />
             <StaticResourceExtension ResourceKey="LockTaskbarMenuItem" />
+            <MenuItem x:Name="StretchMenuItem"
+                      Header="{DynamicResource stretch}"
+                      Click="StretchMenuItem_OnClick" />
             <StaticResourceExtension ResourceKey="PropertiesMenuItem" />
             <MenuItem x:Name="RestartMenuItem"
                       Header="{DynamicResource restart_retrobar}"

@@ -1,12 +1,14 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
+using ManagedShell.AppBar;
 using ManagedShell.Common.Helpers;
 using ManagedShell.Interop;
 using ManagedShell.WindowsTasks;
@@ -34,6 +36,10 @@ namespace RetroBar.Controls
 
         private DelayedActivationHandler dragHandler;
         private bool _isLoaded;
+
+        private LowLevelMouseHook _dragHook;
+        private LowLevelMouseHook.POINT _dragStartScreenPos;
+        private bool _isDraggingToTaskbar;
 
         public TaskButton()
         {
@@ -142,6 +148,7 @@ namespace RetroBar.Controls
 
             Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
             dragHandler?.Dispose();
+            StopTaskDragHook();
 
             if (Window != null)
             {
@@ -177,6 +184,16 @@ namespace RetroBar.Controls
             }
             MoveMenuItem.IsEnabled = wss == NativeMethods.WindowShowStyle.ShowNormal;
             SizeMenuItem.IsEnabled = wss == NativeMethods.WindowShowStyle.ShowNormal && (ws & (int)NativeMethods.WindowStyles.WS_MAXIMIZEBOX) != 0;
+
+            ResetTaskAssignmentMenuItem.Visibility = Settings.Instance.EnabledEdges.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void ResetTaskAssignmentMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (Window != null)
+            {
+                TaskAssignmentManager.ResetAssignment(Window);
+            }
         }
 
         private void CloseMenuItem_OnClick(object sender, RoutedEventArgs e)
@@ -285,8 +302,143 @@ namespace RetroBar.Controls
             if (e.ChangedButton == MouseButton.Left)
             {
                 PressedWindowState = Window.State;
+
+                if (Settings.Instance.EnabledEdges.Count > 1)
+                {
+                    StartTaskDragHook();
+                }
             }
         }
+
+        #region Cross-taskbar drag
+        // gong-wpf-dragdrop's OLE-based drag never completes a Drop for this scenario
+        // (task buttons are Buttons, which capture the mouse on press; that capture
+        // seems to swallow the eventual mouse-up before OLE's drag loop sees it, so
+        // Drop never fires — even reordering within one taskbar). A low-level mouse
+        // hook sidesteps WPF/OLE drag entirely, the same way Taskbar's own edge-drag
+        // resize already does, and lets us explicitly release the button's capture
+        // once a real drag starts.
+        private void StartTaskDragHook()
+        {
+            if (_dragHook != null)
+            {
+                return;
+            }
+
+            _dragStartScreenPos = new LowLevelMouseHook.POINT
+            {
+                X = System.Windows.Forms.Cursor.Position.X,
+                Y = System.Windows.Forms.Cursor.Position.Y
+            };
+            _isDraggingToTaskbar = false;
+
+            _dragHook = new LowLevelMouseHook();
+            _dragHook.LowLevelMouseEvent += DragHook_LowLevelMouseEvent;
+            _dragHook.Initialize();
+        }
+
+        private void DragHook_LowLevelMouseEvent(object sender, LowLevelMouseHook.LowLevelMouseEventArgs e)
+        {
+            switch (e.Message)
+            {
+                case NativeMethods.WM.MOUSEMOVE:
+                    if (!_isDraggingToTaskbar)
+                    {
+                        if (Math.Abs(e.HookStruct.pt.X - _dragStartScreenPos.X) <= SystemParameters.MinimumHorizontalDragDistance &&
+                            Math.Abs(e.HookStruct.pt.Y - _dragStartScreenPos.Y) <= SystemParameters.MinimumVerticalDragDistance)
+                        {
+                            return;
+                        }
+
+                        _isDraggingToTaskbar = true;
+
+                        // Release WPF's own mouse capture so the button's press/click
+                        // state machine stops fighting over subsequent mouse-up.
+                        Dispatcher.BeginInvoke(() => AppButton.ReleaseMouseCapture());
+                    }
+
+                    Dispatcher.BeginInvoke(() =>
+                    {
+                        Cursor = FindTaskbarAtScreenPoint(e.HookStruct.pt) != null ? Cursors.Hand : Cursors.No;
+                    });
+                    break;
+                case NativeMethods.WM.LBUTTONUP:
+                    bool wasDragging = _isDraggingToTaskbar;
+                    LowLevelMouseHook.MSLLHOOKSTRUCT hookStruct = e.HookStruct;
+                    StopTaskDragHook();
+
+                    if (wasDragging)
+                    {
+                        Dispatcher.BeginInvoke(() => CompleteDragToTaskbar(hookStruct.pt));
+                    }
+                    break;
+                case NativeMethods.WM.RBUTTONUP:
+                case NativeMethods.WM.MBUTTONUP:
+                case NativeMethods.WM.XBUTTONUP:
+                    StopTaskDragHook();
+                    break;
+            }
+        }
+
+        private Taskbar FindTaskbarAtScreenPoint(LowLevelMouseHook.POINT pt)
+        {
+            foreach (Taskbar taskbar in System.Windows.Application.Current.Windows.OfType<Taskbar>())
+            {
+                double scale = taskbar.DpiScale;
+                double left = taskbar.Left * scale;
+                double top = taskbar.Top * scale;
+                double right = left + (taskbar.ActualWidth * scale);
+                double bottom = top + (taskbar.ActualHeight * scale);
+
+                if (pt.X >= left && pt.X < right && pt.Y >= top && pt.Y < bottom)
+                {
+                    return taskbar;
+                }
+            }
+
+            return null;
+        }
+
+        private void CompleteDragToTaskbar(LowLevelMouseHook.POINT pt)
+        {
+            Cursor = Cursors.Arrow;
+
+            Taskbar targetTaskbar = FindTaskbarAtScreenPoint(pt);
+
+            if (targetTaskbar == null || Window == null)
+            {
+                return;
+            }
+
+            AppBarEdge targetEdge = targetTaskbar.AppBarEdge;
+            AppBarEdge currentEdge = TaskAssignmentManager.GetAssignedEdge(Window) ?? Settings.Instance.Edge;
+
+            if (targetEdge == currentEdge)
+            {
+                return;
+            }
+
+            // Plain drag moves the whole application; holding Ctrl moves just this window.
+            TaskAssignmentMode mode = Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
+                ? TaskAssignmentMode.WindowClassAndTitle
+                : TaskAssignmentMode.ExecutablePath;
+
+            TaskAssignmentManager.AssignToEdge(Window, targetEdge, mode);
+        }
+
+        private void StopTaskDragHook()
+        {
+            if (_dragHook == null)
+            {
+                return;
+            }
+
+            _dragHook.LowLevelMouseEvent -= DragHook_LowLevelMouseEvent;
+            _dragHook.Dispose();
+            _dragHook = null;
+            _isDraggingToTaskbar = false;
+        }
+        #endregion
 
         private void AppButton_OnMouseUp(object sender, MouseButtonEventArgs e)
         {

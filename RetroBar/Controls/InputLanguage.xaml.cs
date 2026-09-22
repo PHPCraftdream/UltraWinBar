@@ -23,7 +23,7 @@ namespace RetroBar.Controls
             set { SetValue(LocaleIdentifierProperty, value); }
         }
 
-        public static DependencyProperty HostProperty = DependencyProperty.Register(nameof(Host), typeof(Taskbar), typeof(InputLanguage));
+        public static DependencyProperty HostProperty = DependencyProperty.Register(nameof(Host), typeof(Taskbar), typeof(InputLanguage), new PropertyMetadata(OnHostChanged));
 
         public Taskbar Host
         {
@@ -44,18 +44,39 @@ namespace RetroBar.Controls
             layoutWatch.Tick += LayoutWatchTick;
         }
 
+        // Host resolves via a FindAncestor binding, which can still be null the first time
+        // this runs (Loaded can fire before the binding settles). Requiring a non-null Host
+        // — and re-checking via OnHostChanged once it arrives — avoids every taskbar
+        // defaulting to "show" during that window, which would run one watch timer per
+        // taskbar simultaneously.
+        private bool ShouldShow => Settings.Instance.ShowInputLanguage &&
+                                    Host != null && Host.AppBarEdge == Settings.Instance.ResolvedLanguageEdge;
+
+        private static void OnHostChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is InputLanguage inputLanguage && inputLanguage._isLoaded)
+            {
+                inputLanguage.UpdateVisibility();
+            }
+        }
+
         private void Initialize()
         {
-            if (Settings.Instance.ShowInputLanguage)
+            UpdateVisibility();
+
+            Settings.Instance.PropertyChanged += Settings_PropertyChanged;
+        }
+
+        private void UpdateVisibility()
+        {
+            if (ShouldShow)
             {
                 StartWatch();
             }
             else
             {
-                Visibility = Visibility.Collapsed;
+                StopWatch();
             }
-
-            Settings.Instance.PropertyChanged += Settings_PropertyChanged;
         }
 
         private void SetLocaleIdentifier()
@@ -155,16 +176,12 @@ namespace RetroBar.Controls
 
         private void Settings_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(Settings.ShowInputLanguage))
+            if (e.PropertyName == nameof(Settings.ShowInputLanguage) ||
+                e.PropertyName == nameof(Settings.LanguageEdge) ||
+                e.PropertyName == nameof(Settings.Edge) ||
+                e.PropertyName == nameof(Settings.AdditionalEdges))
             {
-                if (Settings.Instance.ShowInputLanguage)
-                {
-                    StartWatch();
-                }
-                else
-                {
-                    StopWatch();
-                }
+                UpdateVisibility();
             }
         }
 

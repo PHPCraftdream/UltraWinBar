@@ -70,13 +70,16 @@ namespace RetroBar.Controls
             InitializeComponent();
         }
 
+        // The edge of the taskbar hosting this list, which may differ from the primary edge.
+        private AppBarEdge HostEdge => Host?.AppBarEdge ?? Settings.Instance.Edge;
+
         private void SetStyles()
         {
             DefaultButtonWidth = Application.Current.FindResource("TaskButtonWidth") as double? ?? 0;
             MinButtonWidth = Application.Current.FindResource("TaskButtonMinWidth") as double? ?? 0;
             Thickness buttonMargin;
 
-            if (Settings.Instance.Edge == AppBarEdge.Left || Settings.Instance.Edge == AppBarEdge.Right)
+            if (HostEdge == AppBarEdge.Left || HostEdge == AppBarEdge.Right)
             {
                 buttonMargin = Application.Current.FindResource("TaskButtonVerticalMargin") as Thickness? ?? new Thickness();
             }
@@ -125,7 +128,10 @@ namespace RetroBar.Controls
 
         private void Settings_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(Settings.MultiMonMode))
+            if (e.PropertyName == nameof(Settings.MultiMonMode) ||
+                e.PropertyName == nameof(Settings.TaskbarAssignments) ||
+                e.PropertyName == nameof(Settings.AdditionalEdges) ||
+                e.PropertyName == nameof(Settings.Edge))
             {
                 taskbarItems?.Refresh();
             }
@@ -182,6 +188,11 @@ namespace RetroBar.Controls
                     return false;
                 }
 
+                if (!IsOnAssignedEdge(window))
+                {
+                    return false;
+                }
+
                 if (!Settings.Instance.ShowMultiMon || Settings.Instance.MultiMonMode == MultiMonOption.AllTaskbars)
                 {
                     return true;
@@ -205,6 +216,22 @@ namespace RetroBar.Controls
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Whether this taskbar is the one this window's application belongs to. Windows
+        /// with no assignment stick to the primary-edge taskbar, matching the single-taskbar
+        /// behavior from before per-application assignments existed.
+        /// </summary>
+        private bool IsOnAssignedEdge(ApplicationWindow window)
+        {
+            if (Settings.Instance.EnabledEdges.Count < 2)
+            {
+                return true;
+            }
+
+            AppBarEdge targetEdge = TaskAssignmentManager.GetAssignedEdge(window) ?? Settings.Instance.Edge;
+            return HostEdge == targetEdge;
         }
 
         private void TaskList_OnUnloaded(object sender, RoutedEventArgs e)
@@ -240,7 +267,7 @@ namespace RetroBar.Controls
             if (Host is null)
                 return; // The state is trashed, but presumably it's just a transition
 
-            if (Settings.Instance.Edge == AppBarEdge.Left || Settings.Instance.Edge == AppBarEdge.Right)
+            if (HostEdge == AppBarEdge.Left || HostEdge == AppBarEdge.Right)
             {
                 ExtraWidthCount = 0;
                 ButtonWidth = ActualWidth;

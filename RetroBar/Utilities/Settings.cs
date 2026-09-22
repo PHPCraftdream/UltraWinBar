@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization;
 
 namespace RetroBar.Utilities
 {
@@ -488,6 +489,136 @@ namespace RetroBar.Utilities
             get => _allowBlurBehind;
             set => Set(ref _allowBlurBehind, value);
         }
+
+        // Extra taskbars beyond the primary one on Edge. Empty by default, so
+        // existing setups keep their single taskbar.
+        private List<AppBarEdge> _additionalEdges = [];
+        public List<AppBarEdge> AdditionalEdges
+        {
+            get => _additionalEdges;
+            set => Set(ref _additionalEdges, value);
+        }
+
+        // Taskbar hosting the notification area and clock. There is only ever one.
+        private AppBarEdge _trayEdge = AppBarEdge.Bottom;
+        public AppBarEdge TrayEdge
+        {
+            get => _trayEdge;
+            set => SetEnum(ref _trayEdge, value);
+        }
+
+        // Taskbar hosting the start button. There is only ever one.
+        private AppBarEdge _startButtonEdge = AppBarEdge.Bottom;
+        public AppBarEdge StartButtonEdge
+        {
+            get => _startButtonEdge;
+            set => SetEnum(ref _startButtonEdge, value);
+        }
+
+        // Taskbar hosting the input language indicator. There is only ever one.
+        private AppBarEdge _languageEdge = AppBarEdge.Bottom;
+        public AppBarEdge LanguageEdge
+        {
+            get => _languageEdge;
+            set => SetEnum(ref _languageEdge, value);
+        }
+
+        // Which taskbar each window/application is pinned to, once dragged there by the
+        // user (plain drag = that window only, Ctrl+drag = the whole application).
+        private List<TaskbarAssignment> _taskbarAssignments = [];
+        public List<TaskbarAssignment> TaskbarAssignments
+        {
+            get => _taskbarAssignments;
+            set => Set(ref _taskbarAssignments, value);
+        }
+
+        // Edges the user has explicitly "stretched", most-recent first. An edge here
+        // registers with the OS AppBar API before edges not listed, so it keeps its full
+        // length and neighboring taskbars shrink to make room for it instead.
+        private List<AppBarEdge> _edgePriority = [];
+        public List<AppBarEdge> EdgePriority
+        {
+            get => _edgePriority;
+            set => Set(ref _edgePriority, value);
+        }
+        #endregion
+
+        #region Computed helpers
+        // Read-only, so these are not written to settings.json.
+
+        /// <summary>
+        /// Every edge that should have a taskbar: the primary one plus any extras.
+        /// </summary>
+        // System.Text.Json serializes read-only collection properties regardless of
+        // IgnoreReadOnlyProperties, so this needs an explicit opt-out.
+        [JsonIgnore]
+        public List<AppBarEdge> EnabledEdges
+        {
+            get
+            {
+                List<AppBarEdge> edges = [Edge];
+
+                foreach (AppBarEdge edge in AdditionalEdges)
+                {
+                    if (!edges.Contains(edge))
+                    {
+                        edges.Add(edge);
+                    }
+                }
+
+                return edges;
+            }
+        }
+
+        /// <summary>
+        /// TrayEdge, falling back to the primary edge if that taskbar isn't open.
+        /// </summary>
+        public AppBarEdge ResolvedTrayEdge => EnabledEdges.Contains(TrayEdge) ? TrayEdge : Edge;
+
+        /// <summary>
+        /// StartButtonEdge, falling back to the primary edge if that taskbar isn't open.
+        /// </summary>
+        public AppBarEdge ResolvedStartButtonEdge => EnabledEdges.Contains(StartButtonEdge) ? StartButtonEdge : Edge;
+
+        /// <summary>
+        /// LanguageEdge, falling back to the primary edge if that taskbar isn't open.
+        /// </summary>
+        public AppBarEdge ResolvedLanguageEdge => EnabledEdges.Contains(LanguageEdge) ? LanguageEdge : Edge;
+
+        /// <summary>
+        /// The order taskbars should register with the OS AppBar API on each screen.
+        /// Edges earlier in this list keep their full length; later ones get shrunk by
+        /// the OS to avoid overlapping earlier ones. Defaults to vertical edges first
+        /// (Left, Right), since a full-height side bar reads as more "primary" than a
+        /// strip across the top/bottom, then falls back to Top, Bottom.
+        /// </summary>
+        [JsonIgnore]
+        public List<AppBarEdge> ResolvedEdgeOrder
+        {
+            get
+            {
+                List<AppBarEdge> enabled = EnabledEdges;
+                List<AppBarEdge> order = [];
+
+                foreach (AppBarEdge edge in EdgePriority)
+                {
+                    if (enabled.Contains(edge) && !order.Contains(edge))
+                    {
+                        order.Add(edge);
+                    }
+                }
+
+                foreach (AppBarEdge edge in new[] { AppBarEdge.Left, AppBarEdge.Right, AppBarEdge.Top, AppBarEdge.Bottom })
+                {
+                    if (enabled.Contains(edge) && !order.Contains(edge))
+                    {
+                        order.Add(edge);
+                    }
+                }
+
+                return order;
+            }
+        }
         #endregion
 
         #region Old Properties
@@ -581,6 +712,23 @@ namespace RetroBar.Utilities
         AlwaysShow,
         Remove
     }
+
+    /// <summary>
+    /// How a window is identified for a taskbar assignment: chosen per drag by whether
+    /// Ctrl is held, not a global setting.
+    /// </summary>
+    public enum TaskAssignmentMode
+    {
+        /// <summary>
+        /// Group by executable (Ctrl+drag), so every window of an application shares one taskbar.
+        /// </summary>
+        ExecutablePath,
+
+        /// <summary>
+        /// Group by window class and title (plain drag), moving only that one window.
+        /// </summary>
+        WindowClassAndTitle
+    }
     #endregion
 
     #region Structs
@@ -588,6 +736,13 @@ namespace RetroBar.Utilities
     {
         public string Identifier {  get; set; }
         public NotifyIconBehavior Behavior { get; set; }
+    }
+
+    public struct TaskbarAssignment
+    {
+        public string Identifier { get; set; }
+        public AppBarEdge Edge { get; set; }
+        public TaskAssignmentMode Mode { get; set; }
     }
     #endregion
 }

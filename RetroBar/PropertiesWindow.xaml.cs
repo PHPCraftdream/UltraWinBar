@@ -107,6 +107,10 @@ namespace RetroBar
                 LoadAppInfo();
                 LoadClockActions();
             }
+            else if (e.PropertyName == nameof(Settings.Edge) || e.PropertyName == nameof(Settings.AdditionalEdges))
+            {
+                RefreshEdgeCheckboxes();
+            }
         }
 
         public static PropertiesWindow Open(NotificationArea notificationArea, DictionaryManager dictionaryManager, AppBarScreen screen, double dpiScale, double barSize)
@@ -337,7 +341,74 @@ namespace RetroBar
             Left = 10;
             Top = (ScreenHelper.PrimaryMonitorDeviceSize.Height / DpiHelper.DpiScale) - Height - 40;
             UpdateWindowPosition();
+
+            RefreshEdgeCheckboxes();
         }
+
+        #region Multiple taskbars
+        private bool _isUpdatingEdgeCheckboxes;
+
+        private System.Collections.Generic.IEnumerable<(AppBarEdge Edge, System.Windows.Controls.CheckBox CheckBox)> EdgeCheckboxes()
+        {
+            yield return (AppBarEdge.Left, cbEdgeLeft);
+            yield return (AppBarEdge.Top, cbEdgeTop);
+            yield return (AppBarEdge.Right, cbEdgeRight);
+            yield return (AppBarEdge.Bottom, cbEdgeBottom);
+        }
+
+        /// <summary>
+        /// Reflects Settings' current primary + additional edges onto the checkboxes,
+        /// without re-entering EdgeCheckBox_Changed.
+        /// </summary>
+        private void RefreshEdgeCheckboxes()
+        {
+            _isUpdatingEdgeCheckboxes = true;
+
+            var enabled = Settings.Instance.EnabledEdges;
+            foreach (var (edge, checkBox) in EdgeCheckboxes())
+            {
+                checkBox.IsChecked = enabled.Contains(edge);
+            }
+
+            _isUpdatingEdgeCheckboxes = false;
+        }
+
+        private void EdgeCheckBox_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_isUpdatingEdgeCheckboxes)
+            {
+                return;
+            }
+
+            var checkedEdges = EdgeCheckboxes()
+                .Where(x => x.CheckBox.IsChecked == true)
+                .Select(x => x.Edge)
+                .ToList();
+
+            if (checkedEdges.Count == 0)
+            {
+                // Must always have at least one taskbar; revert the change.
+                RefreshEdgeCheckboxes();
+                return;
+            }
+
+            // Keep the existing primary edge if it's still checked, so unrelated
+            // taskbars don't get needlessly recreated; otherwise promote another.
+            AppBarEdge primary = checkedEdges.Contains(Settings.Instance.Edge)
+                ? Settings.Instance.Edge
+                : checkedEdges[0];
+
+            checkedEdges.Remove(primary);
+
+            Settings.Instance.Edge = primary;
+            Settings.Instance.AdditionalEdges = checkedEdges;
+        }
+
+        private void ResetTaskAssignments_OnClick(object sender, RoutedEventArgs e)
+        {
+            Settings.Instance.TaskbarAssignments = new System.Collections.Generic.List<TaskbarAssignment>();
+        }
+        #endregion
 
         private void PropertiesWindow_OnContentRendered(object sender, EventArgs e)
         {
