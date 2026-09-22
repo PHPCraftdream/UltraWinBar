@@ -16,6 +16,7 @@ namespace RetroBar.Controls
         private LowLevelMouseHook _dragHook;
         private LowLevelMouseHook.POINT _dragStartScreenPos;
         private bool _isDraggingToTaskbar;
+        private Taskbar _sourceTaskbar;
 
         public ToolbarButton()
         {
@@ -39,24 +40,23 @@ namespace RetroBar.Controls
             ToolbarIcon.SetBinding(Image.SourceProperty, iconBinding);
         }
 
-        // Ctrl+drag moves this shortcut to another taskbar (Settings.QuickLaunchAssignments).
-        // A plain drag still reorders within this panel via gong-wpf-dragdrop, untouched —
-        // gating on Ctrl here means we never compete with it for the same mouse gesture.
-        #region Cross-taskbar drag (Ctrl+drag)
+        // Drag reorders within this panel, or moves the shortcut to another taskbar if
+        // dropped there. gong-wpf-dragdrop was removed from ToolbarItems entirely — its
+        // ancestor-level PreviewMouseLeftButtonDown subscription runs before this handler
+        // during tunneling (it's on the parent ItemsControl), so marking e.Handled here was
+        // always too late to stop it; same reliability issue this session already hit with
+        // TaskButton/TaskList, same fix (fully own the gesture via the low-level hook).
+        #region Drag (reorder within panel, or move to another taskbar)
         private void ToolbarButton_OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control) || Settings.Instance.EnabledEdges.Count < 2)
+            if (_dragHook != null)
             {
                 return;
             }
 
             e.Handled = true;
 
-            if (_dragHook != null)
-            {
-                return;
-            }
-
+            _sourceTaskbar = Window.GetWindow(this) as Taskbar;
             _dragStartScreenPos = new LowLevelMouseHook.POINT
             {
                 X = System.Windows.Forms.Cursor.Position.X,
@@ -133,12 +133,19 @@ namespace RetroBar.Controls
             Cursor = Cursors.Arrow;
 
             Taskbar targetTaskbar = FindTaskbarAtScreenPoint(pt);
-            if (targetTaskbar == null)
+            if (targetTaskbar == null || !(DataContext is ShellFile file))
             {
                 return;
             }
 
-            if (DataContext is ShellFile file)
+            if (targetTaskbar == _sourceTaskbar)
+            {
+                if (targetTaskbar.FindName("QuickLaunchToolbar") is Toolbar toolbar)
+                {
+                    toolbar.ReorderQuickLaunchItem(file.Path, new Point(pt.X, pt.Y));
+                }
+            }
+            else
             {
                 Settings.Instance.SetQuickLaunchEdge(file.Path, targetTaskbar.AppBarEdge);
             }

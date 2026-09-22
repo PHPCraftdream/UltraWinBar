@@ -163,6 +163,83 @@ namespace RetroBar.Controls
             Settings.Instance.QuickLaunchOrder = mergedOrder;
         }
 
+        // Reorders a shortcut within this panel by nearest-neighbor screen position, driven by
+        // ToolbarButton's own LowLevelMouseHook drag (gong-wpf-dragdrop was removed from this
+        // ItemsControl — same reliability issue this session already hit with TaskButton/TaskList).
+        public void ReorderQuickLaunchItem(string draggedPath, Point screenPoint)
+        {
+            if (Folder == null)
+            {
+                return;
+            }
+
+            List<ShellFile> visibleFiles = new List<ShellFile>();
+            foreach (object item in (ListCollectionView)CollectionViewSource.GetDefaultView(Folder.Files))
+            {
+                if (item is ShellFile file)
+                {
+                    visibleFiles.Add(file);
+                }
+            }
+
+            bool vertical = Host != null &&
+                (Host.AppBarEdge == ManagedShell.AppBar.AppBarEdge.Left || Host.AppBarEdge == ManagedShell.AppBar.AppBarEdge.Right);
+
+            int insertIndex = visibleFiles.Count;
+            for (int i = 0; i < ToolbarItems.Items.Count; i++)
+            {
+                if (!(ToolbarItems.ItemContainerGenerator.ContainerFromIndex(i) is ToolbarButton container))
+                {
+                    continue;
+                }
+
+                Point topLeft = container.PointToScreen(new Point(0, 0));
+                Point center = new Point(topLeft.X + container.ActualWidth / 2, topLeft.Y + container.ActualHeight / 2);
+
+                if (vertical ? screenPoint.Y < center.Y : screenPoint.X < center.X)
+                {
+                    insertIndex = i;
+                    break;
+                }
+            }
+
+            List<string> newOrder = new List<string>();
+            for (int i = 0; i < visibleFiles.Count; i++)
+            {
+                if (i == insertIndex)
+                {
+                    newOrder.Add(draggedPath);
+                }
+
+                if (visibleFiles[i].Path != draggedPath)
+                {
+                    newOrder.Add(visibleFiles[i].Path);
+                }
+            }
+
+            if (insertIndex >= visibleFiles.Count)
+            {
+                newOrder.Add(draggedPath);
+            }
+
+            HashSet<string> visibleSet = new HashSet<string>();
+            foreach (ShellFile file in visibleFiles)
+            {
+                visibleSet.Add(file.Path);
+            }
+
+            foreach (string existingPath in Settings.Instance.QuickLaunchOrder)
+            {
+                if (!visibleSet.Contains(existingPath) && existingPath != draggedPath)
+                {
+                    newOrder.Add(existingPath);
+                }
+            }
+
+            _ignoreNextUpdate = true;
+            Settings.Instance.QuickLaunchOrder = newOrder;
+        }
+
         public void AddToSource(StringCollection filesToAdd)
         {
             string sourcePath = Environment.ExpandEnvironmentVariables(Path);
