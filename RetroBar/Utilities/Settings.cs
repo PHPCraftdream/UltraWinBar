@@ -303,7 +303,13 @@ namespace RetroBar.Utilities
         public AppBarEdge Edge
         {
             get => _edge;
-            set => SetEnum(ref _edge, value);
+            set
+            {
+                SetEnum(ref _edge, value);
+                // The primary edge changed identity, so the size it resolves to may too.
+                OnPropertyChanged(nameof(PrimaryRowCount));
+                OnPropertyChanged(nameof(PrimaryTaskbarWidth));
+            }
         }
 
         private int _rowCount = 1;
@@ -559,6 +565,16 @@ namespace RetroBar.Utilities
             get => _edgePriority;
             set => Set(ref _edgePriority, value);
         }
+
+        // Per-edge taskbar size override. Each edge is either horizontal or vertical, never
+        // both, so one Size field covers RowCount (horizontal) or TaskbarWidth (vertical).
+        // Edges without an entry fall back to the global RowCount/TaskbarWidth default below.
+        private List<EdgeSizeSetting> _edgeSizes = [];
+        public List<EdgeSizeSetting> EdgeSizes
+        {
+            get => _edgeSizes;
+            set => Set(ref _edgeSizes, value);
+        }
         #endregion
 
         #region Computed helpers
@@ -646,6 +662,63 @@ namespace RetroBar.Utilities
 
                 return order;
             }
+        }
+
+        /// <summary>
+        /// Per-edge taskbar size (row count or column count, depending on orientation),
+        /// falling back to the given default if that edge has no override yet.
+        /// </summary>
+        public int GetEdgeSize(AppBarEdge edge, int defaultValue)
+        {
+            foreach (EdgeSizeSetting entry in EdgeSizes)
+            {
+                if (entry.Edge == edge)
+                {
+                    return entry.Size;
+                }
+            }
+
+            return defaultValue;
+        }
+
+        public void SetEdgeSize(AppBarEdge edge, int value)
+        {
+            List<EdgeSizeSetting> edges = new List<EdgeSizeSetting>(EdgeSizes);
+            int index = edges.FindIndex(entry => entry.Edge == edge);
+
+            if (index >= 0)
+            {
+                EdgeSizeSetting entry = edges[index];
+                entry.Size = value;
+                edges[index] = entry;
+            }
+            else
+            {
+                edges.Add(new EdgeSizeSetting { Edge = edge, Size = value });
+            }
+
+            EdgeSizes = edges;
+            OnPropertyChanged(nameof(PrimaryRowCount));
+            OnPropertyChanged(nameof(PrimaryTaskbarWidth));
+        }
+
+        /// <summary>
+        /// The primary edge's own row count (Properties dialog binds to this, not the
+        /// global RowCount default, so editing it never affects other edges' panels).
+        /// </summary>
+        public int PrimaryRowCount
+        {
+            get => GetEdgeSize(Edge, RowCount);
+            set => SetEdgeSize(Edge, value);
+        }
+
+        /// <summary>
+        /// The primary edge's own width. See <see cref="PrimaryRowCount"/>.
+        /// </summary>
+        public int PrimaryTaskbarWidth
+        {
+            get => GetEdgeSize(Edge, TaskbarWidth);
+            set => SetEdgeSize(Edge, value);
         }
         #endregion
 
@@ -771,6 +844,12 @@ namespace RetroBar.Utilities
         public string Identifier { get; set; }
         public AppBarEdge Edge { get; set; }
         public TaskAssignmentMode Mode { get; set; }
+    }
+
+    public struct EdgeSizeSetting
+    {
+        public AppBarEdge Edge { get; set; }
+        public int Size { get; set; }
     }
     #endregion
 }

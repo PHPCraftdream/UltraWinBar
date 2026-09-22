@@ -509,7 +509,7 @@ namespace RetroBar
         {
             if (cboRowCount.SelectedItem == null)
             {
-                cboRowCount.SelectedValue = cboRowCount.Items[Settings.Instance.RowCount - 1];
+                cboRowCount.SelectedValue = cboRowCount.Items[Settings.Instance.PrimaryRowCount - 1];
             }
         }
 

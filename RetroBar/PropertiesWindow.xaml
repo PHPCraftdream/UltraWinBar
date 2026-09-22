@@ -261,7 +261,7 @@
                                                 ToolTip="{DynamicResource rowcount_tip}" />
                                 </Label>
                                 <ComboBox x:Name="cboRowCount"
-                                          SelectedIndex="{Binding Source={x:Static Settings:Settings.Instance}, Path=RowCount, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource countToIndexConverter}}"
+                                          SelectedIndex="{Binding Source={x:Static Settings:Settings.Instance}, Path=PrimaryRowCount, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource countToIndexConverter}}"
                                           SelectionChanged="CboRowCount_SelectionChanged" />
                             </DockPanel>
                             <DockPanel Visibility="{Binding Source={x:Static Settings:Settings.Instance}, Path=Edge, Converter={StaticResource edgeOrientationVisibilityConverter}, ConverterParameter='vertical'}">
@@ -272,7 +272,7 @@
                                 <Slider x:Name="sldTaskbarWidth"
                                         Orientation="Horizontal"
                                         IsSnapToTickEnabled="True"
-                                        Value="{Binding Source={x:Static Settings:Settings.Instance}, Path=TaskbarWidth, UpdateSourceTrigger=PropertyChanged}"
+                                        Value="{Binding Source={x:Static Settings:Settings.Instance}, Path=PrimaryTaskbarWidth, UpdateSourceTrigger=PropertyChanged}"
                                         Minimum="1"
                                         TickFrequency="1"
                                         TickPlacement="BottomRight"
