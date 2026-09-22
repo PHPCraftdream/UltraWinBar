@@ -52,7 +52,7 @@ namespace RetroBar.Utilities
             {
                 // Windows 8+
                 newIsVisible = true;
-                startHmonitor = hMonitorModernStartMenu();
+                startHmonitor = relocateAndHMonitorModernStartMenu();
             }
 
             if (!newIsVisible && isClassicStartMenuOpen())
@@ -132,14 +132,18 @@ namespace RetroBar.Utilities
             return IsWindowVisible(hStartMenu);
         }
 
-        private IntPtr hMonitorModernStartMenu()
+        private IntPtr relocateAndHMonitorModernStartMenu()
         {
             IntPtr hwndForeground = GetForegroundWindow();
             StringBuilder cName = new StringBuilder(256);
             GetClassName(hwndForeground, cName, cName.Capacity);
             if (cName.ToString() == "Windows.UI.Core.CoreWindow")
             {
-                // When the modern Start menu opens, it gains focus, so this is probably it
+                // When the modern Start menu opens, it gains focus, so this is probably it.
+                // Unlike Open Shell, the OS doesn't know where our custom Start button is, so
+                // it opens wherever it assumes the (hidden) system taskbar's button is. Correct
+                // that the same way relocateStartMenuByClass does for Open Shell.
+                relocateStartMenu(hwndForeground);
                 return MonitorFromWindow(hwndForeground, MONITOR_DEFAULTTONEAREST);
             }
             return IntPtr.Zero;
@@ -169,17 +173,22 @@ namespace RetroBar.Utilities
 
         private void relocateStartMenuByClass(string className)
         {
-            if (_taskbarHwndActivated == IntPtr.Zero)
-            {
-                return;
-            }
-
-            // Get current window rects
             IntPtr hStartMenu = FindWindowEx(IntPtr.Zero, IntPtr.Zero, className, IntPtr.Zero);
             if (hStartMenu == IntPtr.Zero)
             {
                 return;
             }
+
+            relocateStartMenu(hStartMenu);
+        }
+
+        private void relocateStartMenu(IntPtr hStartMenu)
+        {
+            if (_taskbarHwndActivated == IntPtr.Zero)
+            {
+                return;
+            }
+
             FlowDirection flowDirection = Application.Current.FindResource("flow_direction") as FlowDirection? ?? FlowDirection.LeftToRight;
             GetWindowRect(hStartMenu, out ManagedShell.Interop.NativeMethods.Rect startMenuRect);
             GetWindowRect(_taskbarHwndActivated, out ManagedShell.Interop.NativeMethods.Rect taskbarRect);
@@ -264,8 +273,20 @@ namespace RetroBar.Utilities
             return monitor;
         }
 
+        // Re-querying and reconnecting these COM launchers is 2 out-of-process round trips;
+        // caching per connected monitor avoids paying that cost on every Start button press.
+        private IImmersiveLauncher_Win10RS1 _cachedLauncherRS1;
+        private IImmersiveLauncher_Win81 _cachedLauncherWin81;
+        private IntPtr _cachedLauncherMonitor = IntPtr.Zero;
+
         private IImmersiveLauncher_Win10RS1 GetImmersiveLauncher_Win10RS1(IntPtr taskbarHwnd)
         {
+            IntPtr targetMonitor = MonitorFromWindow(taskbarHwnd, MONITOR_DEFAULTTONEAREST);
+            if (_cachedLauncherRS1 != null && _cachedLauncherMonitor == targetMonitor)
+            {
+                return _cachedLauncherRS1;
+            }
+
             var shell = ImmersiveShellHelper.GetImmersiveShell();
             if (shell.QueryService(ref CLSID_ImmersiveLauncher, ref IID_ImmersiveLauncher_Win10RS1, out object immersiveLauncherObj) != 0)
             {
@@ -281,11 +302,19 @@ namespace RetroBar.Utilities
                 return null;
             }
 
+            _cachedLauncherRS1 = immersiveLauncher;
+            _cachedLauncherMonitor = targetMonitor;
             return immersiveLauncher;
         }
 
         private IImmersiveLauncher_Win81 GetImmersiveLauncher_Win81(IntPtr taskbarHwnd)
         {
+            IntPtr targetMonitor = MonitorFromWindow(taskbarHwnd, MONITOR_DEFAULTTONEAREST);
+            if (_cachedLauncherWin81 != null && _cachedLauncherMonitor == targetMonitor)
+            {
+                return _cachedLauncherWin81;
+            }
+
             var shell = ImmersiveShellHelper.GetImmersiveShell();
             if (shell.QueryService(ref CLSID_ImmersiveLauncher, ref IID_ImmersiveLauncher_Win81, out object immersiveLauncherObj) != 0)
             {
@@ -301,6 +330,8 @@ namespace RetroBar.Utilities
                 return null;
             }
 
+            _cachedLauncherWin81 = immersiveLauncher;
+            _cachedLauncherMonitor = targetMonitor;
             return immersiveLauncher;
         }
 
@@ -347,6 +378,12 @@ namespace RetroBar.Utilities
             catch (Exception e)
             {
                 ShellLogger.Warning($"StartMenuMonitor: Failed to show Start menu via IImmersiveLauncher: {e}");
+
+                // The cached launcher may be a stale RCW (e.g. explorer.exe restarted);
+                // drop it so the next press re-queries a fresh one instead of failing forever.
+                _cachedLauncherRS1 = null;
+                _cachedLauncherWin81 = null;
+                _cachedLauncherMonitor = IntPtr.Zero;
             }
 
             ShellHelper.ShowStartMenu();
