@@ -977,6 +977,11 @@ namespace RetroBar
                         }
 
                         _isDraggingElement = true;
+
+                        // The language indicator's Button captures the mouse on press same
+                        // as task buttons do; release it so the low-level hook isn't fighting
+                        // WPF's own capture for the rest of this drag.
+                        Dispatcher.BeginInvoke(() => Mouse.Capture(null));
                     }
 
                     Dispatcher.BeginInvoke(() =>

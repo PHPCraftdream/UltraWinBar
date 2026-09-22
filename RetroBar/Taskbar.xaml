@@ -140,7 +140,7 @@
             <controls:InputLanguage VerticalAlignment="Stretch"
                                     HorizontalAlignment="Stretch"
                                     Host="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}"
-                                    MouseLeftButtonDown="InputLanguageGroup_OnMouseLeftButtonDown">
+                                    PreviewMouseLeftButtonDown="InputLanguageGroup_OnMouseLeftButtonDown">
                 <DockPanel.Dock>
                     <Binding Converter="{StaticResource dockOrientationConverter}"
                              ConverterParameter="trailing"
