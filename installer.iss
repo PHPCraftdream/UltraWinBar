@@ -1,26 +1,27 @@
-﻿#define RetroBarName "RetroBar"
-#define RetroBarPublisher "Sam Johnson"
-#define RetroBarURL "https://github.com/dremin/RetroBar"
-#define RetroBarReleasesURL RetroBarURL + "/releases"
-#define RetroBarExeName "RetroBar.exe"
+#define UltraWinBarName "UltraWinBar"
+#define UltraWinBarPublisher "Sam Johnson"
+#define UltraWinBarRepository "PHPCraftdream/UltraWinBar"
+#define UltraWinBarURL "https://github.com/" + UltraWinBarRepository
+#define UltraWinBarReleasesURL UltraWinBarURL + "/releases"
+#define UltraWinBarExeName "UltraWinBar.exe"
 
 #define DotNet6VersionDownload "6.0.36"
 #define DotNet6VersionMinimum "6.0.2"
 #define DotNet6VersionMaximum "6.1.0"
-#define DotNetVersionFile "RetroBar_DotNetRuntimeLatest.txt"
+#define DotNetVersionFile "UltraWinBar_DotNetRuntimeLatest.txt"
 #define DotNet10VersionMinimum "10.0.0"
 #define DotNet10VersionMaximum "10.1.0"
-#define DotNetInstallerExe "RetroBar_DotNetRuntimeInstaller.exe"
+#define DotNetInstallerExe "UltraWinBar_DotNetRuntimeInstaller.exe"
 #define DotNetInstallerTitle "Microsoft .NET Desktop Runtime"
 
 #define TargetFramework6 "net6.0-windows"
 #define TargetFramework10 "net10.0-windows"
-#define ReleasePathBase "RetroBar\bin\Release\"
+#define ReleasePathBase "UltraWinBar\bin\Release\"
 #define ReleasePath6 ReleasePathBase + TargetFramework6
 #define ReleasePath10 ReleasePathBase + TargetFramework10
 #define Excludes "Languages,Themes,Resources,System.Diagnostics.EventLog.Messages.dll"
 
-#define InstallerExternalAssetsDir AddBackslash(GetEnv('TEMP')) + "RetroBarInstallerExternalAssets"
+#define InstallerExternalAssetsDir AddBackslash(GetEnv('TEMP')) + "UltraWinBarInstallerExternalAssets"
 #define CroatianISL AddBackslash(InstallerExternalAssetsDir) + "Croatian.isl"
 #if !FileExists(CroatianISL)
   #expr Exec('mkdir', InstallerExternalAssetsDir)
@@ -30,27 +31,35 @@
 #define Major
 #define Minor
 #define Revision
-#define RetroBarVersion GetVersionComponents(ReleasePath10 + "\publish-x64\" + RetroBarExeName, Major, Minor, Revision, null), Str(Major) + "." + Str(Minor) + "." + Str(Revision)
-#define VersionURL "https://dremin.github.io/updates/retrobar.json"
+#ifdef LocalBuildDir
+  #define VersionBinary AddBackslash(LocalBuildDir) + UltraWinBarExeName
+#else
+  #define VersionBinary ReleasePath10 + "\publish-x64\" + UltraWinBarExeName
+#endif
+#define UltraWinBarVersion GetVersionComponents(VersionBinary, Major, Minor, Revision, null), Str(Major) + "." + Str(Minor) + "." + Str(Revision)
+#define VersionURL "https://api.github.com/repos/" + UltraWinBarRepository + "/releases/latest"
 
 [Setup]
 AppId={{574527FE-00A4-4F85-92AD-B4B8B4077D73}
-AppMutex={#RetroBarName}
-AppName={#RetroBarName}
-AppVersion={#RetroBarVersion}
-AppVerName={#RetroBarName} {#RetroBarVersion}
-AppPublisher={#RetroBarPublisher}
-AppPublisherURL={#RetroBarURL}
-AppSupportURL={#RetroBarURL}
-AppUpdatesURL={#RetroBarURL}
-DefaultDirName={autopf}\{#RetroBarName}
-UninstallDisplayIcon={app}\{#RetroBarExeName}
-SetupMutex={#RetroBarName}Installer
-SetupIconFile=RetroBar\Resources\retrobar.ico
+AppMutex={#UltraWinBarName}
+AppName={#UltraWinBarName}
+AppVersion={#UltraWinBarVersion}
+AppVerName={#UltraWinBarName} {#UltraWinBarVersion}
+AppPublisher={#UltraWinBarPublisher}
+AppPublisherURL={#UltraWinBarURL}
+AppSupportURL={#UltraWinBarURL}
+AppUpdatesURL={#UltraWinBarURL}
+DefaultDirName={autopf}\{#UltraWinBarName}
+UninstallDisplayIcon={app}\{#UltraWinBarExeName}
+SetupMutex={#UltraWinBarName}Installer
+SetupIconFile=UltraWinBar\Resources\ultrawinbar.ico
 ArchitecturesInstallIn64BitMode=x64compatible or arm64
+#ifdef LocalBuildDir
+ArchitecturesAllowed=x64compatible
+#endif
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
-OutputBaseFilename=RetroBarInstaller
+OutputBaseFilename=UltraWinBarInstaller
 OutputDir=bin
 Compression=lzma2
 SolidCompression=yes
@@ -110,9 +119,9 @@ spanish.WizardSelectDir=Seleccione la carpeta de destino
 spanish.BrowseDialogTitle=Instalar: elegir una carpeta
 spanish.WizardReady=Listo para instalar
 spanish.WizardPreparing=Preparando la instalación
-spanish.ConfirmUninstall=¿Seguro que desea desinstalar {#RetroBarName}?
+spanish.ConfirmUninstall=¿Seguro que desea desinstalar {#UltraWinBarName}?
 spanish.WizardUninstalling=Estado de la desinstalación
-spanish.TranslatorNote=Updated Spanish translation courtesy of Amaro Martínez for {#RetroBarPublisher}.
+spanish.TranslatorNote=Updated Spanish translation courtesy of Amaro Martínez for {#UltraWinBarPublisher}.
 spanish.WizardLicense=Acuerdo de licencia
 spanish.WizardSelectComponents=Seleccione los componentes
 spanish.FullInstallation=Instalación completa
@@ -125,19 +134,19 @@ spanish.DirExists=La carpeta "%1" ya existe. ¿Desea realizar la instalación en
 
 [CustomMessages]
 DependenciesMessage=Setup will also download and install required dependencies:
-UpdateAvailableMessage=A new version of RetroBar is available!%n%nCurrent version: %s%nNew version: %s%n%nWould you like to visit the download page to get the latest version?
-ConfirmDeleteSettingsMessage=Do you want to delete the RetroBar user settings?
+UpdateAvailableMessage=A new version of UltraWinBar is available!%n%nCurrent version: %s%nNew version: %s%n%nWould you like to visit the download page to get the latest version?
+ConfirmDeleteSettingsMessage=Do you want to delete the UltraWinBar user settings?
 InstallingDotNetRuntime=Installing {#DotNetInstallerTitle}...
 
 spanish.DependenciesMessage=La instalación también descargará e instalará las dependencias necesarias:
-spanish.UpdateAvailableMessage=¡Una nueva versión de RetroBar está disponible!%n%nVersión actual: %s%nNueva versión: %s%n%n¿Desea visitar la página de descarga para obtener la última versión?
-spanish.ConfirmDeleteSettingsMessage=¿Desea eliminar su configuración de usuario de RetroBar?
+spanish.UpdateAvailableMessage=¡Una nueva versión de UltraWinBar está disponible!%n%nVersión actual: %s%nNueva versión: %s%n%n¿Desea visitar la página de descarga para obtener la última versión?
+spanish.ConfirmDeleteSettingsMessage=¿Desea eliminar su configuración de usuario de UltraWinBar?
 spanish.InstallingDotNetRuntime=Instalando {#DotNetInstallerTitle}...
 
 #if FileExists(CroatianISL)
 croatian.DependenciesMessage=Instalacijski program će također preuzeti i instalirati potrebne ovisnosti:
-croatian.UpdateAvailableMessage=Nova verzija Retrobara je dostupna!%n%nTrenutna verzija: %s%nNova verzija: %s%n%nŽelite li posjetiti stranicu za preuzimanje da preuzmete najnoviju verziju?
-croatian.ConfirmDeleteSettingsMessage=Želite li izbrisati korisničke postavke Retrobara?
+croatian.UpdateAvailableMessage=Nova verzija UltraWinBara je dostupna!%n%nTrenutna verzija: %s%nNova verzija: %s%n%nŽelite li posjetiti stranicu za preuzimanje da preuzmete najnoviju verziju?
+croatian.ConfirmDeleteSettingsMessage=Želite li izbrisati korisničke postavke UltraWinBara?
 croatian.InstallingDotNetRuntime=Instaliranje {#DotNetInstallerTitle}...
 #endif
 
@@ -148,9 +157,12 @@ french.DependenciesMessage=Le programme d'installation téléchargera et install
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-Name: "autostart"; Description: "{cm:AutoStartProgram,{#RetroBarName}}"; GroupDescription: "{cm:AutoStartProgramGroupDescription}"; Flags: unchecked
+Name: "autostart"; Description: "{cm:AutoStartProgram,{#UltraWinBarName}}"; GroupDescription: "{cm:AutoStartProgramGroupDescription}"; Flags: unchecked
 
 [Files]
+#ifdef LocalBuildDir
+Source: "{#LocalBuildDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs; Excludes: "*.pdb"
+#else
 Source: "{#ReleasePath10}\publish-ARM64\*"; DestDir: "{app}"; Check: PreferArm64Files; Flags: ignoreversion recursesubdirs; Excludes: "{#Excludes}"
 Source: "{#ReleasePath6}\publish-x64\*"; DestDir: "{app}"; Check: PreferX64Files; Flags: solidbreak ignoreversion recursesubdirs; Excludes: "{#Excludes}"; OnlyBelowVersion: 10.0
 Source: "{#ReleasePath6}\publish-x86\*"; DestDir: "{app}"; Check: PreferX86Files; Flags: solidbreak ignoreversion recursesubdirs; Excludes: "{#Excludes}"; OnlyBelowVersion: 10.0
@@ -160,21 +172,22 @@ Source: "{#ReleasePath10}\publish-x86\*"; DestDir: "{app}"; Check: PreferX86File
 Source: "{#ReleasePath10}\publish-x64\Languages\*"; DestDir: "{app}\Languages"; Flags: ignoreversion recursesubdirs
 Source: "{#ReleasePath10}\publish-x64\Themes\*"; DestDir: "{app}\Themes"; Flags: ignoreversion recursesubdirs
 Source: "{#ReleasePath10}\publish-x64\Resources\*"; DestDir: "{app}\Resources"; Flags: ignoreversion recursesubdirs
+#endif
 
 [UninstallDelete]
-Type: filesandordirs; Name: "{localappdata}\RetroBar\Logs"
-Type: dirifempty; Name: "{localappdata}\RetroBar"
+Type: filesandordirs; Name: "{localappdata}\UltraWinBar\Logs"
+Type: dirifempty; Name: "{localappdata}\UltraWinBar"
 
 [Icons]
-Name: "{autoprograms}\{#RetroBarName}"; Filename: "{app}\{#RetroBarExeName}"
-Name: "{autodesktop}\{#RetroBarName}"; Filename: "{app}\{#RetroBarExeName}"; Tasks: desktopicon
+Name: "{autoprograms}\{#UltraWinBarName}"; Filename: "{app}\{#UltraWinBarExeName}"
+Name: "{autodesktop}\{#UltraWinBarName}"; Filename: "{app}\{#UltraWinBarExeName}"; Tasks: desktopicon
 
 [Registry]
-Root: HKA; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueName: "RetroBar"; ValueType: string; ValueData: "{app}\{#RetroBarExeName}"; Tasks: autostart; Flags: uninsdeletevalue
+Root: HKA; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueName: "UltraWinBar"; ValueType: string; ValueData: "{app}\{#UltraWinBarExeName}"; Tasks: autostart; Flags: uninsdeletevalue
 
 [Run]
-Filename: "{tmp}\{#DotNetInstallerExe}"; StatusMsg: "{cm:InstallingDotNetRuntime}"; Parameters:"/install /norestart"; Description: "{cm:LaunchProgram,{#RetroBarName}}"; Check: DotNetRuntimeIsMissing; Flags: skipifdoesntexist
-Filename: "{app}\{#RetroBarExeName}"; Description: "{cm:LaunchProgram,{#RetroBarName}}"; Flags: nowait postinstall skipifsilent
+Filename: "{tmp}\{#DotNetInstallerExe}"; StatusMsg: "{cm:InstallingDotNetRuntime}"; Parameters:"/install /norestart"; Description: "{cm:LaunchProgram,{#UltraWinBarName}}"; Check: DotNetRuntimeIsMissing; Flags: skipifdoesntexist
+Filename: "{app}\{#UltraWinBarExeName}"; Description: "{cm:LaunchProgram,{#UltraWinBarName}}"; Flags: nowait postinstall skipifsilent
 
 [Code]
 var
@@ -248,23 +261,31 @@ var
   LatestVersion: string;
   CurrentVersion: string;
   JSONStr: AnsiString;
-  PosStart, PosEnd: Integer;
+  PosStart, PosEnd, I: Integer;
   MsgResult: Integer;
 begin
-  CurrentVersion := '{#RetroBarVersion}';
+  CurrentVersion := '{#UltraWinBarVersion}';
 
   try
-    DownloadTemporaryFile('{#VersionURL}', 'retrobar.json', '', nil);
+    DownloadTemporaryFile('{#VersionURL}', 'ultrawinbar.json', '', nil);
   except
     Log('Failed to download update information: ' + GetExceptionMessage);
     Exit;
   end;
 
-  if LoadStringFromFile(ExpandConstant('{tmp}\retrobar.json'), JSONStr) then
+  if LoadStringFromFile(ExpandConstant('{tmp}\ultrawinbar.json'), JSONStr) then
   begin
-    PosStart := Pos('"version": "', JSONStr) + Length('"version": "');
+    PosStart := Pos('"tag_name"', JSONStr);
+    if PosStart = 0 then Exit;
+    Delete(JSONStr, 1, PosStart + Length('"tag_name"') - 1);
+    PosStart := Pos('"', JSONStr) + 1;
     PosEnd := Pos('"', Copy(JSONStr, PosStart, Length(JSONStr))) + PosStart - 1;
     LatestVersion := Copy(JSONStr, PosStart, PosEnd - PosStart);
+    if (Copy(LatestVersion, 1, 1) = 'v') or (Copy(LatestVersion, 1, 1) = 'V') then
+      Delete(LatestVersion, 1, 1);
+    if LatestVersion = '' then Exit;
+    for I := 1 to Length(LatestVersion) do
+      if not (((LatestVersion[I] >= '0') and (LatestVersion[I] <= '9')) or (LatestVersion[I] = '.')) then Exit;
 
     case CompareVersion(CurrentVersion, LatestVersion) of
       -1: begin
@@ -272,7 +293,7 @@ begin
         MsgResult := MsgBox(Format(CustomMessage('UpdateAvailableMessage'), [CurrentVersion, LatestVersion]),
           mbInformation, MB_YESNO);
         if MsgResult = IDYES then
-          ShellExec('open', '{#RetroBarReleasesURL}', '', '', SW_SHOW, ewNoWait, MsgResult);
+          ShellExec('open', '{#UltraWinBarReleasesURL}', '', '', SW_SHOW, ewNoWait, MsgResult);
           end;
        0: Log(Format('CheckForUpdates: Current version %s matches latest version %s', [CurrentVersion, LatestVersion]));
        1: Log(Format('CheckForUpdates: Current version %s is newer than latest version %s', [CurrentVersion, LatestVersion]));
@@ -372,7 +393,7 @@ begin
     DownloadPage.Add(Format('%s-win-x86.exe', [baseUrl]), '{#DotNetInstallerExe}', '');
   DownloadPage.Show;
   // Allow the install to proceed even if the download fails
-  // The user will be prompted again when they launch RetroBar
+  // The user will be prompted again when they launch UltraWinBar
   try
     try
       DownloadPage.Download; // This downloads the files to {tmp}
@@ -438,7 +459,7 @@ begin
   Result := Result + MemoTasksInfo;
 end;
 
-// ask if user wants to delete the settings.json file
+// ask if user wants to delete the UltraWinBar.settings.json file
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   settingsPath: string;
@@ -446,7 +467,7 @@ begin
   if CurUninstallStep <> usPostUninstall then
     Exit;
 
-  settingsPath := ExpandConstant('{localappdata}\RetroBar\settings.json');
+  settingsPath := ExpandConstant('{localappdata}\UltraWinBar\UltraWinBar.settings.json');
   if FileExists(settingsPath) and
      (MsgBox(CustomMessage('ConfirmDeleteSettingsMessage'), mbConfirmation, MB_YESNO) = IDYES) then
   begin

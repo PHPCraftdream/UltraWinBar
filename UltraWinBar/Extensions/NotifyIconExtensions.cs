@@ -1,0 +1,102 @@
+﻿using ManagedShell.WindowsTray;
+using UltraWinBar.Utilities;
+using System.Collections.Generic;
+
+namespace UltraWinBar.Extensions
+{
+    public static class NotifyIconExtensions
+    {
+        public static string GetInvertIdentifier(this NotifyIcon icon)
+        {
+            if (icon.GUID != default) return icon.GUID.ToString();
+            else return icon.Path + ":" + icon.UID.ToString();
+        }
+
+        public static NotifyIconBehavior GetBehavior(this NotifyIcon icon)
+        {
+            if (Settings.Instance.NotifyIconBehaviors.Find(setting => setting.Identifier == icon.Identifier) is NotifyIconBehaviorSetting iconSetting)
+            {
+                return iconSetting.Behavior;
+            }
+
+            return NotifyIconBehavior.HideWhenInactive;
+        }
+
+        public static void SetBehavior(this NotifyIcon icon, NotifyIconBehavior behavior)
+        {
+            var settings = new List<NotifyIconBehaviorSetting>(Settings.Instance.NotifyIconBehaviors);
+            var currentSettingIndex = settings.FindIndex(setting => setting.Identifier == icon.Identifier);
+
+            if (currentSettingIndex >= 0)
+            {
+                if (behavior == NotifyIconBehavior.HideWhenInactive)
+                {
+                    // Switching back to default value; remove from settings
+                    settings.RemoveAt(currentSettingIndex);
+                }
+                else
+                {
+                    settings[currentSettingIndex] = new NotifyIconBehaviorSetting
+                    {
+                        Identifier = icon.Identifier,
+                        Behavior = behavior
+                    };
+                }
+            }
+            else
+            {
+                settings.Add(new NotifyIconBehaviorSetting
+                {
+                    Identifier = icon.Identifier,
+                    Behavior = behavior
+                });
+            }
+
+            Settings.Instance.NotifyIconBehaviors = settings;
+
+            if (icon.IsPinned != (behavior == NotifyIconBehavior.AlwaysShow))
+            {
+                // Update pinned values in ManagedShell
+                if (behavior == NotifyIconBehavior.AlwaysShow)
+                {
+                    icon.Pin();
+                }
+                else
+                {
+                    icon.Unpin();
+                }
+            }
+            else
+            {
+                // Trigger a refresh of the collections
+                icon.OnPropertyChanged("IsPinned");
+            }
+        }
+
+        public static bool CanInvert(this NotifyIcon icon) {
+            return Settings.Instance.InvertNotifyIcons.Contains(icon.GetInvertIdentifier());
+        }
+
+        public static void SetCanInvert(this NotifyIcon icon, bool canInvert)
+        {
+            var identifier = icon.GetInvertIdentifier();
+            var settings = new List<string>(Settings.Instance.InvertNotifyIcons);
+            var changed = false;
+
+            if (!canInvert)
+            {
+                changed = settings.Remove(identifier);
+            }
+            else if (!settings.Contains(identifier))
+            {
+                settings.Add(identifier);
+                changed = true;
+            }
+
+            if (changed)
+            {
+                Settings.Instance.InvertNotifyIcons = settings;
+            }
+        }
+    }
+}

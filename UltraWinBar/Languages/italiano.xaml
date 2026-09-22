@@ -1,0 +1,171 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:s="clr-namespace:System;assembly=mscorlib">
+
+    <s:String x:Key="ultrawinbar_properties">Proprietà di UltraWinBar</s:String>
+    <s:String x:Key="taskbar_tab">Barra delle applicazioni</s:String>
+    <s:String x:Key="advanced_tab">Avanzate</s:String>
+    <s:String x:Key="taskbar_appearance">Aspetto della barra delle applicazioni</s:String>
+    <s:String x:Key="notification_area">Area di notifica</s:String>
+    <s:String x:Key="general_heading">Generale</s:String>
+    <s:String x:Key="clock_heading">Orologio</s:String>
+    <s:String x:Key="autostart">Esegui automaticamente all'a_ccesso</s:String>
+    <s:String x:Key="language_text">Lin_gua:</s:String>
+    <s:String x:Key="language_tip">Seleziona la lingua da utilizzare.</s:String>
+    <s:String x:Key="theme_text">_Tema:</s:String>
+    <s:String x:Key="theme_tip">Inserisci i temi all'interno della cartella Themes.</s:String>
+    <s:String x:Key="location_text">_Posizione:</s:String>
+    <s:String x:Key="location_tip">Modifica la posizione della barra delle applicazioni.</s:String>
+    <x:Array x:Key="location_values" Type="s:String">
+        <s:String>Sinistra</s:String>
+        <s:String>In alto</s:String>
+        <s:String>Destra</s:String>
+        <s:String>In basso</s:String>
+    </x:Array>
+    <s:String x:Key="rowcount_text">Numero di righe:</s:String>
+    <s:String x:Key="rowcount_tip">Numero di righe della barra delle applicazioni quando è posizionata in alto o in basso.</s:String>
+    <s:String x:Key="taskbar_width">Ridimensionamento barra delle applicazioni:</s:String>
+    <s:String x:Key="allow_font_smoothing">Attiva anti-a_liasing dei caratteri</s:String>
+    <s:String x:Key="allow_font_smoothing_menu">Attiva anti-aliasing dei caratteri _nei menu</s:String>
+    <s:String x:Key="collapse_tray_icons">Nascondi _icone inattive nell'area di notifica</s:String>
+    <s:String x:Key="customize">Perso_nalizza...</s:String>
+    <s:String x:Key="show_input_language">Mostra indicatore lingua di immissione</s:String>
+    <s:String x:Key="show_clock">M_ostra orologio</s:String>
+    <s:String x:Key="show_multi_mon">Mostra su _più schermi</s:String>
+    <s:String x:Key="show_start_button_multi_mon">Mostra il pulsante Start su tutte le barre delle applicazioni</s:String>
+    <s:String x:Key="show_quick_launch">Mostra A_vvio veloce</s:String>
+    <s:String x:Key="select_location">Cam_bia cartella...</s:String>
+    <s:String x:Key="quick_launch_folder">Avvio veloce - Selezione cartella</s:String>
+    <s:String x:Key="show_badges">Mostra badge di notifica</s:String>
+    <s:String x:Key="show_window_previews">Mostra anteprime delle finestre (miniature)</s:String>
+    <s:String x:Key="use_software_rendering">_Usa rendering software</s:String>
+    <s:String x:Key="add_show_desktop_button">Aggiungi il pulsante Mostra desktop</s:String>
+    <s:String x:Key="enable_auto_hide">Nascondi automaticamente la barra delle applicazioni</s:String>
+    <s:String x:Key="lock_taskbar">_Blocca la barra delle applicazioni</s:String>
+    <s:String x:Key="multiple_displays">Più schermi</s:String>
+    <s:String x:Key="show_tasks_on">Mostra i pulsanti della barra delle applicazioni su:</s:String>
+    <x:Array x:Key="show_tasks_on_values" Type="s:String">
+        <s:String>Tutte le barre delle applicazioni</s:String>
+        <s:String>Barra delle applicazioni in cui è aperta la finestra</s:String>
+        <s:String>Barra delle applicazioni principale e barra in cui è aperta la finestra</s:String>
+    </x:Array>
+    <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
+        <s:String>Quando richiesto dal tema</s:String>
+        <s:String>Sempre</s:String>
+        <s:String>Mai</s:String>
+    </x:Array>
+    <s:String x:Key="middle_mouse_task_action">A_zione clic centrale del mouse:</s:String>
+    <x:Array x:Key="middle_mouse_task_action_values" Type="s:String">
+        <s:String>Nessuna azione</s:String>
+        <s:String>Apri una nuova istanza</s:String>
+        <s:String>Chiudi finestra</s:String>
+    </x:Array>
+    <s:String x:Key="clock_click_action">A_zione clic sull'orologio:</s:String>
+    <x:Array x:Key="clock_click_action_values" Type="s:String">
+        <s:String>Nessuna azione</s:String>
+        <s:String>Apri calendario Aero</s:String>
+        <s:String>Apri calendario Modern</s:String>
+        <s:String>Apri Centro notifiche</s:String>
+    </x:Array>
+    <s:String x:Key="auto_hide_transparent">Rendi trasparente la barra quando è nascosta</s:String>
+    <s:String x:Key="version">Versione {0}</s:String>
+    <s:String x:Key="visit_on_github">Visita UltraWinBar su GitHub</s:String>
+    <s:String x:Key="taskbar_scale">Scala della barra delle applicazioni</s:String>
+    <s:String x:Key="taskbar_scale_1x">100%</s:String>
+    <s:String x:Key="taskbar_scale_2x">200%</s:String>
+    <s:String x:Key="taskbar_scale_current">Impostazione attuale: {0}%</s:String>
+    <s:String x:Key="debug_logging">Abilita _registro di debug</s:String>
+    <s:String x:Key="check_for_updates">Verifica aggiornamenti</s:String>
+    <s:String x:Key="show_exit_menu_item">Mostra l'opzione _Esci nel menu contestuale</s:String>
+    <s:String x:Key="show_end_task_button">Mostra l'opzione _Termina attività nel menu contestuale</s:String>
+    <s:String x:Key="slide_taskbar_buttons">Usa l'effetto di scorrimento per i pulsanti</s:String>
+    <s:String x:Key="show_clock_seconds">Mostra i secondi nell'orologio</s:String>
+    <s:String x:Key="open_custom_themes_folder">Apri la cartella dei temi personalizzati</s:String>
+    <s:String x:Key="win_num_hotkeys_action">Azione scorciatoie Win+[0-9]:</s:String>
+    <x:Array x:Key="win_num_hotkeys_action_values" Type="s:String">
+        <s:String>Predefinita di Windows</s:String>
+        <s:String>Passa all'attività</s:String>
+        <s:String>Apri elemento in Avvio veloce</s:String>
+    </x:Array>
+    <s:String x:Key="hotkey_warning_title">Tasti di scelta rapida di UltraWinBar</s:String>
+    <s:String x:Key="hotkey_warning_text">UltraWinBar sostituirà i tasti di scelta rapida predefiniti della barra delle applicazioni di Windows. Anche chiudendo UltraWinBar, le scorciatoie non verranno ripristinate fino a quando non si effettuerà la disconnessione o il riavvio.</s:String>
+    <s:String x:Key="allow_blur_behind">Consenti effetto sfocatura _dietro la barra trasparente</s:String>
+    <s:String x:Key="ok_dialog">OK</s:String>
+
+    <s:String x:Key="customize_notifications">Personalizza notifiche</s:String>
+    <s:String x:Key="customize_notifications_info">UltraWinBar mostra le icone per le notifiche attive o urgenti e nasconde quelle inattive. È possibile modificare questo comportamento per gli elementi elencati di seguito.</s:String>
+    <s:String x:Key="customize_notifications_instruction">Selezionare un elemento, quindi sceglierne il comportamento di notifica:</s:String>
+    <s:String x:Key="hide_when_inactive">Nascondi se inattivo</s:String>
+    <s:String x:Key="always_show">Mostra sempre</s:String>
+    <s:String x:Key="always_hide">Nascondi sempre</s:String>
+    <s:String x:Key="remove">Rimuovi</s:String>
+    <s:String x:Key="name_heading">Nome</s:String>
+    <s:String x:Key="behavior_heading">Comportamento</s:String>
+    <s:String x:Key="invert_heading">Inverti</s:String>
+
+    <s:String x:Key="start_text">Start</s:String>
+    <s:String x:Key="start_text_xp">start</s:String>
+    <s:String x:Key="start_button_tip_98">Fare clic qui per iniziare.</s:String>
+    <s:String x:Key="start_button_tip">Fare clic qui per iniziare.</s:String>
+    <s:String x:Key="start_button_tip_vista">Start</s:String>
+
+    <s:String x:Key="ultrawinbar_title">Barra delle applicazioni UltraWinBar</s:String>
+    <s:String x:Key="toolbars">_Barre degli strumenti</s:String>
+    <s:String x:Key="quick_launch">A_vvio veloce</s:String>
+    <s:String x:Key="new_toolbar">_Nuova barra degli strumenti...</s:String>
+    <s:String x:Key="set_time">Mo_difica data e ora...</s:String>
+    <s:String x:Key="cascade">Sovrapponi le finestre a _cascata</s:String>
+    <s:String x:Key="horiz_tile">Affianca le finestre in _orizzontale</s:String>
+    <s:String x:Key="vert_tile">Affianca le finestre in _verticale</s:String>
+    <s:String x:Key="toggle_desktop">Mostra il desktop</s:String>
+    <s:String x:Key="hide_desktop">Mostra finestre aperte</s:String>
+    <s:String x:Key="undo_cascade">Annulla Cascata</s:String>
+    <s:String x:Key="undo_tile">Annulla Affianca</s:String>
+    <s:String x:Key="undo_minimize_all">Annulla Riduci a icona tutte le finestre</s:String>
+    <s:String x:Key="show_taskman_2k">Gestione attività...</s:String>
+    <s:String x:Key="show_taskman">Gestione attività</s:String>
+    <s:String x:Key="tray_properties">_Proprietà</s:String>
+    <s:String x:Key="update_available">A_ggiornamento disponibile...</s:String>
+    <s:String x:Key="exit_ultrawinbar">_Esci da UltraWinBar</s:String>
+    <s:String x:Key="customize_notifications_menu">Perso_nalizza notifiche...</s:String>
+    <s:String x:Key="lock_taskbar_menu">_Blocca la barra delle applicazioni</s:String>
+
+    <s:String x:Key="show_desktop_tip_95">Desktop/Ripristina desktop</s:String>
+    <s:String x:Key="show_desktop_tip">Mostra desktop</s:String>
+    <s:String x:Key="show_desktop_95">_Desktop</s:String>
+    <s:String x:Key="show_desktop">_Mostra desktop</s:String>
+    <s:String x:Key="peek_at_desktop">_Mostra anteprima desktop</s:String>
+
+    <s:String x:Key="restore">_Ripristina</s:String>
+    <s:String x:Key="move">_Sposta</s:String>
+    <s:String x:Key="size">_Dimensioni</s:String>
+    <s:String x:Key="minimize">_Riduci a icona</s:String>
+    <s:String x:Key="maximize">_Ingrandisci</s:String>
+    <s:String x:Key="close">_Chiudi</s:String>
+    <s:String x:Key="end_task">_Termina attività</s:String>
+
+    <s:String x:Key="show_hidden">Mostra icone nascoste</s:String>
+    <s:String x:Key="hide">Nascondi</s:String>
+
+    <s:String x:Key="open_folder">Apri cartella</s:String>
+
+    <s:String x:Key="ime_input_tip_enabled">Fare clic con il pulsante destro del mouse per le opzioni IME</s:String>
+    <s:String x:Key="ime_input_tip_disabled">IME disattivato</s:String>
+    <s:String x:Key="ime_input_full_shape_hiragana">Hiragana a larghezza intera</s:String>
+    <s:String x:Key="ime_input_full_shape_katakana">Katakana a larghezza intera</s:String>
+    <s:String x:Key="ime_input_full_shape_alphanumeric">Alfanumerico a larghezza intera</s:String>
+    <s:String x:Key="ime_input_katakana">Katakana a mezza larghezza</s:String>
+    <s:String x:Key="ime_input_alphanumeric">Alfanumerico a mezza larghezza</s:String>
+    <s:String x:Key="ime_input_direct">Immissione diretta</s:String>
+    <s:String x:Key="ime_open_pad">Assistente IME</s:String>
+    <s:String x:Key="ime_open_add_word_dictionary">Aggiungi parola</s:String>
+    <s:String x:Key="ime_open_dictionary_tool">Strumento dizionario</s:String>
+    <s:String x:Key="ime_open_properties">Proprietà</s:String>
+    <s:String x:Key="ime_input_key">Metodo di immissione</s:String>
+    <s:String x:Key="ime_input_key_roma">Immissione Romaji</s:String>
+    <s:String x:Key="ime_input_key_kana">Immissione Kana</s:String>
+    <s:String x:Key="ime_conversion">Modalità di conversione</s:String>
+    <s:String x:Key="ime_conversion_general">Generale</s:String>
+    <s:String x:Key="ime_conversion_none">Nessuna conversione</s:String>
+    <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+</ResourceDictionary>

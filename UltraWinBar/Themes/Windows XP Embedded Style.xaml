@@ -1,0 +1,110 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:system="clr-namespace:System;assembly=mscorlib">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Windows XP Royale.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <Thickness x:Key="TaskButtonMargin" Right="2" />
+    <system:Boolean x:Key="InvertSystemNotifyIcons">False</system:Boolean>
+
+    <SolidColorBrush x:Key="TaskbarBackground" Color="#054c84" />
+    <SolidColorBrush x:Key="TaskbarBackgroundTall" Color="#054c84" />
+    <SolidColorBrush x:Key="TaskbarVerticalBackground" Color="#1c639b" />
+
+    <SolidColorBrush x:Key="TaskbarBorder" Color="#012f54" />
+
+    <SolidColorBrush x:Key="TaskbarUnlockedBorderTop" Color="#034a82" />
+    <SolidColorBrush x:Key="TaskbarUnlockedBottomBorder" Color="#011e36" />
+    <SolidColorBrush x:Key="TaskbarUnlockedTopBorder" Color="#011e36" />
+    <SolidColorBrush x:Key="TaskbarUnlockedLeftBorder" Color="#011e36" />
+    <SolidColorBrush x:Key="TaskbarUnlockedRightBorder" Color="#011e36" />
+
+    <SolidColorBrush x:Key="TrayTopBorder" Color="#011220" />
+    <SolidColorBrush x:Key="TrayBottomBorder" Color="#011220" />
+    <SolidColorBrush x:Key="TrayTopBottomBorder" Color="#011220" />
+    <SolidColorBrush x:Key="TrayOuterBorderVertical" Color="#011220" />
+    <SolidColorBrush x:Key="TrayLeftBorder1" Color="#000000" />
+    <SolidColorBrush x:Key="TrayLeftBorder2" Color="Transparent" />
+    <SolidColorBrush x:Key="TrayLeftBorder3" Color="Transparent" />
+    <SolidColorBrush x:Key="TrayLeftBorder4" Color="Transparent" />
+
+    <SolidColorBrush x:Key="TrayBackground" Color="#013c6b" />
+    <SolidColorBrush x:Key="TrayVerticalBackground" Color="#013c6b" />
+
+    <SolidColorBrush x:Key="TrayToggleOuterBorder" Color="#0d3f70" />
+    <Thickness x:Key="TrayToggleOuterBorderThickness" Left="1" Top="1" Right="1" Bottom="1" />
+    <SolidColorBrush x:Key="TrayToggleBorder" Color="#2b72aa" />
+    <SolidColorBrush x:Key="TrayToggleBorderHover" Color="#2b72aa" />
+    <SolidColorBrush x:Key="TrayToggleBackground" Color="#012644" />
+    <SolidColorBrush x:Key="TrayToggleHoverBackground" Color="#010b14" />
+    <SolidColorBrush x:Key="TrayTogglePressedBackground" Color="#010407" />
+    <DropShadowEffect x:Key="TrayToggleArrowOuterShadow" Color="#246ba3" BlurRadius="0" Opacity="0" ShadowDepth="0" />
+    <DropShadowEffect x:Key="TrayToggleArrowShadow" Color="#01447a" BlurRadius="0" Opacity="0" ShadowDepth="0" />
+
+    <SolidColorBrush x:Key="TrayToggleArrow" Color="#ffffff" />
+    <SolidColorBrush x:Key="TrayToggleArrowPressed" Color="#559cd4" />
+
+    <Thickness x:Key="TrayToggleArrowPadding" Left="3" Top="3" Right="5" Bottom="3" />
+
+    <SolidColorBrush x:Key="TaskButtonTopBorder" Color="#276ea6" />
+    <SolidColorBrush x:Key="TaskButtonLeftBorder" Color="#013e6f" />
+    <SolidColorBrush x:Key="TaskButtonRightBorder" Color="#013e6f" />
+    <SolidColorBrush x:Key="TaskButtonBottomBorder" Color="#010e19" />
+    <SolidColorBrush x:Key="TaskButtonInnerLeftBorder" Color="Transparent" />
+    <SolidColorBrush x:Key="TaskButtonInnerRightBorder" Color="Transparent" />
+    <SolidColorBrush x:Key="TaskButtonInnerBottomBorder" Color="#012f54" />
+
+    <SolidColorBrush x:Key="TaskButtonBackground" Color="#246ba3" />
+
+    <SolidColorBrush x:Key="TaskButtonBackgroundHighlight" Color="Transparent" />
+
+    <SolidColorBrush x:Key="TaskButtonTopBorderHover" Color="#125991" />
+    <SolidColorBrush x:Key="TaskButtonLeftBorderHover" Color="#012440" />
+    <SolidColorBrush x:Key="TaskButtonRightBorderHover" Color="#012440" />
+    <SolidColorBrush x:Key="TaskButtonBottomBorderHover" Color="#010f1b" />
+    <SolidColorBrush x:Key="TaskButtonInnerLeftBorderHover" Color="Transparent" />
+    <SolidColorBrush x:Key="TaskButtonInnerRightBorderHover" Color="Transparent" />
+    <SolidColorBrush x:Key="TaskButtonInnerBottomBorderHover" Color="#011c32" />
+    <SolidColorBrush x:Key="TaskButtonBackgroundHover" Color="#074e86" />
+
+    <SolidColorBrush x:Key="TaskButtonBackgroundHighlightHover" Color="Transparent" />
+
+    <SolidColorBrush x:Key="TaskButtonTopBorderPressed" Color="#010407" />
+    <SolidColorBrush x:Key="TaskButtonLeftBorderPressed" Color="#010910" />
+    <SolidColorBrush x:Key="TaskButtonRightBorderPressed" Color="#010910" />
+    <SolidColorBrush x:Key="TaskButtonBottomBorderPressed" Color="#387fb7" />
+    <SolidColorBrush x:Key="TaskButtonInnerLeftBorderPressed" Color="Transparent" />
+    <SolidColorBrush x:Key="TaskButtonInnerRightBorderPressed" Color="Transparent" />
+    <SolidColorBrush x:Key="TaskButtonInnerBottomBorderPressed" Color="Transparent" />
+    <SolidColorBrush x:Key="TaskButtonBackgroundPressed" Color="#011729" />
+
+    <SolidColorBrush x:Key="TaskButtonBackgroundHighlightPressed" Color="Transparent" />
+
+    <SolidColorBrush x:Key="TaskButtonTopBorderPressedHover" Color="#01060b" />
+    <SolidColorBrush x:Key="TaskButtonInnerLeftBorderPressedHover" Color="Transparent" />
+    <SolidColorBrush x:Key="TaskButtonInnerRightBorderPressedHover" Color="Transparent" />
+    <SolidColorBrush x:Key="TaskButtonInnerBottomBorderPressedHover" Color="Transparent" />
+    <SolidColorBrush x:Key="TaskButtonBackgroundPressedHover" Color="#0c538b" />
+
+    <SolidColorBrush x:Key="TaskButtonTopBorderFlashing" Color="#5e4c36" />
+    <SolidColorBrush x:Key="TaskButtonLeftBorderFlashing" Color="#524844" />
+    <SolidColorBrush x:Key="TaskButtonRightBorderFlashing" Color="#524844" />
+    <SolidColorBrush x:Key="TaskButtonBottomBorderFlashing" Color="#ebbb74" />
+    <SolidColorBrush x:Key="TaskButtonInnerLeftBorderFlashing" Color="#d26238" />
+    <SolidColorBrush x:Key="TaskButtonBottomRightBorderFlashing" Color="#d26238" />
+    <SolidColorBrush x:Key="TaskButtonBackgroundFlashing" Color="#ff7533" />
+
+    <SolidColorBrush x:Key="TaskButtonBackgroundHighlightFlashing" Color="Transparent" />
+
+    <SolidColorBrush x:Key="TaskListScrollButtonBackgroundHover" Color="#1a6199" />
+    <SolidColorBrush x:Key="TaskListScrollButtonBackgroundPressed" Color="#013c6b" />
+
+    <SolidColorBrush x:Key="TaskListScrollArrow" Color="#b8dfff" />
+
+    <SolidColorBrush x:Key="ToolbarThumbForeground" Color="#3d84bc" />
+
+    <SolidColorBrush x:Key="ClockForeground" Color="#ffffff" />
+    <SolidColorBrush x:Key="InputLanguageBackground" Color="#3e9de8" />
+
+    <BitmapImage x:Key="StartButtonImage" UriSource="../Resources/startxpembeddedbutton.png" />
+</ResourceDictionary>

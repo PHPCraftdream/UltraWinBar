@@ -1,0 +1,80 @@
+﻿<UserControl x:Class="UltraWinBar.Controls.TaskList"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+             xmlns:local="clr-namespace:UltraWinBar.Controls"
+             xmlns:converters="clr-namespace:UltraWinBar.Converters"
+             Loaded="TaskList_OnLoaded"
+             Unloaded="TaskList_OnUnloaded"
+             SizeChanged="TaskList_OnSizeChanged">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <converters:DockOrientationConverter x:Key="dockOrientationConverter" />
+            <converters:EdgeOrientationConverter x:Key="orientationConverter" />
+            <converters:TaskButtonWidthConverter x:Key="taskButtonWidthConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <DockPanel>
+        <Thumb Style="{DynamicResource ToolbarThumb}" Visibility="Collapsed">
+            <DockPanel.Dock>
+                <Binding Converter="{StaticResource dockOrientationConverter}"
+                             ConverterParameter="leading"
+                             Path="Orientation"
+                             RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
+            </DockPanel.Dock>
+        </Thumb>
+        <Grid>
+            <ScrollViewer Style="{DynamicResource TaskListScrollViewer}"
+                          x:Name="TasksScrollViewer"
+                          Focusable="False"
+                          PreviewMouseWheel="TasksScrollViewer_PreviewMouseWheel"
+                          VerticalScrollBarVisibility="Disabled">
+                <ItemsControl x:Name="TasksList"
+                              Focusable="False"
+                              HorizontalAlignment="Stretch">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel>
+                                <WrapPanel.Style>
+                                    <Style TargetType="WrapPanel" BasedOn="{StaticResource TaskListWrapPanel}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Orientation, RelativeSource={RelativeSource AncestorType=Window}}" Value="Vertical">
+                                                <Setter Property="ItemWidth" Value="{Binding ButtonWidth, RelativeSource={RelativeSource AncestorType=local:TaskList}}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </WrapPanel.Style>
+                                <WrapPanel.Orientation>
+                                    <Binding Converter="{StaticResource orientationConverter}"
+                                             Path="Orientation"
+                                             RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
+                                </WrapPanel.Orientation>
+                            </WrapPanel>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <ItemContainerTemplate>
+                            <local:TaskButton HorizontalAlignment="Center" Host="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:TaskList}}">
+                                <local:TaskButton.Width>
+                                    <MultiBinding Converter="{StaticResource taskButtonWidthConverter}">
+                                        <Binding Path="(ItemsControl.AlternationIndex)" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=ContentPresenter}" />
+                                        <Binding Path="ButtonWidth" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}" />
+                                        <Binding Path="ExtraWidthCount" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}" />
+                                        <Binding Path="ButtonsPerRow" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=local:TaskList}" />
+                                        <Binding Path="IsLauncher" RelativeSource="{RelativeSource Self}" />
+                                        <Binding Path="Orientation" RelativeSource="{RelativeSource AncestorType=Window}" />
+                                    </MultiBinding>
+                                </local:TaskButton.Width>
+                            </local:TaskButton>
+                        </ItemContainerTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+            <Canvas x:Name="InsertionOverlay"
+                    IsHitTestVisible="False">
+                <Border x:Name="InsertionIndicator"
+                        Background="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"
+                        Visibility="Collapsed" />
+            </Canvas>
+        </Grid>
+    </DockPanel>
+</UserControl>

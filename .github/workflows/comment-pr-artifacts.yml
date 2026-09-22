@@ -1,8 +1,8 @@
-name: Comment on PR with RetroBar artifacts
+name: Comment on PR with UltraWinBar artifacts
 
 on:
   workflow_run:
-    workflows: ['RetroBar']
+    workflows: ['UltraWinBar']
     types: [completed]
 
 jobs:

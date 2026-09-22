@@ -1,0 +1,100 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DrawingImage x:Key="FlatStartIcon">
+        <DrawingImage.Drawing>
+            <GeometryDrawing Brush="{DynamicResource FlatText}"
+                Geometry="M0,0 H9 V9 H0 Z M12,0 H21 V9 H12 Z M0,12 H9 V21 H0 Z M12,12 H21 V21 H12 Z" />
+        </DrawingImage.Drawing>
+    </DrawingImage>
+    <ControlTemplate x:Key="FlatPanelTemplate" TargetType="ContentControl">
+        <Border Background="{DynamicResource FlatPanel}" BorderThickness="0">
+            <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+        </Border>
+    </ControlTemplate>
+    <ControlTemplate x:Key="FlatTrayTemplate" TargetType="GroupBox">
+        <Border Background="{DynamicResource FlatPanel}" Padding="2,0">
+            <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+        </Border>
+    </ControlTemplate>
+    <ControlTemplate x:Key="FlatTaskTemplate" TargetType="Button">
+        <Border x:Name="Surface" Background="{DynamicResource FlatTask}" BorderBrush="{DynamicResource FlatBorder}"
+                BorderThickness="1" CornerRadius="4" Margin="0,0,2,2" Padding="{TemplateBinding Padding}">
+            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Stretch" />
+        </Border>
+        <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Surface" Property="Background" Value="{DynamicResource FlatHover}" />
+            </Trigger>
+            <DataTrigger Binding="{Binding State}" Value="Active">
+                <Setter TargetName="Surface" Property="Background" Value="{DynamicResource FlatActive}" />
+                <Setter TargetName="Surface" Property="BorderBrush" Value="{DynamicResource FlatText}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding State}" Value="Flashing">
+                <Setter TargetName="Surface" Property="Background" Value="{DynamicResource ButtonFlashingFace}" />
+            </DataTrigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="Surface" Property="Background" Value="{DynamicResource FlatPressed}" />
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+                <Setter TargetName="Surface" Property="BorderBrush" Value="{DynamicResource FlatText}" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Surface" Property="Opacity" Value="0.5" /></Trigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
+    <ControlTemplate x:Key="FlatButtonTemplate" TargetType="Button">
+        <Border x:Name="Surface" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" CornerRadius="4" Padding="2">
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Border>
+        <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource FlatHover}" /></Trigger>
+            <Trigger Property="IsPressed" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource FlatPressed}" /></Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Surface" Property="BorderBrush" Value="{DynamicResource FlatText}" /></Trigger>
+            <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Surface" Property="Opacity" Value="0.5" /></Trigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
+    <ControlTemplate x:Key="FlatToggleTemplate" TargetType="ToggleButton">
+        <Border x:Name="Surface" Background="{DynamicResource FlatPanel}" BorderBrush="Transparent" BorderThickness="1" CornerRadius="4" Padding="2">
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Border>
+        <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource FlatHover}" /></Trigger>
+            <Trigger Property="IsChecked" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource FlatActive}" /></Trigger>
+            <Trigger Property="IsPressed" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource FlatPressed}" /></Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Surface" Property="BorderBrush" Value="{DynamicResource FlatText}" /></Trigger>
+            <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Surface" Property="Opacity" Value="0.5" /></Trigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
+    <ControlTemplate x:Key="FlatRepeatTemplate" TargetType="RepeatButton">
+        <Border x:Name="Surface" Background="{DynamicResource FlatPanel}" BorderBrush="{DynamicResource FlatBorder}" BorderThickness="1" CornerRadius="3">
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Border>
+        <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource FlatHover}" /></Trigger>
+            <Trigger Property="IsPressed" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource FlatPressed}" /></Trigger>
+            <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Surface" Property="Opacity" Value="0.5" /></Trigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
+    <ControlTemplate x:Key="FlatTrayToggleTemplate" TargetType="ToggleButton">
+        <Border x:Name="Surface" Background="{DynamicResource FlatPanel}" CornerRadius="4" Padding="3">
+            <Path x:Name="Arrow" Data="M8,0 L4,4 L8,8" Stroke="{DynamicResource FlatText}" StrokeThickness="1.5"
+                  StrokeLineJoin="Round" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+            </Path>
+        </Border>
+        <ControlTemplate.Triggers>
+            <DataTrigger Binding="{Binding Orientation, RelativeSource={RelativeSource AncestorType=Window}}" Value="Vertical">
+                <Setter TargetName="Arrow" Property="LayoutTransform"><Setter.Value><RotateTransform Angle="90" /></Setter.Value></Setter>
+            </DataTrigger>
+            <Trigger Property="IsChecked" Value="True">
+                <Setter TargetName="Arrow" Property="RenderTransform"><Setter.Value><RotateTransform Angle="180" /></Setter.Value></Setter>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource FlatHover}" /></Trigger>
+            <Trigger Property="IsPressed" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource FlatPressed}" /></Trigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
+    <ControlTemplate x:Key="FlatGripTemplate" TargetType="Thumb">
+        <Border Background="Transparent" Padding="2">
+            <Path Data="M0,0 V12 M4,0 V12" Stroke="{DynamicResource FlatText}" StrokeThickness="1.5" Opacity="0.45"
+                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Border>
+    </ControlTemplate>
+</ResourceDictionary>

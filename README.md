@@ -1,16 +1,21 @@
-﻿![RetroBar screenshot](https://raw.githubusercontent.com/dremin/retrobar/master/retrobar-preview.png)
+UltraWinBar is a fork of [RetroBar](https://github.com/dremin/RetroBar), the upstream project.
 
-# RetroBar
-[![Current release](https://img.shields.io/github/v/release/dremin/RetroBar)](https://github.com/dremin/RetroBar/releases/latest) ![Build status](https://github.com/dremin/RetroBar/workflows/RetroBar/badge.svg)  [![Discord](https://img.shields.io/badge/discord-white?logo=discord)](https://discord.gg/8bGuPmerxC)
+![UltraWinBar screenshot](ultrawinbar-preview.png)
 
-Pining for simpler times? RetroBar teleports you back in time by replacing your modern Windows taskbar with the classic Windows 95, 98, Me, 2000, XP, or Vista style.
+# UltraWinBar
 
-RetroBar is based on the [ManagedShell](https://github.com/cairoshell/ManagedShell) library for great compatibility and performance.
+[Changelog](CHANGELOG.md)
+
+[![Current release](https://img.shields.io/github/v/release/PHPCraftdream/UltraWinBar)](https://github.com/PHPCraftdream/UltraWinBar/releases/latest) ![Build status](https://github.com/PHPCraftdream/UltraWinBar/workflows/UltraWinBar/badge.svg)  [![Discord](https://img.shields.io/badge/discord-white?logo=discord)](https://discord.gg/8bGuPmerxC)
+
+Pining for simpler times? UltraWinBar teleports you back in time by replacing your modern Windows taskbar with the classic Windows 95, 98, Me, 2000, XP, or Vista style.
+
+UltraWinBar is based on the [ManagedShell](https://github.com/cairoshell/ManagedShell) library for great compatibility and performance.
 
 ## Requirements
 - Windows 7 SP1, Windows 8.1, Windows 10, or Windows 11
-  - Fresh installs of Windows 7 may require additional Windows updates. See [#1319](https://github.com/dremin/RetroBar/issues/1319) for details.
-- Microsoft .NET Desktop Runtime - When using the RetroBar installer, this is automatically downloaded and installed if necessary. If you're using the portable version, you will be prompted to download on first launch.
+  - Fresh installs of Windows 7 may require additional Windows updates.
+- Microsoft .NET Desktop Runtime - When using the UltraWinBar installer, this is automatically downloaded and installed if necessary. If you're using the portable version, you will be prompted to download on first launch.
 
 ## Features
 - Replaces default Windows taskbar with classic layout
@@ -50,7 +55,7 @@ RetroBar is based on the [ManagedShell](https://github.com/cairoshell/ManagedShe
   - Basic
   - Classic
 
-Looking for more themes? [Check out the great community-made RetroBar themes on DeviantArt](https://www.deviantart.com/tag/retrobar), and the theme-repository channel on [our Discord](https://discord.gg/8bGuPmerxC)!
+Additional themes can be installed through Properties > Advanced.
 
 ## Supported languages
 - Arabic (العربية)
@@ -101,15 +106,34 @@ Looking for more themes? [Check out the great community-made RetroBar themes on 
 - Welsh (Cymraeg)
 
 ## Custom languages and themes
-RetroBar supports custom languages and themes. You may install community-made theme files that you have downloaded in RetroBar Properties > Advanced.
+UltraWinBar supports custom languages and themes. You may install community-made theme files that you have downloaded in UltraWinBar Properties > Advanced.
 
-You may manually install custom languages or themes by creating a `Languages` or a `Themes` directory in `%localappdata%\RetroBar`, and placing valid `.xaml` language or theme files there.
+You may manually install custom languages or themes by creating a `Languages` or a `Themes` directory in `%localappdata%\UltraWinBar`, and placing valid `.xaml` language or theme files there.
 
-Themes use the XAML `ResourceDictionary` format. When creating a new theme, [view the included example themes](https://github.com/dremin/RetroBar/tree/master/RetroBar/Themes) to get started.
+Themes use the XAML `ResourceDictionary` format. When creating a new theme, [view the included example themes](https://github.com/PHPCraftdream/UltraWinBar/tree/master/UltraWinBar/Themes) to get started.
+
+## Per-panel pinned applications and virtual desktops
+
+Right-click a task and choose **Pin to this taskbar**. A closed pinned application
+keeps one icon; a running application shows a separate task button and title for
+each open window. Clicking a task activates that specific window.
+Launching a pinned icon assigns the application to that panel on the current
+Windows virtual desktop.
+
+Panel assignments, pinned applications, and task order are saved by virtual
+desktop ID. Restarting UltraWinBar preserves these settings for already-running
+windows. This does not relaunch applications or recreate windows after Windows
+reboots. Existing assignments without a desktop ID remain fallback rules;
+new assignments override them only on their own desktop. Existing pins are
+initially associated with the desktop active when this feature is first loaded.
+
+The desktop assignment checks run without creating any windows:
+`dotnet run --project tests/DesktopRules/DesktopRules.csproj`
+(build UltraWinBar for `net6.0-windows` first).
 
 ## Open-Shell Menu users
 
-You may need to adjust some Open-Shell Menu settings for the best compatibility with RetroBar. We recommend the following settings:
+You may need to adjust some Open-Shell Menu settings for the best compatibility with UltraWinBar. We recommend the following settings:
 
 - Controls > Windows Key opens > Open-Shell Menu
 - Menu Look > Align start menu to working area

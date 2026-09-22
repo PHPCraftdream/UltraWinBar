@@ -1,0 +1,942 @@
+[
+  {
+    "Locale": "ca",
+    "Language": "català",
+    "Months": {
+      "1": "Tishri",
+      "2": "Heshvan",
+      "3": "Kislev",
+      "4": "Tevet",
+      "5": "Shevat",
+      "6": "Adar I",
+      "7": "Adar",
+      "8": "Nisan",
+      "9": "Iyar",
+      "10": "Sivan",
+      "11": "Tamuz",
+      "12": "Av",
+      "13": "Elul",
+      "7-yeartype-leap": "Adar II"
+    }
+  },
+  {
+    "Locale": "cy",
+    "Language": "Cymraeg",
+    "Months": {
+      "1": "Tishri",
+      "2": "Heshvan",
+      "3": "Kislev",
+      "4": "Tevet",
+      "5": "Shevat",
+      "6": "Adar I",
+      "7": "Adar",
+      "8": "Nisan",
+      "9": "Iyar",
+      "10": "Sivan",
+      "11": "Tamuz",
+      "12": "Av",
+      "13": "Elul",
+      "7-yeartype-leap": "Adar II"
+    }
+  },
+  {
+    "Locale": "da",
+    "Language": "dansk",
+    "Months": {
+      "1": "tishri",
+      "2": "heshvan",
+      "3": "kislev",
+      "4": "tevet",
+      "5": "shevat",
+      "6": "adar I",
+      "7": "adar",
+      "8": "nisan",
+      "9": "iyar",
+      "10": "sivan",
+      "11": "tamuz",
+      "12": "av",
+      "13": "elul",
+      "7-yeartype-leap": "adar II"
+    }
+  },
+  {
+    "Locale": "de",
+    "Language": "Deutsch",
+    "Months": {
+      "1": "Tischri",
+      "2": "Cheschwan",
+      "3": "Kislew",
+      "4": "Tevet",
+      "5": "Schevat",
+      "6": "Adar I",
+      "7": "Adar",
+      "8": "Nisan",
+      "9": "Ijjar",
+      "10": "Siwan",
+      "11": "Tammus",
+      "12": "Aw",
+      "13": "Elul",
+      "7-yeartype-leap": "Adar II"
+    }
+  },
+  {
+    "Locale": "en-GB",
+    "Language": "English (United Kingdom)",
+    "Months": {
+      "1": "Tishri",
+      "2": "Heshvan",
+      "3": "Kislev",
+      "4": "Tevet",
+      "5": "Shevat",
+      "6": "Adar I",
+      "7": "Adar",
+      "8": "Nisan",
+      "9": "Iyar",
+      "10": "Sivan",
+      "11": "Tamuz",
+      "12": "Av",
+      "13": "Elul",
+      "7-yeartype-leap": "Adar II"
+    }
+  },
+  {
+    "Locale": "en",
+    "Language": "English",
+    "Months": {
+      "1": "Tishri",
+      "2": "Heshvan",
+      "3": "Kislev",
+      "4": "Tevet",
+      "5": "Shevat",
+      "6": "Adar I",
+      "7": "Adar",
+      "8": "Nisan",
+      "9": "Iyar",
+      "10": "Sivan",
+      "11": "Tamuz",
+      "12": "Av",
+      "13": "Elul",
+      "7-yeartype-leap": "Adar II"
+    }
+  },
+  {
+    "Locale": "es",
+    "Language": "español",
+    "Months": {
+      "1": "tishri",
+      "2": "heshvan",
+      "3": "kislev",
+      "4": "tevet",
+      "5": "shevat",
+      "6": "adar I",
+      "7": "adar",
+      "8": "nisan",
+      "9": "iyar",
+      "10": "sivan",
+      "11": "tamuz",
+      "12": "av",
+      "13": "elul",
+      "7-yeartype-leap": "adar II"
+    }
+  },
+  {
+    "Locale": "eu",
+    "Language": "euskara",
+    "Months": {
+      "1": "Tishri",
+      "2": "Heshvan",
+      "3": "Kislev",
+      "4": "Tevet",
+      "5": "Shevat",
+      "6": "Adar I",
+      "7": "Adar",
+      "8": "Nisan",
+      "9": "Iyar",
+      "10": "Sivan",
+      "11": "Tamuz",
+      "12": "Av",
+      "13": "Elul",
+      "7-yeartype-leap": "Adar II"
+    }
+  },
+  {
+    "Locale": "fr",
+    "Language": "français",
+    "Months": {
+      "1": "tichri",
+      "2": "hèchvan",
+      "3": "kislev",
+      "4": "téveth",
+      "5": "chevat",
+      "6": "adar I",
+      "7": "adar",
+      "8": "nissan",
+      "9": "iyar",
+      "10": "sivan",
+      "11": "tamouz",
+      "12": "av",
+      "13": "éloul",
+      "7-yeartype-leap": "adar II"
+    }
+  },
+  {
+    "Locale": "hr",
+    "Language": "hrvatski",
+    "Months": {
+      "1": "Tishri",
+      "2": "Heshvan",
+      "3": "Kislev",
+      "4": "Tevet",
+      "5": "Shevat",
+      "6": "Adar I",
+      "7": "Adar",
+      "8": "Nisan",
+      "9": "Iyar",
+      "10": "Sivan",
+      "11": "Tamuz",
+      "12": "Av",
+      "13": "Elul",
+      "7-yeartype-leap": "Adar II"
+    }
+  },
+  {
+    "Locale": "id",
+    "Language": "Indonesia",
+    "Months": {
+      "1": "Tishri",
+      "2": "Heshvan",
+      "3": "Kislev",
+      "4": "Tevet",
+      "5": "Shevat",
+      "6": "Adar I",
+      "7": "Adar",
+      "8": "Nisan",
+      "9": "Iyar",
+      "10": "Sivan",
+      "11": "Tamuz",
+      "12": "Av",
+      "13": "Elul",
+      "7-yeartype-leap": "Adar II"
+    }
+  },
+  {
+    "Locale": "it",
+    "Language": "italiano",
+    "Months": {
+      "1": "Tishri",
+      "2": "Heshvan",
+      "3": "Kislev",
+      "4": "Tevet",
+      "5": "Shevat",
+      "6": "Adar I",
+      "7": "Adar",
+      "8": "Nisan",
+      "9": "Iyar",
+      "10": "Sivan",
+      "11": "Tamuz",
+      "12": "Av",
+      "13": "Elul",
+      "7-yeartype-leap": "Adar II"
+    }
+  },
+  {
+    "Locale": "lv",
+    "Language": "latviešu",
+    "Months": {
+      "1": "tišri",
+      "2": "hešvans",
+      "3": "kisļevs",
+      "4": "tevets",
+      "5": "ševats",
+      "6": "1. adars",
+      "7": "adars",
+      "8": "nisans",
+      "9": "ijars",
+      "10": "sivans",
+      "11": "tamuzs",
+      "12": "avs",
+      "13": "eluls",
+      "7-yeartype-leap": "2. adars"
+    }
+  },
+  {
+    "Locale": "lt",
+    "Language": "lietuvių",
+    "Months": {
+      "1": "Tishri",
+      "2": "Heshvan",
+      "3": "Kislev",
+      "4": "Tevet",
+      "5": "Shevat",
+      "6": "Adar I",
+      "7": "Adar",
+      "8": "Nisan",
+      "9": "Iyar",
+      "10": "Sivan",
+      "11": "Tamuz",
+      "12": "Av",
+      "13": "Elul",
+      "7-yeartype-leap": "Adar II"
+    }
+  },
+  {
+    "Locale": "lb",
+    "Language": "Lëtzebuergesch",
+    "Months": {
+      "1": "Tishri",
+      "2": "Heshvan",
+      "3": "Kislev",
+      "4": "Tevet",
+      "5": "Shevat",
+      "6": "Adar I",
+      "7": "Adar",
+      "8": "Nisan",
+      "9": "Iyar",
+      "10": "Sivan",
+      "11": "Tamuz",
+      "12": "Av",
+      "13": "Elul",
+      "7-yeartype-leap": "Adar II"
+    }
+  },
+  {
+    "Locale": "hu",
+    "Language": "magyar",
+    "Months": {
+      "1": "Tisri",
+      "2": "Hesván",
+      "3": "Kiszlév",
+      "4": "Tévész",
+      "5": "Svát",
+      "6": "Ádár I",
+      "7": "Ádár",
+      "8": "Niszán",
+      "9": "Ijár",
+      "10": "Sziván",
+      "11": "Tamuz",
+      "12": "Áv",
+      "13": "Elul",
+      "7-yeartype-leap": "Ádár II"
+    }
+  },
+  {
+    "Locale": "mt",
+    "Language": "Malti",
+    "Months": {
+      "1": "Tishri",
+      "2": "Heshvan",
+      "3": "Kislev",
+      "4": "Tevet",
+      "5": "Shevat",
+      "6": "Adar I",
+      "7": "Adar",
+      "8": "Nisan",
+      "9": "Iyar",
+      "10": "Sivan",
+      "11": "Tamuz",
+      "12": "Av",
+      "13": "Elul",
+      "7-yeartype-leap": "Adar II"
+    }
+  },
+  {
+    "Locale": "ms",
+    "Language": "Melayu",
+    "Months": {
+      "1": "Tishri",
+      "2": "Heshvan",
+      "3": "Kislev",
+      "4": "Tevet",
+      "5": "Shevat",
+      "6": "Adar I",
+      "7": "Adar",
+      "8": "Nisan",
+      "9": "Iyar",
+      "10": "Sivan",
+      "11": "Tamuz",
+      "12": "Av",
+      "13": "Elul",
+      "7-yeartype-leap": "Adar II"
+    }
+  },
+  {
+    "Locale": "nl",
+    "Language": "Nederlands",
+    "Months": {
+      "1": "Tisjrie",
+      "2": "Chesjwan",
+      "3": "Kislev",
+      "4": "Tevet",
+      "5": "Sjevat",
+      "6": "Adar A",
+      "7": "Adar",
+      "8": "Nisan",
+      "9": "Ijar",
+      "10": "Sivan",
+      "11": "Tammoez",
+      "12": "Av",
+      "13": "Elloel",
+      "7-yeartype-leap": "Adar B"
+    }
+  },
+  {
+    "Locale": "nb",
+    "Language": "Norsk (bokmål)",
+    "Months": {
+      "1": "tishri",
+      "2": "heshvan",
+      "3": "kislev",
+      "4": "tevet",
+      "5": "shevat",
+      "6": "adar I",
+      "7": "adar",
+      "8": "nisan",
+      "9": "iyar",
+      "10": "sivan",
+      "11": "tamuz",
+      "12": "av",
+      "13": "elul",
+      "7-yeartype-leap": "adar II"
+    }
+  },
+  {
+    "Locale": "pl",
+    "Language": "polski",
+    "Months": {
+      "1": "Tiszri",
+      "2": "Cheszwan",
+      "3": "Kislew",
+      "4": "Tewet",
+      "5": "Szwat",
+      "6": "Adar I",
+      "7": "Adar",
+      "8": "Nisan",
+      "9": "Ijar",
+      "10": "Siwan",
+      "11": "Tamuz",
+      "12": "Aw",
+      "13": "Elul",
+      "7-yeartype-leap": "Adar II"
+    }
+  },
+  {
+    "Locale": "pt",
+    "Language": "português",
+    "Months": {
+      "1": "Tishri",
+      "2": "Heshvan",
+      "3": "Kislev",
+      "4": "Tevet",
+      "5": "Shevat",
+      "6": "Adar I",
+      "7": "Adar",
+      "8": "Nisan",
+      "9": "Iyar",
+      "10": "Sivan",
+      "11": "Tamuz",
+      "12": "Av",
+      "13": "Elul",
+      "7-yeartype-leap": "Adar II"
+    }
+  },
+  {
+    "Locale": "ro",
+    "Language": "română",
+    "Months": {
+      "1": "Tișrei",
+      "2": "Heșvan",
+      "3": "Kislev",
+      "4": "Tevet",
+      "5": "Șevat",
+      "6": "Adar I",
+      "7": "Adar",
+      "8": "Nisan",
+      "9": "Iyar",
+      "10": "Sivan",
+      "11": "Tammuz",
+      "12": "Av",
+      "13": "Elul",
+      "7-yeartype-leap": "Adar II"
+    }
+  },
+  {
+    "Locale": "sk",
+    "Language": "slovenčina",
+    "Months": {
+      "1": "tišri",
+      "2": "chešvan",
+      "3": "kislev",
+      "4": "tevet",
+      "5": "ševat",
+      "6": "adar I",
+      "7": "adar",
+      "8": "nisan",
+      "9": "ijar",
+      "10": "sivan",
+      "11": "tamuz",
+      "12": "av",
+      "13": "elul",
+      "7-yeartype-leap": "adar II"
+    }
+  },
+  {
+    "Locale": "sl",
+    "Language": "slovenščina",
+    "Months": {
+      "1": "Tishri",
+      "2": "Heshvan",
+      "3": "Kislev",
+      "4": "Tevet",
+      "5": "Shevat",
+      "6": "Adar I",
+      "7": "Adar",
+      "8": "Nisan",
+      "9": "Iyar",
+      "10": "Sivan",
+      "11": "Tamuz",
+      "12": "Av",
+      "13": "Elul",
+      "7-yeartype-leap": "Adar II"
+    }
+  },
+  {
+    "Locale": "sr-Latn",
+    "Language": "srpski",
+    "Months": {
+      "1": "Tišri",
+      "2": "Hešvan",
+      "3": "Kislev",
+      "4": "Tevet",
+      "5": "Ševat",
+      "6": "Adar I",
+      "7": "Adar",
+      "8": "Nisan",
+      "9": "Ijar",
+      "10": "Sivan",
+      "11": "Tamuz",
+      "12": "Av",
+      "13": "Elul",
+      "7-yeartype-leap": "Adar II"
+    }
+  },
+  {
+    "Locale": "fi",
+    "Language": "Suomi",
+    "Months": {
+      "1": "tišríkuuta",
+      "2": "hešvánkuuta",
+      "3": "kislévkuuta",
+      "4": "tevétkuuta",
+      "5": "ševátkuuta",
+      "6": "adárkuuta I",
+      "7": "adárkuuta",
+      "8": "nisánkuuta",
+      "9": "ijjárkuuta",
+      "10": "sivánkuuta",
+      "11": "tammúzkuuta",
+      "12": "abkuuta",
+      "13": "elúlkuuta",
+      "7-yeartype-leap": "adárkuuta II"
+    }
+  },
+  {
+    "Locale": "sv",
+    "Language": "svenska",
+    "Months": {
+      "1": "tishrí",
+      "2": "heshván",
+      "3": "kislév",
+      "4": "tevét",
+      "5": "shevát",
+      "6": "adár I",
+      "7": "adár",
+      "8": "nisán",
+      "9": "ijjár",
+      "10": "siván",
+      "11": "tammúz",
+      "12": "ab",
+      "13": "elúl",
+      "7-yeartype-leap": "adár II"
+    }
+  },
+  {
+    "Locale": "vi",
+    "Language": "Tiếng Việt",
+    "Months": {
+      "1": "Tishri",
+      "2": "Heshvan",
+      "3": "Kislev",
+      "4": "Tevet",
+      "5": "Shevat",
+      "6": "Adar I",
+      "7": "Adar",
+      "8": "Nisan",
+      "9": "Iyar",
+      "10": "Sivan",
+      "11": "Tamuz",
+      "12": "Av",
+      "13": "Elul",
+      "7-yeartype-leap": "Adar II"
+    }
+  },
+  {
+    "Locale": "tr",
+    "Language": "Türkçe",
+    "Months": {
+      "1": "Tişri",
+      "2": "Heşvan",
+      "3": "Kislev",
+      "4": "Tevet",
+      "5": "Şevat",
+      "6": "Adar Rişon",
+      "7": "Adar",
+      "8": "Nisan",
+      "9": "İyar",
+      "10": "Sivan",
+      "11": "Tamuz",
+      "12": "Av",
+      "13": "Elul",
+      "7-yeartype-leap": "Veadar"
+    }
+  },
+  {
+    "Locale": "is",
+    "Language": "íslenska",
+    "Months": {
+      "1": "tishri",
+      "2": "heshvan",
+      "3": "kislev",
+      "4": "tevet",
+      "5": "shevat",
+      "6": "adar I",
+      "7": "adar",
+      "8": "nisan",
+      "9": "iyar",
+      "10": "sivan",
+      "11": "tamuz",
+      "12": "av",
+      "13": "elul",
+      "7-yeartype-leap": "adar II"
+    }
+  },
+  {
+    "Locale": "cs",
+    "Language": "čeština",
+    "Months": {
+      "1": "tišri",
+      "2": "chešvan",
+      "3": "kislev",
+      "4": "tevet",
+      "5": "ševat",
+      "6": "adar I",
+      "7": "adar",
+      "8": "nisan",
+      "9": "ijar",
+      "10": "sivan",
+      "11": "tamuz",
+      "12": "av",
+      "13": "elul",
+      "7-yeartype-leap": "adar II"
+    }
+  },
+  {
+    "Locale": "el",
+    "Language": "ελληνικά",
+    "Months": {
+      "1": "Τισρί",
+      "2": "Χεσβάν",
+      "3": "Κισλέφ",
+      "4": "Τέβετ",
+      "5": "Σεβάτ",
+      "6": "Αντάρ I",
+      "7": "Αντάρ",
+      "8": "Νισάν",
+      "9": "Ιγιάρ",
+      "10": "Σιβάν",
+      "11": "Ταμούζ",
+      "12": "Αβ",
+      "13": "Έλουλ",
+      "7-yeartype-leap": "Αντάρ II"
+    }
+  },
+  {
+    "Locale": "be",
+    "Language": "беларуская",
+    "Months": {
+      "1": "цішрэй",
+      "2": "хешван",
+      "3": "кіслеў",
+      "4": "тэвэт",
+      "5": "шват",
+      "6": "адар I",
+      "7": "адар",
+      "8": "нісан",
+      "9": "іяр",
+      "10": "сіван",
+      "11": "тамуз",
+      "12": "аў",
+      "13": "элул",
+      "7-yeartype-leap": "адар II"
+    }
+  },
+  {
+    "Locale": "bg",
+    "Language": "български",
+    "Months": {
+      "1": "тишри",
+      "2": "хешван",
+      "3": "кислев",
+      "4": "тебет",
+      "5": "шебат",
+      "6": "адар I",
+      "7": "адар",
+      "8": "нисан",
+      "9": "иар",
+      "10": "сиван",
+      "11": "тамуз",
+      "12": "ав",
+      "13": "елул",
+      "7-yeartype-leap": "адар II"
+    }
+  },
+  {
+    "Locale": "mk",
+    "Language": "Македонски",
+    "Months": {
+      "1": "тишри",
+      "2": "хешван",
+      "3": "кислев",
+      "4": "тевет",
+      "5": "шеват",
+      "6": "адар I",
+      "7": "адар",
+      "8": "нисан",
+      "9": "ијар",
+      "10": "сиван",
+      "11": "тамуз",
+      "12": "ав",
+      "13": "елул",
+      "7-yeartype-leap": "адар II"
+    }
+  },
+  {
+    "Locale": "ru",
+    "Language": "русский",
+    "Months": {
+      "1": "тишрей",
+      "2": "хешван",
+      "3": "кислев",
+      "4": "тевет",
+      "5": "шеват",
+      "6": "адар I",
+      "7": "адар",
+      "8": "нисан",
+      "9": "ияр",
+      "10": "сиван",
+      "11": "таммуз",
+      "12": "ав",
+      "13": "элул",
+      "7-yeartype-leap": "адар II"
+    }
+  },
+  {
+    "Locale": "sr",
+    "Language": "српски",
+    "Months": {
+      "1": "Тишри",
+      "2": "Хешван",
+      "3": "Кислев",
+      "4": "Тевет",
+      "5": "Шеват",
+      "6": "Адар I",
+      "7": "Адар",
+      "8": "Нисан",
+      "9": "Ијар",
+      "10": "Сиван",
+      "11": "Тамуз",
+      "12": "Ав",
+      "13": "Елул",
+      "7-yeartype-leap": "Адар II"
+    }
+  },
+  {
+    "Locale": "uk",
+    "Language": "українська",
+    "Months": {
+      "1": "тішри",
+      "2": "марчешван",
+      "3": "числьов",
+      "4": "тебет",
+      "5": "шеват",
+      "6": "адар I",
+      "7": "адар",
+      "8": "нісан",
+      "9": "іар",
+      "10": "сиван",
+      "11": "таммуз",
+      "12": "аб",
+      "13": "елул",
+      "7-yeartype-leap": "адар II"
+    }
+  },
+  {
+    "Locale": "he",
+    "Language": "עברית",
+    "Months": {
+      "1": "תשרי",
+      "2": "חשוון",
+      "3": "כסלו",
+      "4": "טבת",
+      "5": "שבט",
+      "6": "אדר א׳",
+      "7": "אדר",
+      "8": "ניסן",
+      "9": "אייר",
+      "10": "סיוון",
+      "11": "תמוז",
+      "12": "אב",
+      "13": "אלול",
+      "7-yeartype-leap": "אדר ב׳"
+    }
+  },
+  {
+    "Locale": "ar",
+    "Language": "العربية",
+    "Months": {
+      "1": "تشري",
+      "2": "مرحشوان",
+      "3": "كيسلو",
+      "4": "طيفت",
+      "5": "شباط",
+      "6": "آذار الأول",
+      "7": "آذار",
+      "8": "نيسان",
+      "9": "أيار",
+      "10": "سيفان",
+      "11": "تموز",
+      "12": "آب",
+      "13": "أيلول",
+      "7-yeartype-leap": "آذار الثاني"
+    }
+  },
+  {
+    "Locale": "fa",
+    "Language": "فارسی",
+    "Months": {
+      "1": "تشری",
+      "2": "حشوان",
+      "3": "کسلو",
+      "4": "طوت",
+      "5": "شباط",
+      "6": "آذار",
+      "7": "واذار",
+      "8": "نیسان",
+      "9": "ایار",
+      "10": "سیوان",
+      "11": "تموز",
+      "12": "آب",
+      "13": "ایلول",
+      "7-yeartype-leap": "واذار الثانی"
+    }
+  },
+  {
+    "Locale": "th",
+    "Language": "ไทย",
+    "Months": {
+      "1": "ทิชรี",
+      "2": "เฮวาน",
+      "3": "กีสเลฟ",
+      "4": "เตเวต",
+      "5": "เชวัต",
+      "6": "อาดาร์ I",
+      "7": "อาดาร์",
+      "8": "นิสซาน",
+      "9": "อิยาร์",
+      "10": "สีวัน",
+      "11": "ตามูซ",
+      "12": "อัฟ",
+      "13": "เอลอุล",
+      "7-yeartype-leap": "อาดาร์ II"
+    }
+  },
+  {
+    "Locale": "zh-Hans",
+    "Language": "中文(简体)",
+    "Months": {
+      "1": "一月",
+      "2": "二月",
+      "3": "三月",
+      "4": "四月",
+      "5": "五月",
+      "6": "六月",
+      "7": "七月",
+      "8": "八月",
+      "9": "九月",
+      "10": "十月",
+      "11": "十一月",
+      "12": "十二月",
+      "13": "十三月",
+      "7-yeartype-leap": "闰七月"
+    }
+  },
+  {
+    "Locale": "zh-Hant",
+    "Language": "中文(繁體)",
+    "Months": {
+      "1": "提斯利月",
+      "2": "瑪西班月",
+      "3": "基斯流月",
+      "4": "提別月",
+      "5": "細罷特月",
+      "6": "亞達月 I",
+      "7": "亞達月",
+      "8": "尼散月",
+      "9": "以珥月",
+      "10": "西彎月",
+      "11": "搭模斯月",
+      "12": "埃波月",
+      "13": "以祿月",
+      "7-yeartype-leap": "亞達月 II"
+    }
+  },
+  {
+    "Locale": "ja",
+    "Language": "日本語",
+    "Months": {
+      "1": "ティスレ",
+      "2": "へシボン",
+      "3": "キスレブ",
+      "4": "テベット",
+      "5": "シバット",
+      "6": "アダル I",
+      "7": "アダル",
+      "8": "ニサン",
+      "9": "イヤル",
+      "10": "シバン",
+      "11": "タムズ",
+      "12": "アヴ",
+      "13": "エルル",
+      "7-yeartype-leap": "アダル II"
+    }
+  },
+  {
+    "Locale": "ko",
+    "Language": "한국어",
+    "Months": {
+      "1": "디스리",
+      "2": "말케스",
+      "3": "기슬르",
+      "4": "데벳",
+      "5": "스밧",
+      "6": "아달 1",
+      "7": "아달",
+      "8": "닛산",
+      "9": "이야르",
+      "10": "시완",
+      "11": "담무르",
+      "12": "압",
+      "13": "엘룰",
+      "7-yeartype-leap": "아달 2"
+    }
+  }
+]

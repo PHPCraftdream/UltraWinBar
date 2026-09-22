@@ -1,0 +1,91 @@
+{
+  "Language": "System",
+  "Theme": "Windows XP Royale Noir",
+  "ShowInputLanguage": true,
+  "ShowClock": true,
+  "OverrideClockFormat": false,
+  "ClockFormat": "ddd MMM d  h:mm:ss tt",
+  "OverrideAMPMDesignators": false,
+  "AMDesignator": "a.m.",
+  "PMDesignator": "p.m.",
+  "ShowDesktopButton": false,
+  "PeekAtDesktop": false,
+  "ShowMultiMon": false,
+  "ShowQuickLaunch": false,
+  "QuickLaunchPath": "%appdata%\\Microsoft\\Internet Explorer\\Quick Launch\\User Pinned\\TaskBar",
+  "CollapseNotifyIcons": false,
+  "InvertNotifyIcons": [
+    "7820ae78-23e3-4229-82c1-e41cb67d5b9c",
+    "7820ae81-23e3-4229-82c1-e41cb67d5b9c",
+    "7820ae82-23e3-4229-82c1-e41cb67d5b9c",
+    "7820ae77-23e3-4229-82c1-e41cb67d5b9c",
+    "7820ae83-23e3-4229-82c1-e41cb67d5b9c"
+  ],
+  "NotifyIconOrder": [],
+  "AllowFontSmoothing": true,
+  "AllowFontSmoothingMenu": true,
+  "UseSoftwareRendering": false,
+  "Edge": 2,
+  "RowCount": 1,
+  "RowLimit": 5,
+  "TaskbarWidth": 2,
+  "TaskbarWidthLimit": 7,
+  "ShowTaskThumbnails": false,
+  "MultiMonMode": 0,
+  "TaskbarScale": 1.2,
+  "TrayIconSize": 20,
+  "DebugLogging": true,
+  "DebugLogMasks": [
+    "*",
+    "!NotificationArea:*",
+    "!TrayService: Handled AppBar message*"
+  ],
+  "AutoHide": false,
+  "LockTaskbar": false,
+  "InvertIconsMode": 0,
+  "ShowTaskBadges": false,
+  "TaskMiddleClickAction": 1,
+  "TaskWheelAction": 0,
+  "ClockClickAction": 1,
+  "CheckForUpdates": false,
+  "ShowExitMenuItem": true,
+  "ShowEndTaskButton": false,
+  "ShowStartButtonMultiMon": false,
+  "AutoHideTransparent": false,
+  "SlideTaskbarButtons": false,
+  "ShowClockSeconds": true,
+  "WinNumHotkeysAction": 0,
+  "AllowBlurBehind": true,
+  "AdditionalEdges": [
+    0,
+    1,
+    3
+  ],
+  "TrayEdge": 3,
+  "ClockEdge": 2,
+  "StartButtonEdge": 2,
+  "LanguageEdge": 2,
+  "DefaultTaskEdge": 3,
+  "EdgePriority": [
+    1,
+    0
+  ],
+  "EdgeSizes": [
+    {
+      "Edge": 3,
+      "Size": 1
+    },
+    {
+      "Edge": 2,
+      "Size": 2
+    },
+    {
+      "Edge": 0,
+      "Size": 2
+    },
+    {
+      "Edge": 1,
+      "Size": 1
+    }
+  ]
+}

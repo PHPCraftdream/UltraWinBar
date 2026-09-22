@@ -1,0 +1,171 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:s="clr-namespace:System;assembly=mscorlib">
+
+    <s:String x:Key="ultrawinbar_properties">Właściwości UltraWinBar</s:String>
+    <s:String x:Key="taskbar_tab">Pasek zadań</s:String>
+    <s:String x:Key="advanced_tab">Zaawansowane</s:String>
+    <s:String x:Key="taskbar_appearance">Wygląd paska zadań</s:String>
+    <s:String x:Key="notification_area">Obszar powiadomień</s:String>
+    <s:String x:Key="general_heading">Ogólne</s:String>
+    <s:String x:Key="clock_heading">Zegar</s:String>
+    <s:String x:Key="autostart">Uruchamiaj podczas startu systemu</s:String>
+    <s:String x:Key="language_text">_Język:</s:String>
+    <s:String x:Key="language_tip">Wybierz język.</s:String>
+    <s:String x:Key="theme_text">_Motyw:</s:String>
+    <s:String x:Key="theme_tip">Zainstaluj motywy w folderze Themes.</s:String>
+    <s:String x:Key="location_text">Lokalizacja:</s:String>
+    <s:String x:Key="location_tip">Zmień umiejscowienie paska zadań na ekranie.</s:String>
+    <x:Array x:Key="location_values" Type="s:String">
+        <s:String>Po lewej</s:String>
+        <s:String>Na górze</s:String>
+        <s:String>Po prawej</s:String>
+        <s:String>Na dole</s:String>
+    </x:Array>
+    <s:String x:Key="rowcount_text">Liczba wierszy:</s:String>
+    <s:String x:Key="rowcount_tip">Liczba wierszy na pasku zadań, gdy jest on na górze lub na dole.</s:String>
+    <s:String x:Key="taskbar_width">Szerokość paska zadań:</s:String>
+    <s:String x:Key="allow_font_smoothing">_Zezwól na wygładzanie czcionek</s:String>
+    <s:String x:Key="allow_font_smoothing_menu">Zezwól na wygładzanie czcionek w _menu</s:String>
+    <s:String x:Key="collapse_tray_icons">Zwiń ikony w pasku powiadomień</s:String>
+    <s:String x:Key="customize">_Dostosuj...</s:String>
+    <s:String x:Key="show_input_language">Pokaż ję_zyk wprowadzania</s:String>
+    <s:String x:Key="show_clock">_Pokaż zegar</s:String>
+    <s:String x:Key="show_multi_mon">Pokaż pasek zadań na wielu ekranach</s:String>
+    <s:String x:Key="show_start_button_multi_mon">Pokaż przycisk "Start" na wszystkich paskach zadań</s:String>
+    <s:String x:Key="show_quick_launch">Pokaż pasek szybkiego uruchamiania</s:String>
+    <s:String x:Key="select_location">_Wybierz lokalizację...</s:String>
+    <s:String x:Key="quick_launch_folder">Pasek szybkiego uruchamiania - Wybierz folder</s:String>
+    <s:String x:Key="show_badges">Pokaż _odznaki</s:String>
+    <s:String x:Key="show_window_previews">Pokaż podgląd okien</s:String>
+    <s:String x:Key="use_software_rendering">_Użyj renderowania oprogramowania</s:String>
+    <s:String x:Key="add_show_desktop_button">Dodaj przycisk "pokaż pulpit"</s:String>
+    <s:String x:Key="enable_auto_hide">A_utoukrywanie</s:String>
+    <s:String x:Key="lock_taskbar">_Zablokuj pasek zadań</s:String>
+    <s:String x:Key="multiple_displays">Wiele monitorów</s:String>
+    <s:String x:Key="show_tasks_on">Pokaż zadania na:</s:String>
+    <x:Array x:Key="show_tasks_on_values" Type="s:String">
+        <s:String>Wszystkich paskach zadań</s:String>
+        <s:String>Ten sam pasek zadań co okno</s:String>
+        <s:String>Ten sam pasek zadań co okno i główny pasek zadań</s:String>
+    </x:Array>
+    <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
+        <s:String>Gdy potrzebuje tego motyw</s:String>
+        <s:String>Zawsze</s:String>
+        <s:String>Nigdy</s:String>
+    </x:Array>
+    <s:String x:Key="middle_mouse_task_action">Akcja środkowego przycisku myszy:</s:String>
+    <x:Array x:Key="middle_mouse_task_action_values" Type="s:String">
+        <s:String>Nic nie rób</s:String>
+        <s:String>Otwórz nowe okno</s:String>
+        <s:String>Zamknij</s:String>
+    </x:Array>
+    <s:String x:Key="clock_click_action">_Kliknięcie na zegar:</s:String>
+    <x:Array x:Key="clock_click_action_values" Type="s:String">
+        <s:String>Nic nie rób</s:String>
+        <s:String>Otwórz kalendarz Aero</s:String>
+        <s:String>Otwórz kalendarz Modern</s:String>
+        <s:String>Otwórz Centrum powiadomień</s:String>
+    </x:Array>
+    <s:String x:Key="auto_hide_transparent">Ukryj także linię paska zadań, gdy jest on ukryty przez Autoukrywanie</s:String>
+    <s:String x:Key="version">Wersja {0}</s:String>
+    <s:String x:Key="visit_on_github">Zobacz na GitHub</s:String>
+    <s:String x:Key="taskbar_scale">Skala paska zadań</s:String>
+    <s:String x:Key="taskbar_scale_1x">100%</s:String>
+    <s:String x:Key="taskbar_scale_2x">200%</s:String>
+    <s:String x:Key="taskbar_scale_current">Aktualne ustawienie: {0}%</s:String>
+    <s:String x:Key="debug_logging">Włącz debugowanie</s:String>
+    <s:String x:Key="check_for_updates">Sprawdź aktualizacje</s:String>
+    <s:String x:Key="show_exit_menu_item">Pokaż opcję "Wyjdź z UltraWinBar" w menu podręcznym (prawy przycisk myszy)</s:String>
+    <s:String x:Key="show_end_task_button">Pokaż opcję "Zakończ zadanie" w menu podręcznym (prawy przycisk myszy)</s:String>
+    <s:String x:Key="slide_taskbar_buttons">Stosuj efekt ślizgania przy przesuwaniu przycisków paska zadań</s:String>
+    <s:String x:Key="show_clock_seconds">Pokaż sekundy na zegarze</s:String>
+    <s:String x:Key="open_custom_themes_folder">Otwórz folder motywów własnych ("themes")</s:String>
+    <s:String x:Key="win_num_hotkeys_action">Akcje klawiszy skrótów Win+[0-9]:</s:String>
+    <x:Array x:Key="win_num_hotkeys_action_values" Type="s:String">
+        <s:String>Domyślne dla systemu Windows</s:String>
+        <s:String>Przełączanie zadań</s:String>
+        <s:String>Otwieranie skrótów z Szybkiego uruchamiania</s:String>
+    </x:Array>
+    <s:String x:Key="hotkey_warning_title">Klawisze skrótów UltraWinBar</s:String>
+    <s:String x:Key="hotkey_warning_text">UltraWinBar zamieni istniejące klawisze skrótów paska zadań systemu Windows. Nawet po zamknięciu UltraWinBar klawisze skrótów systemu Windows nie będą przywrócone aż do wylogowania się i ponownego zalogowania się do systemu Windows.</s:String>
+    <s:String x:Key="allow_blur_behind">Pozwolić na rozmycie za przeźroczystym paskiem zadań?</s:String>
+    <s:String x:Key="ok_dialog">OK</s:String>
+
+    <s:String x:Key="customize_notifications">Dostosuj powiadomienia</s:String>
+    <s:String x:Key="customize_notifications_info">UltraWinBar wyświetla ikony aktywnych i pilnych powiadomień oraz ukrywa nieaktywne. Możesz zmienić to zachowanie dla elementów z poniższej listy.</s:String>
+    <s:String x:Key="customize_notifications_instruction">Wybierz element, a następnie wybierz jego sposób powiadamiania:</s:String>
+    <s:String x:Key="hide_when_inactive">Ukryj, gdy jest nieaktywny</s:String>
+    <s:String x:Key="always_show">Zawsze pokazuj</s:String>
+    <s:String x:Key="always_hide">Zawsze ukrywaj</s:String>
+    <s:String x:Key="remove">Usuń</s:String>
+    <s:String x:Key="name_heading">Nazwa</s:String>
+    <s:String x:Key="behavior_heading">Zachowanie</s:String>
+    <s:String x:Key="invert_heading">Odwróć</s:String>
+
+    <s:String x:Key="start_text">Start</s:String>
+    <s:String x:Key="start_text_xp">Start</s:String>
+    <s:String x:Key="start_button_tip_98">Kliknij, aby rozpocząć.</s:String>
+    <s:String x:Key="start_button_tip">Kliknij, aby rozpocząć</s:String>
+    <s:String x:Key="start_button_tip_vista">Start</s:String>
+
+    <s:String x:Key="ultrawinbar_title">Pasek zadań UltraWinBar</s:String>
+    <s:String x:Key="toolbars">P_aski narzędzi</s:String>
+    <s:String x:Key="quick_launch">_Pasek szybkiego uruchamiania</s:String>
+    <s:String x:Key="new_toolbar">_Nowy pasek narzędzi...</s:String>
+    <s:String x:Key="set_time">_Dostosuj datę i godzinę</s:String>
+    <s:String x:Key="cascade">Okna kaskadowe</s:String>
+    <s:String x:Key="horiz_tile">Ułóż okna poziomo</s:String>
+    <s:String x:Key="vert_tile">Ułóż okna pionowo</s:String>
+    <s:String x:Key="toggle_desktop">Pokaż pulpit</s:String>
+    <s:String x:Key="hide_desktop">Pokaż otwarte okna</s:String>
+    <s:String x:Key="undo_cascade">Cofnij okna kaskadowe</s:String>
+    <s:String x:Key="undo_tile">Cofnij kafelki</s:String>
+    <s:String x:Key="undo_minimize_all">Cofnij minimalizacje</s:String>
+    <s:String x:Key="show_taskman_2k">Menedżer zadań...</s:String>
+    <s:String x:Key="show_taskman">Menedżer zadań</s:String>
+    <s:String x:Key="tray_properties">Właś_ciwości</s:String>
+    <s:String x:Key="update_available">_Dostępna aktualizacja...</s:String>
+    <s:String x:Key="exit_ultrawinbar">_Wyjdź z UltraWinBar</s:String>
+    <s:String x:Key="customize_notifications_menu">_Dostosuj powiadomienia...</s:String>
+    <s:String x:Key="lock_taskbar_menu">_Zablokuj pasek zadań</s:String>
+
+    <s:String x:Key="show_desktop_tip_95">Przywracanie pulpitu</s:String>
+    <s:String x:Key="show_desktop_tip">Pokaż pulpit</s:String>
+    <s:String x:Key="show_desktop_95">Pulpit</s:String>
+    <s:String x:Key="show_desktop">Pokaż pulpit</s:String>
+    <s:String x:Key="peek_at_desktop">Zerknij na Pulpit</s:String>
+
+    <s:String x:Key="restore">_Przywróć</s:String>
+    <s:String x:Key="move">Prz_enieś</s:String>
+    <s:String x:Key="size">_Rozmiar</s:String>
+    <s:String x:Key="minimize">_Minimalizuj</s:String>
+    <s:String x:Key="maximize">Mak_symalizuj</s:String>
+    <s:String x:Key="close">Zam_knij</s:String>
+    <s:String x:Key="end_task">Zakończyć polecenie</s:String>
+
+    <s:String x:Key="show_hidden">Pokaż ukryte ikony</s:String>
+    <s:String x:Key="hide">Ukryj</s:String>
+
+    <s:String x:Key="open_folder">&amp;Otwórz folder</s:String>
+
+    <s:String x:Key="ime_input_tip_enabled">Kliknięcie prawym przyciskiem myszy otwiera opcje IME</s:String>
+    <s:String x:Key="ime_input_tip_disabled">IME jest nieaktywne</s:String>
+    <s:String x:Key="ime_input_full_shape_hiragana">Hiragana</s:String>
+    <s:String x:Key="ime_input_full_shape_katakana">Katakana o pełnej szerokosci</s:String>
+    <s:String x:Key="ime_input_full_shape_alphanumeric">Alphanumeryczne o pełnej szerokości</s:String>
+    <s:String x:Key="ime_input_katakana">Katakana o połowie szerokości</s:String>
+    <s:String x:Key="ime_input_alphanumeric">Alfanumeryczne o połowie szerokosci</s:String>
+    <s:String x:Key="ime_input_direct">Wprowadzanie bezpośrednie</s:String>
+    <s:String x:Key="ime_open_pad">Konsola edytora IME</s:String>
+    <s:String x:Key="ime_open_add_word_dictionary">Dodaj słowo</s:String>
+    <s:String x:Key="ime_open_dictionary_tool">Słownik dodatkowy</s:String>
+    <s:String x:Key="ime_open_properties">Ustawienia</s:String>
+    <s:String x:Key="ime_input_key">Metoda wprowadzania</s:String>
+    <s:String x:Key="ime_input_key_roma">Wprowadzanie znaków Romaji</s:String>
+    <s:String x:Key="ime_input_key_kana">Wprowadzanie znaków Kana</s:String>
+    <s:String x:Key="ime_conversion">Tryb konwersji</s:String>
+    <s:String x:Key="ime_conversion_general">Ogólna</s:String>
+    <s:String x:Key="ime_conversion_none">Bez konwersji</s:String>
+    <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+</ResourceDictionary>

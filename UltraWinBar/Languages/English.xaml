@@ -1,0 +1,217 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+                    xmlns:s="clr-namespace:System;assembly=mscorlib">
+
+    <s:String x:Key="ultrawinbar_properties">UltraWinBar Properties</s:String>
+    <s:String x:Key="taskbar_tab">Taskbar</s:String>
+    <s:String x:Key="advanced_tab">Advanced</s:String>
+    <s:String x:Key="taskbar_appearance">Taskbar appearance</s:String>
+    <s:String x:Key="notification_area">Notification area</s:String>
+    <s:String x:Key="general_heading">General</s:String>
+    <s:String x:Key="clock_heading">Clock</s:String>
+    <s:String x:Key="autostart">Automatically start at _logon</s:String>
+    <s:String x:Key="language_text">Lan_guage:</s:String>
+    <s:String x:Key="language_tip">Select the language to use.</s:String>
+    <s:String x:Key="theme_text">_Theme:</s:String>
+    <s:String x:Key="theme_tip">Install themes in the Themes folder.</s:String>
+    <s:String x:Key="location_text">Locat_ion:</s:String>
+    <s:String x:Key="location_tip">Change the taskbar location on screen.</s:String>
+    <x:Array x:Key="location_values" Type="s:String">
+        <s:String>Left</s:String>
+        <s:String>Top</s:String>
+        <s:String>Right</s:String>
+        <s:String>Bottom</s:String>
+    </x:Array>
+    <s:String x:Key="rowcount_text">Number of _rows:</s:String>
+    <s:String x:Key="rowcount_tip">The number of rows on the taskbar when on top or bottom.</s:String>
+    <s:String x:Key="taskbar_width">Taskba_r width:</s:String>
+    <s:String x:Key="allow_font_smoothing">_Allow font smoothing</s:String>
+    <s:String x:Key="allow_font_smoothing_menu">_Allow font smoothing in menus</s:String>
+    <s:String x:Key="collapse_tray_icons">Collapse _notification area icons</s:String>
+    <s:String x:Key="customize">_Customize...</s:String>
+    <s:String x:Key="show_input_language">Show the input _language</s:String>
+    <s:String x:Key="show_clock">Show the cloc_k</s:String>
+    <s:String x:Key="show_multi_mon">Show on _multiple displays</s:String>
+    <s:String x:Key="show_start_button_multi_mon">Show _Start button on all taskbars</s:String>
+    <s:String x:Key="show_quick_launch">Show _Quick Launch</s:String>
+    <s:String x:Key="select_location">_Select location...</s:String>
+    <s:String x:Key="quick_launch_folder">Quick Launch - Choose a folder</s:String>
+    <s:String x:Key="show_badges">Show _badges</s:String>
+    <s:String x:Key="show_window_previews">Show _window previews (thumbnails)</s:String>
+    <s:String x:Key="use_software_rendering">_Use software rendering</s:String>
+    <s:String x:Key="add_show_desktop_button">Add the Show _Desktop button</s:String>
+    <s:String x:Key="enable_auto_hide">A_uto-hide the taskbar</s:String>
+    <s:String x:Key="lock_taskbar">_Lock the taskbar</s:String>
+    <s:String x:Key="multiple_displays">Multiple displays</s:String>
+    <s:String x:Key="show_tasks_on">S_how tasks on:</s:String>
+    <x:Array x:Key="show_tasks_on_values" Type="s:String">
+        <s:String>All taskbars</s:String>
+        <s:String>Same taskbar as window</s:String>
+        <s:String>Same taskbar as window and primary taskbar</s:String>
+    </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_Invert grayscale colors:</s:String>
+    <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
+        <s:String>When needed by theme</s:String>
+        <s:String>Always</s:String>
+        <s:String>Never</s:String>
+    </x:Array>
+    <s:String x:Key="middle_mouse_task_action">_Middle-click action:</s:String>
+    <x:Array x:Key="middle_mouse_task_action_values" Type="s:String">
+        <s:String>Do nothing</s:String>
+        <s:String>Open a new instance</s:String>
+        <s:String>Close the task</s:String>
+    </x:Array>
+    <s:String x:Key="clock_click_action">_Clock click action:</s:String>
+    <x:Array x:Key="clock_click_action_values" Type="s:String">
+        <s:String>Do nothing</s:String>
+        <s:String>Open Aero calendar</s:String>
+        <s:String>Open Modern calendar</s:String>
+        <s:String>Open Notification Center</s:String>
+    </x:Array>
+    <s:String x:Key="task_wheel_action">_Mouse wheel action:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>Do nothing</s:String>
+        <s:String>Show/hide window</s:String>
+    </x:Array>
+    <s:String x:Key="auto_hide_transparent">Hide _taskbar line when hidden with auto-hide</s:String>
+    <s:String x:Key="version">Version {0}</s:String>
+    <s:String x:Key="visit_on_github">Visit UltraWinBar on GitHub</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Multiple taskbars</s:String>
+    <s:String x:Key="additional_taskbars_text">Show a taskbar on these edges. Right-click a taskbar to make it stretch to the full edge, pushing others aside.</s:String>
+    <s:String x:Key="location_left">Left</s:String>
+    <s:String x:Key="location_top">Top</s:String>
+    <s:String x:Key="location_right">Right</s:String>
+    <s:String x:Key="location_bottom">Bottom</s:String>
+    <s:String x:Key="tray_location_text">_Notification area on:</s:String>
+    <s:String x:Key="clock_location_text">_Clock on:</s:String>
+    <s:String x:Key="start_button_location_text">Sta_rt button on:</s:String>
+    <s:String x:Key="language_location_text">_Language indicator on:</s:String>
+    <s:String x:Key="task_assignment_hint">Drag a task button to another taskbar to move its whole application; hold Ctrl while dragging to move just that window instead. Right-click a task button to reset its assignment.</s:String>
+    <s:String x:Key="reset_task_assignments">Reset all taskbar assignments</s:String>
+    <s:String x:Key="stretch">_Stretch</s:String>
+    <s:String x:Key="make_main">_Make main</s:String>
+    <s:String x:Key="reset_task_assignment">Reset taskbar assig_nment</s:String>
+    <s:String x:Key="taskbar_scale">Taskbar scale</s:String>
+    <s:String x:Key="taskbar_scale_1x">100%</s:String>
+    <s:String x:Key="taskbar_scale_2x">200%</s:String>
+    <s:String x:Key="taskbar_scale_current">Current setting: {0}%</s:String>
+    <s:String x:Key="debug_logging">Enable _debug logging</s:String>
+    <s:String x:Key="check_for_updates">Check for u_pdates</s:String>
+    <s:String x:Key="show_exit_menu_item">Show E_xit option in right-click menu</s:String>
+    <s:String x:Key="show_end_task_button">Show End _task option in right-click menu</s:String>
+    <s:String x:Key="slide_taskbar_buttons">Slid_e taskbar buttons</s:String>
+    <s:String x:Key="show_clock_seconds">S_how seconds in the clock</s:String>
+    <s:String x:Key="open_custom_themes_folder">Open custom themes folder</s:String>
+    <s:String x:Key="win_num_hotkeys_action">Win+[0-9] _hotkeys action:</s:String>
+    <x:Array x:Key="win_num_hotkeys_action_values" Type="s:String">
+        <s:String>Windows default</s:String>
+        <s:String>Switch tasks</s:String>
+        <s:String>Open Quick Launch item</s:String>
+    </x:Array>
+    <s:String x:Key="hotkey_warning_title">UltraWinBar Hotkeys</s:String>
+    <s:String x:Key="hotkey_warning_text">UltraWinBar will override Windows taskbar hotkeys. Even if UltraWinBar is closed, they will not be restored to Windows until you log out and back in.</s:String>
+    <s:String x:Key="allow_blur_behind">Allow _blur behind transparent taskbar</s:String>
+    <s:String x:Key="ok_dialog">OK</s:String>
+
+    <s:String x:Key="clock_format_help">View available formatting options</s:String>
+    <s:String x:Key="clock_format_warning">Note: Custom clock formatting may not work as expected if your selected theme specifies its own format.</s:String>
+    <s:String x:Key="override_clock_format">Custom clock _format:</s:String>
+    <s:String x:Key="override_ampm_designators">Custom d_esignators:</s:String>
+    <s:String x:Key="am_designator">AM:</s:String>
+    <s:String x:Key="pm_designator">PM:</s:String>
+
+    <s:String x:Key="customize_notifications">Customize Notifications</s:String>
+    <s:String x:Key="customize_notifications_info">UltraWinBar displays icons for active and urgent notifications, and hides inactive ones. You can change this behavior for items in the list below.</s:String>
+    <s:String x:Key="customize_notifications_instruction">Select an item, then choose its notification behavior:</s:String>
+    <s:String x:Key="hide_when_inactive">Hide when inactive</s:String>
+    <s:String x:Key="always_show">Always show</s:String>
+    <s:String x:Key="always_hide">Always hide</s:String>
+    <s:String x:Key="remove">Remove</s:String>
+    <s:String x:Key="name_heading">Name</s:String>
+    <s:String x:Key="behavior_heading">Behavior</s:String>
+    <s:String x:Key="invert_heading">Invert</s:String>
+
+    <s:String x:Key="start_text">Start</s:String>
+    <s:String x:Key="start_text_xp">start</s:String>
+    <s:String x:Key="start_button_tip_98">Click here to begin.</s:String>
+    <s:String x:Key="start_button_tip">Click here to begin</s:String>
+    <s:String x:Key="start_button_tip_vista">Start</s:String>
+
+    <s:String x:Key="ultrawinbar_title">UltraWinBar Taskbar</s:String>
+    <s:String x:Key="toolbars">_Toolbars</s:String>
+    <s:String x:Key="quick_launch">_Quick Launch</s:String>
+    <s:String x:Key="new_toolbar">_New Toolbar...</s:String>
+    <s:String x:Key="set_time">_Adjust Date/Time</s:String>
+    <s:String x:Key="cascade">Ca_scade Windows</s:String>
+    <s:String x:Key="horiz_tile">Tile Windows _Horizontally</s:String>
+    <s:String x:Key="vert_tile">Tile Windows V_ertically</s:String>
+    <s:String x:Key="toggle_desktop">_Show the Desktop</s:String>
+    <s:String x:Key="hide_desktop">_Show Open Windows</s:String>
+    <s:String x:Key="undo_cascade">_Undo Cascade</s:String>
+    <s:String x:Key="undo_tile">_Undo Tile</s:String>
+    <s:String x:Key="undo_minimize_all">_Undo Minimize All</s:String>
+    <s:String x:Key="show_taskman_2k">Tas_k Manager...</s:String>
+    <s:String x:Key="show_taskman">Tas_k Manager</s:String>
+    <s:String x:Key="tray_properties">P_roperties</s:String>
+    <s:String x:Key="update_available">_Update available...</s:String>
+    <s:String x:Key="exit_ultrawinbar">_Exit UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">Rest_art UltraWinBar</s:String>
+    <s:String x:Key="customize_notifications_menu">_Customize Notifications...</s:String>
+    <s:String x:Key="lock_taskbar_menu">_Lock the Taskbar</s:String>
+
+    <s:String x:Key="show_desktop_tip_95">Surface/Restore Desktop</s:String>
+    <s:String x:Key="show_desktop_tip">Show Desktop</s:String>
+    <s:String x:Key="show_desktop_95">_Desktop</s:String>
+    <s:String x:Key="show_desktop">_Show Desktop</s:String>
+    <s:String x:Key="peek_at_desktop">_Peek at desktop</s:String>
+
+    <s:String x:Key="restore">_Restore</s:String>
+    <s:String x:Key="move">_Move</s:String>
+    <s:String x:Key="size">_Size</s:String>
+    <s:String x:Key="minimize">Mi_nimize</s:String>
+    <s:String x:Key="maximize">Ma_ximize</s:String>
+    <s:String x:Key="close">_Close</s:String>
+    <s:String x:Key="end_task">_End task</s:String>
+
+    <s:String x:Key="show_hidden">Show hidden icons</s:String>
+    <s:String x:Key="hide">Hide</s:String>
+
+    <s:String x:Key="open_folder">&amp;Open Folder</s:String>
+    <s:String x:Key="move_to_taskbar_format">Move to {0} taskbar</s:String>
+
+    <s:String x:Key="ime_input_tip_enabled">Right-click to open IME options.</s:String>
+    <s:String x:Key="ime_input_tip_disabled">IME disabled</s:String>
+    <s:String x:Key="ime_input_full_shape_hiragana">_Hiragana</s:String>
+    <s:String x:Key="ime_input_full_shape_katakana">Full-width _Katakana</s:String>
+    <s:String x:Key="ime_input_full_shape_alphanumeric">Full-_width Alphanumeric</s:String>
+    <s:String x:Key="ime_input_katakana">Half-width Kataka_na</s:String>
+    <s:String x:Key="ime_input_alphanumeric">Hal_f-width Alphanumeric</s:String>
+    <s:String x:Key="ime_input_direct">_Direct Input</s:String>
+    <s:String x:Key="ime_open_pad">IME _Pad</s:String>
+    <s:String x:Key="ime_open_add_word_dictionary">Add W_ord</s:String>
+    <s:String x:Key="ime_open_dictionary_tool">User Dictionary _Tool</s:String>
+    <s:String x:Key="ime_open_properties">P_roperties</s:String>
+    <s:String x:Key="ime_input_key">Input _Method</s:String>
+    <s:String x:Key="ime_input_key_roma">_Romaji Input</s:String>
+    <s:String x:Key="ime_input_key_kana">Kana Inpu_t</s:String>
+    <s:String x:Key="ime_conversion">_Conversion mode</s:String>
+    <s:String x:Key="ime_conversion_general">_General</s:String>
+    <s:String x:Key="ime_conversion_none">N_o Conversion</s:String>
+    <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+
+    <s:String x:Key="pin_to_taskbar">Pin to this taskbar</s:String>
+    <s:String x:Key="pinned_app_windows">Open windows</s:String>
+    <s:String x:Key="unpin_from_taskbar">Unpin from this taskbar</s:String>
+
+    <!-- Items below are settings, and should always be in English -->
+    <FlowDirection x:Key="flow_direction">LeftToRight</FlowDirection>
+    <FontFamily x:Key="start_text_xp_font_family">Franklin Gothic</FontFamily>
+    <sys:String x:Key="app_all_desktops">Show this application's windows on all desktops</sys:String>
+    <sys:String x:Key="move_window_desktop">Move this window to desktop</sys:String>
+    <sys:String x:Key="move_app_desktop">Move all application windows to desktop</sys:String>
+    <sys:String x:Key="desktop_number">Desktop {0}</sys:String>
+    <sys:String x:Key="desktop_action_failed">Windows could not complete the operation for every window. Some windows may already have moved. See the log for details.</sys:String>
+    <s:String x:Key="show_hebrew_date">Show Hebrew date and numbered weekdays</s:String>
+    <s:String x:Key="hebrew_date_midnight">Uses the local calendar date; changes at midnight, not at sunset.</s:String>
+</ResourceDictionary>
