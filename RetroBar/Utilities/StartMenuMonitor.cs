@@ -296,6 +296,15 @@ namespace RetroBar.Utilities
                     break;
             }
 
+            // Open Shell's Win7-style menu subclasses the OS-provided "Desktop User Picture"
+            // window rather than owning/positioning it, so it never follows our correction
+            // to the main menu window. It has no independently meaningful target position —
+            // just translate it by the same delta we're applying to the main menu, preserving
+            // whatever relative offset Open Shell/Windows originally established.
+            int dx = x - startMenuRect.Left;
+            int dy = y - startMenuRect.Top;
+            RepositionRelatedWindow("Desktop User Picture", dx, dy);
+
             if (y == startMenuRect.Top && x == startMenuRect.Left)
             {
                 // Start menu is already in the correct position
@@ -337,8 +346,24 @@ namespace RetroBar.Utilities
 
                 ShellLogger.Debug($"StartMenuMonitor DIAG: Start menu drifted to ({currentRect.Left},{currentRect.Top}), re-applying target=({x},{y})");
                 SetWindowPos(hStartMenu, IntPtr.Zero, x, y, 0, 0, (int)(SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOZORDER));
+                RepositionRelatedWindow("Desktop User Picture", dx, dy);
             };
             correctionTimer.Start();
+        }
+
+        private void RepositionRelatedWindow(string className, int dx, int dy)
+        {
+            IntPtr hWnd = FindWindowEx(IntPtr.Zero, IntPtr.Zero, className, IntPtr.Zero);
+            if (hWnd == IntPtr.Zero)
+            {
+                return;
+            }
+
+            GetWindowRect(hWnd, out ManagedShell.Interop.NativeMethods.Rect rect);
+            int targetX = rect.Left + dx;
+            int targetY = rect.Top + dy;
+            SetWindowPos(hWnd, IntPtr.Zero, targetX, targetY, 0, 0, (int)(SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOZORDER));
+            ShellLogger.Debug($"StartMenuMonitor DIAG: repositioned '{className}' by delta=({dx},{dy}) to ({targetX},{targetY})");
         }
 
         private IImmersiveMonitor GetImmersiveMonitor(ManagedShell.UWPInterop.Interfaces.IServiceProvider shell, IntPtr hWnd)
