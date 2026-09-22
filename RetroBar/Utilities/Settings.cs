@@ -4,6 +4,7 @@ using ManagedShell.WindowsTray;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 
@@ -757,6 +758,17 @@ namespace RetroBar.Utilities
             foreach (string identifier in identifiers)
             {
                 entries.Add(new TaskOrderEntry { Edge = edge, Identifier = identifier });
+            }
+
+            // TaskOrder is a List<T>, so Set<T>'s field.Equals(value) is reference equality —
+            // assigning a content-identical new list would still raise PropertyChanged. That
+            // feeds back into TaskList's TaskOrder->Refresh()->GroupedWindows_CollectionChanged
+            // ->SaveTaskOrder()->SetTaskOrderForEdge loop forever. Skip the write when the
+            // content hasn't actually changed (TaskOrderEntry is a struct, so SequenceEqual
+            // uses structural equality here).
+            if (entries.SequenceEqual(TaskOrder))
+            {
+                return;
             }
 
             TaskOrder = entries;
