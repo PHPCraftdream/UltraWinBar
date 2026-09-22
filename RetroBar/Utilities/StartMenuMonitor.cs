@@ -59,11 +59,18 @@ namespace RetroBar.Utilities
 
             StringBuilder cName = new StringBuilder(256);
             GetClassName(hwnd, cName, cName.Capacity);
-            if (cName.ToString() != "Windows.UI.Core.CoreWindow")
+            string className = cName.ToString();
+            ShellLogger.Debug($"StartMenuMonitor DIAG: foreground changed, hwnd={hwnd}, class={className}");
+
+            // Modern Start (Win10/11) and Open Shell Menu both become foreground when they
+            // open; classic Start (DV2ControlHost) does not reliably, so it stays on the
+            // poller below.
+            if (className != "Windows.UI.Core.CoreWindow" && className != "OpenShell.CMenuContainer")
             {
                 return;
             }
 
+            ShellLogger.Debug($"StartMenuMonitor DIAG: foreground hook matched {className}, relocating");
             relocateStartMenu(hwnd);
             setVisibility(true, MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST));
         }
@@ -177,6 +184,7 @@ namespace RetroBar.Utilities
             IntPtr hwndForeground = GetForegroundWindow();
             StringBuilder cName = new StringBuilder(256);
             GetClassName(hwndForeground, cName, cName.Capacity);
+            ShellLogger.Debug($"StartMenuMonitor DIAG: poller tick, isModernStartMenuOpen=true, foreground hwnd={hwndForeground}, class={cName}");
             if (cName.ToString() == "Windows.UI.Core.CoreWindow")
             {
                 // When the modern Start menu opens, it gains focus, so this is probably it.
@@ -226,12 +234,14 @@ namespace RetroBar.Utilities
         {
             if (_taskbarHwndActivated == IntPtr.Zero)
             {
+                ShellLogger.Debug("StartMenuMonitor DIAG: relocateStartMenu skipped, _taskbarHwndActivated is Zero (already consumed)");
                 return;
             }
 
             FlowDirection flowDirection = Application.Current.FindResource("flow_direction") as FlowDirection? ?? FlowDirection.LeftToRight;
             GetWindowRect(hStartMenu, out ManagedShell.Interop.NativeMethods.Rect startMenuRect);
             GetWindowRect(_taskbarHwndActivated, out ManagedShell.Interop.NativeMethods.Rect taskbarRect);
+            ShellLogger.Debug($"StartMenuMonitor DIAG: relocateStartMenu entered, hStartMenu={hStartMenu}, currentRect=({startMenuRect.Left},{startMenuRect.Top},{startMenuRect.Right},{startMenuRect.Bottom}), taskbarRect=({taskbarRect.Left},{taskbarRect.Top},{taskbarRect.Right},{taskbarRect.Bottom})");
 
             // Use the edge of whichever taskbar the button was actually pressed on, not
             // the primary one — with multiple taskbars they can differ.
@@ -289,10 +299,23 @@ namespace RetroBar.Utilities
             if (y == startMenuRect.Top && x == startMenuRect.Left)
             {
                 // Start menu is already in the correct position
+                ShellLogger.Debug("StartMenuMonitor DIAG: relocateStartMenu no-op, already at target position");
                 return;
             }
 
-            SetWindowPos(hStartMenu, IntPtr.Zero, x, y, 0, 0, (int)(SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOZORDER));
+            bool moved = SetWindowPos(hStartMenu, IntPtr.Zero, x, y, 0, 0, (int)(SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOZORDER));
+            ShellLogger.Debug($"StartMenuMonitor DIAG: SetWindowPos target=({x},{y}) returned {moved}");
+
+            // Diagnostic only: check whether something (the OS itself?) moves the window
+            // back after we do, which would explain a persistent jump despite this call.
+            DispatcherTimer recheckTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
+            recheckTimer.Tick += (s, e) =>
+            {
+                recheckTimer.Stop();
+                GetWindowRect(hStartMenu, out ManagedShell.Interop.NativeMethods.Rect afterRect);
+                ShellLogger.Debug($"StartMenuMonitor DIAG: 150ms after SetWindowPos, rect=({afterRect.Left},{afterRect.Top},{afterRect.Right},{afterRect.Bottom})");
+            };
+            recheckTimer.Start();
         }
 
         private IImmersiveMonitor GetImmersiveMonitor(ManagedShell.UWPInterop.Interfaces.IServiceProvider shell, IntPtr hWnd)
@@ -375,16 +398,70 @@ namespace RetroBar.Utilities
             return immersiveLauncher;
         }
 
+        // wParam values for Open Shell Menu's registered "OpenShellMenu.StartMenuMsg" window
+        // message, posted to the real Explorer taskbar (Shell_TrayWnd). From Open-Shell's own
+        // TMenuMsgParam enum (Src/StartMenu/StartMenuDLL/StartMenuDLL.h) — undocumented but
+        // stable across recent versions; falls back to SendInput if Open Shell isn't found or
+        // doesn't respond, so a protocol change there just loses the fast path, not breaks it.
+        private const int OpenShellMsgOpen = 2;
+
+        private bool TryOpenShellDirectInvoke()
+        {
+            IntPtr hTaskbar = FindWindowEx(IntPtr.Zero, IntPtr.Zero, "Shell_TrayWnd", IntPtr.Zero);
+            if (hTaskbar == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            int openShellMsg = RegisterWindowMessage("OpenShellMenu.StartMenuMsg");
+            if (openShellMsg == 0)
+            {
+                return false;
+            }
+
+            return PostMessage(hTaskbar, (uint)openShellMsg, (IntPtr)OpenShellMsgOpen, IntPtr.Zero);
+        }
+
         internal void ShowStartMenu(IntPtr taskbarHwnd)
         {
+            var diagStopwatch = System.Diagnostics.Stopwatch.StartNew();
+            ShellLogger.Debug("StartMenuMonitor DIAG: ShowStartMenu entered");
             _taskbarHwndActivated = taskbarHwnd;
 
             if (!EnvironmentHelper.IsWindows10OrBetter ||
                 FindWindowEx(IntPtr.Zero, IntPtr.Zero, "OpenShell.COwnerWindow", IntPtr.Zero) != IntPtr.Zero ||
                 FindWindowEx(IntPtr.Zero, IntPtr.Zero, "DV2ControlHost", IntPtr.Zero) != IntPtr.Zero)
             {
+                // Open Shell Menu listens for its own registered message on the real
+                // taskbar window, which skips the OS input queue/focus round trip that
+                // SendInput needs — try that first, since it's measurably faster. The
+                // exact message protocol is undocumented (reverse-engineered from Open
+                // Shell's own source), so don't just trust PostMessage's return value —
+                // it only confirms the message was queued, not that anything opened. Fall
+                // back to the proven SendInput path if the menu isn't actually open shortly
+                // after, so a protocol mismatch degrades to the old speed instead of a dead
+                // button.
+                if (TryOpenShellDirectInvoke())
+                {
+                    ShellLogger.Debug($"StartMenuMonitor DIAG: posted direct OpenShellMenu.StartMenuMsg at {diagStopwatch.ElapsedMilliseconds}ms");
+
+                    DispatcherTimer fallbackTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
+                    fallbackTimer.Tick += (s, e) =>
+                    {
+                        fallbackTimer.Stop();
+                        if (!_isVisible)
+                        {
+                            ShellLogger.Debug("StartMenuMonitor DIAG: direct invoke didn't open the menu within 300ms, falling back to SendInput");
+                            ShellHelper.ShowStartMenu();
+                        }
+                    };
+                    fallbackTimer.Start();
+                    return;
+                }
+
                 // Always use the Windows key when IImmersiveLauncher or IImmersiveMonitor is unavailable
                 // Also use the Windows key when Open Shell Menu or StartIsBack is running, because we cannot otherwise invoke it
+                ShellLogger.Debug("StartMenuMonitor DIAG: falling back to ShellHelper.ShowStartMenu (SendInput) — OpenShell/DV2ControlHost detected or pre-Win10");
                 ShellHelper.ShowStartMenu();
                 return;
             }
@@ -398,10 +475,15 @@ namespace RetroBar.Utilities
                 if (EnvironmentHelper.IsWindows10RS1OrBetter)
                 {
                     IImmersiveLauncher_Win10RS1 immersiveLauncher = GetImmersiveLauncher_Win10RS1(taskbarHwnd);
-                    if (immersiveLauncher != null &&
-                        immersiveLauncher.ShowStartView(IMMERSIVELAUNCHERSHOWMETHOD.ILSM_STARTBUTTON, IMMERSIVELAUNCHERSHOWFLAGS.ILSF_IGNORE_SET_FOREGROUND_ERROR) == 0)
+                    ShellLogger.Debug($"StartMenuMonitor DIAG: GetImmersiveLauncher_Win10RS1 returned {(immersiveLauncher != null ? "non-null" : "null")} at {diagStopwatch.ElapsedMilliseconds}ms");
+                    if (immersiveLauncher != null)
                     {
-                        return;
+                        int hr = immersiveLauncher.ShowStartView(IMMERSIVELAUNCHERSHOWMETHOD.ILSM_STARTBUTTON, IMMERSIVELAUNCHERSHOWFLAGS.ILSF_IGNORE_SET_FOREGROUND_ERROR);
+                        ShellLogger.Debug($"StartMenuMonitor DIAG: ShowStartView returned hr={hr} at {diagStopwatch.ElapsedMilliseconds}ms");
+                        if (hr == 0)
+                        {
+                            return;
+                        }
                     }
                 }
                 else
