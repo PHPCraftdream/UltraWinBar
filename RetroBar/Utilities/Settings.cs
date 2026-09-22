@@ -802,6 +802,8 @@ namespace RetroBar.Utilities
         /// The primary edge's own row count (Properties dialog binds to this, not the
         /// global RowCount default, so editing it never affects other edges' panels).
         /// </summary>
+        // Computed pass-through over EdgeSizes — must not be serialized separately.
+        [JsonIgnore]
         public int PrimaryRowCount
         {
             get => GetEdgeSize(Edge, RowCount);
@@ -811,6 +813,7 @@ namespace RetroBar.Utilities
         /// <summary>
         /// The primary edge's own width. See <see cref="PrimaryRowCount"/>.
         /// </summary>
+        [JsonIgnore]
         public int PrimaryTaskbarWidth
         {
             get => GetEdgeSize(Edge, TaskbarWidth);
