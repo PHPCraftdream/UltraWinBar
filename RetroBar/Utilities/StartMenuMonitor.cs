@@ -20,12 +20,52 @@ namespace RetroBar.Utilities
         private bool _isVisible;
         private IntPtr _taskbarHwndActivated;
 
+        // Fast path for the modern Start menu: EVENT_SYSTEM_FOREGROUND fires the instant it
+        // becomes the foreground window, instead of waiting for the next 100ms poller tick
+        // (during which the window is already visibly painted at the OS's default position).
+        // Kept as a supplement, not a replacement — the poller still drives Open Shell/classic
+        // detection and close detection, where a 100ms delay isn't visually noticeable.
+        private const uint EVENT_SYSTEM_FOREGROUND = 0x0003;
+        private const uint WINEVENT_OUTOFCONTEXT = 0x0000;
+        private delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
+        [DllImport("user32.dll")]
+        private static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc, WinEventDelegate lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
+        [DllImport("user32.dll")]
+        private static extern bool UnhookWinEvent(IntPtr hWinEventHook);
+        private IntPtr _foregroundEventHook;
+        private WinEventDelegate _foregroundEventProc;
+
         public event EventHandler<StartMenuMonitorEventArgs> StartMenuVisibilityChanged;
 
         public StartMenuMonitor(AppVisibilityHelper appVisibilityHelper)
         {
             _appVisibilityHelper = appVisibilityHelper;
             setupPoller();
+            setupForegroundHook();
+        }
+
+        private void setupForegroundHook()
+        {
+            _foregroundEventProc = ForegroundEventProc;
+            _foregroundEventHook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, IntPtr.Zero, _foregroundEventProc, 0, 0, WINEVENT_OUTOFCONTEXT);
+        }
+
+        private void ForegroundEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
+        {
+            if (hwnd == IntPtr.Zero || !EnvironmentHelper.IsWindows8OrBetter)
+            {
+                return;
+            }
+
+            StringBuilder cName = new StringBuilder(256);
+            GetClassName(hwnd, cName, cName.Capacity);
+            if (cName.ToString() != "Windows.UI.Core.CoreWindow")
+            {
+                return;
+            }
+
+            relocateStartMenu(hwnd);
+            setVisibility(true, MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST));
         }
 
         private void setupPoller()
@@ -392,6 +432,12 @@ namespace RetroBar.Utilities
         public void Dispose()
         {
             _poller?.Stop();
+
+            if (_foregroundEventHook != IntPtr.Zero)
+            {
+                UnhookWinEvent(_foregroundEventHook);
+                _foregroundEventHook = IntPtr.Zero;
+            }
         }
 
         #region Immersive launcher interfaces
