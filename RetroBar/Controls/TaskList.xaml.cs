@@ -141,7 +141,18 @@ namespace RetroBar.Controls
                 e.PropertyName == nameof(Settings.Edge) ||
                 e.PropertyName == nameof(Settings.DefaultTaskEdge))
             {
-                taskbarItems?.Refresh();
+                try
+                {
+                    taskbarItems?.Refresh();
+                }
+                catch (Exception)
+                {
+                    // Settings.PropertyChanged is a single multicast event shared by every
+                    // open taskbar's TaskList — an unhandled exception here would abort the
+                    // invocation and skip whichever other panels hadn't been notified yet,
+                    // e.g. leaving a just-dragged task showing on neither the old nor the new
+                    // panel. Never let a refresh failure break other panels' updates.
+                }
             }
             else if (e.PropertyName == nameof(Settings.ShowMultiMon))
             {

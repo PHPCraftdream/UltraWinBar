@@ -1,4 +1,5 @@
 using ManagedShell.WindowsTasks;
+using System;
 
 namespace RetroBar.Utilities
 {
@@ -22,21 +23,30 @@ namespace RetroBar.Utilities
                 return TaskAssignmentManager.GetIdentifier(window, TaskAssignmentMode.WindowClassAndTitle);
             }
 
-            int ordinal = 0;
-            foreach (object item in tasks.GroupedWindows)
+            // Best-effort only — never let a transient enumeration failure here (e.g. a
+            // sibling window closing mid-loop) affect drag/assignment/sort callers.
+            try
             {
-                if (item is ApplicationWindow sibling &&
-                    TaskAssignmentManager.GetIdentifier(sibling, TaskAssignmentMode.ExecutablePath) == appId)
+                int ordinal = 0;
+                foreach (object item in tasks.GroupedWindows)
                 {
-                    ordinal++;
-                    if (ReferenceEquals(sibling, window))
+                    if (item is ApplicationWindow sibling &&
+                        TaskAssignmentManager.GetIdentifier(sibling, TaskAssignmentMode.ExecutablePath) == appId)
                     {
-                        break;
+                        ordinal++;
+                        if (ReferenceEquals(sibling, window))
+                        {
+                            break;
+                        }
                     }
                 }
-            }
 
-            return appId + "#" + ordinal;
+                return appId + "#" + ordinal;
+            }
+            catch (Exception)
+            {
+                return appId;
+            }
         }
     }
 }
