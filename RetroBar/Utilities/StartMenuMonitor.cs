@@ -306,16 +306,39 @@ namespace RetroBar.Utilities
             bool moved = SetWindowPos(hStartMenu, IntPtr.Zero, x, y, 0, 0, (int)(SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOZORDER));
             ShellLogger.Debug($"StartMenuMonitor DIAG: SetWindowPos target=({x},{y}) returned {moved}");
 
-            // Diagnostic only: check whether something (the OS itself?) moves the window
-            // back after we do, which would explain a persistent jump despite this call.
-            DispatcherTimer recheckTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
-            recheckTimer.Tick += (s, e) =>
+            // Confirmed via diagnostic logging: our SetWindowPos succeeds immediately, but
+            // Open Shell Menu (and possibly others) then repositions itself shortly after
+            // based on its own internal state, drifting away from the target within ~150ms.
+            // Keep re-asserting the target position for a short window until it settles.
+            int correctionAttemptsRemaining = 5;
+            DispatcherTimer correctionTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
+            correctionTimer.Tick += (s, e) =>
             {
-                recheckTimer.Stop();
-                GetWindowRect(hStartMenu, out ManagedShell.Interop.NativeMethods.Rect afterRect);
-                ShellLogger.Debug($"StartMenuMonitor DIAG: 150ms after SetWindowPos, rect=({afterRect.Left},{afterRect.Top},{afterRect.Right},{afterRect.Bottom})");
+                if (!IsWindow(hStartMenu))
+                {
+                    correctionTimer.Stop();
+                    return;
+                }
+
+                GetWindowRect(hStartMenu, out ManagedShell.Interop.NativeMethods.Rect currentRect);
+                if (currentRect.Left == x && currentRect.Top == y)
+                {
+                    correctionTimer.Stop();
+                    return;
+                }
+
+                correctionAttemptsRemaining--;
+                if (correctionAttemptsRemaining <= 0)
+                {
+                    ShellLogger.Debug($"StartMenuMonitor DIAG: gave up correcting Start menu position, final rect=({currentRect.Left},{currentRect.Top},{currentRect.Right},{currentRect.Bottom})");
+                    correctionTimer.Stop();
+                    return;
+                }
+
+                ShellLogger.Debug($"StartMenuMonitor DIAG: Start menu drifted to ({currentRect.Left},{currentRect.Top}), re-applying target=({x},{y})");
+                SetWindowPos(hStartMenu, IntPtr.Zero, x, y, 0, 0, (int)(SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOZORDER));
             };
-            recheckTimer.Start();
+            correctionTimer.Start();
         }
 
         private IImmersiveMonitor GetImmersiveMonitor(ManagedShell.UWPInterop.Interfaces.IServiceProvider shell, IntPtr hWnd)
