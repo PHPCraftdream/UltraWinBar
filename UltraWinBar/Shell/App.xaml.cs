@@ -162,6 +162,7 @@ namespace UltraWinBar
             _startMenuMonitor.Dispose();
             _updater.Dispose();
             _hotkeyManager.Dispose();
+            Settings.Flush();
             _logger.Dispose();
         }
 

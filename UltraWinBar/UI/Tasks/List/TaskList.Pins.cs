@@ -75,9 +75,26 @@ namespace UltraWinBar.Controls
                 items.Add(window);
                 keys[window] = TaskOrderIdentifier.Get(window, Tasks) ?? "hwnd:" + window.Handle;
             }
+            var orderIndexes = new Dictionary<string, int>();
+            int nullOrderIndex = -1;
+            for (int i = 0; i < order.Count; i++)
+            {
+                string orderKey = order[i];
+                if (orderKey == null)
+                {
+                    if (nullOrderIndex < 0) nullOrderIndex = i;
+                }
+                else if (!orderIndexes.ContainsKey(orderKey))
+                {
+                    orderIndexes.Add(orderKey, i);
+                }
+            }
             items = items.OrderBy(item =>
             {
-                int index = order.IndexOf(keys[item]);
+                string itemKey = keys[item];
+                int index = itemKey == null
+                    ? nullOrderIndex
+                    : orderIndexes.TryGetValue(itemKey, out int orderIndex) ? orderIndex : -1;
                 return index < 0 ? int.MaxValue : index;
             }).ToList();
             displayKeys = keys;

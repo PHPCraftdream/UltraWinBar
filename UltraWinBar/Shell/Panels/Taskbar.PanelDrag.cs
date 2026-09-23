@@ -212,7 +212,12 @@ namespace UltraWinBar
 
             _mouseDragHook = new LowLevelMouseHook();
             _mouseDragHook.LowLevelMouseEvent += MouseDragHook_LowLevelMouseEvent;
-            _mouseDragHook.Initialize();
+            if (!_mouseDragHook.Initialize())
+            {
+                ShellLogger.Warning("Mouse drag hook could not be initialized.");
+                StopMouseDragHook();
+                return;
+            }
             _mouseDragStart = new Point(System.Windows.Forms.Cursor.Position.X, System.Windows.Forms.Cursor.Position.Y);
             _mouseDragResize = IsMouseInResizeArea();
 

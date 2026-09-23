@@ -1,5 +1,6 @@
 ﻿using ManagedShell.ShellFolders;
 using UltraWinBar.Utilities;
+using ManagedShell.Common.Logging;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -66,7 +67,12 @@ namespace UltraWinBar.Controls
 
             _dragHook = new LowLevelMouseHook();
             _dragHook.LowLevelMouseEvent += DragHook_LowLevelMouseEvent;
-            _dragHook.Initialize();
+            if (!_dragHook.Initialize())
+            {
+                ShellLogger.Warning("Toolbar drag hook could not be initialized.");
+                StopDragHook();
+                e.Handled = false;
+            }
         }
 
         private void DragHook_LowLevelMouseEvent(object sender, LowLevelMouseHook.LowLevelMouseEventArgs e)
@@ -162,6 +168,7 @@ namespace UltraWinBar.Controls
             _dragHook.Dispose();
             _dragHook = null;
             _isDraggingToTaskbar = false;
+            Cursor = Cursors.Arrow;
         }
         #endregion
     }

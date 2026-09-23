@@ -16,8 +16,12 @@ internal static class SettingsLayoutChecks
         var xml = XDocument.Load(Path.Combine(AppContext.BaseDirectory, "Layout", "PropertiesWindow.xaml"));
         XNamespace ui = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
         if ((string)xml.Root.Attribute("SizeToContent") != "Manual") throw new Exception("Settings size follows theme contents.");
-        if (xml.Descendants(ui + "TabItem").Any(tab => tab.Elements().First().Name != ui + "ScrollViewer"))
-            throw new Exception("Settings tab has no bounded scrolling.");
+        var outerTabsXml = xml.Descendants(ui + "TabControl").First().Elements(ui + "TabItem").ToArray();
+        var innerTabsXml = outerTabsXml[0].Element(ui + "TabControl")?.Elements(ui + "TabItem").ToArray();
+        if (innerTabsXml == null || innerTabsXml.Length != 5 ||
+            innerTabsXml.Any(tab => tab.Elements().FirstOrDefault()?.Name != ui + "ScrollViewer") ||
+            outerTabsXml.Skip(1).Any(tab => tab.Elements().FirstOrDefault()?.Name != ui + "ScrollViewer"))
+            throw new Exception("Settings page has no bounded scrolling.");
         if (xml.Descendants(ui + "ComboBox").Any(combo => combo.Parent.Name != ui + "Grid"))
             throw new Exception("Settings combo is outside a grid row.");
         foreach (var element in xml.Descendants().ToArray())
@@ -49,24 +53,44 @@ internal static class SettingsLayoutChecks
         control.Arrange(new Rect(0, 0, 640, 700));
         control.UpdateLayout();
         tabs ??= Descendants(control).OfType<TabControl>().First();
+        var innerTabs = Descendants(control).OfType<TabControl>().Skip(1).First();
         int checkedCombos = 0;
         foreach (double width in new[] { 360d, 640d })
-        for (int tab = 0; tab < tabs.Items.Count; tab++)
         {
-            tabs.SelectedIndex = tab;
-            control.Measure(new Size(width, 600));
-            control.Arrange(new Rect(0, 0, width, 600));
-            control.UpdateLayout();
-            foreach (var combo in Descendants(control).OfType<ComboBox>())
+            tabs.SelectedIndex = 0;
+            for (int tab = 0; tab < innerTabs.Items.Count; tab++)
             {
-                if (combo.ActualWidth == 0) continue;
-                var point = combo.TranslatePoint(new Point(), control);
-                if (point.X < -1 || point.X + combo.ActualWidth > width + 1)
-                    throw new Exception($"Settings combo overflows: {combo.Name}, width={width}, x={point.X}, controlWidth={combo.ActualWidth}");
-                checkedCombos++;
+                innerTabs.SelectedIndex = tab;
+                control.Measure(new Size(width, 600));
+                control.Arrange(new Rect(0, 0, width, 600));
+                control.UpdateLayout();
+                checkedCombos += CheckCombos(control, width);
+            }
+
+            for (int tab = 1; tab < tabs.Items.Count; tab++)
+            {
+                tabs.SelectedIndex = tab;
+                control.Measure(new Size(width, 600));
+                control.Arrange(new Rect(0, 0, width, 600));
+                control.UpdateLayout();
+                checkedCombos += CheckCombos(control, width);
             }
         }
         if (checkedCombos == 0) throw new Exception("Settings layout test did not measure any combo boxes.");
+    }
+
+    private static int CheckCombos(UserControl control, double width)
+    {
+        int checkedCombos = 0;
+        foreach (var combo in Descendants(control).OfType<ComboBox>())
+        {
+            if (combo.ActualWidth == 0) continue;
+            var point = combo.TranslatePoint(new Point(), control);
+            if (point.X < -1 || point.X + combo.ActualWidth > width + 1)
+                throw new Exception($"Settings combo overflows: {combo.Name}, width={width}, x={point.X}, controlWidth={combo.ActualWidth}");
+            checkedCombos++;
+        }
+        return checkedCombos;
     }
 
     private static IEnumerable<DependencyObject> Descendants(DependencyObject parent)

@@ -30,14 +30,17 @@
             Grid.Row="0">
             <TabItem
                 Header="{DynamicResource taskbar_tab}">
-                <ScrollViewer
-                    VerticalScrollBarVisibility="Auto"
-                    HorizontalScrollBarVisibility="Disabled"
-                    CanContentScroll="False">
-                    <StackPanel
-                        Orientation="Vertical"
-                        Margin="10"
-                        x:Name="FirstTabContent">
+                <TabControl>
+                    <TabItem
+                        Header="{DynamicResource general_heading}">
+                        <ScrollViewer
+                            VerticalScrollBarVisibility="Auto"
+                            HorizontalScrollBarVisibility="Disabled"
+                            CanContentScroll="False">
+                            <StackPanel
+                                Orientation="Vertical"
+                                Margin="10"
+                                x:Name="FirstTabContent">
                         <GroupBox
                             x:Name="gbUltraWinBar">
                             <StackPanel
@@ -76,10 +79,18 @@
                                 </Grid>
                             </StackPanel>
                         </GroupBox>
-                        <GroupBox
-                            Header="{DynamicResource taskbar_appearance}">
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+                    <TabItem
+                        Header="{DynamicResource taskbar_appearance}">
+                        <ScrollViewer
+                            VerticalScrollBarVisibility="Auto"
+                            HorizontalScrollBarVisibility="Disabled"
+                            CanContentScroll="False">
                             <StackPanel
-                                Orientation="Vertical">
+                                Orientation="Vertical"
+                                Margin="10">
                                 <Border
                                     Style="{StaticResource PreviewBorder}">
                                     <ContentControl
@@ -277,6 +288,18 @@
                                     <Label
                                         Content="{DynamicResource enable_auto_hide}" />
                                 </CheckBox>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+                    <TabItem
+                        Header="{DynamicResource behavior_heading}">
+                        <ScrollViewer
+                            VerticalScrollBarVisibility="Auto"
+                            HorizontalScrollBarVisibility="Disabled"
+                            CanContentScroll="False">
+                            <StackPanel
+                                Orientation="Vertical"
+                                Margin="10">
                                 <CheckBox
                                     x:Name="cbShowBadges"
                                     IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=ShowTaskBadges, UpdateSourceTrigger=PropertyChanged}">
@@ -309,11 +332,17 @@
                                         Click="SetQuickLaunchLocation_OnClick" />
                                 </DockPanel>
                             </StackPanel>
-                        </GroupBox>
-                        <GroupBox
-                            Header="{DynamicResource multiple_taskbars_heading}">
+                        </ScrollViewer>
+                    </TabItem>
+                    <TabItem
+                        Header="{DynamicResource multiple_taskbars_heading}">
+                        <ScrollViewer
+                            VerticalScrollBarVisibility="Auto"
+                            HorizontalScrollBarVisibility="Disabled"
+                            CanContentScroll="False">
                             <StackPanel
-                                Orientation="Vertical">
+                                Orientation="Vertical"
+                                Margin="10">
                                 <TextBlock
                                     Text="{DynamicResource additional_taskbars_text}"
                                     TextWrapping="Wrap"
@@ -425,11 +454,17 @@
                                     Content="{DynamicResource reset_task_assignments}"
                                     Click="ResetTaskAssignments_OnClick" />
                             </StackPanel>
-                        </GroupBox>
-                        <GroupBox
-                            Header="{DynamicResource taskbar_scale}">
+                        </ScrollViewer>
+                    </TabItem>
+                    <TabItem
+                        Header="{DynamicResource taskbar_scale}">
+                        <ScrollViewer
+                            VerticalScrollBarVisibility="Auto"
+                            HorizontalScrollBarVisibility="Disabled"
+                            CanContentScroll="False">
                             <StackPanel
-                                Orientation="Vertical">
+                                Orientation="Vertical"
+                                Margin="10">
                                 <DockPanel
                                     Margin="20,0">
                                     <Label
@@ -465,9 +500,9 @@
                                     </TextBlock.Text>
                                 </TextBlock>
                             </StackPanel>
-                        </GroupBox>
-                    </StackPanel>
-                </ScrollViewer>
+                        </ScrollViewer>
+                    </TabItem>
+                </TabControl>
             </TabItem>
             <TabItem
                 Header="{DynamicResource notification_area}">

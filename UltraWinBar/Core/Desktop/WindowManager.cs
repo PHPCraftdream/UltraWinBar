@@ -135,23 +135,32 @@ namespace UltraWinBar.Utilities
             }
 
             _isSettingDisplays = true;
-
-            while (_pendingDisplayEvents > 0)
+            try
             {
-                // Skip re-opening taskbars if the screens haven't changed
-                if (!haveDisplaysChanged())
+                while (_pendingDisplayEvents > 0)
                 {
+                    // Skip re-opening taskbars if the screens haven't changed
+                    if (!haveDisplaysChanged())
+                    {
+                        _pendingDisplayEvents--;
+                        continue;
+                    }
+
+                    ReopenTaskbars();
+
                     _pendingDisplayEvents--;
-                    continue;
                 }
 
-                ReopenTaskbars();
-
-                _pendingDisplayEvents--;
+                ShellLogger.Debug($"WindowManager: Finished processing display events");
             }
-
-            _isSettingDisplays = false;
-            ShellLogger.Debug($"WindowManager: Finished processing display events");
+            catch (Exception ex)
+            {
+                ShellLogger.Error($"WindowManager: Error processing display events: {ex}");
+            }
+            finally
+            {
+                _isSettingDisplays = false;
+            }
         }
 
         public bool IsValidHMonitor(IntPtr hMonitor)

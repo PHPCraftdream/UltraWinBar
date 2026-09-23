@@ -28,6 +28,11 @@ namespace UltraWinBar.Utilities
             }
         }
 
+        internal static void Flush()
+        {
+            _settingsManager.Flush();
+        }
+
         private static string _settingsPath = "UltraWinBar.settings.json".InLocalAppData();
         private static bool _isInitializing = true;
         private static SettingsManager<Settings> _settingsManager = new(_settingsPath, new Settings());
@@ -754,7 +759,7 @@ namespace UltraWinBar.Utilities
         ExecutablePath,
 
         /// <summary>
-        /// Group by window class and title (plain drag), moving only that one window.
+        /// Identify one window lifetime (plain drag). The enum name stays for JSON compatibility.
         /// </summary>
         WindowClassAndTitle
     }

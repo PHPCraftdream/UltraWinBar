@@ -59,6 +59,7 @@ namespace UltraWinBar.Utilities
                 if (!Settings.Instance.DesktopPinPreferencesInitialized)
                 {
                     var ids = Settings.Instance.AllDesktopApplications.ToList();
+                    bool scanComplete = true;
                     foreach (var window in tasks.GroupedWindows.SourceCollection.Cast<object>().OfType<ApplicationWindow>().ToArray())
                     {
                         try
@@ -66,10 +67,17 @@ namespace UltraWinBar.Utilities
                             string id = actions.GetApplicationId(window.Handle);
                             if (actions.IsApplicationIdPinned(id) && !ids.Contains(id)) ids.Add(id);
                         }
-                        catch (Exception error) { ShellLogger.Debug($"Desktop pin import skipped {window.Handle}: {error.Message}"); }
+                        catch (Exception error)
+                        {
+                            scanComplete = false;
+                            ShellLogger.Debug($"Desktop pin import skipped {window.Handle}: {error.Message}");
+                        }
                     }
-                    Settings.Instance.AllDesktopApplications = ids;
-                    Settings.Instance.DesktopPinPreferencesInitialized = true;
+                    if (scanComplete)
+                    {
+                        Settings.Instance.AllDesktopApplications = ids;
+                        Settings.Instance.DesktopPinPreferencesInitialized = true;
+                    }
                 }
                 foreach (string id in Settings.Instance.AllDesktopApplications.ToArray())
                 {

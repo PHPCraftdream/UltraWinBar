@@ -2,12 +2,17 @@ using ManagedShell.Interop;
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace UltraWinBar.Utilities
 {
     internal static class WorkAreaManager
     {
         private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+        private static readonly object NotificationLock = new object();
+        private static bool notificationPending;
+        private static bool notificationWorkerRunning;
+        private static uint notificationProcessId;
 
         [DllImport("user32.dll")]
         private static extern bool EnumWindows(EnumWindowsProc callback, IntPtr lParam);
@@ -23,36 +28,112 @@ namespace UltraWinBar.Utilities
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         private static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint message, IntPtr wParam,
-            string lParam, uint flags, uint timeout, out IntPtr result);
+            IntPtr lParam, uint flags, uint timeout, out IntPtr result);
 
         public static void Apply(NativeMethods.Rect workArea, uint UltraWinBarProcessId)
         {
-            NativeMethods.SystemParametersInfo((int)NativeMethods.SPI.SETWORKAREA, 0, ref workArea, 0);
-
-            EnumWindows((hWnd, lParam) =>
+            if (!NativeMethods.SystemParametersInfo((int)NativeMethods.SPI.SETWORKAREA, 0, ref workArea, 0))
             {
-                GetWindowThreadProcessId(hWnd, out uint processId);
-                if (processId == UltraWinBarProcessId)
+                ManagedShell.Common.Logging.ShellLogger.Error("WorkAreaManager: Failed to set the work area.");
+                return;
+            }
+
+            lock (NotificationLock)
+            {
+                notificationProcessId = UltraWinBarProcessId;
+                notificationPending = true;
+                if (notificationWorkerRunning)
                 {
-                    return true;
+                    return;
                 }
 
-                if (!IsWindowVisible(hWnd))
+                notificationWorkerRunning = true;
+            }
+
+            Task.Run(DispatchPendingNotifications);
+        }
+
+        private static void DispatchPendingNotifications()
+        {
+            try
+            {
+                while (true)
                 {
-                    return true;
+                    uint processId;
+                    lock (NotificationLock)
+                    {
+                        if (!notificationPending)
+                        {
+                            return;
+                        }
+
+                        notificationPending = false;
+                        processId = notificationProcessId;
+                    }
+
+                    BroadcastSettingChange(processId);
+                }
+            }
+            catch (Exception ex)
+            {
+                try { ManagedShell.Common.Logging.ShellLogger.Error($"WorkAreaManager: Notification failed: {ex.Message}"); }
+                catch { }
+            }
+            finally
+            {
+                bool restartWorker;
+                lock (NotificationLock)
+                {
+                    notificationWorkerRunning = notificationPending;
+                    restartWorker = notificationWorkerRunning;
                 }
 
-                StringBuilder className = new StringBuilder(64);
-                GetClassName(hWnd, className, className.Capacity);
-                if (className.ToString() == "Shell_TrayWnd" || className.ToString() == "Shell_SecondaryTrayWnd")
+                if (restartWorker)
                 {
+                    Task.Run(DispatchPendingNotifications);
+                }
+            }
+        }
+
+        private static void BroadcastSettingChange(uint UltraWinBarProcessId)
+        {
+            IntPtr settingName = Marshal.StringToHGlobalUni("WorkArea");
+            try
+            {
+                if (!EnumWindows((hWnd, lParam) =>
+                {
+                    GetWindowThreadProcessId(hWnd, out uint processId);
+                    if (processId == UltraWinBarProcessId)
+                    {
+                        return true;
+                    }
+
+                    if (!IsWindowVisible(hWnd))
+                    {
+                        return true;
+                    }
+
+                    StringBuilder className = new StringBuilder(64);
+                    GetClassName(hWnd, className, className.Capacity);
+                    if (className.ToString() == "Shell_TrayWnd" || className.ToString() == "Shell_SecondaryTrayWnd")
+                    {
+                        return true;
+                    }
+
+                    SendMessageTimeout(hWnd, (uint)NativeMethods.WM.SETTINGCHANGE,
+                        (IntPtr)NativeMethods.SPI.SETWORKAREA, settingName, 0x2, 250, out _);
                     return true;
+                }, IntPtr.Zero))
+                {
+                    return;
                 }
 
-                SendMessageTimeout(hWnd, (uint)NativeMethods.WM.SETTINGCHANGE,
-                    (IntPtr)NativeMethods.SPI.SETWORKAREA, "WorkArea", 0x2, 250, out _);
-                return true;
-            }, IntPtr.Zero);
+                ManagedShell.Common.Logging.ShellLogger.Warning("WorkAreaManager: Could not enumerate top-level windows for notification.");
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(settingName);
+            }
         }
     }
 }

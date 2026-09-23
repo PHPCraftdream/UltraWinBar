@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using ManagedShell.Common.Logging;
 using static ManagedShell.Interop.NativeMethods;
 
 namespace UltraWinBar.Utilities
@@ -72,13 +73,26 @@ namespace UltraWinBar.Utilities
 
         private IntPtr MouseHookProc(int code, uint wParam, IntPtr lParam)
         {
+            if (code < 0)
+            {
+                return CallNextHookEx(_hook, code, wParam, lParam);
+            }
+
             LowLevelMouseEventArgs args = new LowLevelMouseEventArgs
             {
                 Message = (WM)wParam,
                 HookStruct = (MSLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(MSLLHOOKSTRUCT))
             };
 
-            LowLevelMouseEvent?.Invoke(this, args);
+            try
+            {
+                LowLevelMouseEvent?.Invoke(this, args);
+            }
+            catch (Exception ex)
+            {
+                try { ShellLogger.Error($"LowLevelMouseHook callback failed: {ex.Message}"); }
+                catch { }
+            }
 
             if (args.Handled)
             {

@@ -41,11 +41,25 @@ namespace UltraWinBar.Utilities
             var parts = key?.Split(':');
             if (parts?.Length != 5 || parts[0] != "window" || parts[1] != "v2" ||
                 !uint.TryParse(parts[2], out uint processId) ||
+                !long.TryParse(parts[3], out long processStartTicks) ||
                 !long.TryParse(parts[4], System.Globalization.NumberStyles.HexNumber,
                     System.Globalization.CultureInfo.InvariantCulture, out long handle)) return false;
-            var hwnd = new IntPtr(handle);
-            NativeMethods.GetWindowThreadProcessId(hwnd, out uint actualProcess);
-            return NativeMethods.IsWindow(hwnd) && actualProcess == processId;
+            try
+            {
+                var hwnd = new IntPtr(handle);
+                if (!NativeMethods.IsWindow(hwnd)) return false;
+                NativeMethods.GetWindowThreadProcessId(hwnd, out uint actualProcess);
+                if (actualProcess != processId) return false;
+                using var process = Process.GetProcessById((int)processId);
+                if (process.StartTime.ToUniversalTime().Ticks != processStartTicks || process.HasExited)
+                    return false;
+                NativeMethods.GetWindowThreadProcessId(hwnd, out actualProcess);
+                return NativeMethods.IsWindow(hwnd) && actualProcess == processId && !process.HasExited;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         public static string GetLegacy(ApplicationWindow window, Tasks tasks)
@@ -53,7 +67,7 @@ namespace UltraWinBar.Utilities
             string appId = TaskAssignmentManager.GetIdentifier(window, TaskAssignmentMode.ExecutablePath);
             if (appId == null || tasks == null)
             {
-                return TaskAssignmentManager.GetIdentifier(window, TaskAssignmentMode.WindowClassAndTitle);
+                return TaskAssignmentManager.GetLegacyWindowIdentifier(window);
             }
 
             // Best-effort only — never let a transient enumeration failure here (e.g. a

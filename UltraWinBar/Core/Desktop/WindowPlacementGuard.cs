@@ -90,8 +90,8 @@ namespace UltraWinBar.Utilities
             var screen = System.Windows.Forms.Screen.FromHandle(hwnd);
             var area = AvailableArea(screen.Bounds);
             var visible = outer;
-            DwmGetWindowAttribute(hwnd, 9, out var frame, Marshal.SizeOf<NativeMethods.Rect>());
-            if (frame.Width > 0 && frame.Height > 0) visible = frame;
+            if (DwmGetWindowAttribute(hwnd, 9, out var frame, Marshal.SizeOf<NativeMethods.Rect>()) == 0 &&
+                frame.Width > 0 && frame.Height > 0) visible = frame;
             double width = Math.Min(visible.Width, area.Width), height = Math.Min(visible.Height, area.Height);
             double x = Math.Max(area.Left, Math.Min(visible.Left, area.Right - width));
             double y = Math.Max(area.Top, Math.Min(visible.Top, area.Bottom - height));
@@ -102,11 +102,13 @@ namespace UltraWinBar.Utilities
                 x = area.Left; y = area.Top; width = area.Width; height = area.Height;
             }
             if (lastAttempt.Count > 256) lastAttempt.Clear();
-            lastAttempt[hwnd] = outer;
-            NativeMethods.SetWindowPos(hwnd, IntPtr.Zero,
+            if (NativeMethods.SetWindowPos(hwnd, IntPtr.Zero,
                 (int)x - (visible.Left - outer.Left), (int)y - (visible.Top - outer.Top),
                 (int)width + outer.Width - visible.Width, (int)height + outer.Height - visible.Height,
-                (int)(NativeMethods.SetWindowPosFlags.SWP_NOACTIVATE | NativeMethods.SetWindowPosFlags.SWP_NOZORDER));
+                (int)(NativeMethods.SetWindowPosFlags.SWP_NOACTIVATE | NativeMethods.SetWindowPosFlags.SWP_NOZORDER)))
+            {
+                lastAttempt[hwnd] = outer;
+            }
         }
 
         public void Dispose()

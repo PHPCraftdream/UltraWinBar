@@ -237,7 +237,7 @@ namespace UltraWinBar.Controls
             if (Window.GetWindow(this) is Taskbar taskbar && taskbar.Orientation == Orientation.Vertical)
             {
                 double scale = Settings.Instance.TaskbarScale * VisualTreeHelper.GetDpi(this).DpiScaleY;
-                if (scale > 0) bottom = 45 / scale;
+                if (scale > 0) bottom = 22.5 / scale;
             }
 
             if (Math.Abs(Margin.Bottom - bottom) > 0.05)
