@@ -10,6 +10,19 @@ var repositoryRoot = new System.IO.DirectoryInfo(AppContext.BaseDirectory);
 while (repositoryRoot != null && !System.IO.File.Exists(System.IO.Path.Combine(repositoryRoot.FullName, "README.md")))
     repositoryRoot = repositoryRoot.Parent;
 if (repositoryRoot == null) throw new Exception("Repository root not found for structure checks.");
+var taskbarMenus = System.Xml.Linq.XDocument.Load(System.IO.Path.Combine(repositoryRoot.FullName,
+    "UltraWinBar", "Shell", "Panels", "Taskbar.xaml"));
+System.Xml.Linq.XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+System.Xml.Linq.XNamespace xaml = "http://schemas.microsoft.com/winfx/2006/xaml";
+var clockGroup = taskbarMenus.Descendants(presentation + "GroupBox")
+    .Single(element => (string)element.Attribute(xaml + "Name") == "ClockGroupBox");
+var clockMenu = clockGroup.Element(presentation + "GroupBox.ContextMenu");
+var exitMenuItems = taskbarMenus.Descendants()
+    .Where(element => element.Name.LocalName == "StaticResourceExtension" &&
+        (string)element.Attribute("ResourceKey") == "ExitMenuItem").ToArray();
+if (clockMenu == null || exitMenuItems.Length != 1 || !clockMenu.Descendants().Contains(exitMenuItems[0]))
+    throw new Exception("Exit menu item must appear only in the clock context menu.");
+Console.WriteLine("PASS: Exit menu is available only from the clock context menu.");
 var generatedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".git", ".vs", "bin", "obj", "artifacts" };
 var sourceExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     { ".cs", ".xaml", ".json", ".iss", ".ps1", ".bat", ".pubxml", ".hlsl", ".props", ".csproj", ".sln", ".md", ".yml" };

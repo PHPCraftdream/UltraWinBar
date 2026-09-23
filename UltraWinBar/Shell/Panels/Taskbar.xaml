@@ -126,7 +126,6 @@
                         <Separator />
                         <StaticResourceExtension ResourceKey="LockTaskbarMenuItem" />
                         <StaticResourceExtension ResourceKey="PropertiesMenuItem" />
-                        <StaticResourceExtension ResourceKey="ExitMenuItem" />
                     </ContextMenu>
                 </GroupBox.ContextMenu>
                 <DockPanel.Dock>
@@ -181,7 +180,6 @@
                       Header="{DynamicResource restart_ultrawinbar}"
                       Click="RestartMenuItem_Click"
                       Visibility="Collapsed" />
-            <StaticResourceExtension ResourceKey="ExitMenuItem" />
         </ContextMenu>
     </appbar:AppBarWindow.ContextMenu>
 </appbar:AppBarWindow>
