@@ -11,10 +11,12 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <StartupObject>UltraWinBar.Program</StartupObject>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationManifest>Shell\app.manifest</ApplicationManifest>
     <AssemblyVersion>1.0.0.8</AssemblyVersion>
     <FileVersion>1.0.0.8</FileVersion>
-    <ApplicationIcon>Resources\ultrawinbar.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\Resources\Brand\ultrawinbar.ico</ApplicationIcon>
+    <PublishProfileRoot>$(MSBuildProjectDirectory)\Support\PublishProfiles\</PublishProfileRoot>
+    <PublishProfileFullPath Condition="'$(PublishProfile)' != ''">$(PublishProfileRoot)$(PublishProfile).pubxml</PublishProfileFullPath>
     <Platforms>AnyCPU;x86;ARM64</Platforms>
     <LangVersion>12</LangVersion>
   </PropertyGroup>
@@ -24,30 +26,34 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Resources\**">
+    <Compile Remove="Support\tests\**\*.cs" />
+    <Page Remove="Support\tests\**\*.xaml" />
+    <None Include="Assets\Resources\**\*.*" Link="Resources\%(Filename)%(Extension)" TargetPath="Resources\%(Filename)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </None>
-    <None Include="Languages\*.xaml">
+    <None Include="Assets\Languages\**\*.xaml" Link="Languages\%(Filename)%(Extension)" TargetPath="Languages\%(Filename)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </None>
-    <None Include="Themes\*.xaml">
+    <None Include="Assets\Themes\**\*.xaml" Link="Themes\%(Filename)%(Extension)" TargetPath="Themes\%(Filename)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
 
   <ItemGroup>
-	<None Remove="Resources\desktop95-sm.png" />
-	<None Remove="Resources\desktop95-lg.png" />
-	<None Remove="Resources\help.png" />
-    <None Remove="Resources\ultrawinbar.ico" />
-    <None Remove="Resources\FlatControls.xaml" />
-    <None Remove="Resources\shader_invert.ps" />
-    <None Remove="Resources\start9x.png" />
-    <None Remove="Languages\English.xaml" />
-    <None Remove="Themes\System.xaml" />
+    <None Remove="Assets\Resources\Desktop\desktop95-sm.png" />
+    <None Remove="Assets\Resources\Desktop\desktop95-lg.png" />
+    <None Remove="Assets\Resources\Brand\help.png" />
+    <None Remove="Assets\Resources\Brand\ultrawinbar.ico" />
+    <None Remove="Assets\Resources\Brand\FlatControls.xaml" />
+    <None Remove="Assets\Resources\Effects\shader_invert.ps" />
+    <None Remove="Assets\Resources\Start\Group01\start9x.png" />
+    <None Remove="Assets\Languages\Group01\English.xaml" />
+    <None Remove="Assets\Themes\Core\System.xaml" />
+    <Page Remove="Shell\App.xaml" />
+    <ApplicationDefinition Include="Shell\App.xaml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -56,16 +62,16 @@
   </ItemGroup>
 
   <ItemGroup>
-	<Resource Include="Resources\desktop95-sm.png" />
-	<Resource Include="Resources\desktop95-lg.png" />
-	<Resource Include="Resources\help.png" />
-    <Resource Include="Resources\shader_invert.ps" />
-    <Resource Include="Resources\FlatControls.xaml" />
-    <Resource Include="Resources\ultrawinbar.ico">
+    <Resource Include="Assets\Resources\Desktop\desktop95-sm.png" />
+    <Resource Include="Assets\Resources\Desktop\desktop95-lg.png" />
+    <Resource Include="Assets\Resources\Brand\help.png" />
+    <Resource Include="Assets\Resources\Effects\shader_invert.ps" />
+    <Resource Include="Assets\Resources\Brand\FlatControls.xaml" />
+    <Resource Include="Assets\Resources\Brand\ultrawinbar.ico">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
-    <EmbeddedResource Include="Resources\HebrewMonths.json" LogicalName="UltraWinBar.Resources.HebrewMonths.json" />
-    <Resource Include="Resources\start9x.png" />
+    <EmbeddedResource Include="Assets\Resources\Calendar\HebrewMonths.json" LogicalName="UltraWinBar.Resources.HebrewMonths.json" />
+    <Resource Include="Assets\Resources\Start\Group01\start9x.png" />
   </ItemGroup>
 
 </Project>

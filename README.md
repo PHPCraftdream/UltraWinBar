@@ -1,10 +1,12 @@
 UltraWinBar is a fork of [RetroBar](https://github.com/dremin/RetroBar), the upstream project.
 
-![UltraWinBar screenshot](ultrawinbar-preview.png)
+![UltraWinBar screenshot](UltraWinBar/Assets/Resources/Brand/ultrawinbar-preview.png)
 
 # UltraWinBar
 
-[Changelog](CHANGELOG.md)
+[Changelog](UltraWinBar/Support/docs/CHANGELOG.md)
+
+[Source tree and build instructions](UltraWinBar/Support/docs/STRUCTURE.md)
 
 [![Current release](https://img.shields.io/github/v/release/PHPCraftdream/UltraWinBar)](https://github.com/PHPCraftdream/UltraWinBar/releases/latest) ![Build status](https://github.com/PHPCraftdream/UltraWinBar/workflows/UltraWinBar/badge.svg)  [![Discord](https://img.shields.io/badge/discord-white?logo=discord)](https://discord.gg/8bGuPmerxC)
 
@@ -110,7 +112,7 @@ UltraWinBar supports custom languages and themes. You may install community-made
 
 You may manually install custom languages or themes by creating a `Languages` or a `Themes` directory in `%localappdata%\UltraWinBar`, and placing valid `.xaml` language or theme files there.
 
-Themes use the XAML `ResourceDictionary` format. When creating a new theme, [view the included example themes](https://github.com/PHPCraftdream/UltraWinBar/tree/master/UltraWinBar/Themes) to get started.
+Themes use the XAML `ResourceDictionary` format. When creating a new theme, [view the included example themes](https://github.com/PHPCraftdream/UltraWinBar/tree/master/UltraWinBar/Assets/Themes) to get started.
 
 ## Per-panel pinned applications and virtual desktops
 
@@ -128,8 +130,8 @@ new assignments override them only on their own desktop. Existing pins are
 initially associated with the desktop active when this feature is first loaded.
 
 The desktop assignment checks run without creating any windows:
-`dotnet run --project tests/DesktopRules/DesktopRules.csproj`
-(build UltraWinBar for `net6.0-windows` first).
+`dotnet run --project UltraWinBar/Support/tests/DesktopRules/DesktopRules.csproj`
+(build `UltraWinBar/Support/BuildTools/UltraWinBar.sln` for `net6.0-windows` first).
 
 ## Open-Shell Menu users
 

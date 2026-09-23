@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Update="UltraWinBar.defaults.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../../Assets/Languages/Group01/English.xaml" Link="Localization/English.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../../Assets/Languages/Group05/беларуская.xaml" Link="Localization/Belarusian.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../../Assets/Themes/**/*.xaml" Link="Themes/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../../Assets/Resources/**/*" Link="Resources/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../../Shell/Dialogs/PropertiesWindow.xaml" Link="Layout/PropertiesWindow.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../../Shell/Dialogs/SettingsStyles.xaml" Link="Layout/SettingsStyles.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <Reference Include="UltraWinBar"><HintPath>../../../Support/BuildTools/artifacts/bin/Debug/net6.0-windows/UltraWinBar.dll</HintPath></Reference>
+    <Reference Include="ManagedShell.AppBar"><HintPath>../../../Support/BuildTools/artifacts/bin/Debug/net6.0-windows/ManagedShell.AppBar.dll</HintPath></Reference>
+    <Reference Include="ManagedShell.Interop"><HintPath>../../../Support/BuildTools/artifacts/bin/Debug/net6.0-windows/ManagedShell.Interop.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>
