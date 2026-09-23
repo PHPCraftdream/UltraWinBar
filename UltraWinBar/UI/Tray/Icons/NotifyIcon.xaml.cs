@@ -155,6 +155,8 @@ namespace UltraWinBar.Controls
             Host?.SetTrayHost();
             if (e.ChangedButton != MouseButton.Left)
             {
+                if (e.ChangedButton == MouseButton.Middle)
+                    (Application.Current as UltraWinBar.App)?.ArmTrayActivation(TrayIcon?.HWnd ?? IntPtr.Zero, false);
                 TrayIcon?.IconMouseDown(e.ChangedButton, MouseHelper.GetCursorPositionParam(), System.Windows.Forms.SystemInformation.DoubleClickTime);
             }
         }
@@ -164,6 +166,7 @@ namespace UltraWinBar.Controls
             e.Handled = true;
             if (e.ChangedButton == MouseButton.Left)
             {
+                (Application.Current as UltraWinBar.App)?.ArmTrayActivation(TrayIcon?.HWnd ?? IntPtr.Zero, e.ClickCount > 1);
                 TrayIcon?.IconMouseDown(e.ChangedButton, MouseHelper.GetCursorPositionParam(), System.Windows.Forms.SystemInformation.DoubleClickTime);
             }
             TrayIcon?.IconMouseUp(e.ChangedButton, MouseHelper.GetCursorPositionParam(), System.Windows.Forms.SystemInformation.DoubleClickTime);

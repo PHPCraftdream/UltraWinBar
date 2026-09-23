@@ -1,9 +1,26 @@
 # Changelog
 
-## Unreleased (targeting 2.0.0)
+## Unreleased (targeting 2.1.0)
+
+The Nerdbank.GitVersioning prefix is raised from `2.0` to `2.1`. No 2.1 release
+has been published yet.
+
+### Added
+
+- Tray-icon activation now records the owning process before its callback is
+  sent. A double-click pre-moves its sole foreign window; other clicks wait for
+  the exact window activation before attempting a move.
+
+### Fixed
+
+- The experimental desktop guard attempts a bounded return when Windows
+  switches after a move or before the target window's activation event. Later
+  user input cancels the return.
+
+## 2.0 development (unreleased)
 
 The Nerdbank.GitVersioning prefix is raised from `1.23` to `2.0`. No 2.0 release
-has been published yet.
+was published.
 
 ### Added
 

@@ -54,6 +54,12 @@ namespace UltraWinBar
             Current.Shutdown();
         }
 
+        internal void ArmTrayActivation(IntPtr ownerHwnd, bool preMove)
+        {
+            try { _desktopActivationGuard?.ArmTrayIntent(ownerHwnd, _shellManager.Tasks, preMove); }
+            catch (Exception error) { ShellLogger.Error($"DesktopActivation: tray activation failed: {error.Message}"); }
+        }
+
         private void App_OnStartup(object sender, StartupEventArgs e)
         {
             if (Settings.Instance.UseSoftwareRendering)

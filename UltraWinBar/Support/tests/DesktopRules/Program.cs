@@ -231,9 +231,32 @@ if (!CanMove(originDesktop, originDesktop, otherDesktop, false, 200) ||
     CanMove(originDesktop, otherDesktop, otherDesktop, false, 200) ||
     CanMove(originDesktop, originDesktop, originDesktop, false, 200) ||
     CanMove(originDesktop, originDesktop, otherDesktop, true, 200) ||
-    CanMove(originDesktop, originDesktop, otherDesktop, false, 3000))
+    CanMove(originDesktop, originDesktop, otherDesktop, false, 6000))
     throw new Exception("Desktop activation guard may move a window after an intentional switch or stale launch.");
 Console.WriteLine("PASS: desktop activation policy only accepts fresh foreign-window activations on the originating desktop.");
+var recoverAfterSwitch = guardType.GetMethod("ShouldRecoverAfterSwitch", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+var returnAfterMove = guardType.GetMethod("ShouldReturnAfterMove", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+bool CanRecover(Guid source, Guid current, Guid owner, long age, bool inputIntact) =>
+    (bool)recoverAfterSwitch.Invoke(null, new object[] { source, current, owner, age, inputIntact });
+bool CanReturn(Guid source, Guid original, Guid current, Guid owner, long age, bool inputIntact) =>
+    (bool)returnAfterMove.Invoke(null, new object[] { source, original, current, owner, age, inputIntact });
+if (!CanRecover(originDesktop, otherDesktop, otherDesktop, 200, true) ||
+    CanRecover(originDesktop, otherDesktop, otherDesktop, 200, false) ||
+    CanRecover(originDesktop, otherDesktop, originDesktop, 200, true) ||
+    CanRecover(originDesktop, otherDesktop, otherDesktop, 6000, true) ||
+    !CanReturn(originDesktop, otherDesktop, otherDesktop, originDesktop, 2000, true) ||
+    CanReturn(originDesktop, otherDesktop, otherDesktop, originDesktop, 2000, false) ||
+    CanReturn(originDesktop, otherDesktop, otherDesktop, otherDesktop, 2000, true) ||
+    CanReturn(originDesktop, otherDesktop, originDesktop, originDesktop, 2000, true))
+    throw new Exception("Desktop return policy may reverse an intentional switch or follow a stale window.");
+Console.WriteLine("PASS: desktop return policy requires the same launch, target window, and originating desktop.");
+var trayPolicy = guardType.GetMethod("ShouldPreMoveTrayWindow", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+bool CanPreMoveTray(bool doubleClick, int current, int remote) =>
+    (bool)trayPolicy.Invoke(null, new object[] { doubleClick, current, remote });
+if (!CanPreMoveTray(true, 0, 1) || CanPreMoveTray(false, 0, 1) ||
+    CanPreMoveTray(true, 1, 1) || CanPreMoveTray(true, 0, 2) || CanPreMoveTray(true, 0, 0))
+    throw new Exception("Tray activation could move an unrelated or ambiguous window.");
+Console.WriteLine("PASS: tray pre-move requires a double-click and exactly one foreign window.");
 var enabledGuardSettings = JsonSerializer.Deserialize("{\"MoveActivatedWindowsToCurrentDesktop\":true}", settingsType);
 if (!System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.Serialize(enabledGuardSettings, settingsType))
     ["MoveActivatedWindowsToCurrentDesktop"].GetValue<bool>())

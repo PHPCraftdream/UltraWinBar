@@ -196,5 +196,5 @@
     <s:String x:Key="show_hebrew_date">Еврейская дата и нумерованные дни недели</s:String>
     <s:String x:Key="hebrew_date_midnight">Используется местная календарная дата; смена в полночь, не на закате.</s:String>
     <s:String x:Key="move_activated_windows_to_current_desktop">Пробовать оставлять открываемые окна на этом столе (экспериментально)</s:String>
-    <s:String x:Key="desktop_activation_experiment_hint">Для двойного щелчка по значкам рабочего стола и закреплённых кнопок панели. Windows может переключить стол раньше переноса окна.</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Для значков рабочего стола и трея, а также закреплённых кнопок панели. Если Windows всё же переключит стол, UltraWinBar попробует вернуть исходный.</s:String>
 </ResourceDictionary>

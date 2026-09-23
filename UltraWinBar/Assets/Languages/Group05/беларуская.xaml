@@ -212,5 +212,5 @@
     <s:String x:Key="open_drives">Адкрыць дыскі</s:String>
     <s:String x:Key="this_pc">Гэты кампутар</s:String>
     <s:String x:Key="move_activated_windows_to_current_desktop">Спрабаваць пакідаць адкрытыя вокны на гэтым працоўным стале (эксперыментальна)</s:String>
-    <s:String x:Key="desktop_activation_experiment_hint">Для двайнога націску на значкі працоўнага стала і замацаваныя кнопкі панэлі. Windows можа пераключыць стол раней, чым акно перамесціцца.</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Для значкоў працоўнага стала і трэя, а таксама замацаваных кнопак панэлі. Калі Windows усё ж пераключыць стол, UltraWinBar паспрабуе вярнуцца на пачатковы.</s:String>
 </ResourceDictionary>

@@ -112,6 +112,14 @@ namespace UltraWinBar.Utilities
             }
         }
 
+        public void SwitchDesktop(Guid destination)
+        {
+            IDesktop desktop = manager.FindDesktop(ref destination);
+            if (desktop == null) throw new InvalidOperationException("Desktop was not found.");
+            try { manager.SwitchDesktop(desktop); }
+            finally { Marshal.ReleaseComObject(desktop); }
+        }
+
         public void Dispose()
         {
             foreach (object value in new object[] { pins, manager, views, shell })
@@ -149,7 +157,7 @@ namespace UltraWinBar.Utilities
             void MoveViewToDesktop(IView view, IDesktop desktop);
             bool CanViewMoveDesktops(IView view);
             void GetCurrentDesktop(); void GetDesktops(); void GetAdjacentDesktop();
-            void SwitchDesktop(); void CreateDesktop(); void RemoveDesktop();
+            void SwitchDesktop(IDesktop desktop); void CreateDesktop(); void RemoveDesktop();
             IDesktop FindDesktop(ref Guid id);
         }
         [ComImport, Guid("4CE81583-1E4C-4632-A621-07A53543148F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]

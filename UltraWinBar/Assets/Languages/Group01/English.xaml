@@ -219,5 +219,5 @@
     <s:String x:Key="open_drives">Open drives</s:String>
     <s:String x:Key="this_pc">This PC</s:String>
     <s:String x:Key="move_activated_windows_to_current_desktop">Try to keep opened windows on this desktop (experimental)</s:String>
-    <s:String x:Key="desktop_activation_experiment_hint">For desktop-icon double-clicks and pinned launchers. Windows may switch desktops before the window can move.</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">For desktop icons, tray icons, and pinned launchers. If Windows switches anyway, UltraWinBar tries to return to the starting desktop.</s:String>
 </ResourceDictionary>
