@@ -250,13 +250,28 @@ if (!CanRecover(originDesktop, otherDesktop, otherDesktop, 200, true) ||
     CanReturn(originDesktop, otherDesktop, originDesktop, originDesktop, 2000, true))
     throw new Exception("Desktop return policy may reverse an intentional switch or follow a stale window.");
 Console.WriteLine("PASS: desktop return policy requires the same launch, target window, and originating desktop.");
-var trayPolicy = guardType.GetMethod("ShouldPreMoveTrayWindow", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
-bool CanPreMoveTray(bool doubleClick, int current, int remote) =>
-    (bool)trayPolicy.Invoke(null, new object[] { doubleClick, current, remote });
-if (!CanPreMoveTray(true, 0, 1) || CanPreMoveTray(false, 0, 1) ||
-    CanPreMoveTray(true, 1, 1) || CanPreMoveTray(true, 0, 2) || CanPreMoveTray(true, 0, 0))
-    throw new Exception("Tray activation could move an unrelated or ambiguous window.");
-Console.WriteLine("PASS: tray pre-move requires a double-click and exactly one foreign window.");
+var uniqueWindowPolicy = guardType.GetMethod("HasUniqueForeignWindow", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+bool HasUniqueForeignWindow(int current, int remote) =>
+    (bool)uniqueWindowPolicy.Invoke(null, new object[] { current, remote });
+if (!HasUniqueForeignWindow(0, 1) || HasUniqueForeignWindow(1, 1) ||
+    HasUniqueForeignWindow(0, 2) || HasUniqueForeignWindow(0, 0))
+    throw new Exception("Activation could pre-move an unrelated or ambiguous window.");
+Console.WriteLine("PASS: pre-move requires exactly one foreign window and no current window.");
+if (args.Contains("--shortcut-probe"))
+{
+    var resolver = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.DesktopShortcutResolver");
+    var selection = resolver?.GetMethod("ReadSelectedShortcut").Invoke(null, null);
+    if (selection == null) Console.WriteLine("SKIP: no executable desktop shortcut selected.");
+    else
+    {
+        var shortcutPath = (string)selection.GetType().GetProperty("ShortcutPath").GetValue(selection);
+        var targetPath = (string)selection.GetType().GetProperty("TargetPath").GetValue(selection);
+        if (!System.IO.File.Exists(shortcutPath) || !System.IO.File.Exists(targetPath) ||
+            !string.Equals(System.IO.Path.GetExtension(targetPath), ".exe", StringComparison.OrdinalIgnoreCase))
+            throw new Exception("Selected desktop shortcut did not resolve to an executable.");
+        Console.WriteLine("PASS: selected desktop shortcut resolves to an executable.");
+    }
+}
 var enabledGuardSettings = JsonSerializer.Deserialize("{\"MoveActivatedWindowsToCurrentDesktop\":true}", settingsType);
 if (!System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.Serialize(enabledGuardSettings, settingsType))
     ["MoveActivatedWindowsToCurrentDesktop"].GetValue<bool>())

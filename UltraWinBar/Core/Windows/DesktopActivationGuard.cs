@@ -3,9 +3,11 @@ using ManagedShell.Interop;
 using ManagedShell.WindowsTasks;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Threading;
 
 namespace UltraWinBar.Utilities
@@ -30,7 +32,11 @@ namespace UltraWinBar.Utilities
         [DllImport("user32.dll")]
         private static extern int GetSystemMetrics(int index);
         [DllImport("user32.dll")]
+        private static extern short GetAsyncKeyState(int key);
+        [DllImport("user32.dll")]
         private static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint processId);
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
         [DllImport("user32.dll")]
         private static extern IntPtr GetShellWindow();
         [DllImport("user32.dll")]
@@ -47,6 +53,8 @@ namespace UltraWinBar.Utilities
         private const long IntentDurationMs = 5000;
         private const long ReturnWindowMs = 6000;
         private readonly VirtualDesktopContext desktops;
+        private readonly Tasks tasks;
+        private readonly Dispatcher dispatcher;
         private readonly LowLevelMouseHook mouseHook;
         private readonly WinEventProc foregroundCallback;
         private readonly IntPtr foregroundHook;
@@ -66,11 +74,26 @@ namespace UltraWinBar.Utilities
         private Guid lastMoveOriginal;
         private IntPtr lastMovedWindow;
         private long lastMoveAt;
+        private ShortcutPreflight preflight;
+        private bool preflightPending;
+        private bool suppressNextLeftUp;
         private bool disposed;
 
-        public DesktopActivationGuard(VirtualDesktopContext desktops)
+        private sealed class ShortcutPreflight
+        {
+            public DesktopShortcutSelection Shortcut { get; init; }
+            public ApplicationWindow Window { get; init; }
+            public Guid Source { get; init; }
+            public Guid Owner { get; init; }
+            public long FirstDownAt { get; init; }
+            public uint ProcessId { get; init; }
+        }
+
+        public DesktopActivationGuard(VirtualDesktopContext desktops, Tasks tasks)
         {
             this.desktops = desktops;
+            this.tasks = tasks;
+            dispatcher = System.Windows.Application.Current.Dispatcher;
             mouseHook = new LowLevelMouseHook();
             mouseHook.LowLevelMouseEvent += OnMouseEvent;
             if (!mouseHook.Initialize())
@@ -93,6 +116,7 @@ namespace UltraWinBar.Utilities
 
             desktops.Changed += OnDesktopChanged;
             ShellLogger.Info("DesktopActivation: experimental guard enabled.");
+            _ = Task.Run(DesktopShortcutResolver.ReadSelectedShortcut);
         }
 
         internal static bool ShouldMoveWindow(Guid origin, Guid current, Guid owner, bool onCurrent, long ageMs) =>
@@ -108,14 +132,18 @@ namespace UltraWinBar.Utilities
             inputIntact && origin != Guid.Empty && original != Guid.Empty && current == original &&
             current != origin && owner == origin && ageMs >= 0 && ageMs <= ReturnWindowMs;
 
-        internal static bool ShouldPreMoveTrayWindow(bool doubleClick, int currentWindows, int remoteWindows) =>
-            doubleClick && currentWindows == 0 && remoteWindows == 1;
+        internal static bool HasUniqueForeignWindow(int currentWindows, int remoteWindows) =>
+            currentWindows == 0 && remoteWindows == 1;
 
         private static uint ProcessIdForWindow(IntPtr hwnd)
         {
             GetWindowThreadProcessId(hwnd, out uint processId);
             return processId;
         }
+
+        private static bool HasSelectionModifiers() =>
+            GetAsyncKeyState(0x10) < 0 || GetAsyncKeyState(0x11) < 0 ||
+            GetAsyncKeyState(0x12) < 0 || GetAsyncKeyState(0x5B) < 0 || GetAsyncKeyState(0x5C) < 0;
 
         internal void ArmTrayIntent(IntPtr ownerHwnd, Tasks tasks, bool preMove)
         {
@@ -144,7 +172,7 @@ namespace UltraWinBar.Utilities
                 var remote = windows.Where(window =>
                     desktops.TryGetWindowDesktopId(window.Handle, out Guid owner) && owner != source &&
                     !desktops.IsOnCurrentDesktop(window.Handle)).Take(2).ToArray();
-                if (!ShouldPreMoveTrayWindow(preMove, currentWindows, remote.Length)) return;
+                if (!HasUniqueForeignWindow(currentWindows, remote.Length)) return;
                 IntPtr hwnd = remote[0].Handle;
                 if (!desktops.TryGetWindowDesktopId(hwnd, out Guid original)) return;
                 bool moved = desktops.TryMoveWindowToDesktop(hwnd, source);
@@ -162,6 +190,117 @@ namespace UltraWinBar.Utilities
             }
         }
 
+        private void QueueShortcutPreflight()
+        {
+            if (preflightPending || tasks == null || HasSelectionModifiers()) return;
+            Guid source = desktops.CurrentIdSnapshot();
+            if (source == Guid.Empty) return;
+            preflightPending = true;
+            int generation = intentGeneration;
+            long firstDownAt = previousDownAt;
+            _ = Task.Run(DesktopShortcutResolver.ReadSelectedShortcut).ContinueWith(result =>
+            {
+                try
+                {
+                    dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        preflightPending = false;
+                        if (disposed || generation != intentGeneration || !previousDownOnDesktop ||
+                            previousDownAt != firstDownAt || desktops.CurrentIdSnapshot() != source ||
+                            result.Status != TaskStatus.RanToCompletion || result.Result == null) return;
+                        preflight = FindShortcutWindow(result.Result, source, firstDownAt);
+                    }), DispatcherPriority.Input);
+                }
+                catch (Exception) { }
+            });
+        }
+
+        private ShortcutPreflight FindShortcutWindow(DesktopShortcutSelection shortcut, Guid source, long firstDownAt)
+        {
+            try
+            {
+                var windows = tasks.GroupedWindows.SourceCollection.Cast<object>().OfType<ApplicationWindow>()
+                    .Where(window => window.CanAddToTaskbar &&
+                        string.Equals(window.WinFileName, shortcut.TargetPath, StringComparison.OrdinalIgnoreCase)).ToList();
+                int currentWindows = windows.Count(window => desktops.IsOnCurrentDesktop(window.Handle));
+                var remote = windows.Where(window =>
+                    desktops.TryGetWindowDesktopId(window.Handle, out Guid owner) && owner != source &&
+                    !desktops.IsOnCurrentDesktop(window.Handle)).Take(2).ToArray();
+                if (!HasUniqueForeignWindow(currentWindows, remote.Length)) return null;
+                ApplicationWindow target = remote[0];
+                if (!desktops.TryGetWindowDesktopId(target.Handle, out Guid original)) return null;
+                ShellLogger.Info($"DesktopActivation: prepared {Path.GetFileName(shortcut.TargetPath)} window={target.Handle} from={original}.");
+                return new ShortcutPreflight
+                {
+                    Shortcut = shortcut, Window = target, Source = source, Owner = original,
+                    FirstDownAt = firstDownAt, ProcessId = ProcessIdForWindow(target.Handle)
+                };
+            }
+            catch (Exception error)
+            {
+                ShellLogger.Warning($"DesktopActivation: shortcut preparation failed: {error.Message}");
+                return null;
+            }
+        }
+
+        private void OpenPreparedShortcut(ShortcutPreflight prepared)
+        {
+            IntPtr hwnd = prepared.Window.Handle;
+            bool moved = false;
+            try
+            {
+                if (!disposed && NativeMethods.IsWindow(hwnd) && desktops.CurrentIdSnapshot() == prepared.Source &&
+                    desktops.TryGetWindowDesktopId(hwnd, out Guid owner) && owner == prepared.Owner)
+                    moved = desktops.TryMoveWindowToDesktop(hwnd, prepared.Source);
+            }
+            catch (Exception error)
+            {
+                ShellLogger.Warning($"DesktopActivation: early shortcut move failed: {error.Message}");
+            }
+
+            if (moved)
+            {
+                armed = false;
+                lastMoveDestination = prepared.Source;
+                lastMoveOriginal = prepared.Owner;
+                lastMovedWindow = hwnd;
+                lastMoveAt = Environment.TickCount64;
+                try
+                {
+                    prepared.Window.BringToFront();
+                    if (ProcessIdForWindow(GetForegroundWindow()) == ProcessIdForWindow(hwnd))
+                    {
+                        ShellLogger.Info($"DesktopActivation: opened existing shortcut window={hwnd} without shell launch.");
+                        return;
+                    }
+                }
+                catch (Exception error)
+                {
+                    ShellLogger.Warning($"DesktopActivation: shortcut foreground failed: {error.Message}");
+                }
+            }
+            else if (!disposed)
+            {
+                intentDesktop = prepared.Source;
+                intentProcessId = ProcessIdForWindow(hwnd);
+                intentSource = "desktop shortcut fallback";
+                intentAt = Environment.TickCount64;
+                intentInputTick = lastMouseInputTick;
+                armed = true;
+            }
+
+            try
+            {
+                Process.Start(new ProcessStartInfo { FileName = prepared.Shortcut.ShortcutPath, UseShellExecute = true });
+                ShellLogger.Info($"DesktopActivation: forwarded shortcut after pre-move={moved}.");
+            }
+            catch (Exception error)
+            {
+                CancelIntent();
+                ShellLogger.Error($"DesktopActivation: could not open shortcut: {error.Message}");
+            }
+        }
+
         private bool InputStillFromLaunch()
         {
             var input = new LastInputInfo { Size = (uint)Marshal.SizeOf<LastInputInfo>() };
@@ -176,6 +315,7 @@ namespace UltraWinBar.Utilities
             armed = false;
             intentProcessId = 0;
             lastMoveAt = 0;
+            preflight = null;
             intentGeneration++;
         }
 
@@ -183,8 +323,19 @@ namespace UltraWinBar.Utilities
         {
             if (disposed) return;
             lastMouseInputTick = unchecked((uint)e.HookStruct.time);
+            if (suppressNextLeftUp && e.Message == NativeMethods.WM.LBUTTONUP)
+            {
+                suppressNextLeftUp = false;
+                e.Handled = true;
+                return;
+            }
             if (e.Message != NativeMethods.WM.LBUTTONDOWN)
             {
+                if (e.Message == NativeMethods.WM.LBUTTONUP && previousDownOnDesktop &&
+                    Environment.TickCount64 - previousDownAt <= GetDoubleClickTime() &&
+                    Math.Abs(e.HookStruct.pt.X - previousDownPoint.X) <= GetSystemMetrics(36) &&
+                    Math.Abs(e.HookStruct.pt.Y - previousDownPoint.Y) <= GetSystemMetrics(37))
+                    QueueShortcutPreflight();
                 if ((uint)e.Message is 0x0204 or 0x0207 or 0x020A or 0x020E)
                 {
                     previousDownOnDesktop = false;
@@ -206,6 +357,31 @@ namespace UltraWinBar.Utilities
                 Math.Abs(point.X - previousDownPoint.X) <= GetSystemMetrics(36) &&
                 Math.Abs(point.Y - previousDownPoint.Y) <= GetSystemMetrics(37))
             {
+                ShortcutPreflight ready = preflight;
+                if (ready != null && ready.FirstDownAt == previousDownAt &&
+                    ready.Source == desktops.CurrentId && !HasSelectionModifiers() && !dispatcher.HasShutdownStarted &&
+                    ready.ProcessId != 0 && ready.ProcessId == ProcessIdForWindow(ready.Window.Handle) &&
+                    NativeMethods.IsWindow(ready.Window.Handle))
+                {
+                    previousDownOnDesktop = false;
+                    CancelIntent();
+                    intentDesktop = ready.Source;
+                    intentAt = now;
+                    intentInputTick = lastMouseInputTick;
+                    intentSource = "desktop shortcut";
+                    try
+                    {
+                        dispatcher.BeginInvoke(new Action(() => OpenPreparedShortcut(ready)), DispatcherPriority.Send);
+                        suppressNextLeftUp = true;
+                        e.Handled = true;
+                        ShellLogger.Info($"DesktopActivation: intercepted desktop shortcut for window={ready.Window.Handle}.");
+                        return;
+                    }
+                    catch (Exception error)
+                    {
+                        ShellLogger.Warning($"DesktopActivation: shortcut interception unavailable: {error.Message}");
+                    }
+                }
                 previousDownOnDesktop = false;
                 CancelIntent();
                 intentDesktop = desktops.CurrentIdSnapshot();
@@ -219,6 +395,7 @@ namespace UltraWinBar.Utilities
             }
 
             if (armed || lastMoveAt != 0) CancelIntent();
+            preflight = null;
             previousDownOnDesktop = true;
             previousDownPoint = point;
             previousDownAt = now;

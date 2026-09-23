@@ -13,6 +13,10 @@ has been published yet.
 
 ### Fixed
 
+- Desktop executable shortcuts with one matching window on another desktop can
+  bring that window forward before Explorer launches the shortcut, avoiding a
+  visible round trip between desktops. Ambiguous shortcuts keep the existing
+  activation behavior.
 - The experimental desktop guard attempts a bounded return when Windows
   switches after a move or before the target window's activation event. Later
   user input cancels the return.

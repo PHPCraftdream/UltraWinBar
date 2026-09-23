@@ -126,7 +126,7 @@ namespace UltraWinBar
                 return;
             }
             if (_desktopActivationGuard != null) return;
-            try { _desktopActivationGuard = new DesktopActivationGuard(_virtualDesktops); }
+            try { _desktopActivationGuard = new DesktopActivationGuard(_virtualDesktops, _shellManager.Tasks); }
             catch (Exception error)
             {
                 ShellLogger.Error($"DesktopActivation: cannot enable guard: {error.Message}");
