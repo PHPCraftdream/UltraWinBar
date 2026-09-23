@@ -214,4 +214,10 @@
     <sys:String x:Key="desktop_action_failed">Windows could not complete the operation for every window. Some windows may already have moved. See the log for details.</sys:String>
     <s:String x:Key="show_hebrew_date">Show Hebrew date and numbered weekdays</s:String>
     <s:String x:Key="hebrew_date_midnight">Uses the local calendar date; changes at midnight, not at sunset.</s:String>
+    <s:String x:Key="open_system_settings">Open System Settings</s:String>
+    <s:String x:Key="open_computer_management">Computer Management</s:String>
+    <s:String x:Key="open_drives">Open drives</s:String>
+    <s:String x:Key="this_pc">This PC</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">Try to keep opened windows on this desktop (experimental)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">For desktop-icon double-clicks and pinned launchers. Windows may switch desktops before the window can move.</s:String>
 </ResourceDictionary>

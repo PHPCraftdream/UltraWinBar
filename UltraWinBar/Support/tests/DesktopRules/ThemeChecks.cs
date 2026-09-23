@@ -3,9 +3,12 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Xml.Linq;
@@ -29,6 +32,16 @@ internal static class ThemeChecks
     private static void CheckThemes()
     {
         var app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
+        var windowSource = new ObservableCollection<object>();
+        var createView = typeof(UltraWinBar.Controls.TaskList).GetMethod("CreateWindowView", BindingFlags.Static | BindingFlags.NonPublic);
+        var windowView = (ICollectionView)createView.Invoke(null,
+            new object[] { windowSource, new Predicate<object>(_ => true) });
+        if (windowView is not ICollectionViewLiveShaping shaping || shaping.IsLiveFiltering == true ||
+            shaping.IsLiveGrouping == true || shaping.IsLiveSorting == true)
+            throw new Exception("Task window view still schedules live-shaping callbacks.");
+        windowSource.Add(new object());
+        if (windowView.Cast<object>().Count() != 1)
+            throw new Exception("Task window view missed a source collection change.");
         string root = AppContext.BaseDirectory;
         var files = Directory.GetFiles(Path.Combine(root, "Themes"), "*.xaml");
         var preview = new DrawingVisual();
@@ -99,6 +112,7 @@ internal static class ThemeChecks
         encoder.Frames.Add(BitmapFrame.Create(sheet));
         using (var output = File.Create(Path.Combine(Path.GetTempPath(), "ultrawinbar-flat-themes.png"))) encoder.Save(output);
         app.Shutdown();
+        Console.WriteLine("PASS: task-window view tracks source changes without WPF live shaping.");
         Console.WriteLine($"PASS: {files.Length} flat themes loaded and controls rendered off-screen.");
         Console.WriteLine("PASS: settings tabs stay within 360/640-DIP bounds in every theme; theme dictionaries do not accumulate.");
     }

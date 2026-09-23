@@ -29,6 +29,8 @@
             <MenuItem x:Shared="false" x:Key="SetTimeMenuItem" Header="{DynamicResource set_time}" Click="SetTimeMenuItem_OnClick" FontWeight="{DynamicResource SetTimeMenuItemWeight}" />
             <MenuItem x:Shared="false" x:Key="CustomizeNotificationsMenuItem" Header="{DynamicResource customize_notifications_menu}" Click="CustomizeNotificationsMenuItem_OnClick" />
             <MenuItem x:Shared="false" x:Key="TaskManagerMenuItem" Style="{DynamicResource TaskManMenuItem}" Click="TaskManagerMenuItem_OnClick" />
+            <MenuItem x:Shared="false" x:Key="OpenSystemSettingsMenuItem" Header="{DynamicResource open_system_settings}" Click="OpenSystemSettingsMenuItem_OnClick" />
+            <MenuItem x:Shared="false" x:Key="OpenComputerManagementMenuItem" Header="{DynamicResource open_computer_management}" Click="OpenComputerManagementMenuItem_OnClick" />
             <MenuItem x:Shared="false" x:Key="LockTaskbarMenuItem" Header="{DynamicResource lock_taskbar_menu}" IsCheckable="True" IsChecked="{Binding Source={x:Static utilities:Settings.Instance}, Path=LockTaskbar, UpdateSourceTrigger=PropertyChanged}" />
             <MenuItem x:Shared="false" x:Key="PropertiesMenuItem" Header="{DynamicResource tray_properties}" Click="PropertiesMenuItem_OnClick" />
             <MenuItem x:Shared="false" x:Key="ExitMenuItem" Header="{DynamicResource exit_ultrawinbar}" Click="ExitMenuItem_OnClick" Visibility="{Binding Source={x:Static utilities:Settings.Instance}, Path=ShowExitMenuItem, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource boolToVisibilityConverter}}" />
@@ -162,6 +164,17 @@
             <!--StaticResourceExtension ResourceKey="ToolbarsItem" />
             <Separator /-->
             <StaticResourceExtension ResourceKey="TaskManagerMenuItem" />
+            <Separator />
+            <StaticResourceExtension ResourceKey="OpenSystemSettingsMenuItem" />
+            <StaticResourceExtension ResourceKey="OpenComputerManagementMenuItem" />
+            <MenuItem x:Name="OpenDrivesMenuItem"
+                      Header="{DynamicResource open_drives}"
+                      SubmenuOpened="OpenDrivesMenuItem_OnSubmenuOpened">
+                <MenuItem x:Name="ThisPcMenuItem"
+                          Header="{DynamicResource this_pc}"
+                          Click="ThisPcMenuItem_OnClick" />
+                <Separator />
+            </MenuItem>
             <Separator />
             <MenuItem x:Name="UpdateAvailableMenuItem"
                       Header="{DynamicResource update_available}"

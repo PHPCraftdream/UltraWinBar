@@ -76,6 +76,7 @@ namespace UltraWinBar.Utilities
                     var candidate = new ApplicationWindow(service, hwnd);
                     if (candidate.CanAddToTaskbar)
                     {
+                        candidate.SetShowInTaskbar();
                         windows.Add(candidate);
                         ShellLogger.Info($"Task recovery: restored window {hwnd}");
                     }

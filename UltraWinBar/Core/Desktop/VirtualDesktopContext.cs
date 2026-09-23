@@ -67,14 +67,45 @@ namespace UltraWinBar.Utilities
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
+        public Guid CurrentIdSnapshot() => ReadCurrent();
+
+        public bool TryGetWindowDesktopId(IntPtr hwnd, out Guid id)
+        {
+            id = Guid.Empty;
+            try { return manager != null && manager.GetWindowDesktopId(hwnd, out id) >= 0 && id != Guid.Empty; }
+            catch (COMException) { return false; }
+        }
+
         public Guid DesktopForWindow(IntPtr hwnd)
         {
+            if (TryGetWindowDesktopId(hwnd, out Guid id)) return id;
+            return CurrentId;
+        }
+
+        public bool TryMoveWindowToDesktop(IntPtr hwnd, Guid destination)
+        {
+            if (hwnd == IntPtr.Zero || destination == Guid.Empty) return false;
             try
             {
-                if (manager != null && manager.GetWindowDesktopId(hwnd, out Guid id) >= 0 && id != Guid.Empty) return id;
+                if (manager != null && manager.MoveWindowToDesktop(hwnd, ref destination) >= 0) return true;
             }
-            catch (COMException) { }
-            return CurrentId;
+            catch (COMException error)
+            {
+                ShellLogger.Warning($"Desktop move COM failed for {hwnd}: {error.Message}");
+            }
+
+            if (!DesktopActions.IsSupported) return false;
+            try
+            {
+                using var actions = new DesktopActions();
+                actions.MoveWindow(hwnd, destination);
+                return true;
+            }
+            catch (Exception error)
+            {
+                ShellLogger.Warning($"Desktop move failed for {hwnd}: {error.Message}");
+                return false;
+            }
         }
 
         public bool IsOnCurrentDesktop(IntPtr hwnd)

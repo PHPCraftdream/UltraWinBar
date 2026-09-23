@@ -81,9 +81,10 @@ namespace UltraWinBar.Utilities
             {
                 Guid desktop = VirtualDesktopContext.Instance?.CurrentId ?? Guid.Empty;
                 if (DesktopId != desktop) return;
-                var windows = tasks.GroupedWindows.OfType<ApplicationWindow>()
-                    .Where(w => VirtualDesktopContext.Instance?.IsOnCurrentDesktop(w.Handle) != false)
+                var matchingWindows = tasks.GroupedWindows.SourceCollection.Cast<object>().OfType<ApplicationWindow>()
                     .Where(w => TaskAssignmentManager.GetIdentifier(w, TaskAssignmentMode.ExecutablePath) == Identifier).ToList();
+                var windows = matchingWindows.Where(w => w.ShowInTaskbar &&
+                    VirtualDesktopContext.Instance?.IsOnCurrentDesktop(w.Handle) != false).ToList();
                 var windowIds = new HashSet<string>(windows.Select(w =>
                     TaskAssignmentManager.GetIdentifier(w, TaskAssignmentMode.WindowClassAndTitle)));
                 var assignments = Settings.Instance.TaskbarAssignments.Where(a => a.DesktopId != desktop ||
@@ -93,6 +94,14 @@ namespace UltraWinBar.Utilities
                 Settings.Instance.TaskbarAssignments = assignments;
                 var existing = windows.FirstOrDefault(w => w.ShowInTaskbar);
                 if (existing != null) existing.BringToFront();
+                else if (Settings.Instance.MoveActivatedWindowsToCurrentDesktop &&
+                    matchingWindows.FirstOrDefault(w => w.CanAddToTaskbar &&
+                        VirtualDesktopContext.Instance?.IsOnCurrentDesktop(w.Handle) == false) is { } remote &&
+                    VirtualDesktopContext.Instance?.TryMoveWindowToDesktop(remote.Handle, desktop) == true)
+                {
+                    ShellLogger.Info($"DesktopActivation: moved pinned window {remote.Handle} to {desktop}.");
+                    remote.BringToFront();
+                }
                 else ShellHelper.StartProcess(LaunchTarget);
             }
             catch (Exception ex)

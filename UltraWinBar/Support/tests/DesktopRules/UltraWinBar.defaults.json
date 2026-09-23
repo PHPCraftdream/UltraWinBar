@@ -48,6 +48,7 @@
   "TaskWheelAction": 0,
   "ClockClickAction": 1,
   "CheckForUpdates": false,
+  "MoveActivatedWindowsToCurrentDesktop": false,
   "ShowExitMenuItem": true,
   "ShowEndTaskButton": false,
   "ShowStartButtonMultiMon": false,

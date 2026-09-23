@@ -466,6 +466,13 @@ namespace UltraWinBar.Utilities
             set => Set(ref _showHebrewDate, value);
         }
 
+        private bool _moveActivatedWindowsToCurrentDesktop;
+        public bool MoveActivatedWindowsToCurrentDesktop
+        {
+            get => _moveActivatedWindowsToCurrentDesktop;
+            set => Set(ref _moveActivatedWindowsToCurrentDesktop, value);
+        }
+
         public bool CheckForUpdates
         {
             get => _checkForUpdates;

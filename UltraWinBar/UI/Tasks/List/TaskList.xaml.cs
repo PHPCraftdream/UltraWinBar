@@ -4,8 +4,11 @@ using ManagedShell.Common.Helpers;
 using ManagedShell.Common.Logging;
 using UltraWinBar.Utilities;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -26,6 +29,9 @@ namespace UltraWinBar.Controls
         private double TaskButtonLeftMargin;
         private double TaskButtonRightMargin;
         private ICollectionView taskbarItems;
+        private INotifyCollectionChanged sourceWindows;
+        private readonly HashSet<ApplicationWindow> observedWindows = new(ReferenceEqualityComparer.Instance);
+        private bool viewRefreshPending;
 
         public static DependencyProperty ButtonWidthProperty = DependencyProperty.Register(nameof(ButtonWidth), typeof(double), typeof(TaskList), new PropertyMetadata(new double()));
 
@@ -106,13 +112,17 @@ namespace UltraWinBar.Controls
         {
             if (!isLoaded && Tasks != null && Host != null)
             {
-                taskbarItems = Tasks.CreateGroupedWindowsCollection();
+                var source = Tasks.GroupedWindows.SourceCollection as IList
+                    ?? throw new InvalidOperationException("Task window source is not a list.");
+                taskbarItems = CreateWindowView(source, Tasks_Filter);
                 if (taskbarItems != null)
                 {
                     taskbarItems.CollectionChanged += GroupedWindows_CollectionChanged;
-                    taskbarItems.Filter = Tasks_Filter;
-
                 }
+
+                sourceWindows = source as INotifyCollectionChanged;
+                if (sourceWindows != null) sourceWindows.CollectionChanged += SourceWindows_CollectionChanged;
+                foreach (var window in source.OfType<ApplicationWindow>()) WatchWindow(window);
 
                 TasksList.ItemsSource = displayedTasks;
 
@@ -124,6 +134,9 @@ namespace UltraWinBar.Controls
                 QueueTaskRebuild();
             }
         }
+
+        internal static ICollectionView CreateWindowView(IList source, Predicate<object> filter) =>
+            new ListCollectionView(source) { Filter = filter };
 
         private static void TasksChangedCallback(DependencyObject sender, DependencyPropertyChangedEventArgs e)
         {
@@ -140,8 +153,54 @@ namespace UltraWinBar.Controls
 
         internal void RefreshWindowVisibility()
         {
-            taskbarItems?.Refresh();
-            QueueTaskRebuild();
+            QueueViewRefresh();
+        }
+
+        private void QueueViewRefresh()
+        {
+            if (viewRefreshPending) return;
+            viewRefreshPending = true;
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                viewRefreshPending = false;
+                if (!isLoaded) return;
+                taskbarItems?.Refresh();
+                QueueTaskRebuild();
+            }), System.Windows.Threading.DispatcherPriority.Background);
+        }
+
+        private void SourceWindows_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action == NotifyCollectionChangedAction.Reset)
+            {
+                foreach (var window in observedWindows.ToArray()) UnwatchWindow(window);
+                foreach (var window in Tasks.GroupedWindows.SourceCollection.Cast<object>().OfType<ApplicationWindow>())
+                    WatchWindow(window);
+            }
+            else
+            {
+                if (e.OldItems != null)
+                    foreach (ApplicationWindow window in e.OldItems) UnwatchWindow(window);
+                if (e.NewItems != null)
+                    foreach (ApplicationWindow window in e.NewItems) WatchWindow(window);
+            }
+            QueueViewRefresh();
+        }
+
+        private void WatchWindow(ApplicationWindow window)
+        {
+            if (observedWindows.Add(window)) window.PropertyChanged += Window_PropertyChanged;
+        }
+
+        private void UnwatchWindow(ApplicationWindow window)
+        {
+            if (observedWindows.Remove(window)) window.PropertyChanged -= Window_PropertyChanged;
+        }
+
+        private void Window_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName is nameof(ApplicationWindow.ShowInTaskbar) or nameof(ApplicationWindow.HMonitor) or null or "")
+                QueueViewRefresh();
         }
 
         private void Settings_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -153,24 +212,13 @@ namespace UltraWinBar.Controls
                 e.PropertyName == nameof(Settings.Edge) ||
                 e.PropertyName == nameof(Settings.DefaultTaskEdge))
             {
-                try
-                {
-                    taskbarItems?.Refresh();
-                }
-                catch (Exception)
-                {
-                    // Settings.PropertyChanged is a single multicast event shared by every
-                    // open taskbar's TaskList — an unhandled exception here would abort the
-                    // invocation and skip whichever other panels hadn't been notified yet,
-                    // e.g. leaving a just-dragged task showing on neither the old nor the new
-                    // panel. Never let a refresh failure break other panels' updates.
-                }
+                QueueViewRefresh();
             }
             else if (e.PropertyName == nameof(Settings.ShowMultiMon))
             {
                 if (Settings.Instance.MultiMonMode != MultiMonOption.AllTaskbars)
                 {
-                    taskbarItems?.Refresh();
+                    QueueViewRefresh();
                 }
             }
         }
@@ -275,6 +323,9 @@ namespace UltraWinBar.Controls
         private void TaskList_OnUnloaded(object sender, RoutedEventArgs e)
         {
             if (VirtualDesktopContext.Instance != null) VirtualDesktopContext.Instance.Changed -= DesktopChanged;
+            if (sourceWindows != null) sourceWindows.CollectionChanged -= SourceWindows_CollectionChanged;
+            foreach (var window in observedWindows.ToArray()) UnwatchWindow(window);
+            sourceWindows = null;
             if (taskbarItems != null)
             {
                 taskbarItems.CollectionChanged -= GroupedWindows_CollectionChanged;
@@ -293,11 +344,6 @@ namespace UltraWinBar.Controls
 
         private void GroupedWindows_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            SetTaskButtonWidth();
-
-            // Deferred: enumerating taskbarItems synchronously from inside its own
-            // CollectionChanged handler risks "collection was modified during enumeration"
-            // if this fired mid-refresh. Running after the current dispatch frame avoids that.
             QueueTaskRebuild();
         }
 

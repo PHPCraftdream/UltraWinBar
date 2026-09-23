@@ -17,13 +17,29 @@ System.Xml.Linq.XNamespace xaml = "http://schemas.microsoft.com/winfx/2006/xaml"
 var clockGroup = taskbarMenus.Descendants(presentation + "GroupBox")
     .Single(element => (string)element.Attribute(xaml + "Name") == "ClockGroupBox");
 var clockMenu = clockGroup.Element(presentation + "GroupBox.ContextMenu");
+var appBarMenuProperty = taskbarMenus.Root.Elements()
+    .Single(element => element.Name.LocalName == "AppBarWindow.ContextMenu");
+var appBarMenu = appBarMenuProperty.Element(presentation + "ContextMenu");
+if (appBarMenu == null) throw new Exception("AppBarWindow context menu is missing.");
+var systemSettingsCommand = appBarMenu.Descendants(presentation + "StaticResourceExtension")
+    .SingleOrDefault(element => (string)element.Attribute("ResourceKey") == "OpenSystemSettingsMenuItem");
+var computerManagementCommand = appBarMenu.Descendants(presentation + "StaticResourceExtension")
+    .SingleOrDefault(element => (string)element.Attribute("ResourceKey") == "OpenComputerManagementMenuItem");
+var drivesMenu = appBarMenu.Descendants(presentation + "MenuItem")
+    .SingleOrDefault(element => (string)element.Attribute(xaml + "Name") == "OpenDrivesMenuItem");
+if (systemSettingsCommand == null || computerManagementCommand == null || drivesMenu == null ||
+    !drivesMenu.Elements(presentation + "MenuItem").Any(element =>
+        (string)element.Attribute(xaml + "Name") == "ThisPcMenuItem" &&
+        (string)element.Attribute("Header") == "{DynamicResource this_pc}"))
+    throw new Exception("AppBarWindow context menu is missing system commands, This PC, or the drives submenu.");
 var exitMenuItems = taskbarMenus.Descendants()
     .Where(element => element.Name.LocalName == "StaticResourceExtension" &&
         (string)element.Attribute("ResourceKey") == "ExitMenuItem").ToArray();
-if (clockMenu == null || exitMenuItems.Length != 1 || !clockMenu.Descendants().Contains(exitMenuItems[0]))
+if (clockMenu == null || exitMenuItems.Length != 1 || !clockMenu.Descendants().Contains(exitMenuItems[0]) ||
+    appBarMenu.Descendants().Contains(exitMenuItems[0]))
     throw new Exception("Exit menu item must appear only in the clock context menu.");
 Console.WriteLine("PASS: Exit menu is available only from the clock context menu.");
-var generatedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".git", ".vs", "bin", "obj", "artifacts" };
+var generatedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".git", ".vs", "bin", "obj", "artifacts", "worktrees" };
 var sourceExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     { ".cs", ".xaml", ".json", ".iss", ".ps1", ".bat", ".pubxml", ".hlsl", ".props", ".csproj", ".sln", ".md", ".yml" };
 void CheckDirectory(System.IO.DirectoryInfo folder)
@@ -201,7 +217,27 @@ foreach (var property in expectedDefaults)
         throw new Exception($"Default mismatch: {property.Key}: expected {property.Value}, actual {actualDefaults[property.Key]}");
 foreach (var name in new[] { "PinnedApplications", "TaskOrder", "TaskbarAssignments", "AllDesktopApplications" })
     if (actualDefaults[name].AsArray().Count != 0) throw new Exception($"Personal data in defaults: {name}");
+if (actualDefaults["MoveActivatedWindowsToCurrentDesktop"].GetValue<bool>())
+    throw new Exception("Experimental desktop activation must be disabled by default.");
 Console.WriteLine("PASS: current general settings are defaults; no personal pins, desktop IDs or assignments embedded.");
+
+var guardType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.DesktopActivationGuard");
+var shouldMove = guardType?.GetMethod("ShouldMoveWindow", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+if (shouldMove == null) throw new Exception("Desktop activation guard policy is missing.");
+bool CanMove(Guid source, Guid current, Guid owner, bool onCurrent, long age) =>
+    (bool)shouldMove.Invoke(null, new object[] { source, current, owner, onCurrent, age });
+Guid originDesktop = Guid.NewGuid(), otherDesktop = Guid.NewGuid();
+if (!CanMove(originDesktop, originDesktop, otherDesktop, false, 200) ||
+    CanMove(originDesktop, otherDesktop, otherDesktop, false, 200) ||
+    CanMove(originDesktop, originDesktop, originDesktop, false, 200) ||
+    CanMove(originDesktop, originDesktop, otherDesktop, true, 200) ||
+    CanMove(originDesktop, originDesktop, otherDesktop, false, 3000))
+    throw new Exception("Desktop activation guard may move a window after an intentional switch or stale launch.");
+Console.WriteLine("PASS: desktop activation policy only accepts fresh foreign-window activations on the originating desktop.");
+var enabledGuardSettings = JsonSerializer.Deserialize("{\"MoveActivatedWindowsToCurrentDesktop\":true}", settingsType);
+if (!System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.Serialize(enabledGuardSettings, settingsType))
+    ["MoveActivatedWindowsToCurrentDesktop"].GetValue<bool>())
+    throw new Exception("Desktop activation preference did not survive JSON round-trip.");
 
 var pinSettings = JsonSerializer.Deserialize("{\"AllDesktopApplications\":[\"test.app\",\"test.app\",\"\"],\"DesktopPinPreferencesInitialized\":true}", settingsType);
 var pinState = System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.Serialize(pinSettings, settingsType));

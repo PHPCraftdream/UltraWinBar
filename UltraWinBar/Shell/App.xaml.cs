@@ -26,6 +26,7 @@ namespace UltraWinBar
         private VirtualDesktopContext _virtualDesktops;
         private TaskWindowRecovery _taskRecovery;
         private PersistentDesktopPins _desktopPins;
+        private DesktopActivationGuard _desktopActivationGuard;
 
         private readonly DictionaryManager _dictionaryManager;
         private readonly ExplorerMonitor _explorerMonitor;
@@ -73,6 +74,7 @@ namespace UltraWinBar
             _windowManager = new WindowManager(_dictionaryManager, _explorerMonitor, _shellManager, _startMenuMonitor, _updater, _hotkeyManager);
             _taskRecovery = new TaskWindowRecovery(_shellManager.Tasks, _shellManager.TasksService, _virtualDesktops);
             _desktopPins = new PersistentDesktopPins(_shellManager.Tasks, _shellManager.TasksService, _virtualDesktops);
+            UpdateDesktopActivationGuard();
         }
 
         private void App_OnExit(object sender, ExitEventArgs e)
@@ -102,6 +104,28 @@ namespace UltraWinBar
             {
                 setTaskIconSize();
             }
+            else if (e.PropertyName == nameof(Settings.MoveActivatedWindowsToCurrentDesktop))
+            {
+                UpdateDesktopActivationGuard();
+            }
+        }
+
+        private void UpdateDesktopActivationGuard()
+        {
+            if (_virtualDesktops == null) return;
+            if (!Settings.Instance.MoveActivatedWindowsToCurrentDesktop)
+            {
+                _desktopActivationGuard?.Dispose();
+                _desktopActivationGuard = null;
+                return;
+            }
+            if (_desktopActivationGuard != null) return;
+            try { _desktopActivationGuard = new DesktopActivationGuard(_virtualDesktops); }
+            catch (Exception error)
+            {
+                ShellLogger.Error($"DesktopActivation: cannot enable guard: {error.Message}");
+                Settings.Instance.MoveActivatedWindowsToCurrentDesktop = false;
+            }
         }
 
         private void loadTheme()
@@ -129,7 +153,15 @@ namespace UltraWinBar
             ShellConfig config = ShellManager.DefaultShellConfig;
             config.PinnedNotifyIcons = Settings.Instance.NotifyIconBehaviors.Where(setting => setting.Behavior == NotifyIconBehavior.AlwaysShow).Select(setting => setting.Identifier).ToArray();
 
-            return new ShellManager(config);
+            var shell = new ShellManager(config);
+            if (shell.Tasks.GroupedWindows is System.ComponentModel.ICollectionViewLiveShaping view)
+            {
+                view.IsLiveFiltering = false;
+                view.IsLiveGrouping = false;
+                view.IsLiveSorting = false;
+                ShellLogger.Info("Task views: ManagedShell live shaping disabled.");
+            }
+            return shell;
         }
 
         public void RestartApp()
@@ -153,6 +185,7 @@ namespace UltraWinBar
             Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
 
             _explorerMonitor.Dispose();
+            _desktopActivationGuard?.Dispose();
             _taskRecovery?.Dispose();
             _desktopPins?.Dispose();
             _windowManager.Dispose();

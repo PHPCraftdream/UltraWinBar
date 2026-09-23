@@ -782,6 +782,15 @@
                                         Content="{DynamicResource auto_hide_transparent}" />
                                 </CheckBox>
                                 <CheckBox
+                                    x:Name="cbMoveActivatedWindowsToCurrentDesktop"
+                                    ToolTip="{DynamicResource desktop_activation_experiment_hint}"
+                                    IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=MoveActivatedWindowsToCurrentDesktop, UpdateSourceTrigger=PropertyChanged}">
+                                    <TextBlock
+                                        Text="{DynamicResource move_activated_windows_to_current_desktop}"
+                                        TextWrapping="Wrap"
+                                        MaxWidth="280" />
+                                </CheckBox>
+                                <CheckBox
                                     x:Name="cbShowExitMenuItem"
                                     IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=ShowExitMenuItem, UpdateSourceTrigger=PropertyChanged}">
                                     <Label

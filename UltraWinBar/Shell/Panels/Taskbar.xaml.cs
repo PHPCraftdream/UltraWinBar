@@ -531,6 +531,85 @@ namespace UltraWinBar
             ShellHelper.StartTaskManager();
         }
 
+        private void OpenSystemSettingsMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            StartShellTarget("ms-settings:");
+        }
+
+        private void OpenComputerManagementMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            StartShellTarget("compmgmt.msc");
+        }
+
+        private void ThisPcMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            StartExplorer("shell:MyComputerFolder");
+        }
+
+        private void OpenDrivesMenuItem_OnSubmenuOpened(object sender, RoutedEventArgs e)
+        {
+            while (OpenDrivesMenuItem.Items.Count > 2)
+            {
+                OpenDrivesMenuItem.Items.RemoveAt(2);
+            }
+
+            try
+            {
+                foreach (System.IO.DriveInfo drive in System.IO.DriveInfo.GetDrives())
+                {
+                    var driveMenuItem = new MenuItem { Header = drive.Name, Tag = drive.Name };
+                    driveMenuItem.Click += DriveMenuItem_OnClick;
+                    OpenDrivesMenuItem.Items.Add(driveMenuItem);
+                }
+            }
+            catch (Exception error)
+            {
+                ShellLogger.Warning($"Unable to enumerate drives for the taskbar menu: {error.Message}");
+            }
+        }
+
+        private void DriveMenuItem_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem menuItem && menuItem.Tag is string root)
+            {
+                StartExplorer(root);
+            }
+        }
+
+        private static void StartShellTarget(string target)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = target,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception error)
+            {
+                ShellLogger.Error($"Unable to open {target} from the taskbar menu.", error);
+            }
+        }
+
+        private static void StartExplorer(string root)
+        {
+            try
+            {
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = "explorer.exe",
+                    UseShellExecute = true
+                };
+                startInfo.ArgumentList.Add(root);
+                Process.Start(startInfo);
+            }
+            catch (Exception error)
+            {
+                ShellLogger.Error($"Unable to open Explorer at {root} from the taskbar menu.", error);
+            }
+        }
+
         private void UpdateAvailableMenuItem_OnClick(object sender, RoutedEventArgs e)
         {
             ProcessStartInfo psi = new ProcessStartInfo

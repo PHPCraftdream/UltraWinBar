@@ -207,4 +207,10 @@
     <s:String x:Key="desktop_action_failed">Не ўдалося выканаць аперацыю для ўсіх вокнаў. Частка вокнаў магла ўжо перамясціцца. Падрабязнасці запісаныя ў журнал.</s:String>
     <s:String x:Key="show_hebrew_date">Яўрэйская дата і нумараваныя дні тыдня</s:String>
     <s:String x:Key="hebrew_date_midnight">Выкарыстоўваецца мясцовая каляндарная дата; змена апоўначы, а не на захадзе сонца.</s:String>
+    <s:String x:Key="open_system_settings">Адкрыць сістэмныя налады</s:String>
+    <s:String x:Key="open_computer_management">Кіраванне кампутарам</s:String>
+    <s:String x:Key="open_drives">Адкрыць дыскі</s:String>
+    <s:String x:Key="this_pc">Гэты кампутар</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">Спрабаваць пакідаць адкрытыя вокны на гэтым працоўным стале (эксперыментальна)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Для двайнога націску на значкі працоўнага стала і замацаваныя кнопкі панэлі. Windows можа пераключыць стол раней, чым акно перамесціцца.</s:String>
 </ResourceDictionary>

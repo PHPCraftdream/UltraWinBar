@@ -75,9 +75,9 @@ namespace UltraWinBar.Utilities
             try
             {
                 int ordinal = 0;
-                foreach (object item in tasks.GroupedWindows)
+                foreach (object item in tasks.GroupedWindows.SourceCollection)
                 {
-                    if (item is ApplicationWindow sibling &&
+                    if (item is ApplicationWindow sibling && sibling.ShowInTaskbar &&
                         TaskAssignmentManager.GetIdentifier(sibling, TaskAssignmentMode.ExecutablePath) == appId)
                     {
                         ordinal++;

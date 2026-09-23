@@ -1,23 +1,42 @@
 # Changelog
 
-## Unreleased
+## Unreleased (targeting 2.0.0)
 
-Reviewed against the 33 preceding commits dated 2026-09-22 in the local Git
-history (Europe/Berlin, UTC+02:00), from `f5609b6` through `3cd02f0`.
-Their changes and this follow-up change set are listed separately.
-No release has been published.
+The Nerdbank.GitVersioning prefix is raised from `1.23` to `2.0`. No 2.0 release
+has been published yet.
 
-### Current working tree (not yet committed)
+### Added
 
-- Reorganized source code, XAML styles, themes, translations, resources, tests,
-  packaging, and documentation so each source folder contains at most seven
-  entries and each source file is at most 1000 lines. Build and installer paths
-  keep the installed `Themes`, `Languages`, and `Resources` directories flat.
-- Keep each single-monitor panel inside its assigned, non-overlapping rectangle
-  even when Windows or the shell requests a later move or resize. Recalculate
-  the layout after display or DPI changes.
-- Reserve 45 screen pixels below the clock on vertical panels, adjusting for
-  taskbar scaling and display DPI.
+- Taskbar context-menu shortcuts to Windows Settings and Computer Management,
+  plus a submenu for This PC and individual drives in File Explorer.
+- An opt-in experimental guard that tries to move an already open window to the
+  current virtual desktop after a desktop-icon double-click or pinned-launcher
+  activation. Diagnostic logs record when Windows switches desktops first.
+
+### Changed
+
+- Exit is available only from the clock's right-click menu.
+- The first Taskbar settings page is split into five localized sub-tabs.
+- Vertical-panel clock bottom spacing is set to 22.5 physical pixels and scaled
+  for DPI and taskbar scale.
+
+### Fixed
+
+- Settings writes are coalesced and atomic; unreadable settings are preserved
+  before defaults replace them.
+- Work-area notifications no longer block the UI while waiting on other windows.
+- Window-specific taskbar assignments use window-lifetime IDs, and saved order
+  validation checks process start time to avoid reused PID/HWNDs.
+- Low-level mouse hook callbacks follow the Win32 contract and recover when a
+  drag hook cannot be installed.
+- Incomplete desktop-pin imports remain retryable instead of saving partial data.
+- Task lists now refresh from shell window changes without WPF live shaping,
+  preventing collection changes during its deferred filtering pass.
+
+### Previously documented changes
+
+The following sections retain the history recorded for the preceding 1.23.x
+development work.
 
 ### Committed on 2026-09-22
 
@@ -53,14 +72,14 @@ No release has been published.
   ([07bdd46](https://github.com/PHPCraftdream/UltraWinBar/commit/07bdd46))
 - Flattened the Zune theme's vertical-panel background and task-button side borders
   and background to remove glare and visible stripes. The later all-theme cleanup
-  is listed in the working-tree section.
+  is listed in the follow-up changes section.
   ([52f333d](https://github.com/PHPCraftdream/UltraWinBar/commit/52f333d),
   [9e13577](https://github.com/PHPCraftdream/UltraWinBar/commit/9e13577),
   [96e20f0](https://github.com/PHPCraftdream/UltraWinBar/commit/96e20f0))
 - Improved Start-menu placement around the invoking panel: cached the modern
   launcher per monitor, added foreground-event positioning for modern Start and
   Open-Shell, retried position drift, and added related user-picture positioning.
-  Further Open-Shell corrections remain in the working-tree section below.
+  Further Open-Shell corrections are listed in the follow-up changes below.
   ([1c3d0d4](https://github.com/PHPCraftdream/UltraWinBar/commit/1c3d0d4),
   [8a3c860](https://github.com/PHPCraftdream/UltraWinBar/commit/8a3c860),
   [a1e868f](https://github.com/PHPCraftdream/UltraWinBar/commit/a1e868f),
@@ -87,7 +106,7 @@ No release has been published.
   [3cd02f0](https://github.com/PHPCraftdream/UltraWinBar/commit/3cd02f0))
 - Changing window titles no longer directly invalidate order keys. This commit
   introduced executable/ordinal keys; their remaining restart ambiguity is
-  addressed by the window-lifetime identities in the working tree below.
+  addressed by the window-lifetime identities in the follow-up changes below.
   ([5b07df5](https://github.com/PHPCraftdream/UltraWinBar/commit/5b07df5))
 - Task-list and tray-toggle orientation now follows the hosting panel rather
   than the primary panel. Language-indicator dragging receives the mouse-down
@@ -107,7 +126,7 @@ No release has been published.
   per-edge size records remain the persisted source of truth.
   ([eca0c84](https://github.com/PHPCraftdream/UltraWinBar/commit/eca0c84))
 
-### Follow-up changes
+### Previously documented follow-up changes
 
 #### Added
 
@@ -142,8 +161,9 @@ No release has been published.
 - The Start button and closed pinned launchers are clickable across the full
   width of vertical panels; launcher icons remain centered. Horizontal launchers
   remain compact.
-- Task-button separation is 2 DIPs. The clock has 15 DIPs of bottom spacing on
-  vertical panels, without increasing horizontal-panel height.
+- Task-button separation is 2 DIPs. Vertical-panel clock spacing is 22.5
+  physical pixels, adjusted for DPI and taskbar scale, without changing
+  horizontal panels.
 - Larger task, clock, and language-indicator text; larger task and notification
   icons, with notification-icon padding and a rounded notification-area outline.
 - Quick Launch is hidden in favor of per-panel pinned launchers. Inactive taskbar
