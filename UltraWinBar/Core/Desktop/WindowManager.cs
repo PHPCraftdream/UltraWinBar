@@ -22,6 +22,7 @@ namespace UltraWinBar.Utilities
         private List<AppBarScreen> _screenState = new List<AppBarScreen>();
         private List<Taskbar> _taskbars = new List<Taskbar>();
         private NativeMethods.Rect _originalWorkArea;
+        private NativeMethods.Rect? _expectedWorkArea;
         private WindowPlacementGuard _placementGuard;
 
         private readonly DictionaryManager _dictionaryManager;
@@ -48,7 +49,7 @@ namespace UltraWinBar.Utilities
 
             openTaskbars();
 
-            _placementGuard = new WindowPlacementGuard();
+            _placementGuard = new WindowPlacementGuard(EnsureManualWorkArea);
 
             _explorerMonitor.ExplorerMonitorStart(this, _shellManager);
 
@@ -104,8 +105,14 @@ namespace UltraWinBar.Utilities
 
         public void NotifyWorkAreaChange()
         {
-            if (_isOpeningTaskbars || _manualWorkArea)
+            if (_isOpeningTaskbars)
             {
+                return;
+            }
+
+            if (_manualWorkArea)
+            {
+                EnsureManualWorkArea();
                 return;
             }
 
@@ -196,6 +203,7 @@ namespace UltraWinBar.Utilities
             if (_manualWorkArea && !useManualWorkArea)
             {
                 WorkAreaManager.Apply(_originalWorkArea, (uint)Process.GetCurrentProcess().Id);
+                _expectedWorkArea = null;
             }
             _manualWorkArea = useManualWorkArea;
 
@@ -314,8 +322,18 @@ namespace UltraWinBar.Utilities
                 }
             }
 
+            _expectedWorkArea = layout.WorkArea;
             WorkAreaManager.Apply(layout.WorkArea, (uint)Process.GetCurrentProcess().Id);
             ShellLogger.Debug($"WindowManager: Applied manual work area {FormatRect(layout.WorkArea)}");
+        }
+
+        private void EnsureManualWorkArea()
+        {
+            if (!_manualWorkArea || _isOpeningTaskbars || !_expectedWorkArea.HasValue ||
+                WorkAreaManager.IsCurrent(_expectedWorkArea.Value)) return;
+
+            ShellLogger.Warning($"WindowManager: Restoring lost work area {FormatRect(_expectedWorkArea.Value)}");
+            WorkAreaManager.Apply(_expectedWorkArea.Value, (uint)Process.GetCurrentProcess().Id);
         }
 
         private static string FormatRect(NativeMethods.Rect rect)

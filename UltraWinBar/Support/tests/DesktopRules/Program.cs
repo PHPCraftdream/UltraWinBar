@@ -102,6 +102,39 @@ var topFirst = PanelLayout.Calculate(screen, new[] { AppBarEdge.Top, AppBarEdge.
 if (topFirst.Panels[0].Bounds.Right != 1920 || topFirst.Panels[1].Bounds.Top != 40)
     throw new Exception("Edge priority was not preserved.");
 Console.WriteLine("PASS: panel bounds never intersect for every edge subset/order, including tight monitors.");
+var placementGuard = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.WindowPlacementGuard");
+var planPlacement = placementGuard?.GetMethod("PlanPlacement", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+if (planPlacement == null) throw new Exception("Window placement policy is missing.");
+System.Windows.Rect? PlanWindow(ManagedShell.Interop.NativeMethods.Rect visible, System.Windows.Rect area, bool maximized) =>
+    (System.Windows.Rect?)planPlacement.Invoke(null, new object[] { visible, area, maximized });
+var reservedArea = new System.Windows.Rect(158, 41, 1604, 998);
+var oversizedWindow = new ManagedShell.Interop.NativeMethods.Rect { Left = 0, Top = 0, Right = 1920, Bottom = 1080 };
+if (PlanWindow(oversizedWindow, reservedArea, true).HasValue)
+    throw new Exception("Maximized windows must retain Windows-managed placement and restore bounds.");
+var normalWindow = new ManagedShell.Interop.NativeMethods.Rect { Left = 0, Top = 0, Right = 900, Bottom = 700 };
+var relocated = PlanWindow(normalWindow, reservedArea, false);
+if (!relocated.HasValue || relocated.Value.X != 158 || relocated.Value.Y != 41 ||
+    relocated.Value.Width != 900 || relocated.Value.Height != 700 ||
+    PlanWindow(new ManagedShell.Interop.NativeMethods.Rect { Left = 158, Top = 41, Right = 1058, Bottom = 741 },
+        reservedArea, false).HasValue)
+    throw new Exception("Restored windows must move out of panel space without changing a fitting size.");
+var clipped = PlanWindow(oversizedWindow, reservedArea, false);
+if (!clipped.HasValue || clipped.Value != reservedArea)
+    throw new Exception("An oversized restored window must fit the reserved work area.");
+Console.WriteLine("PASS: maximized placement is untouched; restored windows move without unnecessary resizing.");
+var workAreaManager = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.WorkAreaManager");
+var isCurrentWorkArea = workAreaManager?.GetMethod("IsCurrent");
+var liveWorkArea = new ManagedShell.Interop.NativeMethods.Rect();
+if (isCurrentWorkArea == null ||
+    !ManagedShell.Interop.NativeMethods.SystemParametersInfo(
+        (int)ManagedShell.Interop.NativeMethods.SPI.GETWORKAREA, 0, ref liveWorkArea, 0))
+    throw new Exception("Cannot read the current system work area.");
+bool IsCurrentWorkArea(ManagedShell.Interop.NativeMethods.Rect expected) =>
+    (bool)isCurrentWorkArea.Invoke(null, new object[] { expected });
+if (!IsCurrentWorkArea(liveWorkArea)) throw new Exception("The current system work area was not recognized.");
+liveWorkArea.Left++;
+if (IsCurrentWorkArea(liveWorkArea)) throw new Exception("A lost work area was not detected.");
+Console.WriteLine("PASS: system work-area reconciliation detects a changed rectangle without writing system state.");
 if (Array.IndexOf(args, "--themes") >= 0) ThemeChecks.Run();
 if (ReleaseEndpoints.Releases != "https://github.com/PHPCraftdream/UltraWinBar/releases" ||
     ReleaseEndpoints.LatestReleaseApi != "https://api.github.com/repos/PHPCraftdream/UltraWinBar/releases/latest")

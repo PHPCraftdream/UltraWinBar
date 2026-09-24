@@ -13,6 +13,10 @@ has been published yet.
 
 ### Fixed
 
+- Restore the reserved screen work area if Windows or Explorer clears it while
+  the panels remain open, so maximized windows continue to avoid the panels.
+- Keep maximized window geometry under Windows control instead of resizing it
+  on every activation; restored windows still move clear of panel edges.
 - Desktop executable shortcuts with one matching window on another desktop can
   bring that window forward before Explorer launches the shortcut, avoiding a
   visible round trip between desktops. Ambiguous shortcuts keep the existing

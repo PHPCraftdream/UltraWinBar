@@ -30,6 +30,14 @@ namespace UltraWinBar.Utilities
         private static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint message, IntPtr wParam,
             IntPtr lParam, uint flags, uint timeout, out IntPtr result);
 
+        public static bool IsCurrent(NativeMethods.Rect expected)
+        {
+            var current = new NativeMethods.Rect();
+            return NativeMethods.SystemParametersInfo((int)NativeMethods.SPI.GETWORKAREA, 0, ref current, 0) &&
+                current.Left == expected.Left && current.Top == expected.Top &&
+                current.Right == expected.Right && current.Bottom == expected.Bottom;
+        }
+
         public static void Apply(NativeMethods.Rect workArea, uint UltraWinBarProcessId)
         {
             if (!NativeMethods.SystemParametersInfo((int)NativeMethods.SPI.SETWORKAREA, 0, ref workArea, 0))

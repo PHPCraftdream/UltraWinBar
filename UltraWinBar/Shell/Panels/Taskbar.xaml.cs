@@ -342,6 +342,12 @@ namespace UltraWinBar
 
             base.WndProc(hwnd, msg, wParam, lParam, ref handled);
 
+            if (msg == (int)NativeMethods.WM.SETTINGCHANGE && wParam == (IntPtr)NativeMethods.SPI.SETWORKAREA)
+            {
+                windowManager?.NotifyWorkAreaChange();
+                return IntPtr.Zero;
+            }
+
             if ((msg == (int)NativeMethods.WM.SYSCOLORCHANGE || 
                     msg == (int)NativeMethods.WM.SETTINGCHANGE) && 
                 Settings.Instance.Theme.StartsWith(DictionaryManager.THEME_DEFAULT))
@@ -351,11 +357,6 @@ namespace UltraWinBar
                 // If the color scheme changes, re-apply the current theme to get updated colors.
                 _dictionaryManager.SetThemeFromSettings();
             }
-            else if (msg == (int)NativeMethods.WM.SETTINGCHANGE && wParam == (IntPtr)NativeMethods.SPI.SETWORKAREA && Settings.Instance.ShowMultiMon)
-            {
-                windowManager.NotifyWorkAreaChange();
-            }
-
             return IntPtr.Zero;
         }
 

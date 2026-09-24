@@ -22,13 +22,15 @@ namespace UltraWinBar.Utilities
         private readonly WinEventProc callback;
         private readonly Dispatcher dispatcher = Application.Current.Dispatcher;
         private readonly HashSet<IntPtr> pending = new HashSet<IntPtr>();
-        private readonly Dictionary<IntPtr, NativeMethods.Rect> lastAttempt = new Dictionary<IntPtr, NativeMethods.Rect>();
+        private readonly Dictionary<IntPtr, (NativeMethods.Rect Outer, Rect Area)> lastAttempt = new Dictionary<IntPtr, (NativeMethods.Rect, Rect)>();
+        private readonly Action ensureWorkArea;
         private readonly IntPtr showHook, foregroundHook, moveHook, locationHook;
         private IntPtr movingWindow;
         private bool disposed;
 
-        public WindowPlacementGuard()
+        public WindowPlacementGuard(Action ensureWorkArea)
         {
+            this.ensureWorkArea = ensureWorkArea;
             callback = OnWindowEvent;
             showHook = SetWinEventHook(0x8002, 0x8002, IntPtr.Zero, callback, 0, 0, 0);
             foregroundHook = SetWinEventHook(3, 3, IntPtr.Zero, callback, 0, 0, 0);
@@ -59,9 +61,21 @@ namespace UltraWinBar.Utilities
             return result;
         }
 
+        internal static Rect? PlanPlacement(NativeMethods.Rect visible, Rect area, bool maximized)
+        {
+            if (maximized) return null;
+            double width = Math.Min(visible.Width, area.Width), height = Math.Min(visible.Height, area.Height);
+            double x = Math.Max(area.Left, Math.Min(visible.Left, area.Right - width));
+            double y = Math.Max(area.Top, Math.Min(visible.Top, area.Bottom - height));
+            if (visible.Left == x && visible.Top == y && visible.Width == width && visible.Height == height)
+                return null;
+            return new Rect(x, y, width, height);
+        }
+
         private void OnWindowEvent(IntPtr hook, uint type, IntPtr hwnd, int obj, int child, uint thread, uint time)
         {
             if (disposed || hwnd == IntPtr.Zero || obj != 0 || child != 0) return;
+            if (type == 0x8002 || type == 3) ensureWorkArea?.Invoke();
             if (type == 0x000A) { movingWindow = hwnd; return; }
             if (type == 0x000B) movingWindow = IntPtr.Zero;
             if (movingWindow == hwnd) return;
@@ -86,28 +100,22 @@ namespace UltraWinBar.Utilities
             if ((style & 0x00C00000) != 0x00C00000) return;
             if (Application.Current.Windows.OfType<Taskbar>().Any(bar => bar.Handle == hwnd)) return;
             if (!NativeMethods.GetWindowRect(hwnd, out NativeMethods.Rect outer)) return;
-            if (lastAttempt.TryGetValue(hwnd, out var previous) && previous.Equals(outer)) return;
             var screen = System.Windows.Forms.Screen.FromHandle(hwnd);
             var area = AvailableArea(screen.Bounds);
+            if (lastAttempt.TryGetValue(hwnd, out var previous) && previous.Outer.Equals(outer) &&
+                previous.Area.Equals(area)) return;
             var visible = outer;
             if (DwmGetWindowAttribute(hwnd, 9, out var frame, Marshal.SizeOf<NativeMethods.Rect>()) == 0 &&
                 frame.Width > 0 && frame.Height > 0) visible = frame;
-            double width = Math.Min(visible.Width, area.Width), height = Math.Min(visible.Height, area.Height);
-            double x = Math.Max(area.Left, Math.Min(visible.Left, area.Right - width));
-            double y = Math.Max(area.Top, Math.Min(visible.Top, area.Bottom - height));
-            if (visible.Left == x && visible.Top == y && visible.Width == width && visible.Height == height) return;
-            // Borderless full-screen windows never enter this path.
-            if (IsZoomed(hwnd))
-            {
-                x = area.Left; y = area.Top; width = area.Width; height = area.Height;
-            }
+            var target = PlanPlacement(visible, area, IsZoomed(hwnd));
+            if (!target.HasValue) return;
             if (lastAttempt.Count > 256) lastAttempt.Clear();
             if (NativeMethods.SetWindowPos(hwnd, IntPtr.Zero,
-                (int)x - (visible.Left - outer.Left), (int)y - (visible.Top - outer.Top),
-                (int)width + outer.Width - visible.Width, (int)height + outer.Height - visible.Height,
+                (int)target.Value.X - (visible.Left - outer.Left), (int)target.Value.Y - (visible.Top - outer.Top),
+                (int)target.Value.Width + outer.Width - visible.Width, (int)target.Value.Height + outer.Height - visible.Height,
                 (int)(NativeMethods.SetWindowPosFlags.SWP_NOACTIVATE | NativeMethods.SetWindowPosFlags.SWP_NOZORDER)))
             {
-                lastAttempt[hwnd] = outer;
+                lastAttempt[hwnd] = (outer, area);
             }
         }
 
