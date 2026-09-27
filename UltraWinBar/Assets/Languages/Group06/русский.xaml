@@ -143,6 +143,7 @@
     <s:String x:Key="tray_properties">_Свойства</s:String>
     <s:String x:Key="update_available">Доступно об_новление...</s:String>
     <s:String x:Key="exit_ultrawinbar">Вы_йти из UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">_Перезапустить UltraWinBar</s:String>
     <s:String x:Key="customize_notifications_menu">Настройка _уведомлений...</s:String>
     <s:String x:Key="lock_taskbar_menu">_Закрепить панель задач</s:String>
 

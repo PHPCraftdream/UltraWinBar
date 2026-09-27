@@ -38,7 +38,16 @@ var exitMenuItems = taskbarMenus.Descendants()
 if (clockMenu == null || exitMenuItems.Length != 1 || !clockMenu.Descendants().Contains(exitMenuItems[0]) ||
     appBarMenu.Descendants().Contains(exitMenuItems[0]))
     throw new Exception("Exit menu item must appear only in the clock context menu.");
-Console.WriteLine("PASS: Exit menu is available only from the clock context menu.");
+var restartMenuItems = taskbarMenus.Descendants()
+    .Where(element => element.Name.LocalName == "StaticResourceExtension" &&
+        (string)element.Attribute("ResourceKey") == "RestartAppMenuItem").ToArray();
+var restartMenuResource = taskbarMenus.Descendants(presentation + "MenuItem")
+    .SingleOrDefault(element => (string)element.Attribute(xaml + "Key") == "RestartAppMenuItem");
+if (restartMenuItems.Length != 1 || !clockMenu.Descendants().Contains(restartMenuItems[0]) ||
+    (string)restartMenuResource?.Attribute("Click") != "RestartMenuItem_Click" ||
+    (string)restartMenuResource.Attribute("Header") != "{DynamicResource restart_ultrawinbar}")
+    throw new Exception("Clock context menu must offer restarting UltraWinBar.");
+Console.WriteLine("PASS: Exit and Restart menu items are available from the clock context menu; Exit only there.");
 var generatedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".git", ".vs", ".claude", "bin", "obj", "artifacts", "worktrees", "checkpoints" };
 var sourceExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     { ".cs", ".xaml", ".json", ".iss", ".ps1", ".bat", ".pubxml", ".hlsl", ".props", ".csproj", ".sln", ".md", ".yml" };

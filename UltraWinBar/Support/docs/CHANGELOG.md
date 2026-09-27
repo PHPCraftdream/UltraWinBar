@@ -7,6 +7,8 @@ has been published yet.
 
 ### Added
 
+- The clock context menu offers Restart UltraWinBar next to Exit; like Exit,
+  it follows the "show Exit menu item" setting.
 - Tray-icon activation now records the owning process before its callback is
   sent. A double-click pre-moves its sole foreign window; other clicks wait for
   the exact window activation before attempting a move.

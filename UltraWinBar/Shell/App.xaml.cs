@@ -182,8 +182,10 @@ namespace UltraWinBar
                 // close this instance
                 ExitGracefully();
             }
-            catch
-            { }
+            catch (Exception ex)
+            {
+                ShellLogger.Error($"App: Restart failed: {ex.Message}");
+            }
         }
 
         private void ExitApp()
