@@ -1,9 +1,10 @@
 # Changelog
 
-## Unreleased (targeting 2.1.0)
+## 2.2.0 (2026-09-28)
 
-The Nerdbank.GitVersioning prefix is raised from `2.0` to `2.1`. No 2.1 release
-has been published yet.
+First published release of the UltraWinBar fork. The Nerdbank.GitVersioning
+prefix moves from `2.1` to `2.2` (2.1 was never released); the version height is
+offset so this release is exactly 2.2.0.
 
 ### Added
 
