@@ -39,7 +39,7 @@ if (clockMenu == null || exitMenuItems.Length != 1 || !clockMenu.Descendants().C
     appBarMenu.Descendants().Contains(exitMenuItems[0]))
     throw new Exception("Exit menu item must appear only in the clock context menu.");
 Console.WriteLine("PASS: Exit menu is available only from the clock context menu.");
-var generatedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".git", ".vs", ".claude", "bin", "obj", "artifacts", "worktrees" };
+var generatedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".git", ".vs", ".claude", "bin", "obj", "artifacts", "worktrees", "checkpoints" };
 var sourceExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     { ".cs", ".xaml", ".json", ".iss", ".ps1", ".bat", ".pubxml", ".hlsl", ".props", ".csproj", ".sln", ".md", ".yml" };
 void CheckDirectory(System.IO.DirectoryInfo folder)
