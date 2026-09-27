@@ -12,27 +12,30 @@ namespace UltraWinBar.Utilities
     internal sealed class PersistentDesktopPins : IDisposable
     {
         private readonly Tasks tasks;
-        private readonly TasksService service;
         private readonly VirtualDesktopContext desktops;
         private readonly INotifyCollectionChanged windows;
         private bool queued;
         private bool disposed;
 
-        internal PersistentDesktopPins(Tasks tasks, TasksService service, VirtualDesktopContext desktops)
+        internal PersistentDesktopPins(Tasks tasks, VirtualDesktopContext desktops)
         {
             this.tasks = tasks;
-            this.service = service;
             this.desktops = desktops;
             windows = tasks.GroupedWindows.SourceCollection as INotifyCollectionChanged;
             if (windows != null) windows.CollectionChanged += WindowsChanged;
-            service.WindowActivated += WindowActivated;
             desktops.Changed += DesktopChanged;
             Settings.Instance.PropertyChanged += SettingsChanged;
             Queue();
         }
 
-        private void WindowsChanged(object sender, NotifyCollectionChangedEventArgs e) => Queue();
-        private void WindowActivated(object sender, WindowEventArgs e) => Queue();
+        // App-id pins only need restoring after an Explorer reset or when a remembered app gets a new window.
+        internal static bool RequiresPinRestore(NotifyCollectionChangedAction action) =>
+            action == NotifyCollectionChangedAction.Reset || action == NotifyCollectionChangedAction.Add;
+
+        private void WindowsChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (RequiresPinRestore(e.Action)) Queue();
+        }
         private void DesktopChanged(object sender, EventArgs e) => Queue();
         private void SettingsChanged(object sender, PropertyChangedEventArgs e)
         {
@@ -97,7 +100,6 @@ namespace UltraWinBar.Utilities
         {
             disposed = true;
             if (windows != null) windows.CollectionChanged -= WindowsChanged;
-            service.WindowActivated -= WindowActivated;
             desktops.Changed -= DesktopChanged;
             Settings.Instance.PropertyChanged -= SettingsChanged;
         }

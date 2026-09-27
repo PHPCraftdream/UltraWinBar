@@ -79,7 +79,7 @@ namespace UltraWinBar
             }
             _windowManager = new WindowManager(_dictionaryManager, _explorerMonitor, _shellManager, _startMenuMonitor, _updater, _hotkeyManager);
             _taskRecovery = new TaskWindowRecovery(_shellManager.Tasks, _shellManager.TasksService, _virtualDesktops);
-            _desktopPins = new PersistentDesktopPins(_shellManager.Tasks, _shellManager.TasksService, _virtualDesktops);
+            _desktopPins = new PersistentDesktopPins(_shellManager.Tasks, _virtualDesktops);
             UpdateDesktopActivationGuard();
         }
 

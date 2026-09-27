@@ -68,23 +68,56 @@ namespace UltraWinBar.Utilities
                 if (disposed) return;
                 var handles = pending.ToArray();
                 pending.Clear();
+                var tracked = new Dictionary<IntPtr, ApplicationWindow>();
+                foreach (var window in windows) tracked[window.Handle] = window;
+                bool windowAdded = false;
+                bool showInTaskbarChanged = false;
                 foreach (var hwnd in handles)
                 {
                     if (!IsWindow(hwnd)) continue;
-                    var existing = windows.FirstOrDefault(window => window.Handle == hwnd);
-                    if (existing != null) { existing.SetShowInTaskbar(); continue; }
+                    if (tracked.TryGetValue(hwnd, out var existing))
+                    {
+                        bool before = existing.ShowInTaskbar;
+                        existing.SetShowInTaskbar();
+                        if (existing.ShowInTaskbar != before) showInTaskbarChanged = true;
+                        continue;
+                    }
+                    if (!CanPossiblyAddToTaskbar(hwnd)) continue;
                     var candidate = new ApplicationWindow(service, hwnd);
                     if (candidate.CanAddToTaskbar)
                     {
                         candidate.SetShowInTaskbar();
                         windows.Add(candidate);
+                        windowAdded = true;
                         ShellLogger.Info($"Task recovery: restored window {hwnd}");
                     }
                     else candidate.Dispose();
                 }
+                if (!RequiresPanelRefresh(windowAdded, showInTaskbarChanged)) return;
                 foreach (var panel in Application.Current.Windows.OfType<Taskbar>())
                     panel.TaskListControl.RefreshWindowVisibility();
             }), DispatcherPriority.Background);
+        }
+
+        internal static bool RequiresPanelRefresh(bool windowAdded, bool showInTaskbarChanged) =>
+            windowAdded || showInTaskbarChanged;
+
+        // Mirrors ApplicationWindow.CanAddToTaskbar's Win32 checks to skip constructing one for windows it would reject anyway.
+        private static bool CanPossiblyAddToTaskbar(IntPtr hwnd)
+        {
+            if (!IsWindowVisible(hwnd)) return false;
+            int extendedStyle = GetWindowLong(hwnd, WindowLongFlags.GWL_EXSTYLE);
+            bool hasNoOwner = GetWindow(hwnd, GetWindow_Cmd.GW_OWNER) == IntPtr.Zero;
+            bool taskListNotDeleted = GetProp(hwnd, "ITaskList_Deleted") == IntPtr.Zero;
+            return CanStyleAddToTaskbar(extendedStyle, hasNoOwner, taskListNotDeleted);
+        }
+
+        internal static bool CanStyleAddToTaskbar(int extendedStyle, bool hasNoOwner, bool taskListNotDeleted)
+        {
+            bool isAppWindow = (extendedStyle & (int)ExtendedWindowStyles.WS_EX_APPWINDOW) != 0;
+            bool isToolWindow = (extendedStyle & (int)ExtendedWindowStyles.WS_EX_TOOLWINDOW) != 0;
+            bool isNoActivate = (extendedStyle & (int)ExtendedWindowStyles.WS_EX_NOACTIVATE) != 0;
+            return (hasNoOwner || isAppWindow) && (!isNoActivate || isAppWindow) && !isToolWindow && taskListNotDeleted;
         }
 
         public void Dispose()
