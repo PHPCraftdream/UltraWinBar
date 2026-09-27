@@ -52,6 +52,16 @@ has been published yet.
   armed, and log from the UI thread instead of the hook thread.
 - Recompute the saved original work area and restart its crash watchdog when
   the primary monitor's bounds change, so exit and crash restore the right size.
+- Keep retrying the virtual-desktop manager and Start visibility objects with
+  backoff when Explorer has not registered them yet after a restart, instead of
+  losing desktop filtering or Start detection until UltraWinBar restarts.
+- Re-read the current desktop before re-checking windows from cloak events.
+- Stop leaking inverted tray-icon effects (and the panels holding them) through
+  a static shader event, and guard repeated Loaded events on the Start button
+  and task thumbnails.
+- Tick clocks only in the panel that shows them, read the keyboard layout
+  without per-poll allocations or exceptions, reload the System theme once per
+  color broadcast, and leave balloon promotion to the panel hosting the tray.
 - Coalesce work-area recovery events and pause recovery after repeated resets
   to prevent conflicts from continuously resizing desktop windows. Pauses grow
   from 1 to 5 to 15 minutes while a conflict persists, a single probe runs after
