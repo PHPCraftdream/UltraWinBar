@@ -188,6 +188,33 @@ namespace UltraWinBar.Utilities
         }
 
         /// <summary>
+        /// Drops TaskOrder entries for window lifetimes that no longer exist, across every
+        /// edge/desktop scope at once (liveness is global, unlike the per-edge order itself).
+        /// No-op if nothing is stale.
+        /// </summary>
+        public void PruneDeadTaskOrderEntries(HashSet<string> liveWindowKeys)
+        {
+            List<TaskOrderEntry> pruned = TaskOrderIdentifier.PruneDeadWindowEntries(TaskOrder, liveWindowKeys);
+            if (pruned != null)
+            {
+                TaskOrder = pruned;
+            }
+        }
+
+        /// <summary>
+        /// Drops per-window TaskbarAssignments (Ctrl+drag, desktop moves) for window lifetimes
+        /// that no longer exist. No-op if nothing is stale.
+        /// </summary>
+        public void PruneDeadTaskbarAssignments(HashSet<string> liveWindowKeys)
+        {
+            List<TaskbarAssignment> pruned = TaskOrderIdentifier.PruneDeadWindowAssignments(TaskbarAssignments, liveWindowKeys);
+            if (pruned != null)
+            {
+                TaskbarAssignments = pruned;
+            }
+        }
+
+        /// <summary>
         /// Which taskbar a Quick Launch shortcut is shown on, falling back to the "main"
         /// taskbar (see DefaultTaskEdge / "Make main") if it hasn't been moved yet.
         /// </summary>

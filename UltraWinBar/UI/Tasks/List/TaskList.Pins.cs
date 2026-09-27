@@ -31,17 +31,35 @@ namespace UltraWinBar.Controls
 
         private void RebuildDisplayedTasks()
         {
+            var liveKeys = TaskOrderIdentifier.LiveKeys(Tasks,
+                Settings.Instance.TaskOrder.Select(entry => entry.Identifier)
+                    .Concat(Settings.Instance.TaskbarAssignments.Select(assignment => assignment.Identifier))
+                    .Concat(Settings.Instance.PinnedApplications.Select(pin => pin.PrimaryWindowKey)));
+            Settings.Instance.PruneDeadTaskOrderEntries(liveKeys);
+            Settings.Instance.PruneDeadTaskbarAssignments(liveKeys);
+
             var windows = taskbarItems?.Cast<object>().OfType<ApplicationWindow>().ToList()
                 ?? new List<ApplicationWindow>();
             var pins = Settings.Instance.PinnedApplications.Where(p => p.Edge == HostEdge && p.OnCurrentDesktop)
                 .GroupBy(p => p.Identifier).Select(g => g.First()).ToList();
             var order = Settings.Instance.GetTaskOrderForEdge(HostEdge);
+            var orderSet = new HashSet<string>(order);
+            var legacyIndex = new Dictionary<string, int>();
+            for (int i = 0; i < order.Count; i++)
+                if (order[i] != null && !legacyIndex.ContainsKey(order[i])) legacyIndex[order[i]] = i;
             foreach (var window in windows)
             {
                 string key = TaskOrderIdentifier.Get(window, Tasks);
-                if (order.Contains(key)) continue;
-                int legacyIndex = order.IndexOf(TaskOrderIdentifier.GetLegacy(window, Tasks));
-                if (legacyIndex >= 0) order[legacyIndex] = key;
+                if (orderSet.Contains(key)) continue;
+                string legacyKey = TaskOrderIdentifier.GetLegacy(window, Tasks);
+                if (legacyKey != null && legacyIndex.TryGetValue(legacyKey, out int index))
+                {
+                    orderSet.Remove(order[index]);
+                    order[index] = key;
+                    orderSet.Add(key);
+                    legacyIndex.Remove(legacyKey);
+                    legacyIndex[key] = index;
+                }
             }
             bool pinsChanged = false;
             var keys = new Dictionary<object, string>();
@@ -53,12 +71,17 @@ namespace UltraWinBar.Controls
                     TaskAssignmentManager.GetIdentifier(w, TaskAssignmentMode.ExecutablePath) == pin.Identifier).ToList();
                 var window = group.FirstOrDefault(w => TaskOrderIdentifier.Get(w, Tasks) == pin.PrimaryWindowKey)
                     ?? group.FirstOrDefault(w => displayKeys.TryGetValue(w, out string key) && key == pin.OrderKey)
-                    ?? group.FirstOrDefault(w => !order.Contains(TaskOrderIdentifier.Get(w, Tasks)))
+                    ?? group.FirstOrDefault(w => !orderSet.Contains(TaskOrderIdentifier.Get(w, Tasks)))
                     ?? group.FirstOrDefault();
-                if (window != null && !TaskOrderIdentifier.IsAlive(pin.PrimaryWindowKey))
+                if (window != null)
                 {
-                    pin.PrimaryWindowKey = TaskOrderIdentifier.Get(window, Tasks);
-                    pinsChanged = true;
+                    string reconciled = TaskOrderIdentifier.ReconcilePrimaryWindowKey(
+                        pin.PrimaryWindowKey, TaskOrderIdentifier.Get(window, Tasks), liveKeys);
+                    if (reconciled != pin.PrimaryWindowKey)
+                    {
+                        pin.PrimaryWindowKey = reconciled;
+                        pinsChanged = true;
+                    }
                 }
                 object item = window ?? (object)pin;
                 foreach (var member in group) claimed.Add(member);
@@ -107,7 +130,7 @@ namespace UltraWinBar.Controls
                 else if (oldIndex != i) displayedTasks.Move(oldIndex, i);
             }
             foreach (var item in items)
-                if (!order.Contains(keys[item])) order.Add(keys[item]);
+                if (orderSet.Add(keys[item])) order.Add(keys[item]);
             Settings.Instance.SetTaskOrderForEdge(HostEdge, order);
             if (pinsChanged) Settings.Instance.PinnedApplications = Settings.Instance.PinnedApplications.ToList();
             string snapshot = string.Join("|", displayedTasks.Select(item => displayKeys[item]));
@@ -172,7 +195,9 @@ namespace UltraWinBar.Controls
             if (index == oldIndex) return;
             displayedTasks.Move(oldIndex, index);
             var order = displayedTasks.Select(t => displayKeys[t]).ToList();
-            order.AddRange(Settings.Instance.GetTaskOrderForEdge(HostEdge).Where(id => !order.Contains(id)));
+            var orderSet = new HashSet<string>(order);
+            foreach (var id in Settings.Instance.GetTaskOrderForEdge(HostEdge))
+                if (orderSet.Add(id)) order.Add(id);
             Settings.Instance.SetTaskOrderForEdge(HostEdge, order);
             SetTaskButtonWidth();
             ShellLogger.Debug($"Task reorder: edge={HostEdge}; from={oldIndex}; to={index}; key={key}");
