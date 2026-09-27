@@ -75,23 +75,38 @@ namespace UltraWinBar.Controls
             SystemEvents.TimeChanged += TimeChanged;
             SystemEvents.UserPreferenceChanged += UserPreferenceChanged;
             SystemEvents.PowerModeChanged += PowerModeChanged;
+            IsVisibleChanged += OnIsVisibleChanged;
         }
 
         private void StartClock()
         {
-            SetTime();
-
-            RescheduleClock();
-
             Visibility = Visibility.Visible;
+
+            SyncClockRunning();
         }
 
         private void StopClock()
         {
-            _clock.Stop();
-
             Visibility = Visibility.Collapsed;
+
+            SyncClockRunning();
         }
+
+        // Panels that don't host the clock keep it loaded but collapsed; tick only while visible.
+        private void SyncClockRunning()
+        {
+            if (IsVisible && Settings.Instance.ShowClock)
+            {
+                SetTime();
+                RescheduleClock();
+            }
+            else
+            {
+                _clock.Stop();
+            }
+        }
+
+        private void OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e) => SyncClockRunning();
 
         // Re-arms for the next second/minute boundary instead of polling every 200ms forever.
         private void RescheduleClock()
@@ -422,6 +437,7 @@ namespace UltraWinBar.Controls
             SystemEvents.TimeChanged -= TimeChanged;
             SystemEvents.UserPreferenceChanged -= UserPreferenceChanged;
             SystemEvents.PowerModeChanged -= PowerModeChanged;
+            IsVisibleChanged -= OnIsVisibleChanged;
 
             _isLoaded = false;
         }

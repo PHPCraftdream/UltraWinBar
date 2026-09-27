@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
-using ManagedShell.Common.Helpers;
 using ManagedShell.Common.Logging;
 using UltraWinBar.Converters;
 using UltraWinBar.Utilities;
@@ -32,8 +32,10 @@ namespace UltraWinBar.Controls
         }
 
         private readonly DispatcherTimer layoutWatch = new DispatcherTimer(DispatcherPriority.Background);
+        private readonly CultureInfoToLocaleNameConverter _localeConverter = new CultureInfoToLocaleNameConverter();
 
         private bool _isLoaded;
+        private IntPtr _lastHkl = IntPtr.Zero;
 
         public InputLanguage()
         {
@@ -79,23 +81,69 @@ namespace UltraWinBar.Controls
             }
         }
 
-        private void SetLocaleIdentifier()
+        // Raw HKL of the focused thread, as KeyboardLayoutHelper finds it, without its per-call culture work.
+        private static IntPtr GetActiveKeyboardLayout()
         {
+            var info = new GUITHREADINFO { cbSize = Marshal.SizeOf<GUITHREADINFO>() };
+            IntPtr hwnd = GetGUIThreadInfo(0, ref info) && info.hwndFocus != IntPtr.Zero
+                ? info.hwndFocus
+                : GetForegroundWindow();
+
+            uint threadId = GetWindowThreadProcessId(hwnd, IntPtr.Zero);
+            return GetKeyboardLayout(threadId);
+        }
+
+        // A zero language id (e.g. secure desktop) is skipped instead of throwing.
+        private bool TrySetLocaleIdentifier(IntPtr hkl)
+        {
+            int langId = unchecked((short)hkl.ToInt64());
+            if (langId == 0)
+            {
+                return false;
+            }
+
             try
             {
-                var managedShellLayout = KeyboardLayoutHelper.GetKeyboardLayout(false);
-                LocaleIdentifier = CultureInfo.GetCultureInfo((short)managedShellLayout.HKL);
+                LocaleIdentifier = CultureInfo.GetCultureInfo(langId);
+                return true;
             }
             catch (Exception ex)
             {
                 ShellLogger.Error($"Error getting locale identifier: {ex.Message}");
+                return false;
             }
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        private struct GUITHREADINFO
+        {
+            public int cbSize;
+            public uint flags;
+            public IntPtr hwndActive;
+            public IntPtr hwndFocus;
+            public IntPtr hwndCapture;
+            public IntPtr hwndMenuOwner;
+            public IntPtr hwndMoveSize;
+            public IntPtr hwndCaret;
+            public int rcCaretLeft, rcCaretTop, rcCaretRight, rcCaretBottom;
+        }
+
+        [DllImport("user32.dll")]
+        private static extern bool GetGUIThreadInfo(uint idThread, ref GUITHREADINFO lpgui);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll")]
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, IntPtr lpdwProcessId);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetKeyboardLayout(uint idThread);
+
         private void StartWatch()
         {
-            SetLocaleIdentifier();
-            
+            TrySetLocaleIdentifier(GetActiveKeyboardLayout());
+
             layoutWatch.Start();
 
             Visibility = Visibility.Visible;
@@ -142,12 +190,21 @@ namespace UltraWinBar.Controls
 
         private void LayoutWatchTick(object sender, EventArgs args)
         {
-            SetLocaleIdentifier();
+            IntPtr hkl = GetActiveKeyboardLayout();
+            if (hkl == _lastHkl)
+            {
+                return;
+            }
+            _lastHkl = hkl;
 
-            var LocaleConverter = new CultureInfoToLocaleNameConverter();
-            string LocaleName = (string)LocaleConverter.Convert(LocaleIdentifier, typeof(string), "TwoLetterIsoLanguageName", CultureInfo.InvariantCulture);
+            if (!TrySetLocaleIdentifier(hkl))
+            {
+                return;
+            }
 
-            if (LocaleName == "JA")
+            string localeName = (string)_localeConverter.Convert(LocaleIdentifier, typeof(string), "TwoLetterIsoLanguageName", CultureInfo.InvariantCulture);
+
+            if (localeName == "JA")
             {
                 JapaneseImeAdd();
 
