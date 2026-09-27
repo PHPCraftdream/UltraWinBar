@@ -176,6 +176,8 @@ namespace UltraWinBar.Controls
                 foreach (var window in observedWindows.ToArray()) UnwatchWindow(window);
                 foreach (var window in Tasks.GroupedWindows.SourceCollection.Cast<object>().OfType<ApplicationWindow>())
                     WatchWindow(window);
+                // Reset carries no per-item info, so re-run the filter over everything.
+                QueueViewRefresh();
             }
             else
             {
@@ -183,8 +185,11 @@ namespace UltraWinBar.Controls
                     foreach (ApplicationWindow window in e.OldItems) UnwatchWindow(window);
                 if (e.NewItems != null)
                     foreach (ApplicationWindow window in e.NewItems) WatchWindow(window);
+                // taskbarItems is a live ListCollectionView over this same source: it already
+                // re-runs Filter for just the added/removed item and raises its own Add/Remove,
+                // which GroupedWindows_CollectionChanged turns into a rebuild. No Refresh needed.
+                QueueTaskRebuild();
             }
-            QueueViewRefresh();
         }
 
         private void WatchWindow(ApplicationWindow window)
@@ -199,8 +204,61 @@ namespace UltraWinBar.Controls
 
         private void Window_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName is nameof(ApplicationWindow.ShowInTaskbar) or nameof(ApplicationWindow.HMonitor) or null or "")
+            if (e.PropertyName == nameof(ApplicationWindow.HMonitor))
+            {
+                // Irrelevant to Tasks_Filter unless this panel actually splits tasks by monitor.
+                if (HMonitorAffectsFilter()) ReevaluateFilterFor(sender);
+                return;
+            }
+
+            if (e.PropertyName == nameof(ApplicationWindow.ShowInTaskbar))
+            {
+                ReevaluateFilterFor(sender);
+                return;
+            }
+
+            if (e.PropertyName is null or "")
                 QueueViewRefresh();
+        }
+
+        // Mirrors the monitor branch of Tasks_Filter: true only when this panel's outcome can
+        // actually depend on a window's HMonitor.
+        private bool HMonitorAffectsFilter()
+        {
+            if (!Settings.Instance.ShowMultiMon || Settings.Instance.MultiMonMode == MultiMonOption.AllTaskbars)
+                return false;
+            if (Settings.Instance.MultiMonMode == MultiMonOption.SameAsWindowAndPrimary && Host.Screen.Primary)
+                return false;
+            return true;
+        }
+
+        // Cloak changes move a window between desktops without any property change.
+        internal void ReevaluateWindow(ApplicationWindow window)
+        {
+            if (!isLoaded) return;
+            desktopMembershipCache?.Remove(window.Handle);
+            ReevaluateFilterFor(window);
+        }
+
+        // Re-runs Filter for a single item via an edit transaction instead of a full Refresh
+        // (ListCollectionView repositions/adds/removes just that item on CommitEdit).
+        private void ReevaluateFilterFor(object item)
+        {
+            if (taskbarItems is not IEditableCollectionView editable)
+            {
+                QueueViewRefresh();
+                return;
+            }
+
+            try
+            {
+                editable.EditItem(item);
+                editable.CommitEdit();
+            }
+            catch (InvalidOperationException)
+            {
+                QueueViewRefresh();
+            }
         }
 
         private void Settings_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -264,11 +322,42 @@ namespace UltraWinBar.Controls
             }
         }
 
+        // Shared across every panel's TaskList: IsOnCurrentDesktop is a ~46us cross-process COM
+        // call, and all panels filter the same shared ApplicationWindow set, so without this
+        // cache one window add/remove event repeats the same call once per panel. Cleared after
+        // the current dispatcher pass, and dropped at once when the current desktop changes.
+        private static Dictionary<IntPtr, bool> desktopMembershipCache;
+        private static Guid desktopMembershipCacheDesktop;
+
+        private static bool IsOnCurrentDesktopCached(IntPtr handle)
+        {
+            var cache = desktopMembershipCache;
+            Guid desktop = VirtualDesktopContext.Instance?.CurrentId ?? Guid.Empty;
+            if (cache == null || desktop != desktopMembershipCacheDesktop)
+            {
+                cache = new Dictionary<IntPtr, bool>();
+                desktopMembershipCache = cache;
+                desktopMembershipCacheDesktop = desktop;
+                Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    if (ReferenceEquals(desktopMembershipCache, cache)) desktopMembershipCache = null;
+                }), System.Windows.Threading.DispatcherPriority.ContextIdle);
+            }
+
+            if (!cache.TryGetValue(handle, out bool onCurrentDesktop))
+            {
+                onCurrentDesktop = VirtualDesktopContext.Instance?.IsOnCurrentDesktop(handle) != false;
+                cache[handle] = onCurrentDesktop;
+            }
+
+            return onCurrentDesktop;
+        }
+
         private bool Tasks_Filter(object obj)
         {
             if (obj is ApplicationWindow window)
             {
-                if (VirtualDesktopContext.Instance?.IsOnCurrentDesktop(window.Handle) == false) return false;
+                if (!IsOnCurrentDesktopCached(window.Handle)) return false;
                 if (!window.ShowInTaskbar)
                 {
                     return false;

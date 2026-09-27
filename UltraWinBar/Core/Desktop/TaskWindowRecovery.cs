@@ -23,6 +23,7 @@ namespace UltraWinBar.Utilities
         private readonly EventProc callback;
         private readonly IntPtr hook;
         private readonly HashSet<IntPtr> pending = new HashSet<IntPtr>();
+        private readonly HashSet<IntPtr> cloakChanged = new HashSet<IntPtr>();
         private bool queued;
         private bool disposed;
 
@@ -32,9 +33,9 @@ namespace UltraWinBar.Utilities
             this.desktops = desktops;
             windows = tasks.GroupedWindows.SourceCollection as IList<ApplicationWindow>
                 ?? throw new InvalidOperationException("Task window source is not mutable.");
-            callback = OnUncloaked;
-            hook = SetWinEventHook(0x8018, 0x8018, IntPtr.Zero, callback, 0, 0, 2);
-            if (hook == IntPtr.Zero) ShellLogger.Error("Task recovery: uncloak hook unavailable.");
+            callback = OnCloakChanged;
+            hook = SetWinEventHook(EVENT_OBJECT_CLOAKED, EVENT_OBJECT_UNCLOAKED, IntPtr.Zero, callback, 0, 0, 2);
+            if (hook == IntPtr.Zero) ShellLogger.Error("Task recovery: cloak hook unavailable.");
             desktops.Changed += DesktopChanged;
             EnumerateCurrentWindows();
         }
@@ -51,10 +52,15 @@ namespace UltraWinBar.Utilities
             Queue();
         }
 
-        private void OnUncloaked(IntPtr hook, uint type, IntPtr hwnd, int obj, int child, uint thread, uint time)
+        private const uint EVENT_OBJECT_CLOAKED = 0x8017;
+        private const uint EVENT_OBJECT_UNCLOAKED = 0x8018;
+
+        // Cloak flips when a window moves between desktops; uncloaked windows may also be missing from the task source.
+        private void OnCloakChanged(IntPtr hook, uint type, IntPtr hwnd, int obj, int child, uint thread, uint time)
         {
             if (disposed || hwnd == IntPtr.Zero || obj != 0 || child != 0) return;
-            pending.Add(hwnd);
+            if (type == EVENT_OBJECT_UNCLOAKED) pending.Add(hwnd);
+            cloakChanged.Add(hwnd);
             Queue();
         }
 
@@ -70,6 +76,10 @@ namespace UltraWinBar.Utilities
                 pending.Clear();
                 var tracked = new Dictionary<IntPtr, ApplicationWindow>();
                 foreach (var window in windows) tracked[window.Handle] = window;
+                var moved = new List<ApplicationWindow>();
+                foreach (var hwnd in cloakChanged)
+                    if (tracked.TryGetValue(hwnd, out var window)) moved.Add(window);
+                cloakChanged.Clear();
                 bool windowAdded = false;
                 bool showInTaskbarChanged = false;
                 foreach (var hwnd in handles)
@@ -93,9 +103,16 @@ namespace UltraWinBar.Utilities
                     }
                     else candidate.Dispose();
                 }
-                if (!RequiresPanelRefresh(windowAdded, showInTaskbarChanged)) return;
-                foreach (var panel in Application.Current.Windows.OfType<Taskbar>())
-                    panel.TaskListControl.RefreshWindowVisibility();
+                if (RequiresPanelRefresh(windowAdded, showInTaskbarChanged))
+                {
+                    foreach (var panel in Application.Current.Windows.OfType<Taskbar>())
+                        panel.TaskListControl.RefreshWindowVisibility();
+                }
+                else if (moved.Count > 0)
+                {
+                    foreach (var panel in Application.Current.Windows.OfType<Taskbar>())
+                        foreach (var window in moved) panel.TaskListControl.ReevaluateWindow(window);
+                }
             }), DispatcherPriority.Background);
         }
 
@@ -126,6 +143,7 @@ namespace UltraWinBar.Utilities
             desktops.Changed -= DesktopChanged;
             if (hook != IntPtr.Zero) UnhookWinEvent(hook);
             pending.Clear();
+            cloakChanged.Clear();
         }
     }
 }
