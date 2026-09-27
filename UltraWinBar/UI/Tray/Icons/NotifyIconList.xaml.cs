@@ -270,6 +270,21 @@ namespace UltraWinBar.Controls
                 Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
             }
 
+            // TrayIcons is app-lifetime: an attached view would keep this whole panel alive.
+            NotifyIcons.ItemsSource = null;
+            if (collectionView != null)
+            {
+                if (collectionView is ICollectionViewLiveShaping shaping)
+                {
+                    shaping.IsLiveFiltering = false;
+                    shaping.LiveFilteringProperties.Clear();
+                }
+                collectionView.CustomSort = null;
+                collectionView.Filter = null;
+                collectionView.DetachFromSourceCollection();
+                collectionView = null;
+            }
+
             _isLoaded = false;
         }
 

@@ -68,6 +68,8 @@ internal static class UptimeChecks
                 editable.CommitEdit();
                 if (view.Contains(shown[0]) || view.Count != 2) throw new Exception("CommitEdit must remove a window that no longer passes the filter.");
                 if (resets != 0) throw new Exception("Per-window re-evaluation must not reset the whole view.");
+                if (!OwnerStaysReachable(shown, detach: false) || OwnerStaysReachable(shown, detach: true))
+                    throw new Exception("A view over an app-lifetime collection must be detached to release its panel.");
             }
             catch (Exception error) { viewError = error; }
         });
@@ -75,7 +77,7 @@ internal static class UptimeChecks
         sta.Start();
         sta.Join();
         if (viewError != null) throw viewError;
-        Console.WriteLine("PASS: task views re-filter a single added, cloaked, or changed window without a full refresh.");
+        Console.WriteLine("PASS: task views re-filter a single window without a full refresh, and detached views release their panel.");
 
         var translate = Get("UltraWinBar.Utilities.WindowManager").GetMethod("TranslateWorkArea", Private)
             ?? throw new Exception("Work-area translation is missing.");
@@ -131,6 +133,34 @@ internal static class UptimeChecks
         var unpinnedFilter = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Controls.NotifyIconList")?.GetMethod("UnpinnedNotifyIcons_Filter", Private);
         if (unpinnedFilter == null) throw new Exception("The shared unpinned-icons filter must be static so it retains no tray list.");
         Console.WriteLine("PASS: the System theme reloads only for color-relevant broadcasts and the shared tray filter retains no panel.");
+    }
+
+    // Mirrors NotifyIconList/TaskList: a view over a long-lived collection whose sorter holds its panel.
+    private static bool OwnerStaysReachable(ObservableCollection<Item> source, bool detach)
+    {
+        WeakReference owner = CreateView(source, detach);
+        for (int i = 0; i < 3; i++) { GC.Collect(); GC.WaitForPendingFinalizers(); }
+        return owner.IsAlive;
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static WeakReference CreateView(ObservableCollection<Item> source, bool detach)
+    {
+        var panel = new object();
+        var view = new ListCollectionView(source) { CustomSort = new PanelSorter(panel) };
+        if (detach)
+        {
+            view.CustomSort = null;
+            view.DetachFromSourceCollection();
+        }
+        return new WeakReference(panel);
+    }
+
+    private sealed class PanelSorter : System.Collections.IComparer
+    {
+        private readonly object _panel;
+        internal PanelSorter(object panel) => _panel = panel;
+        public int Compare(object x, object y) => _panel == null ? 0 : 0;
     }
 
     private sealed class Item

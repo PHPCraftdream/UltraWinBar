@@ -37,7 +37,8 @@ namespace UltraWinBar.Controls
             set
             {
                 SetValue(PathProperty, value);
-                SetupFolder(value);
+                // Hidden toolbars only remember the path; IsVisibleChanged creates the folder.
+                if (IsVisible) SetupFolder(value);
             }
         }
 
@@ -272,7 +273,7 @@ namespace UltraWinBar.Controls
         #region Events
         private static void OnPathChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
         {
-            if (sender is Toolbar toolbar)
+            if (sender is Toolbar toolbar && toolbar.IsVisible)
             {
                 toolbar.SetupFolder((string)e.NewValue);
             }
@@ -466,6 +467,9 @@ namespace UltraWinBar.Controls
             {
                 Host.hotkeyManager.TaskbarHotkeyPressed -= Toolbar_TaskbarHotkeyPressed;
             }
+
+            // Panels close while visible, so IsVisibleChanged never releases the folder watcher.
+            UnloadFolder();
 
             _isLoaded = false;
         }

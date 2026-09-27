@@ -419,6 +419,9 @@ namespace UltraWinBar.Controls
             {
                 taskbarItems.CollectionChanged -= GroupedWindows_CollectionChanged;
                 taskbarItems.Filter = null;
+                // The source outlives panels; a closed panel's view would keep handling every window change.
+                (taskbarItems as CollectionView)?.DetachFromSourceCollection();
+                taskbarItems = null;
             }
 
             if (Host != null)
