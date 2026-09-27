@@ -187,6 +187,9 @@ namespace UltraWinBar
 
         private void Settings_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+            // A closed panel still receives the change that closed it.
+            if (IsClosing || AllowClose) return;
+
             if (e.PropertyName == nameof(Settings.Theme))
             {
                 bool newTransparency = AppBarMode == AppBarMode.AutoHide || (Application.Current.FindResource("AllowsTransparency") as bool? ?? false);
@@ -194,7 +197,7 @@ namespace UltraWinBar
                 if (AllowsTransparency != newTransparency && Screen.Primary)
                 {
                     // Transparency cannot be changed on an open window.
-                    windowManager.ReopenTaskbars();
+                    windowManager.RequestReopenTaskbars();
                     return;
                 }
 
@@ -247,7 +250,7 @@ namespace UltraWinBar
                 if (FlowDirection != newFlowDirection && Screen.Primary)
                 {
                     // It is necessary to reopen the taskbars to refresh menu sizes.
-                    windowManager.ReopenTaskbars();
+                    windowManager.RequestReopenTaskbars();
                     return;
                 }
             }
@@ -280,7 +283,7 @@ namespace UltraWinBar
                 {
                     // Auto hide requires transparency
                     // Transparency cannot be changed on an open window.
-                    windowManager.ReopenTaskbars();
+                    windowManager.RequestReopenTaskbars();
                 }
             }
             else if (e.PropertyName == nameof(Settings.LockTaskbar))

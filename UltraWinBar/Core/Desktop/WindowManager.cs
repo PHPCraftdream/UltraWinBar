@@ -17,6 +17,7 @@ namespace UltraWinBar.Utilities
 
         private bool _isSettingDisplays;
         private bool _isOpeningTaskbars;
+        private bool _reopenTaskbarsPending;
         private bool _manualWorkArea;
         private bool _workAreaWatchdogStarted;
         private int _pendingDisplayEvents;
@@ -73,7 +74,7 @@ namespace UltraWinBar.Utilities
             {
                 // Adding/removing a taskbar, or restretching one, requires re-registering
                 // all of them so the OS AppBar API recomputes who shrinks for whom.
-                ReopenTaskbars();
+                RequestReopenTaskbars();
             }
             else if (e.PropertyName == nameof(Settings.ShowMultiMon))
             {
@@ -85,11 +86,11 @@ namespace UltraWinBar.Utilities
                     return;
                 }
 
-                ReopenTaskbars();
+                RequestReopenTaskbars();
             }
             else if (e.PropertyName == nameof(Settings.AutoHide))
             {
-                ReopenTaskbars();
+                RequestReopenTaskbars();
             }
             else if (_manualWorkArea &&
                 (e.PropertyName == nameof(Settings.Theme) ||
@@ -110,6 +111,22 @@ namespace UltraWinBar.Utilities
                 closeTaskbars();
                 openTaskbars();
             }
+        }
+
+        // One reopen per burst: every panel reacts to the same settings change.
+        public void RequestReopenTaskbars()
+        {
+            if (_reopenTaskbarsPending)
+            {
+                return;
+            }
+
+            _reopenTaskbarsPending = true;
+            Dispatcher.CurrentDispatcher.BeginInvoke(() =>
+            {
+                _reopenTaskbarsPending = false;
+                ReopenTaskbars();
+            });
         }
 
         public void NotifyWorkAreaChange()

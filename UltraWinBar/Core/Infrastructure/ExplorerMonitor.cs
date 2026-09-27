@@ -57,6 +57,16 @@ namespace UltraWinBar.Utilities
                 if (m.Msg == WM_TASKBARCREATEDMESSAGE)
                 {
                     Dispatcher.CurrentDispatcher.BeginInvoke(() => {
+                        // Recreate COM proxies first so reopened panels never use the dead explorer.exe.
+                        try
+                        {
+                            RaiseExplorerRestarted();
+                        }
+                        catch (Exception ex)
+                        {
+                            ShellLogger.Warning($"Error raising ExplorerRestarted on ExplorerMonitor: {ex.Message}");
+                        }
+
                         try
                         {
                             if (EnvironmentHelper.IsAppRunningAsShell)
@@ -71,7 +81,6 @@ namespace UltraWinBar.Utilities
                             // Re-initialize the tasks service to prevent leftover File Explorer windows.
                             _shellManager.Tasks.Dispose();
                             _shellManager.Tasks.Initialize(true);
-                            RaiseExplorerRestarted();
                         }
                         catch (Exception ex)
                         {
