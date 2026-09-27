@@ -1,0 +1,98 @@
+using System;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Windows.Data;
+using ManagedShell.Interop;
+using UltraWinBar.Utilities;
+
+internal static class UptimeRound2Checks
+{
+    private const BindingFlags Private = BindingFlags.Static | BindingFlags.NonPublic;
+
+    internal static void Run()
+    {
+        var assembly = typeof(TaskAssignmentManager).Assembly;
+        Type Get(string name) => assembly.GetType(name) ?? throw new Exception($"{name} is missing.");
+
+        int[] disconnected = { unchecked((int)0x80010108), unchecked((int)0x800706BA), unchecked((int)0x800401FD) };
+        int[] other = { 0, 1, unchecked((int)0x80070057), unchecked((int)0x80004005) };
+        var desktopHr = Get("UltraWinBar.Utilities.VirtualDesktopContext").GetMethod("IsDisconnected", Private, null, new[] { typeof(int) }, null)
+            ?? throw new Exception("Virtual desktop HRESULT disconnect check is missing.");
+        var startError = Get("UltraWinBar.Utilities.StartMenuMonitor").GetMethod("IsComDisconnected", Private)
+            ?? throw new Exception("Start menu COM disconnect check is missing.");
+        foreach (int hr in disconnected)
+            if (!(bool)desktopHr.Invoke(null, new object[] { hr }) || !(bool)startError.Invoke(null, new object[] { new COMException("x", hr) }))
+                throw new Exception($"0x{hr:X8} must be treated as a severed Explorer proxy.");
+        foreach (int hr in other)
+            if ((bool)desktopHr.Invoke(null, new object[] { hr }) || (bool)startError.Invoke(null, new object[] { new COMException("x", hr) }))
+                throw new Exception($"0x{hr:X8} must not recreate COM objects.");
+        if (!(bool)startError.Invoke(null, new object[] { new InvalidComObjectException() }))
+            throw new Exception("A released RCW must recreate the Start visibility helper.");
+        if (Get("UltraWinBar.Utilities.ExplorerMonitor").GetEvent("ExplorerRestarted", BindingFlags.Static | BindingFlags.Public) == null)
+            throw new Exception("Explorer restart signal for COM recreation is missing.");
+        var monitor = Get("UltraWinBar.Utilities.StartMenuMonitor");
+        var fast = (TimeSpan)monitor.GetField("FastPollInterval", Private).GetValue(null);
+        var slow = (TimeSpan)monitor.GetField("SlowPollInterval", Private).GetValue(null);
+        if (fast != TimeSpan.FromMilliseconds(100) || slow < TimeSpan.FromSeconds(1))
+            throw new Exception("Start poller must be fast only while a menu is involved and slow otherwise.");
+        Console.WriteLine("PASS: severed Explorer COM proxies are recognised by HRESULT or exception, recreated on Explorer restart, and the Start poller idles slowly.");
+
+        var recovery = Get("UltraWinBar.Utilities.TaskWindowRecovery");
+        if ((uint)recovery.GetField("EVENT_OBJECT_CLOAKED", Private).GetValue(null) != 0x8017 ||
+            (uint)recovery.GetField("EVENT_OBJECT_UNCLOAKED", Private).GetValue(null) != 0x8018)
+            throw new Exception("Task recovery must watch both cloak and uncloak to follow windows between desktops.");
+        Exception viewError = null;
+        var sta = new Thread(() =>
+        {
+            try
+            {
+                var shown = new ObservableCollection<Item> { new Item("a", true), new Item("b", false) };
+                var view = new ListCollectionView(shown) { Filter = item => ((Item)item).Visible };
+                int resets = 0;
+                ((System.Collections.Specialized.INotifyCollectionChanged)view).CollectionChanged += (_, e) => { if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset) resets++; };
+                shown.Add(new Item("c", true));
+                shown.Add(new Item("d", false));
+                if (view.Count != 2) throw new Exception("Live view must filter added windows without Refresh.");
+                shown[1].Visible = true;
+                IEditableCollectionView editable = view;
+                editable.EditItem(shown[1]);
+                editable.CommitEdit();
+                if (!view.Contains(shown[1]) || view.Count != 3) throw new Exception("CommitEdit must add a window that now passes the filter.");
+                shown[0].Visible = false;
+                editable.EditItem(shown[0]);
+                editable.CommitEdit();
+                if (view.Contains(shown[0]) || view.Count != 2) throw new Exception("CommitEdit must remove a window that no longer passes the filter.");
+                if (resets != 0) throw new Exception("Per-window re-evaluation must not reset the whole view.");
+            }
+            catch (Exception error) { viewError = error; }
+        });
+        sta.SetApartmentState(ApartmentState.STA);
+        sta.Start();
+        sta.Join();
+        if (viewError != null) throw viewError;
+        Console.WriteLine("PASS: task views re-filter a single added, cloaked, or changed window without a full refresh.");
+
+        var translate = Get("UltraWinBar.Utilities.WindowManager").GetMethod("TranslateWorkArea", Private)
+            ?? throw new Exception("Work-area translation is missing.");
+        NativeMethods.Rect R(int l, int t, int r, int b) => new NativeMethods.Rect { Left = l, Top = t, Right = r, Bottom = b };
+        NativeMethods.Rect Translate(NativeMethods.Rect area, NativeMethods.Rect from, NativeMethods.Rect to) =>
+            (NativeMethods.Rect)translate.Invoke(null, new object[] { area, from, to });
+        var moved = Translate(R(0, 0, 1920, 1040), R(0, 0, 1920, 1080), R(0, 0, 2560, 1440));
+        if (!moved.Equals(R(0, 0, 2560, 1400))) throw new Exception("Other appbars' reservations must carry over to the new monitor size.");
+        var shifted = Translate(R(100, 0, 1920, 1080), R(0, 0, 1920, 1080), R(-1280, 0, 0, 1024));
+        if (!shifted.Equals(R(-1180, 0, 0, 1024))) throw new Exception("Work area must follow a moved primary monitor.");
+        var degenerate = Translate(R(0, 0, 200, 1080), R(0, 0, 1920, 1080), R(0, 0, 1024, 768));
+        if (!degenerate.Equals(R(0, 0, 1024, 768))) throw new Exception("Insets that no longer fit must fall back to the full monitor.");
+        Console.WriteLine("PASS: the saved original work area follows resolution and primary-monitor changes and never becomes degenerate.");
+    }
+
+    private sealed class Item
+    {
+        internal Item(string name, bool visible) { Name = name; Visible = visible; }
+        internal string Name { get; }
+        internal bool Visible { get; set; }
+    }
+}

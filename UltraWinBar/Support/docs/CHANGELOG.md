@@ -35,6 +35,21 @@ has been published yet.
 - Re-attach the virtual-desktop registry watch when Explorer creates or recreates
   its desktop key, so desktop switches keep being detected after an Explorer restart.
 - Ignore repeated Loaded events on task buttons to avoid duplicate subscriptions.
+- Recreate the virtual-desktop manager and Start menu visibility COM objects
+  after an Explorer restart or a disconnected-proxy error instead of querying
+  dead proxies for the rest of the session.
+- Detect Start menu visibility from shell events; the fallback poll runs every
+  1.5 s and speeds up to 100 ms only while a Start menu is open or positioned.
+- Filter only the added, removed or changed window instead of refreshing every
+  task list, skip monitor changes that cannot affect a panel, and share desktop
+  lookups between panels. Windows moved between desktops are re-checked from
+  their cloak events.
+- Drop expired missed tray notifications and keep at most 10 per icon; remove
+  tray icons whose owner window no longer exists when the tray is hovered.
+- Post desktop-activation cancels from the mouse hook only while something is
+  armed, and log from the UI thread instead of the hook thread.
+- Recompute the saved original work area and restart its crash watchdog when
+  the primary monitor's bounds change, so exit and crash restore the right size.
 - Coalesce work-area recovery events and pause recovery after repeated resets
   to prevent conflicts from continuously resizing desktop windows. Pauses grow
   from 1 to 5 to 15 minutes while a conflict persists, a single probe runs after

@@ -639,6 +639,7 @@ if (RequiresPanelRefresh(false, false) || !RequiresPanelRefresh(true, false) ||
     !RequiresPanelRefresh(false, true) || !RequiresPanelRefresh(true, true))
     throw new Exception("Panel refresh must be skipped unless a window was added or its ShowInTaskbar value changed.");
 Console.WriteLine("PASS: task window recovery prefilters window styles exactly like CanAddToTaskbar and refreshes panels only on an actual change.");
+UptimeRound2Checks.Run();
 
 var windowKeys = new[] { TaskOrderIdentifier.CreateKey(100, 200, 300),
     TaskOrderIdentifier.CreateKey(100, 200, 301), TaskOrderIdentifier.CreateKey(100, 200, 302) };
