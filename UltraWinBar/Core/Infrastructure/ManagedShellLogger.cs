@@ -1,4 +1,4 @@
-﻿using ManagedShell.Common.Logging;
+using ManagedShell.Common.Logging;
 using ManagedShell.Common.Logging.Observers;
 using System;
 using System.IO;
@@ -7,11 +7,11 @@ namespace UltraWinBar.Utilities
 {
     class ManagedShellLogger : IDisposable
     {
+        internal static readonly TimeSpan LogRetention = TimeSpan.FromDays(7);
+
         private string _logPath = "Logs".InLocalAppData();
-        private string _logName = DateTime.Now.ToString("yyyy-MM-dd_HHmmssfff");
         private string _logExt = "log";
-        private TimeSpan _logRetention = new TimeSpan(7, 0, 0);
-        private FileLog _fileLog;
+        private RollingFileLog _fileLog;
         private FilteredLog _filteredFileLog;
         private FilteredLog _filteredConsoleLog;
 
@@ -51,12 +51,11 @@ namespace UltraWinBar.Utilities
 
         private void SetupFileLog()
         {
-            DeleteOldLogFiles();
+            RollingFileLog.DeleteOldLogFiles(_logPath, _logExt, LogRetention);
 
             try
             {
-                _fileLog = new FileLog(Path.Combine(_logPath, $"{_logName}.{_logExt}"));
-                _fileLog?.Open();
+                _fileLog = new RollingFileLog(_logPath, _logExt, LogRetention);
 
                 _filteredFileLog = new FilteredLog(_fileLog, Settings.Instance.DebugLogMasks);
                 ShellLogger.Attach(_filteredFileLog);
@@ -73,36 +72,6 @@ namespace UltraWinBar.Utilities
             _filteredConsoleLog?.UpdateMasks(Settings.Instance.DebugLogMasks);
         }
 
-        private void DeleteOldLogFiles()
-        {
-            try
-            {
-                if (!Directory.Exists(_logPath))
-                {
-                    // Nothing to delete
-                    return;
-                }
-
-                // look for all of the log files
-                DirectoryInfo info = new DirectoryInfo(_logPath);
-                FileInfo[] files = info.GetFiles($"*.{_logExt}", SearchOption.TopDirectoryOnly);
-
-                // delete any files that are older than the retention period
-                DateTime now = DateTime.Now;
-                foreach (FileInfo file in files)
-                {
-                    if (now.Subtract(file.LastWriteTime) > _logRetention)
-                    {
-                        file.Delete();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ShellLogger.Debug($"Unable to delete old log files: {ex.Message}");
-            }
-        }
-
         public void Dispose()
         {
             Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
@@ -115,6 +84,103 @@ namespace UltraWinBar.Utilities
                 ShellLogger.Detach(_filteredConsoleLog);
             }
             _fileLog?.Dispose();
+        }
+    }
+
+    // Rolls to a new timestamped file once the current one exceeds MaxSizeBytes, so
+    // DebugLogging over long uptimes can't grow one log file without bound. Size is
+    // tracked by summing message lengths (no per-line FileInfo stat). The roll swaps
+    // only the inner FileLog under _lock, so the FilteredLog/ShellLogger attachment
+    // above never needs to detach/re-attach.
+    internal sealed class RollingFileLog : ILog, IDisposable
+    {
+        internal const long DefaultMaxSizeBytes = 20 * 1024 * 1024;
+
+        private readonly string _logPath;
+        private readonly string _logExt;
+        private readonly TimeSpan _retention;
+        private readonly long _maxSizeBytes;
+        private readonly object _lock = new object();
+        private FileLog _current;
+        private long _currentSize;
+        private int _rollSequence;
+
+        public RollingFileLog(string logPath, string logExt, TimeSpan retention, long maxSizeBytes = DefaultMaxSizeBytes)
+        {
+            _logPath = logPath;
+            _logExt = logExt;
+            _retention = retention;
+            _maxSizeBytes = maxSizeBytes;
+            _current = OpenNewFile();
+        }
+
+        internal static bool ShouldRoll(long currentSize, long maxSizeBytes) => currentSize >= maxSizeBytes;
+
+        internal static string BuildLogFileName(DateTime timestamp, int sequence) =>
+            $"{timestamp:yyyy-MM-dd_HHmmssfff}-{sequence:D4}";
+
+        private FileLog OpenNewFile()
+        {
+            string name = BuildLogFileName(DateTime.Now, _rollSequence++);
+            FileLog log = new FileLog(Path.Combine(_logPath, $"{name}.{_logExt}"));
+            log.Open();
+            _currentSize = 0;
+            return log;
+        }
+
+        public void Log(object sender, LogEventArgs e)
+        {
+            lock (_lock)
+            {
+                _currentSize += (e.Message?.Length ?? 0) + 32;
+                if (ShouldRoll(_currentSize, _maxSizeBytes))
+                {
+                    FileLog old = _current;
+                    _current = OpenNewFile();
+                    old.Dispose();
+                    DeleteOldLogFiles(_logPath, _logExt, _retention);
+                }
+
+                _current.Log(sender, e);
+            }
+        }
+
+        public void Dispose()
+        {
+            lock (_lock)
+            {
+                _current?.Dispose();
+            }
+        }
+
+        internal static void DeleteOldLogFiles(string logPath, string logExt, TimeSpan retention)
+        {
+            try
+            {
+                if (!Directory.Exists(logPath))
+                {
+                    // Nothing to delete
+                    return;
+                }
+
+                // look for all of the log files
+                DirectoryInfo info = new DirectoryInfo(logPath);
+                FileInfo[] files = info.GetFiles($"*.{logExt}", SearchOption.TopDirectoryOnly);
+
+                // delete any files that are older than the retention period
+                DateTime now = DateTime.Now;
+                foreach (FileInfo file in files)
+                {
+                    if (now.Subtract(file.LastWriteTime) > retention)
+                    {
+                        file.Delete();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ShellLogger.Debug($"Unable to delete old log files: {ex.Message}");
+            }
         }
     }
 }

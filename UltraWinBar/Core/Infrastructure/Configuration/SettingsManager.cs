@@ -27,8 +27,12 @@ namespace UltraWinBar.Utilities
         private bool _unreadableFileBackupCreated;
         private readonly object _saveLock = new object();
         private Timer _saveTimer;
+        private bool _dirty;
         private string _pendingSave;
         private Task _writeTask = Task.CompletedTask;
+        // Thread that mutates Settings; serialization is posted there so it never races a mutation.
+        private SynchronizationContext _ownerContext;
+        internal long SerializeCount;
 
         private T _settings;
         public T Settings
@@ -94,20 +98,11 @@ namespace UltraWinBar.Utilities
 
         private void SaveToFile()
         {
-            string jsonString;
-            try
-            {
-                jsonString = JsonSerializer.Serialize(Settings, options);
-            }
-            catch (Exception ex)
-            {
-                ShellLogger.Error($"SettingsManager: Error serializing settings: {ex.Message}");
-                return;
-            }
-
             lock (_saveLock)
             {
-                _pendingSave = jsonString;
+                // Settings is created before the UI dispatcher runs, so the owner context is taken from the first change made under one.
+                _ownerContext ??= SynchronizationContext.Current;
+                _dirty = true;
                 _saveTimer ??= new Timer(SaveTimerElapsed, null, Timeout.Infinite, Timeout.Infinite);
                 _saveTimer.Change(150, Timeout.Infinite);
             }
@@ -115,9 +110,52 @@ namespace UltraWinBar.Utilities
 
         private void SaveTimerElapsed(object state)
         {
+            if (_ownerContext != null)
+            {
+                _ownerContext.Post(_ => SerializeAndQueue(), null);
+            }
+            else
+            {
+                SerializeAndQueue();
+            }
+        }
+
+        private void SerializeAndQueue()
+        {
             lock (_saveLock)
             {
+                if (!_dirty)
+                {
+                    return;
+                }
+                _dirty = false;
+            }
+
+            string jsonString = SerializeNow();
+            if (jsonString == null)
+            {
+                return;
+            }
+
+            lock (_saveLock)
+            {
+                _pendingSave = jsonString;
                 QueuePendingSave();
+            }
+        }
+
+        private string SerializeNow()
+        {
+            try
+            {
+                string jsonString = JsonSerializer.Serialize(Settings, options);
+                Interlocked.Increment(ref SerializeCount);
+                return jsonString;
+            }
+            catch (Exception ex)
+            {
+                ShellLogger.Error($"SettingsManager: Error serializing settings: {ex.Message}");
+                return null;
             }
         }
 
@@ -140,6 +178,20 @@ namespace UltraWinBar.Utilities
             lock (_saveLock)
             {
                 _saveTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+                _dirty = false;
+            }
+
+            // Serialize inline on the calling (UI) thread: Flush runs during shutdown, whose
+            // thread is not pumping its message loop, so posting to _ownerContext and waiting
+            // on it here would deadlock.
+            string jsonString = SerializeNow();
+
+            lock (_saveLock)
+            {
+                if (jsonString != null)
+                {
+                    _pendingSave = jsonString;
+                }
                 QueuePendingSave();
                 writeTask = _writeTask;
             }
