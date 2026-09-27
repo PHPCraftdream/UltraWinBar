@@ -48,13 +48,13 @@ namespace UltraWinBar.Controls
         private bool _isLoaded;
 
         private const int LOCALE_NAME_MAX_LENGTH = 85;
+        private const int TickMarginMilliseconds = 20;
 
         public Clock()
         {
             InitializeComponent();
             DataContext = this;
 
-            _clock.Interval = TimeSpan.FromMilliseconds(200);
             _clock.Tick += Clock_Tick;
         }
 
@@ -74,13 +74,14 @@ namespace UltraWinBar.Controls
             Settings.Instance.PropertyChanged += Settings_PropertyChanged;
             SystemEvents.TimeChanged += TimeChanged;
             SystemEvents.UserPreferenceChanged += UserPreferenceChanged;
+            SystemEvents.PowerModeChanged += PowerModeChanged;
         }
 
         private void StartClock()
         {
             SetTime();
 
-            _clock.Start();
+            RescheduleClock();
 
             Visibility = Visibility.Visible;
         }
@@ -90,6 +91,27 @@ namespace UltraWinBar.Controls
             _clock.Stop();
 
             Visibility = Visibility.Collapsed;
+        }
+
+        // Re-arms for the next second/minute boundary instead of polling every 200ms forever.
+        private void RescheduleClock()
+        {
+            bool secondsVisible = ClockCanShowSeconds(Settings.Instance.ShowClockSeconds,
+                Settings.Instance.OverrideClockFormat, Settings.Instance.ClockFormat);
+            _clock.Stop();
+            _clock.Interval = GetNextTickDelay(DateTime.Now, secondsVisible);
+            _clock.Start();
+        }
+
+        internal static bool ClockCanShowSeconds(bool showClockSeconds, bool overrideClockFormat, string clockFormat) =>
+            showClockSeconds || (overrideClockFormat && clockFormat != null && clockFormat.Contains('s'));
+
+        internal static TimeSpan GetNextTickDelay(DateTime now, bool secondsVisible)
+        {
+            DateTime boundary = secondsVisible
+                ? new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, now.Second, now.Kind).AddSeconds(1)
+                : new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0, now.Kind).AddMinutes(1);
+            return boundary - now + TimeSpan.FromMilliseconds(TickMarginMilliseconds);
         }
 
         private void Settings_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -112,9 +134,16 @@ namespace UltraWinBar.Controls
                     }
                     break;
                 case nameof(Settings.ShowClockSeconds):
-                case nameof(Settings.Language):
                 case nameof(Settings.OverrideClockFormat):
                 case nameof(Settings.ClockFormat):
+                    UpdateUserCulture();
+                    if (_clock.IsEnabled)
+                    {
+                        SetTime();
+                        RescheduleClock();
+                    }
+                    break;
+                case nameof(Settings.Language):
                 case nameof(Settings.OverrideAMPMDesignators):
                 case nameof(Settings.AMDesignator):
                 case nameof(Settings.PMDesignator):
@@ -126,11 +155,26 @@ namespace UltraWinBar.Controls
         private void Clock_Tick(object sender, EventArgs args)
         {
             SetTime();
+            RescheduleClock();
         }
 
         private void TimeChanged(object sender, EventArgs e)
         {
             TimeZoneInfo.ClearCachedData();
+            if (_clock.IsEnabled)
+            {
+                SetTime();
+                RescheduleClock();
+            }
+        }
+
+        private void PowerModeChanged(object sender, PowerModeChangedEventArgs e)
+        {
+            if (e.Mode == PowerModes.Resume && _clock.IsEnabled)
+            {
+                SetTime();
+                RescheduleClock();
+            }
         }
 
         private static void SetConverterCultureRecursively(DependencyObject main, CultureInfo ci)
@@ -247,11 +291,17 @@ namespace UltraWinBar.Controls
         private void UpdateClockText()
         {
             var value = Now == default ? DateTime.Now : Now;
-            TimeText = value.ToString("t", clockCulture);
-            OrdinaryDateText = value.ToString("d", clockCulture);
-            WeekdayText = HebrewClockFormatter.DayName(value.DayOfWeek);
+            string timeText = value.ToString("t", clockCulture);
+            if (TimeText != timeText) TimeText = timeText;
+            string dateText = value.ToString("d", clockCulture);
+            if (OrdinaryDateText != dateText) OrdinaryDateText = dateText;
+            string weekdayText = HebrewClockFormatter.DayName(value.DayOfWeek);
+            if (WeekdayText != weekdayText) WeekdayText = weekdayText;
             if (Settings.Instance.ShowHebrewDate)
-                HebrewDateText = HebrewClockFormatter.FormatDate(value, Settings.Instance.Language);
+            {
+                string hebrewDateText = HebrewClockFormatter.FormatDate(value, Settings.Instance.Language);
+                if (HebrewDateText != hebrewDateText) HebrewDateText = hebrewDateText;
+            }
         }
 
         private void UpdateClockTemplate() => SetResourceReference(TemplateProperty,
@@ -371,6 +421,7 @@ namespace UltraWinBar.Controls
             Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
             SystemEvents.TimeChanged -= TimeChanged;
             SystemEvents.UserPreferenceChanged -= UserPreferenceChanged;
+            SystemEvents.PowerModeChanged -= PowerModeChanged;
 
             _isLoaded = false;
         }

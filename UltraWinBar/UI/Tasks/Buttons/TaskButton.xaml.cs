@@ -134,6 +134,12 @@ namespace UltraWinBar.Controls
 
         private void TaskButton_OnLoaded(object sender, RoutedEventArgs e)
         {
+            if (_isLoaded)
+            {
+                // Spurious repeat Loaded without an intervening Unloaded - already wired up.
+                return;
+            }
+
             Window = DataContext as ApplicationWindow;
             UpdatePinnedAppearance();
             if (VirtualDesktopContext.Instance != null) VirtualDesktopContext.Instance.Changed += DesktopChanged;

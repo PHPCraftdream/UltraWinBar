@@ -21,15 +21,27 @@ namespace UltraWinBar.Utilities
         }
         [DllImport("advapi32.dll")]
         private static extern int RegNotifyChangeKeyValue(IntPtr key, bool subtree, uint filter, IntPtr signal, bool asynchronous);
+        private const uint ValueChangeFilter = 0x10000004; // REG_NOTIFY_CHANGE_LAST_SET | REG_NOTIFY_THREAD_AGNOSTIC
+        private const uint NameChangeFilter = 0x10000001; // REG_NOTIFY_CHANGE_NAME | REG_NOTIFY_THREAD_AGNOSTIC
         private const string GlobalPath = @"Software\Microsoft\Windows\CurrentVersion\Explorer\VirtualDesktops";
-        private static string SessionPath => @"Software\Microsoft\Windows\CurrentVersion\Explorer\SessionInfo\" + Process.GetCurrentProcess().SessionId + @"\VirtualDesktops";
+        private static readonly int SessionId = ReadSessionId();
+        private static readonly string SessionPath = BuildSessionPath(SessionId);
         private readonly Dispatcher dispatcher = Application.Current.Dispatcher;
-        private readonly List<RegistryWatch> watches = new List<RegistryWatch>();
+        private readonly List<RegistryTreeWatch> watches = new List<RegistryTreeWatch>();
         private IDesktopManager manager;
         private bool disposed;
         public static VirtualDesktopContext Instance { get; private set; }
         public Guid CurrentId { get; private set; }
         public event EventHandler Changed;
+
+        private static int ReadSessionId()
+        {
+            using var process = Process.GetCurrentProcess();
+            return process.SessionId;
+        }
+
+        internal static string BuildSessionPath(int sessionId) =>
+            @"Software\Microsoft\Windows\CurrentVersion\Explorer\SessionInfo\" + sessionId + @"\VirtualDesktops";
 
         public VirtualDesktopContext()
         {
@@ -38,10 +50,7 @@ namespace UltraWinBar.Utilities
             catch (COMException) { }
             CurrentId = ReadCurrent();
             foreach (string path in new[] { GlobalPath, SessionPath })
-            {
-                var key = Registry.CurrentUser.OpenSubKey(path);
-                if (key != null) watches.Add(new RegistryWatch(key, () => dispatcher.BeginInvoke(new Action(Refresh))));
-            }
+                watches.Add(new RegistryTreeWatch(path, dispatcher, () => dispatcher.BeginInvoke(new Action(Refresh))));
             ShellLogger.Info($"Virtual desktop: {CurrentId}");
         }
 
@@ -126,13 +135,15 @@ namespace UltraWinBar.Utilities
         private sealed class RegistryWatch : IDisposable
         {
             private readonly RegistryKey key;
+            private readonly uint filter;
             private readonly AutoResetEvent signal = new AutoResetEvent(false);
             private readonly RegisteredWaitHandle wait;
             private readonly object gate = new object();
             private bool disposed;
-            public RegistryWatch(RegistryKey key, Action changed)
+            public RegistryWatch(RegistryKey key, uint filter, Action changed)
             {
                 this.key = key;
+                this.filter = filter;
                 wait = ThreadPool.RegisterWaitForSingleObject(signal, (_, __) =>
                 {
                     lock (gate)
@@ -144,7 +155,7 @@ namespace UltraWinBar.Utilities
                 }, null, Timeout.Infinite, false);
                 Arm();
             }
-            private void Arm() => RegNotifyChangeKeyValue(key.Handle.DangerousGetHandle(), false, 0x10000004,
+            private void Arm() => RegNotifyChangeKeyValue(key.Handle.DangerousGetHandle(), false, filter,
                 signal.SafeWaitHandle.DangerousGetHandle(), true);
             public void Dispose()
             {
@@ -154,6 +165,85 @@ namespace UltraWinBar.Utilities
                     wait.Unregister(null);
                     key.Dispose();
                     signal.Dispose();
+                }
+            }
+        }
+
+        // Watches a registry leaf Explorer creates lazily and can delete/recreate (e.g. on its
+        // own restart). Besides the leaf's value, it watches the nearest existing ancestor for
+        // name changes, so a missing-at-start or deleted-and-recreated leaf is picked back up
+        // instead of leaving the watch permanently deaf for the rest of the process uptime.
+        // Tradeoff: only ancestor name-changes trigger a rescan (cheap, no polling), but a
+        // rescan re-opens both watches even for unrelated siblings changing under that ancestor.
+        private sealed class RegistryTreeWatch : IDisposable
+        {
+            private readonly string leafPath;
+            private readonly Dispatcher dispatcher;
+            private readonly Action changed;
+            private readonly object gate = new object();
+            private RegistryWatch leafWatch;
+            private RegistryWatch ancestorWatch;
+            private bool disposed;
+
+            public RegistryTreeWatch(string leafPath, Dispatcher dispatcher, Action changed)
+            {
+                this.leafPath = leafPath;
+                this.dispatcher = dispatcher;
+                this.changed = changed;
+                Rebuild();
+            }
+
+            internal static string ParentPath(string path)
+            {
+                int index = path.LastIndexOf('\\');
+                return index > 0 ? path.Substring(0, index) : null;
+            }
+
+            internal static IEnumerable<string> AncestorChainFrom(string path)
+            {
+                for (string ancestor = ParentPath(path); ancestor != null; ancestor = ParentPath(ancestor))
+                    yield return ancestor;
+            }
+
+            private void Rebuild()
+            {
+                lock (gate)
+                {
+                    if (disposed) return;
+                    leafWatch?.Dispose();
+                    leafWatch = null;
+                    ancestorWatch?.Dispose();
+                    ancestorWatch = null;
+
+                    var leafKey = Registry.CurrentUser.OpenSubKey(leafPath);
+                    if (leafKey != null) leafWatch = new RegistryWatch(leafKey, ValueChangeFilter, changed);
+
+                    foreach (string ancestorPath in AncestorChainFrom(leafPath))
+                    {
+                        var ancestorKey = Registry.CurrentUser.OpenSubKey(ancestorPath);
+                        if (ancestorKey == null) continue;
+                        ancestorWatch = new RegistryWatch(ancestorKey, NameChangeFilter,
+                            () => dispatcher.BeginInvoke(new Action(OnAncestorChanged)));
+                        break;
+                    }
+                }
+            }
+
+            private void OnAncestorChanged()
+            {
+                // Runs on the dispatcher thread, never inside the ancestor watch's own callback,
+                // so disposing/replacing it here can't reenter its lock from the same wait.
+                Rebuild();
+                changed();
+            }
+
+            public void Dispose()
+            {
+                lock (gate)
+                {
+                    disposed = true;
+                    leafWatch?.Dispose();
+                    ancestorWatch?.Dispose();
                 }
             }
         }
