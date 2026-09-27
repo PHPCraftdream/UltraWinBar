@@ -152,17 +152,33 @@ Action writeWorkArea = () =>
 if (RecoverArea(recovery, 0, () => true, writeWorkArea) != "Unchanged" || workAreaWrites != 0 ||
     RecoverArea(recovery, 0, () => false, writeWorkArea) != "Applied")
     throw new Exception("Work-area recovery wrote an unchanged area or missed the initial reset.");
+long RetryAt(object controller) => (long)recoveryType.GetProperty("RetryAt", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(controller);
+long SuspendedFor(object controller) => (long)recoveryType.GetProperty("SuspendedFor", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(controller);
+void ResetRecovery(object controller) => recoveryType.GetMethod("Reset", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(controller, null);
 foreach (long time in new long[] { 1, 100, 500, 1999 })
-    if (RecoverArea(recovery, time, () => false, writeWorkArea) != "Deferred")
-        throw new Exception("A burst of work-area notifications bypassed the cooldown.");
+    if (RecoverArea(recovery, time, () => false, writeWorkArea) != "Deferred" || RetryAt(recovery) != 2000)
+        throw new Exception("A burst of work-area notifications bypassed the cooldown or lost its retry time.");
 if (RecoverArea(recovery, 2000, () => false, writeWorkArea) != "Applied" ||
     RecoverArea(recovery, 4000, () => false, writeWorkArea) != "Applied" ||
     RecoverArea(recovery, 6000, () => false, writeWorkArea) != "Suspended" || workAreaWrites != 3 ||
-    RecoverArea(recovery, 600000, () => throw new Exception("Suspended recovery still read OS state."), writeWorkArea) != "Deferred")
+    SuspendedFor(recovery) != 60000 || RetryAt(recovery) != 66000 ||
+    RecoverArea(recovery, 30000, () => throw new Exception("Suspended recovery still read OS state."), writeWorkArea) != "Deferred" ||
+    RetryAt(recovery) != 66000)
     throw new Exception("Competing work-area changes can cause unbounded desktop resizing.");
-recoveryType.GetMethod("Reset", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(recovery, null);
-if (RecoverArea(recovery, 600000, () => false, writeWorkArea) != "Applied" || workAreaWrites != 4)
-    throw new Exception("An explicit layout reset did not enable work-area recovery.");
+if (RecoverArea(recovery, 66000, () => false, writeWorkArea) != "Applied" || workAreaWrites != 4 ||
+    RecoverArea(recovery, 68000, () => false, writeWorkArea) != "Suspended" || SuspendedFor(recovery) != 300000 ||
+    RecoverArea(recovery, 368000, () => false, writeWorkArea) != "Applied" ||
+    RecoverArea(recovery, 370000, () => false, writeWorkArea) != "Suspended" || SuspendedFor(recovery) != 900000 || workAreaWrites != 5)
+    throw new Exception("A persistent work-area conflict did not back off with a single probe per pause.");
+if (RecoverArea(recovery, 1270000, () => false, writeWorkArea) != "Applied" ||
+    RecoverArea(recovery, 1330000, () => false, writeWorkArea) != "Applied" ||
+    RecoverArea(recovery, 1332000, () => false, writeWorkArea) != "Applied" ||
+    RecoverArea(recovery, 1334000, () => false, writeWorkArea) != "Applied" ||
+    RecoverArea(recovery, 1336000, () => false, writeWorkArea) != "Suspended" || SuspendedFor(recovery) != 60000)
+    throw new Exception("A probe that held for the quiet period did not restore the full recovery budget.");
+ResetRecovery(recovery);
+if (RecoverArea(recovery, 1337000, () => false, writeWorkArea) != "Applied" || workAreaWrites != 10)
+    throw new Exception("Reopening the panels did not end a work-area recovery pause.");
 var delayedRecovery = NewRecovery();
 foreach (long time in new long[] { 0, 2000, 4000, 64000 })
     if (RecoverArea(delayedRecovery, time, () => false, () => { }) != "Applied")
@@ -176,7 +192,7 @@ try
 catch (System.Reflection.TargetInvocationException error) when (error.InnerException is InvalidOperationException) { }
 if (RecoverArea(failedRecovery, 2000, () => false, () => { }) != "Applied")
     throw new Exception("A failed write permanently held the recovery reentrancy guard.");
-Console.WriteLine("PASS: repeated and reentrant work-area resets are bounded; conflicts stop writes until layout changes.");
+Console.WriteLine("PASS: repeated and reentrant work-area resets are bounded; conflicts pause writes with escalating backoff and retry after each pause.");
 if (Array.IndexOf(args, "--themes") >= 0) ThemeChecks.Run();
 if (ReleaseEndpoints.Releases != "https://github.com/PHPCraftdream/UltraWinBar/releases" ||
     ReleaseEndpoints.LatestReleaseApi != "https://api.github.com/repos/PHPCraftdream/UltraWinBar/releases/latest")

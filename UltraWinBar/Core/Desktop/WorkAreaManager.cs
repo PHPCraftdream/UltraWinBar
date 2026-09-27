@@ -155,29 +155,60 @@ namespace UltraWinBar.Utilities
 
     internal sealed class WorkAreaRecovery
     {
-        private bool recovering;
-        private bool attempted;
-        private long lastAttempt;
-        private int attempts;
-        internal bool IsSuspended { get; private set; }
+        private const long Cooldown = 2000, QuietPeriod = 60000;
+        private const int BurstLimit = 3;
+        private static readonly long[] Backoff = { 60000, 300000, 900000 };
+        private bool recovering, attempted, suspended;
+        private long lastAttempt, quietSince, suspendedUntil;
+        private int attempts, suspensions;
+
+        internal long RetryAt { get; private set; }
+        internal long SuspendedFor { get; private set; }
 
         internal WorkAreaRecoveryResult Recover(long now, Func<bool> isCurrent, Action apply)
         {
-            if (IsSuspended || recovering) return WorkAreaRecoveryResult.Deferred;
+            if (recovering)
+            {
+                RetryAt = now + Cooldown;
+                return WorkAreaRecoveryResult.Deferred;
+            }
+            if (suspended)
+            {
+                if (now < suspendedUntil)
+                {
+                    RetryAt = suspendedUntil;
+                    return WorkAreaRecoveryResult.Deferred;
+                }
+                // One probe write after the pause; a renewed conflict suspends for longer.
+                suspended = false;
+                quietSince = suspendedUntil;
+                attempts = BurstLimit - 1;
+            }
             recovering = true;
             try
             {
                 if (isCurrent()) return WorkAreaRecoveryResult.Unchanged;
-                if (attempted && now - lastAttempt < 2000) return WorkAreaRecoveryResult.Deferred;
-                if (attempted && now - lastAttempt >= 60000) attempts = 0;
-                if (attempts >= 3)
+                if (attempted && now - lastAttempt < Cooldown)
                 {
-                    IsSuspended = true;
+                    RetryAt = lastAttempt + Cooldown;
+                    return WorkAreaRecoveryResult.Deferred;
+                }
+                if (now - quietSince >= QuietPeriod)
+                {
+                    attempts = 0;
+                    suspensions = 0;
+                }
+                if (attempts >= BurstLimit)
+                {
+                    SuspendedFor = Backoff[Math.Min(suspensions++, Backoff.Length - 1)];
+                    suspended = true;
+                    suspendedUntil = now + SuspendedFor;
+                    RetryAt = suspendedUntil;
                     return WorkAreaRecoveryResult.Suspended;
                 }
 
                 attempted = true;
-                lastAttempt = now;
+                lastAttempt = quietSince = now;
                 attempts++;
                 apply();
                 return WorkAreaRecoveryResult.Applied;
@@ -187,9 +218,8 @@ namespace UltraWinBar.Utilities
 
         internal void Reset()
         {
-            IsSuspended = false;
-            attempted = false;
-            attempts = 0;
+            suspended = attempted = false;
+            attempts = suspensions = 0;
         }
     }
 }

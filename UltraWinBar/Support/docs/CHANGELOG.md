@@ -13,10 +13,16 @@ has been published yet.
 
 ### Fixed
 
-- Coalesce work-area recovery events and suspend recovery after repeated resets
-  to prevent conflicts from continuously resizing desktop windows.
+- Coalesce work-area recovery events and pause recovery after repeated resets
+  to prevent conflicts from continuously resizing desktop windows. Pauses grow
+  from 1 to 5 to 15 minutes while a conflict persists, a single probe runs after
+  each pause, and reopening the panels restores full recovery.
+- Retry a deferred work-area recovery when its cooldown ends instead of waiting
+  for the next window activation.
 - Stop correcting window bounds on every location-change event, and suppress
   repeated placement attempts when applications refuse the requested bounds.
+  Windows moved programmatically or with Win+Arrow are now constrained on
+  their next show or activation rather than immediately.
 - Report work-area notification enumeration failures only when enumeration fails.
 - Restore the reserved screen work area if Windows or Explorer clears it while
   the panels remain open, so maximized windows continue to avoid the panels.

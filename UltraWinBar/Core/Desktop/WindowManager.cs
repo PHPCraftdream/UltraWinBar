@@ -13,6 +13,7 @@ namespace UltraWinBar.Utilities
     public class WindowManager : IDisposable
     {
         private static object reopenLock = new object();
+        private static readonly TimeSpan WorkAreaRecoveryDelay = TimeSpan.FromMilliseconds(500);
 
         private bool _isSettingDisplays;
         private bool _isOpeningTaskbars;
@@ -45,10 +46,7 @@ namespace UltraWinBar.Utilities
             _startMenuMonitor = startMenuMonitor;
             _updater = updater;
             _hotkeyManager = hotkeyManager;
-            _workAreaRecoveryTimer = new DispatcherTimer(DispatcherPriority.Background)
-            {
-                Interval = TimeSpan.FromMilliseconds(500)
-            };
+            _workAreaRecoveryTimer = new DispatcherTimer(DispatcherPriority.Background);
             _workAreaRecoveryTimer.Tick += RecoverWorkArea;
 
             NativeMethods.SystemParametersInfo((int)NativeMethods.SPI.GETWORKAREA, 0, ref _originalWorkArea, 0);
@@ -222,6 +220,7 @@ namespace UltraWinBar.Utilities
             }
 
             ShellLogger.Debug($"WindowManager: Opening taskbars");
+            ResetWorkAreaRecovery();
             _isOpeningTaskbars = true;
 
             try
@@ -333,7 +332,7 @@ namespace UltraWinBar.Utilities
 
             if (!_expectedWorkArea.HasValue || !_expectedWorkArea.Value.Equals(layout.WorkArea))
             {
-                _workAreaRecovery.Reset();
+                ResetWorkAreaRecovery();
                 _expectedWorkArea = layout.WorkArea;
                 WorkAreaManager.Apply(layout.WorkArea, (uint)Process.GetCurrentProcess().Id);
             }
@@ -341,10 +340,17 @@ namespace UltraWinBar.Utilities
             ShellLogger.Debug($"WindowManager: Applied manual work area {FormatRect(layout.WorkArea)}");
         }
 
+        private void ResetWorkAreaRecovery()
+        {
+            _workAreaRecoveryTimer.Stop();
+            _workAreaRecovery.Reset();
+        }
+
         private void QueueManualWorkAreaRecovery()
         {
             if (_disposed || !_manualWorkArea || _isOpeningTaskbars || !_expectedWorkArea.HasValue ||
-                _workAreaRecovery.IsSuspended || _workAreaRecoveryTimer.IsEnabled) return;
+                _workAreaRecoveryTimer.IsEnabled) return;
+            _workAreaRecoveryTimer.Interval = WorkAreaRecoveryDelay;
             _workAreaRecoveryTimer.Start();
         }
 
@@ -352,15 +358,22 @@ namespace UltraWinBar.Utilities
         {
             _workAreaRecoveryTimer.Stop();
             if (_disposed || !_manualWorkArea || _isOpeningTaskbars || !_expectedWorkArea.HasValue ||
-                _workAreaRecovery.IsSuspended || !WorkAreaManager.TryGetCurrent(out var actual)) return;
+                !WorkAreaManager.TryGetCurrent(out var actual)) return;
             var expected = _expectedWorkArea.Value;
-            var result = _workAreaRecovery.Recover(Environment.TickCount64,
+            long now = Environment.TickCount64;
+            var result = _workAreaRecovery.Recover(now,
                 () => actual.Equals(expected),
                 () => WorkAreaManager.Apply(expected, (uint)Process.GetCurrentProcess().Id));
             if (result == WorkAreaRecoveryResult.Applied)
                 ShellLogger.Warning($"WindowManager: Restored work area from {FormatRect(actual)} to {FormatRect(expected)}");
             else if (result == WorkAreaRecoveryResult.Suspended)
-                ShellLogger.Warning("WindowManager: Repeated work-area conflict; automatic recovery suspended until panel layout changes.");
+                ShellLogger.Warning($"WindowManager: Repeated work-area conflict; recovery paused for {_workAreaRecovery.SuspendedFor / 1000}s.");
+            if (result == WorkAreaRecoveryResult.Deferred || result == WorkAreaRecoveryResult.Suspended)
+            {
+                _workAreaRecoveryTimer.Interval = TimeSpan.FromMilliseconds(
+                    Math.Max(_workAreaRecovery.RetryAt - now, WorkAreaRecoveryDelay.TotalMilliseconds));
+                _workAreaRecoveryTimer.Start();
+            }
         }
 
         private static string FormatRect(NativeMethods.Rect rect)
