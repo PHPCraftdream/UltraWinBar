@@ -37,10 +37,18 @@ namespace UltraWinBar.Utilities
             hook = SetWinEventHook(EVENT_OBJECT_CLOAKED, EVENT_OBJECT_UNCLOAKED, IntPtr.Zero, callback, 0, 0, 2);
             if (hook == IntPtr.Zero) ShellLogger.Error("Task recovery: cloak hook unavailable.");
             desktops.Changed += DesktopChanged;
+            desktops.ManagerRecovered += ManagerRecovered;
             EnumerateCurrentWindows();
         }
 
         private void DesktopChanged(object sender, EventArgs e) => EnumerateCurrentWindows();
+
+        // Manager was null (and callers saw stale IsOnCurrentDesktop=true) until now; re-filter.
+        private void ManagerRecovered(object sender, EventArgs e)
+        {
+            foreach (var panel in Application.Current.Windows.OfType<Taskbar>())
+                panel.TaskListControl.RefreshWindowVisibility();
+        }
 
         private void EnumerateCurrentWindows()
         {
@@ -83,7 +91,10 @@ namespace UltraWinBar.Utilities
                 foreach (var window in windows) tracked[window.Handle] = window;
                 var moved = new List<ApplicationWindow>();
                 foreach (var hwnd in cloakChanged)
+                {
+                    desktops.ForgetWindowDesktop(hwnd);
                     if (tracked.TryGetValue(hwnd, out var window)) moved.Add(window);
+                }
                 cloakChanged.Clear();
                 bool windowAdded = false;
                 bool showInTaskbarChanged = false;
@@ -146,6 +157,7 @@ namespace UltraWinBar.Utilities
         {
             disposed = true;
             desktops.Changed -= DesktopChanged;
+            desktops.ManagerRecovered -= ManagerRecovered;
             if (hook != IntPtr.Zero) UnhookWinEvent(hook);
             pending.Clear();
             cloakChanged.Clear();

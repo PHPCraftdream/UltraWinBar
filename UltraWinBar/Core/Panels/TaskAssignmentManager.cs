@@ -55,7 +55,7 @@ namespace UltraWinBar.Utilities
             string legacyWindowId = GetLegacyWindowIdentifier(window);
             string appId = GetIdentifier(window, TaskAssignmentMode.ExecutablePath);
 
-            Guid desktop = VirtualDesktopContext.Instance?.DesktopForWindow(window.Handle) ?? Guid.Empty;
+            Guid desktop = VirtualDesktopContext.Instance?.DesktopForWindowCached(window.Handle) ?? Guid.Empty;
             return ResolveEdge(Settings.Instance.TaskbarAssignments, desktop, windowId, legacyWindowId, appId);
         }
 

@@ -35,6 +35,9 @@ namespace UltraWinBar.Utilities
         private readonly Dispatcher dispatcher = Application.Current.Dispatcher;
         private readonly List<RegistryTreeWatch> watches = new List<RegistryTreeWatch>();
         private readonly object managerGate = new object();
+        // Per-dispatcher-pass cache for GetAssignedEdge's DesktopForWindow lookups; UI thread only.
+        private readonly Dictionary<IntPtr, Guid> desktopForWindowCache = new Dictionary<IntPtr, Guid>();
+        private bool desktopForWindowCacheClearQueued;
         private IDesktopManager manager;
         // Null manager = needs (re)creation on use, with backoff.
         private DateTime nextRetryUtc = DateTime.MinValue;
@@ -44,6 +47,8 @@ namespace UltraWinBar.Utilities
         public static VirtualDesktopContext Instance { get; private set; }
         public Guid CurrentId { get; private set; }
         public event EventHandler Changed;
+        // Raised after EnsureManager recreates the manager following a null period, so panels re-filter.
+        public event EventHandler ManagerRecovered;
 
         private static int ReadSessionId()
         {
@@ -91,6 +96,7 @@ namespace UltraWinBar.Utilities
             Guid id = ReadCurrent();
             if (id == CurrentId) return false;
             CurrentId = id;
+            desktopForWindowCache.Clear();
             ShellLogger.Debug($"Virtual desktop changed: {id}");
             Changed?.Invoke(this, EventArgs.Empty);
             return true;
@@ -145,6 +151,7 @@ namespace UltraWinBar.Utilities
                 retryDelay = NextRetryDelay(retryDelay);
             }
             try { Marshal.ReleaseComObject(stale); } catch (Exception) { }
+            desktopForWindowCache.Clear();
             ShellLogger.Warning($"Virtual desktop manager disconnected ({reason}); will recreate on next use.");
         }
 
@@ -158,6 +165,7 @@ namespace UltraWinBar.Utilities
         // Lazy (re)creation with backoff 2/5/15/60 s; failures logged once per streak.
         private IDesktopManager EnsureManager()
         {
+            IDesktopManager recreated;
             lock (managerGate)
             {
                 if (disposed) return null;
@@ -165,25 +173,29 @@ namespace UltraWinBar.Utilities
                 DateTime now = DateTime.UtcNow;
                 if (now < nextRetryUtc) return null;
                 var created = CreateManager();
-                if (created != null)
+                if (created == null)
                 {
-                    manager = created;
-                    if (retryFailureLogged)
+                    if (!retryFailureLogged)
                     {
-                        ShellLogger.Info("Virtual desktop manager recreated.");
-                        retryFailureLogged = false;
+                        ShellLogger.Warning("Virtual desktop manager unavailable; will keep retrying.");
+                        retryFailureLogged = true;
                     }
-                    return manager;
+                    nextRetryUtc = now + retryDelay;
+                    retryDelay = NextRetryDelay(retryDelay);
+                    return null;
                 }
-                if (!retryFailureLogged)
+                manager = created;
+                if (retryFailureLogged)
                 {
-                    ShellLogger.Warning("Virtual desktop manager unavailable; will keep retrying.");
-                    retryFailureLogged = true;
+                    ShellLogger.Info("Virtual desktop manager recreated.");
+                    retryFailureLogged = false;
                 }
-                nextRetryUtc = now + retryDelay;
-                retryDelay = NextRetryDelay(retryDelay);
-                return null;
+                recreated = manager;
             }
+            // Always after a null period: the constructor assigns the first manager directly.
+            desktopForWindowCache.Clear();
+            dispatcher.BeginInvoke(new Action(() => ManagerRecovered?.Invoke(this, EventArgs.Empty)));
+            return recreated;
         }
 
         public bool TryGetWindowDesktopId(IntPtr hwnd, out Guid id)
@@ -204,13 +216,40 @@ namespace UltraWinBar.Utilities
             return CurrentId;
         }
 
+        // GetAssignedEdge only: one COM lookup per window per dispatcher pass instead of per panel.
+        internal Guid DesktopForWindowCached(IntPtr hwnd)
+        {
+            if (desktopForWindowCache.TryGetValue(hwnd, out Guid cached)) return cached;
+            Guid id = DesktopForWindow(hwnd);
+            desktopForWindowCache[hwnd] = id;
+            QueueDesktopForWindowCacheClear();
+            return id;
+        }
+
+        internal void ForgetWindowDesktop(IntPtr hwnd) => desktopForWindowCache.Remove(hwnd);
+
+        private void QueueDesktopForWindowCacheClear()
+        {
+            if (desktopForWindowCacheClearQueued) return;
+            desktopForWindowCacheClearQueued = true;
+            dispatcher.BeginInvoke(new Action(() =>
+            {
+                desktopForWindowCacheClearQueued = false;
+                desktopForWindowCache.Clear();
+            }), DispatcherPriority.ContextIdle);
+        }
+
         public bool TryMoveWindowToDesktop(IntPtr hwnd, Guid destination)
         {
             if (hwnd == IntPtr.Zero || destination == Guid.Empty) return false;
             var current = EnsureManager();
             try
             {
-                if (current != null && Checked(current.MoveWindowToDesktop(hwnd, ref destination)) >= 0) return true;
+                if (current != null && Checked(current.MoveWindowToDesktop(hwnd, ref destination)) >= 0)
+                {
+                    desktopForWindowCache.Remove(hwnd);
+                    return true;
+                }
             }
             catch (Exception error) when (error is COMException || error is InvalidComObjectException)
             {
@@ -223,6 +262,7 @@ namespace UltraWinBar.Utilities
             {
                 using var actions = new DesktopActions();
                 actions.MoveWindow(hwnd, destination);
+                desktopForWindowCache.Remove(hwnd);
                 return true;
             }
             catch (Exception error)
