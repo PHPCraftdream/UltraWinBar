@@ -24,6 +24,7 @@ namespace UltraWinBar.Utilities
         private bool _correctingPlacement;
         private bool _isVisible;
         private IntPtr _taskbarHwndActivated;
+        private int _staleActivationTicks;
 
         // Fast path for the modern Start menu: EVENT_SYSTEM_FOREGROUND fires the instant it
         // becomes the foreground window, instead of waiting for the next 100ms poller tick
@@ -37,6 +38,10 @@ namespace UltraWinBar.Utilities
         private static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc, WinEventDelegate lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
         [DllImport("user32.dll")]
         private static extern bool UnhookWinEvent(IntPtr hWinEventHook);
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmGetWindowAttribute(IntPtr hwnd, uint attribute, out int value, int size);
+        private static bool IsCloaked(IntPtr hwnd) =>
+            DwmGetWindowAttribute(hwnd, 14, out int cloaked, sizeof(int)) == 0 && cloaked != 0;
         private IntPtr _foregroundEventHook;
         private WinEventDelegate _foregroundEventProc;
 
@@ -48,7 +53,25 @@ namespace UltraWinBar.Utilities
             setupPoller();
             setupForegroundHook();
             _menuEventProc = MenuEventProc;
-            _menuEventHook = SetWinEventHook(0x8001, 0x800B, IntPtr.Zero, _menuEventProc, 0, 0, WINEVENT_OUTOFCONTEXT);
+            // Hooked lazily by UpdateMenuEventHook once positioning is relevant, not for the process lifetime.
+        }
+
+        // Pure so it's testable by reflection without constructing a StartMenuMonitor.
+        private static bool ShouldHookMenuEvents(bool hasPlacement, bool hasActivatedTaskbar) => hasPlacement || hasActivatedTaskbar;
+
+        private void UpdateMenuEventHook()
+        {
+            bool shouldHook = ShouldHookMenuEvents(_correctPlacement != null, _taskbarHwndActivated != IntPtr.Zero);
+            if (shouldHook && _menuEventHook == IntPtr.Zero)
+            {
+                _menuEventHook = SetWinEventHook(0x8001, 0x800B, IntPtr.Zero, _menuEventProc, 0, 0, WINEVENT_OUTOFCONTEXT);
+            }
+            else if (!shouldHook && _menuEventHook != IntPtr.Zero)
+            {
+                // Safe to call from inside the hook's own OUTOFCONTEXT callback; it only stops future dispatch.
+                UnhookWinEvent(_menuEventHook);
+                _menuEventHook = IntPtr.Zero;
+            }
         }
 
         private void MenuEventProc(IntPtr hook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint thread, uint time)
@@ -60,6 +83,7 @@ namespace UltraWinBar.Utilities
                 {
                     _positionedMenu = IntPtr.Zero;
                     _correctPlacement = null;
+                    UpdateMenuEventHook();
                 }
                 return;
             }
@@ -97,7 +121,8 @@ namespace UltraWinBar.Utilities
             StringBuilder cName = new StringBuilder(256);
             GetClassName(hwnd, cName, cName.Capacity);
             string className = cName.ToString();
-            ShellLogger.Debug($"StartMenuMonitor DIAG: foreground changed, hwnd={hwnd}, class={className}");
+            if (ShellLogger.Severity <= LogSeverity.Debug)
+                ShellLogger.Debug($"StartMenuMonitor DIAG: foreground changed, hwnd={hwnd}, class={className}");
 
             // Modern Start (Win10/11) and Open Shell Menu both become foreground when they
             // open; classic Start (DV2ControlHost) does not reliably, so it stays on the
@@ -107,7 +132,8 @@ namespace UltraWinBar.Utilities
                 return;
             }
 
-            ShellLogger.Debug($"StartMenuMonitor DIAG: foreground hook matched {className}, relocating");
+            if (ShellLogger.Severity <= LogSeverity.Debug)
+                ShellLogger.Debug($"StartMenuMonitor DIAG: foreground hook matched {className}, relocating");
             relocateStartMenu(hwnd);
             setVisibility(true, MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST));
         }
@@ -155,6 +181,26 @@ namespace UltraWinBar.Utilities
             }
 
             setVisibility(newIsVisible, startHmonitor);
+
+            // Safety net for a missed HIDE/DESTROY; the modern Start window is cloaked on close rather than hidden.
+            if (_positionedMenu != IntPtr.Zero && (!IsWindow(_positionedMenu) || !IsWindowVisible(_positionedMenu) || IsCloaked(_positionedMenu)))
+            {
+                _positionedMenu = IntPtr.Zero;
+                _correctPlacement = null;
+                UpdateMenuEventHook();
+            }
+
+            // Bounded fallback if ShowStartMenu activates a taskbar but no menu ever appears.
+            if (_taskbarHwndActivated == IntPtr.Zero)
+            {
+                _staleActivationTicks = 0;
+            }
+            else if (++_staleActivationTicks > 100)
+            {
+                _taskbarHwndActivated = IntPtr.Zero;
+                _staleActivationTicks = 0;
+                UpdateMenuEventHook();
+            }
         }
 
         private void setVisibility(bool isVisible, IntPtr startHmonitor)
@@ -181,6 +227,8 @@ namespace UltraWinBar.Utilities
                 // if the menu is opened again not by the start button.
                 _taskbarHwndActivated = IntPtr.Zero;
             }
+
+            UpdateMenuEventHook();
         }
 
         private bool isModernStartMenuOpen()
@@ -221,7 +269,8 @@ namespace UltraWinBar.Utilities
             IntPtr hwndForeground = GetForegroundWindow();
             StringBuilder cName = new StringBuilder(256);
             GetClassName(hwndForeground, cName, cName.Capacity);
-            ShellLogger.Debug($"StartMenuMonitor DIAG: poller tick, isModernStartMenuOpen=true, foreground hwnd={hwndForeground}, class={cName}");
+            if (ShellLogger.Severity <= LogSeverity.Debug)
+                ShellLogger.Debug($"StartMenuMonitor DIAG: poller tick, isModernStartMenuOpen=true, foreground hwnd={hwndForeground}, class={cName}");
             if (cName.ToString() == "Windows.UI.Core.CoreWindow")
             {
                 // When the modern Start menu opens, it gains focus, so this is probably it.
@@ -323,6 +372,7 @@ namespace UltraWinBar.Utilities
                 {
                     _correctPlacement = null;
                     _positionedMenu = IntPtr.Zero;
+                    UpdateMenuEventHook();
                     return;
                 }
 
@@ -375,6 +425,7 @@ namespace UltraWinBar.Utilities
                 }
 
             };
+            UpdateMenuEventHook();
             CorrectPlacement();
         }
 
@@ -484,6 +535,7 @@ namespace UltraWinBar.Utilities
             var diagStopwatch = System.Diagnostics.Stopwatch.StartNew();
             ShellLogger.Debug("StartMenuMonitor DIAG: ShowStartMenu entered");
             _taskbarHwndActivated = taskbarHwnd;
+            UpdateMenuEventHook();
             if (TryOpenShellDirectInvoke()) return;
 
             if (!EnvironmentHelper.IsWindows10OrBetter ||
