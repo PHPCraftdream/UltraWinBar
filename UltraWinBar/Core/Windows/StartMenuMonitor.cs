@@ -30,8 +30,12 @@ namespace UltraWinBar.Utilities
         private const int RPC_E_DISCONNECTED = unchecked((int)0x80010108);
         private const int RPC_S_SERVER_UNAVAILABLE = unchecked((int)0x800706BA);
         private const int CO_E_OBJNOTCONNECTED = unchecked((int)0x800401FD);
-        private static readonly TimeSpan VisibilityHelperRecreateThrottle = TimeSpan.FromSeconds(2);
-        private DateTime _lastVisibilityHelperRecreateUtc = DateTime.MinValue;
+        // Null helper = needs (re)creation from the poller, with backoff.
+        private static readonly TimeSpan InitialVisibilityHelperRetryDelay = TimeSpan.FromSeconds(2);
+        private DateTime _nextVisibilityHelperRetryUtc = DateTime.MinValue;
+        private TimeSpan _visibilityHelperRetryDelay = InitialVisibilityHelperRetryDelay;
+        private bool _visibilityHelperRetryFailureLogged;
+        private string _visibilityHelperLastError;
 
         // Fast (100ms) poll only while the menu is visible, being positioned, or a Start button
         // press is pending a response; otherwise a slow safety poll, since LauncherVisibilityChanged
@@ -74,11 +78,20 @@ namespace UltraWinBar.Utilities
             ExplorerMonitor.ExplorerRestarted += ExplorerMonitor_ExplorerRestarted;
         }
 
+        // Explorer may not have registered the class yet; the caller retries.
         private AppVisibilityHelper CreateAppVisibilityHelper()
         {
-            var helper = new AppVisibilityHelper(true);
-            helper.LauncherVisibilityChanged += OnLauncherVisibilityChanged;
-            return helper;
+            try
+            {
+                var helper = new AppVisibilityHelper(true);
+                helper.LauncherVisibilityChanged += OnLauncherVisibilityChanged;
+                return helper;
+            }
+            catch (Exception error)
+            {
+                _visibilityHelperLastError = error.Message;
+                return null;
+            }
         }
 
         private void DisposeAppVisibilityHelper()
@@ -100,27 +113,61 @@ namespace UltraWinBar.Utilities
             return false;
         }
 
+        private void ResetAppVisibilityHelper()
+        {
+            DisposeAppVisibilityHelper();
+            _nextVisibilityHelperRetryUtc = DateTime.MinValue;
+            _visibilityHelperRetryDelay = InitialVisibilityHelperRetryDelay;
+        }
+
         private void RecreateAppVisibilityHelperIfDisconnected(Exception error)
         {
             if (!IsComDisconnected(error)) return;
-            DateTime now = DateTime.UtcNow;
-            if (now - _lastVisibilityHelperRecreateUtc < VisibilityHelperRecreateThrottle) return;
-            _lastVisibilityHelperRecreateUtc = now;
-            RecreateAppVisibilityHelper();
-            ShellLogger.Warning($"StartMenuMonitor: AppVisibilityHelper COM disconnected ({error.Message}); recreated");
+            DisposeAppVisibilityHelper();
+            _nextVisibilityHelperRetryUtc = DateTime.UtcNow + _visibilityHelperRetryDelay;
+            _visibilityHelperRetryDelay = NextVisibilityHelperRetryDelay(_visibilityHelperRetryDelay);
+            ShellLogger.Warning($"StartMenuMonitor: AppVisibilityHelper COM disconnected ({error.Message}); will recreate.");
         }
 
-        private void RecreateAppVisibilityHelper()
+        private static TimeSpan NextVisibilityHelperRetryDelay(TimeSpan current)
         {
-            DisposeAppVisibilityHelper();
-            _appVisibilityHelper = CreateAppVisibilityHelper();
+            if (current < TimeSpan.FromSeconds(5)) return TimeSpan.FromSeconds(5);
+            if (current < TimeSpan.FromSeconds(15)) return TimeSpan.FromSeconds(15);
+            return TimeSpan.FromSeconds(60);
+        }
+
+        // Lazy (re)creation with backoff 2/5/15/60 s; failures logged once per streak.
+        private AppVisibilityHelper EnsureAppVisibilityHelper()
+        {
+            if (_appVisibilityHelper != null) return _appVisibilityHelper;
+            DateTime now = DateTime.UtcNow;
+            if (now < _nextVisibilityHelperRetryUtc) return null;
+            var created = CreateAppVisibilityHelper();
+            if (created != null)
+            {
+                _appVisibilityHelper = created;
+                if (_visibilityHelperRetryFailureLogged)
+                {
+                    ShellLogger.Info("StartMenuMonitor: AppVisibilityHelper recreated.");
+                    _visibilityHelperRetryFailureLogged = false;
+                }
+                return _appVisibilityHelper;
+            }
+            if (!_visibilityHelperRetryFailureLogged)
+            {
+                ShellLogger.Warning($"StartMenuMonitor: AppVisibilityHelper unavailable ({_visibilityHelperLastError}); will keep retrying.");
+                _visibilityHelperRetryFailureLogged = true;
+            }
+            _nextVisibilityHelperRetryUtc = now + _visibilityHelperRetryDelay;
+            _visibilityHelperRetryDelay = NextVisibilityHelperRetryDelay(_visibilityHelperRetryDelay);
+            return null;
         }
 
         // IsLauncherVisible ignores HRESULTs, so a dead proxy fails silently; recreate on shell restart.
         private void ExplorerMonitor_ExplorerRestarted(object sender, EventArgs e)
         {
-            _lastVisibilityHelperRecreateUtc = DateTime.UtcNow;
-            RecreateAppVisibilityHelper();
+            ResetAppVisibilityHelper();
+            EnsureAppVisibilityHelper();
         }
 
         // COM sink callback, not necessarily on the UI thread; re-run the poll logic there without waiting for a tick.
@@ -313,15 +360,12 @@ namespace UltraWinBar.Utilities
 
         private bool isModernStartMenuOpen()
         {
-            if (_appVisibilityHelper == null)
-            {
-                ShellLogger.Error("StartMenuMonitor: AppVisibilityHelper is null");
-                return false;
-            }
+            var helper = EnsureAppVisibilityHelper();
+            if (helper == null) return false;
 
             try
             {
-                return _appVisibilityHelper.IsLauncherVisible();
+                return helper.IsLauncherVisible();
             }
             catch (Exception error) when (error is COMException || error is InvalidComObjectException)
             {

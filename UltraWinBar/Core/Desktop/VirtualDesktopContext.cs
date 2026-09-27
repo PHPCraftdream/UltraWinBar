@@ -31,12 +31,15 @@ namespace UltraWinBar.Utilities
         private const int RPC_E_DISCONNECTED = unchecked((int)0x80010108);
         private const int RPC_S_SERVER_UNAVAILABLE = unchecked((int)0x800706BA);
         private const int CO_E_OBJNOTCONNECTED = unchecked((int)0x800401FD);
-        private static readonly TimeSpan RecreateThrottle = TimeSpan.FromSeconds(2);
+        private static readonly TimeSpan InitialRetryDelay = TimeSpan.FromSeconds(2);
         private readonly Dispatcher dispatcher = Application.Current.Dispatcher;
         private readonly List<RegistryTreeWatch> watches = new List<RegistryTreeWatch>();
         private readonly object managerGate = new object();
         private IDesktopManager manager;
-        private DateTime lastRecreateUtc = DateTime.MinValue;
+        // Null manager = needs (re)creation on use, with backoff.
+        private DateTime nextRetryUtc = DateTime.MinValue;
+        private TimeSpan retryDelay = InitialRetryDelay;
+        private bool retryFailureLogged;
         private bool disposed;
         public static VirtualDesktopContext Instance { get; private set; }
         public Guid CurrentId { get; private set; }
@@ -77,14 +80,21 @@ namespace UltraWinBar.Utilities
         private void Refresh()
         {
             if (disposed) return;
-            Guid id = ReadCurrent();
-            if (id == CurrentId) return;
-            CurrentId = id;
-            ShellLogger.Debug($"Virtual desktop changed: {id}");
-            Changed?.Invoke(this, EventArgs.Empty);
+            RefreshCurrent();
         }
 
         public Guid CurrentIdSnapshot() => ReadCurrent();
+
+        // Re-reads the current desktop and raises Changed if it moved; dispatcher thread only.
+        internal bool RefreshCurrent()
+        {
+            Guid id = ReadCurrent();
+            if (id == CurrentId) return false;
+            CurrentId = id;
+            ShellLogger.Debug($"Virtual desktop changed: {id}");
+            Changed?.Invoke(this, EventArgs.Empty);
+            return true;
+        }
 
         private static IDesktopManager CreateManager()
         {
@@ -101,40 +111,85 @@ namespace UltraWinBar.Utilities
 
         private int Checked(int hr)
         {
-            if (IsDisconnected(hr)) RecreateManager($"HRESULT 0x{hr:X8}", force: false);
+            if (IsDisconnected(hr)) MarkStale($"HRESULT 0x{hr:X8}");
             return hr;
         }
 
         private void OnComError(Exception error)
         {
-            if (IsDisconnected(error)) RecreateManager(error.Message, force: false);
+            if (IsDisconnected(error)) MarkStale(error.Message);
         }
 
-        private void ExplorerMonitor_ExplorerRestarted(object sender, EventArgs e) => RecreateManager("explorer restarted", force: true);
-
-        // Throttled so a dead shell doesn't cause a CoCreateInstance storm.
-        private void RecreateManager(string reason, bool force)
+        // Explorer registers the CLSID at runtime, possibly after TaskbarCreated: retry from scratch.
+        private void ExplorerMonitor_ExplorerRestarted(object sender, EventArgs e)
         {
-            if (disposed) return;
+            MarkStale("explorer restarted");
             lock (managerGate)
             {
+                nextRetryUtc = DateTime.MinValue;
+                retryDelay = InitialRetryDelay;
+            }
+            EnsureManager();
+        }
+
+        // Drops a severed proxy; recreation keeps backing off so a half-started shell can't cause a storm.
+        private void MarkStale(string reason)
+        {
+            IDesktopManager stale;
+            lock (managerGate)
+            {
+                stale = manager;
+                if (stale == null) return;
+                manager = null;
+                nextRetryUtc = DateTime.UtcNow + retryDelay;
+                retryDelay = NextRetryDelay(retryDelay);
+            }
+            try { Marshal.ReleaseComObject(stale); } catch (Exception) { }
+            ShellLogger.Warning($"Virtual desktop manager disconnected ({reason}); will recreate on next use.");
+        }
+
+        private static TimeSpan NextRetryDelay(TimeSpan current)
+        {
+            if (current < TimeSpan.FromSeconds(5)) return TimeSpan.FromSeconds(5);
+            if (current < TimeSpan.FromSeconds(15)) return TimeSpan.FromSeconds(15);
+            return TimeSpan.FromSeconds(60);
+        }
+
+        // Lazy (re)creation with backoff 2/5/15/60 s; failures logged once per streak.
+        private IDesktopManager EnsureManager()
+        {
+            lock (managerGate)
+            {
+                if (disposed) return null;
+                if (manager != null) return manager;
                 DateTime now = DateTime.UtcNow;
-                if (!force && now - lastRecreateUtc < RecreateThrottle) return;
-                lastRecreateUtc = now;
-                var stale = manager;
-                manager = CreateManager();
-                if (stale != null)
+                if (now < nextRetryUtc) return null;
+                var created = CreateManager();
+                if (created != null)
                 {
-                    try { Marshal.ReleaseComObject(stale); } catch (Exception) { }
+                    manager = created;
+                    if (retryFailureLogged)
+                    {
+                        ShellLogger.Info("Virtual desktop manager recreated.");
+                        retryFailureLogged = false;
+                    }
+                    return manager;
                 }
-                ShellLogger.Warning($"Virtual desktop manager recreated ({reason})");
+                if (!retryFailureLogged)
+                {
+                    ShellLogger.Warning("Virtual desktop manager unavailable; will keep retrying.");
+                    retryFailureLogged = true;
+                }
+                nextRetryUtc = now + retryDelay;
+                retryDelay = NextRetryDelay(retryDelay);
+                return null;
             }
         }
 
         public bool TryGetWindowDesktopId(IntPtr hwnd, out Guid id)
         {
             id = Guid.Empty;
-            var current = manager;
+            var current = EnsureManager();
             try { return current != null && Checked(current.GetWindowDesktopId(hwnd, out id)) >= 0 && id != Guid.Empty; }
             catch (Exception error) when (error is COMException || error is InvalidComObjectException)
             {
@@ -152,7 +207,7 @@ namespace UltraWinBar.Utilities
         public bool TryMoveWindowToDesktop(IntPtr hwnd, Guid destination)
         {
             if (hwnd == IntPtr.Zero || destination == Guid.Empty) return false;
-            var current = manager;
+            var current = EnsureManager();
             try
             {
                 if (current != null && Checked(current.MoveWindowToDesktop(hwnd, ref destination)) >= 0) return true;
@@ -179,7 +234,7 @@ namespace UltraWinBar.Utilities
 
         public bool IsOnCurrentDesktop(IntPtr hwnd)
         {
-            var current = manager;
+            var current = EnsureManager();
             try { return current == null || Checked(current.IsWindowOnCurrentVirtualDesktop(hwnd, out bool onCurrent)) < 0 || onCurrent; }
             catch (Exception error) when (error is COMException || error is InvalidComObjectException)
             {

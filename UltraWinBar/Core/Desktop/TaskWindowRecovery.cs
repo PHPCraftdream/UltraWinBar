@@ -72,6 +72,11 @@ namespace UltraWinBar.Utilities
             {
                 queued = false;
                 if (disposed) return;
+                if (desktops.RefreshCurrent())
+                {
+                    // Registry lagged the cloak events; Changed already queued a fresh batch that needs pending.
+                    return;
+                }
                 var handles = pending.ToArray();
                 pending.Clear();
                 var tracked = new Dictionary<IntPtr, ApplicationWindow>();

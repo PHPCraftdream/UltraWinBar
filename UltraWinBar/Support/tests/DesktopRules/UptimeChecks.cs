@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -8,7 +10,7 @@ using System.Windows.Data;
 using ManagedShell.Interop;
 using UltraWinBar.Utilities;
 
-internal static class UptimeRound2Checks
+internal static class UptimeChecks
 {
     private const BindingFlags Private = BindingFlags.Static | BindingFlags.NonPublic;
 
@@ -87,6 +89,31 @@ internal static class UptimeRound2Checks
         var degenerate = Translate(R(0, 0, 200, 1080), R(0, 0, 1920, 1080), R(0, 0, 1024, 768));
         if (!degenerate.Equals(R(0, 0, 1024, 768))) throw new Exception("Insets that no longer fit must fall back to the full monitor.");
         Console.WriteLine("PASS: the saved original work area follows resolution and primary-monitor changes and never becomes degenerate.");
+
+        foreach (var owner in new[] { Get("UltraWinBar.Utilities.VirtualDesktopContext"), monitor })
+        {
+            var next = owner.GetMethods(Private).Single(m => m.Name.StartsWith("Next") && m.Name.EndsWith("RetryDelay"));
+            var delay = TimeSpan.FromSeconds(2);
+            var sequence = new List<double>();
+            for (int i = 0; i < 5; i++) sequence.Add((delay = (TimeSpan)next.Invoke(null, new object[] { delay })).TotalSeconds);
+            if (!sequence.SequenceEqual(new double[] { 5, 15, 60, 60, 60 }))
+                throw new Exception($"{owner.Name} COM recreation must back off 2/5/15/60 s: {string.Join(",", sequence)}");
+        }
+        var explorer = Get("UltraWinBar.Utilities.ExplorerMonitor");
+        var restarted = explorer.GetEvent("ExplorerRestarted", BindingFlags.Static | BindingFlags.Public);
+        bool laterHandlerRan = false;
+        EventHandler failing = (_, __) => throw new InvalidOperationException("class not registered yet");
+        EventHandler later = (_, __) => laterHandlerRan = true;
+        restarted.AddEventHandler(null, failing);
+        restarted.AddEventHandler(null, later);
+        try { explorer.GetMethod("RaiseExplorerRestarted", Private).Invoke(null, null); }
+        finally
+        {
+            restarted.RemoveEventHandler(null, failing);
+            restarted.RemoveEventHandler(null, later);
+        }
+        if (!laterHandlerRan) throw new Exception("A failing Explorer-restart subscriber must not skip the others.");
+        Console.WriteLine("PASS: Explorer-restart recovery backs off 2/5/15/60 s and isolates failing subscribers.");
     }
 
     private sealed class Item
