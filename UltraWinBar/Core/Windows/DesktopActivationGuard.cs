@@ -72,6 +72,8 @@ namespace UltraWinBar.Utilities
         private volatile uint lastMouseInputTick;
         private int intentGeneration;
         private bool armed;
+        // Mirrors (armed || lastMoveAt != 0); lets the hook thread skip posting a cancel when nothing is armed.
+        private volatile bool hasActiveIntent;
         private Guid lastMoveDestination;
         private Guid lastMoveOriginal;
         private IntPtr lastMovedWindow;
@@ -178,6 +180,7 @@ namespace UltraWinBar.Utilities
             intentAt = Environment.TickCount64;
             intentInputTick = lastMouseInputTick;
             armed = true;
+            hasActiveIntent = armed || lastMoveAt != 0;
             ShellLogger.Info($"DesktopActivation: tray click, process={processId}, source={source}, doubleClick={preMove}.");
             if (!preMove || tasks == null) return;
 
@@ -200,6 +203,7 @@ namespace UltraWinBar.Utilities
                 lastMoveOriginal = original;
                 lastMovedWindow = hwnd;
                 lastMoveAt = Environment.TickCount64;
+                hasActiveIntent = armed || lastMoveAt != 0;
             }
             catch (Exception error)
             {
@@ -283,6 +287,7 @@ namespace UltraWinBar.Utilities
                 lastMoveOriginal = prepared.Owner;
                 lastMovedWindow = hwnd;
                 lastMoveAt = Environment.TickCount64;
+                hasActiveIntent = armed || lastMoveAt != 0;
                 try
                 {
                     prepared.Window.BringToFront();
@@ -305,6 +310,7 @@ namespace UltraWinBar.Utilities
                 intentAt = Environment.TickCount64;
                 intentInputTick = lastMouseInputTick;
                 armed = true;
+                hasActiveIntent = armed || lastMoveAt != 0;
             }
 
             try
@@ -333,6 +339,7 @@ namespace UltraWinBar.Utilities
             armed = false;
             intentProcessId = 0;
             lastMoveAt = 0;
+            hasActiveIntent = false;
             preflight = null;
             intentGeneration++;
         }
@@ -358,7 +365,8 @@ namespace UltraWinBar.Utilities
                 if ((uint)e.Message is 0x0204 or 0x0207 or 0x020A or 0x020E)
                 {
                     previousDownOnDesktop = false;
-                    dispatcher.BeginInvoke(new Action(CancelIntent), DispatcherPriority.Send);
+                    // Nothing armed: skip the post so wheel/right/middle clicks don't churn the dispatcher.
+                    if (hasActiveIntent) dispatcher.BeginInvoke(new Action(CancelIntent), DispatcherPriority.Send);
                 }
                 return;
             }
@@ -367,7 +375,7 @@ namespace UltraWinBar.Utilities
             if (!IsDesktopView(point))
             {
                 previousDownOnDesktop = false;
-                dispatcher.BeginInvoke(new Action(CancelIntent), DispatcherPriority.Send);
+                if (hasActiveIntent) dispatcher.BeginInvoke(new Action(CancelIntent), DispatcherPriority.Send);
                 return;
             }
 
@@ -394,16 +402,19 @@ namespace UltraWinBar.Utilities
                             intentAt = now;
                             intentInputTick = inputTick;
                             intentSource = "desktop shortcut";
+                            // Logged here (UI thread), not on the hook thread: ShellLogger does file I/O.
+                            ShellLogger.Info($"DesktopActivation: intercepted desktop shortcut for window={ready.Window.Handle}.");
                             OpenPreparedShortcut(ready);
                         }), DispatcherPriority.Send);
                         suppressNextLeftUp = true;
                         e.Handled = true;
-                        ShellLogger.Info($"DesktopActivation: intercepted desktop shortcut for window={ready.Window.Handle}.");
                         return;
                     }
                     catch (Exception error)
                     {
-                        ShellLogger.Warning($"DesktopActivation: shortcut interception unavailable: {error.Message}");
+                        // Dispatcher post itself failed; log off the hook thread instead of doing file I/O here.
+                        string message = error.Message;
+                        _ = Task.Run(() => ShellLogger.Warning($"DesktopActivation: shortcut interception unavailable: {message}"));
                     }
                 }
                 previousDownOnDesktop = false;
@@ -416,6 +427,7 @@ namespace UltraWinBar.Utilities
                     intentAt = now;
                     intentInputTick = inputTick;
                     armed = intentDesktop != Guid.Empty;
+                    hasActiveIntent = armed || lastMoveAt != 0;
                     if (armed) ShellLogger.Info($"DesktopActivation: desktop double-click on {intentDesktop}.");
                 }), DispatcherPriority.Send);
                 return;
@@ -425,7 +437,8 @@ namespace UltraWinBar.Utilities
             previousDownPoint = point;
             Interlocked.Exchange(ref previousDownAt, now);
             previousDownOnDesktop = true;
-            dispatcher.BeginInvoke(new Action(() => { if (armed || lastMoveAt != 0) CancelIntent(); }), DispatcherPriority.Send);
+            // hasActiveIntent only gates the post; the inner check stays authoritative against races.
+            if (hasActiveIntent) dispatcher.BeginInvoke(new Action(() => { if (armed || lastMoveAt != 0) CancelIntent(); }), DispatcherPriority.Send);
         }
 
         private static bool IsDesktopView(LowLevelMouseHook.POINT point)
@@ -486,6 +499,7 @@ namespace UltraWinBar.Utilities
                 {
                     bool recover = ShouldRecoverAfterSwitch(intentDesktop, current, owner, age, true);
                     armed = false;
+                    hasActiveIntent = armed || lastMoveAt != 0;
                     if (!recover)
                     {
                         ShellLogger.Info($"DesktopActivation: switched before foreground; window={hwnd}, owner={owner}, now={current}; no move.");
@@ -501,6 +515,7 @@ namespace UltraWinBar.Utilities
 
                 bool onCurrent = desktops.IsOnCurrentDesktop(hwnd);
                 armed = false;
+                hasActiveIntent = armed || lastMoveAt != 0;
                 if (!ShouldMoveWindow(intentDesktop, current, owner, onCurrent, age))
                 {
                     ShellLogger.Info($"DesktopActivation: window={hwnd}, owner={owner}, current={current}, onCurrent={onCurrent}; no move.");
@@ -515,6 +530,7 @@ namespace UltraWinBar.Utilities
                     lastMoveOriginal = owner;
                     lastMovedWindow = hwnd;
                     lastMoveAt = Environment.TickCount64;
+                    hasActiveIntent = armed || lastMoveAt != 0;
                 }
                 else CancelIntent();
             }
@@ -542,6 +558,7 @@ namespace UltraWinBar.Utilities
                 bool restore = knownWindow && ShouldReturnAfterMove(lastMoveDestination, lastMoveOriginal,
                     desktops.CurrentId, owner, age, inputIntact);
                 lastMoveAt = 0;
+                hasActiveIntent = armed;
                 if (!restore)
                 {
                     ShellLogger.Info($"DesktopActivation: return skipped; now={desktops.CurrentId}, owner={owner}, age={age}, inputIntact={inputIntact}.");
