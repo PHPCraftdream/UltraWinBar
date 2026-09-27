@@ -9,6 +9,7 @@ using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -347,16 +348,41 @@ namespace UltraWinBar
                 return IntPtr.Zero;
             }
 
-            if ((msg == (int)NativeMethods.WM.SYSCOLORCHANGE || 
-                    msg == (int)NativeMethods.WM.SETTINGCHANGE) && 
+            if ((msg == (int)NativeMethods.WM.SYSCOLORCHANGE ||
+                    msg == (int)NativeMethods.WM.SETTINGCHANGE) &&
                 Settings.Instance.Theme.StartsWith(DictionaryManager.THEME_DEFAULT))
             {
                 handled = true;
 
-                // If the color scheme changes, re-apply the current theme to get updated colors.
-                _dictionaryManager.SetThemeFromSettings();
+                if (IsRelevantThemeTrigger(msg, wParam, lParam))
+                {
+                    // Color scheme changed: re-apply the theme once per broadcast burst, not per panel.
+                    _dictionaryManager.RequestThemeReload();
+                }
             }
             return IntPtr.Zero;
+        }
+
+        // Only broadcasts that can change system theme colors.
+        private static bool IsRelevantThemeTrigger(int msg, IntPtr wParam, IntPtr lParam)
+        {
+            if (msg == (int)NativeMethods.WM.SYSCOLORCHANGE)
+            {
+                return true;
+            }
+
+            if (wParam == (IntPtr)NativeMethods.SPI.SETHIGHCONTRAST ||
+                wParam == (IntPtr)NativeMethods.SPI.SETNONCLIENTMETRICS)
+            {
+                return true;
+            }
+
+            if (lParam != IntPtr.Zero && Marshal.PtrToStringUni(lParam) == "ImmersiveColorSet")
+            {
+                return true;
+            }
+
+            return false;
         }
 
         protected override void CustomClosing()

@@ -114,6 +114,23 @@ internal static class UptimeChecks
         }
         if (!laterHandlerRan) throw new Exception("A failing Explorer-restart subscriber must not skip the others.");
         Console.WriteLine("PASS: Explorer-restart recovery backs off 2/5/15/60 s and isolates failing subscribers.");
+
+        var themeTrigger = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Taskbar")?.GetMethod("IsRelevantThemeTrigger", Private)
+            ?? throw new Exception("System theme reload trigger filter is missing.");
+        bool Trigger(int msg, int wParam, string category)
+        {
+            IntPtr text = category == null ? IntPtr.Zero : Marshal.StringToHGlobalUni(category);
+            try { return (bool)themeTrigger.Invoke(null, new object[] { msg, (IntPtr)wParam, text }); }
+            finally { if (text != IntPtr.Zero) Marshal.FreeHGlobal(text); }
+        }
+        const int sysColorChange = 0x15, settingChange = 0x1A;
+        if (!Trigger(sysColorChange, 0, null) || !Trigger(settingChange, 0, "ImmersiveColorSet") ||
+            !Trigger(settingChange, 0x43, null) || !Trigger(settingChange, 0x2A, null) ||
+            Trigger(settingChange, 0, "Environment") || Trigger(settingChange, 0, "Policy") || Trigger(settingChange, 0, null))
+            throw new Exception("System theme must reload only for color, high-contrast and metrics broadcasts.");
+        var unpinnedFilter = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Controls.NotifyIconList")?.GetMethod("UnpinnedNotifyIcons_Filter", Private);
+        if (unpinnedFilter == null) throw new Exception("The shared unpinned-icons filter must be static so it retains no tray list.");
+        Console.WriteLine("PASS: the System theme reloads only for color-relevant broadcasts and the shared tray filter retains no panel.");
     }
 
     private sealed class Item

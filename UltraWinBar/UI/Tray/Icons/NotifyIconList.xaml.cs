@@ -24,6 +24,7 @@ namespace UltraWinBar.Controls
     public partial class NotifyIconList : UserControl
     {
         private bool _isLoaded;
+        private bool _isActive;
         private ObservableCollection<Tray.NotifyIcon> promotedIcons = new ObservableCollection<Tray.NotifyIcon>();
         private NotifyIconDropHandler dropHandler;
         private ListCollectionView collectionView;
@@ -36,9 +37,18 @@ namespace UltraWinBar.Controls
             set { SetValue(NotificationAreaProperty, value); }
         }
 
+        public static DependencyProperty HostProperty = DependencyProperty.Register(nameof(Host), typeof(Taskbar), typeof(NotifyIconList), new PropertyMetadata(HostChangedCallback));
+
+        public Taskbar Host
+        {
+            get { return (Taskbar)GetValue(HostProperty); }
+            set { SetValue(HostProperty, value); }
+        }
+
         public NotifyIconList()
         {
             InitializeComponent();
+            IsVisibleChanged += NotifyIconList_OnIsVisibleChanged;
         }
 
         private bool IsCollapsed()
@@ -72,9 +82,9 @@ namespace UltraWinBar.Controls
         {
             if (!_isLoaded && NotificationArea != null)
             {
-                NotificationArea.NotificationBalloonShown += NotificationArea_NotificationBalloonShown;
                 NotificationArea.UnpinnedIcons.CollectionChanged += UnpinnedIcons_CollectionChanged;
-                NotificationArea.UnpinnedIcons.Filter = UnpinnedNotifyIcons_Filter;
+                Predicate<object> unpinnedFilter = UnpinnedNotifyIcons_Filter;
+                if (!Equals(NotificationArea.UnpinnedIcons.Filter, unpinnedFilter)) NotificationArea.UnpinnedIcons.Filter = unpinnedFilter;
                 Settings.Instance.PropertyChanged += Settings_PropertyChanged;
 
                 collectionView = new ListCollectionView(NotificationArea.TrayIcons);
@@ -93,6 +103,8 @@ namespace UltraWinBar.Controls
 
                 _isLoaded = true;
             }
+
+            UpdateActivation();
         }
 
         private static void NotificationAreaChangedCallback(DependencyObject sender, DependencyPropertyChangedEventArgs e)
@@ -101,6 +113,56 @@ namespace UltraWinBar.Controls
             {
                 notifyIconList.SetNotificationAreaCollections();
             }
+        }
+
+        private static void HostChangedCallback(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (sender is NotifyIconList notifyIconList)
+            {
+                notifyIconList.UpdateActivation();
+            }
+        }
+
+        private void NotifyIconList_OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            UpdateActivation();
+        }
+
+        // Only visible, tray-hosting lists promote icons on balloons.
+        private bool ShouldBeActive => NotificationArea != null && IsVisible && Host?.HostsTray == true;
+
+        private void UpdateActivation()
+        {
+            if (ShouldBeActive)
+            {
+                Activate();
+            }
+            else
+            {
+                Deactivate();
+            }
+        }
+
+        private void Activate()
+        {
+            if (_isActive)
+            {
+                return;
+            }
+
+            NotificationArea.NotificationBalloonShown += NotificationArea_NotificationBalloonShown;
+            _isActive = true;
+        }
+
+        private void Deactivate()
+        {
+            if (!_isActive)
+            {
+                return;
+            }
+
+            NotificationArea.NotificationBalloonShown -= NotificationArea_NotificationBalloonShown;
+            _isActive = false;
         }
 
         private bool NotifyIcons_Filter(object icon)
@@ -114,7 +176,8 @@ namespace UltraWinBar.Controls
             return false;
         }
 
-        private bool UnpinnedNotifyIcons_Filter(object obj)
+        // Static: the shared view must not retain whichever list set it last.
+        private static bool UnpinnedNotifyIcons_Filter(object obj)
         {
             // This filter is used when we check if the toggle should hide
             if (obj is Tray.NotifyIcon notifyIcon)
@@ -199,11 +262,11 @@ namespace UltraWinBar.Controls
                 return;
             }
 
+            Deactivate();
+
             if (NotificationArea != null)
             {
-                NotificationArea.NotificationBalloonShown -= NotificationArea_NotificationBalloonShown;
                 NotificationArea.UnpinnedIcons.CollectionChanged -= UnpinnedIcons_CollectionChanged;
-                NotificationArea.UnpinnedIcons.Filter = UnpinnedNotifyIcons_Filter;
                 Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
             }
 

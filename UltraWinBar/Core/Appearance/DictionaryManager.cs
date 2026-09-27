@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace UltraWinBar.Utilities
 {
@@ -22,9 +23,27 @@ namespace UltraWinBar.Utilities
         private const string THEME_FOLDER = "Themes";
         private const string THEME_EXT = DICT_EXT;
 
+        private bool _themeReloadPending;
+
         public DictionaryManager()
         {
             Settings.Instance.PropertyChanged += Settings_PropertyChanged;
+        }
+
+        // One reload per burst: every panel receives the same broadcast.
+        public void RequestThemeReload()
+        {
+            if (_themeReloadPending)
+            {
+                return;
+            }
+
+            _themeReloadPending = true;
+            Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
+            {
+                _themeReloadPending = false;
+                SetThemeFromSettings();
+            }));
         }
 
         public void SetThemeFromSettings()

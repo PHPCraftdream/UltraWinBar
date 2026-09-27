@@ -138,7 +138,8 @@
                              Path="Orientation"
                              RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
                 </DockPanel.Dock>
-                <controls:NotifyIconList NotificationArea="{Binding NotificationArea}" />
+                <controls:NotifyIconList NotificationArea="{Binding NotificationArea}"
+                                         Host="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" />
             </GroupBox>
             <controls:InputLanguage VerticalAlignment="Stretch"
                                     HorizontalAlignment="Stretch"
