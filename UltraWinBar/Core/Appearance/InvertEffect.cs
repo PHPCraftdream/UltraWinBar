@@ -12,14 +12,19 @@ namespace UltraWinBar.Utilities
         private static readonly PixelShader _shader =
             new PixelShader { UriSource = new Uri("pack://application:,,,/UltraWinBar;component/Assets/Resources/Effects/shader_invert.ps") };
 
+        static InvertEffect()
+        {
+            // Static event: an instance handler would root every effect and its visual tree.
+            PixelShader.InvalidPixelShaderEncountered += PixelShader_InvalidPixelShaderEncountered;
+        }
+
         public InvertEffect()
         {
             PixelShader = _shader;
-            PixelShader.InvalidPixelShaderEncountered += PixelShader_InvalidPixelShaderEncountered;
             UpdateShaderValue(InputProperty);
         }
 
-        private void PixelShader_InvalidPixelShaderEncountered(object sender, EventArgs e)
+        private static void PixelShader_InvalidPixelShaderEncountered(object sender, EventArgs e)
         {
             ShellLogger.Error("InvertEffect: The given pixel shader is not valid.");
         }

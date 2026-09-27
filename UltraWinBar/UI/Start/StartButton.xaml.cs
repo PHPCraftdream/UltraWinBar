@@ -21,6 +21,7 @@ namespace UltraWinBar.Controls
         private bool visibilityChanged;
         private DelayedActivationHandler? dragHandler;
         private readonly DispatcherTimer pendingOpenTimer;
+        private bool _isLoaded;
 
         public static DependencyProperty HostProperty = DependencyProperty.Register(nameof(Host), typeof(Taskbar), typeof(StartButton));
         public static DependencyProperty StartMenuMonitorProperty = DependencyProperty.Register(nameof(StartMenuMonitor), typeof(StartMenuMonitor), typeof(StartButton));
@@ -130,6 +131,11 @@ namespace UltraWinBar.Controls
 
         private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
+            if (_isLoaded)
+            {
+                return;
+            }
+
             StartMenuMonitor.StartMenuVisibilityChanged += AppVisibilityHelper_StartMenuVisibilityChanged;
 
             Settings.Instance.PropertyChanged += Settings_PropertyChanged;
@@ -151,10 +157,17 @@ namespace UltraWinBar.Controls
             {
                 Host.PropertyChanged += Taskbar_PropertyChanged;
             }
+
+            _isLoaded = true;
         }
 
         private void UserControl_Unloaded(object sender, RoutedEventArgs e)
         {
+            if (!_isLoaded)
+            {
+                return;
+            }
+
             StartMenuMonitor.StartMenuVisibilityChanged -= AppVisibilityHelper_StartMenuVisibilityChanged;
 
             if (Host != null)
@@ -165,7 +178,12 @@ namespace UltraWinBar.Controls
             Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
             dragHandler?.Dispose();
 
+            IsVisibleChanged -= StartButton_IsVisibleChanged;
+            LayoutUpdated -= StartButton_LayoutUpdated;
+
             hideFloatingStart();
+
+            _isLoaded = false;
         }
 
         private void AppVisibilityHelper_StartMenuVisibilityChanged(object? sender, StartMenuMonitor.StartMenuMonitorEventArgs e)

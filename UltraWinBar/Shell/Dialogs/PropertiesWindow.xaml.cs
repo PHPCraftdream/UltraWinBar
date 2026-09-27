@@ -326,6 +326,9 @@ namespace UltraWinBar
                 _themesWatcher.Created -= ThemesWatcher_Created;
                 _themesWatcher.Deleted -= ThemesWatcher_Deleted;
                 _themesWatcher.Renamed -= ThemesWatcher_Renamed;
+                _themesWatcher.EnableRaisingEvents = false;
+                _themesWatcher.Dispose();
+                _themesWatcher = null;
             }
             Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
         }

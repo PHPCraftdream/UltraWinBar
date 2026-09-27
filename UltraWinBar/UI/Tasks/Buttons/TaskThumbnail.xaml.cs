@@ -192,6 +192,9 @@ namespace UltraWinBar.Controls
 
         private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
+            // Repeat Loaded must not leak the previous thumbnail or render subscription.
+            UserControl_Unloaded(sender, e);
+
             DpiScale = PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice.M11;
 
             if (NativeMethods.DwmIsCompositionEnabled() && SourceWindowHandle != IntPtr.Zero && Handle != IntPtr.Zero && NativeMethods.DwmRegisterThumbnail(Handle, SourceWindowHandle, out _thumbHandle) == 0)
