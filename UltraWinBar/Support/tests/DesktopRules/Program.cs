@@ -39,7 +39,7 @@ if (clockMenu == null || exitMenuItems.Length != 1 || !clockMenu.Descendants().C
     appBarMenu.Descendants().Contains(exitMenuItems[0]))
     throw new Exception("Exit menu item must appear only in the clock context menu.");
 Console.WriteLine("PASS: Exit menu is available only from the clock context menu.");
-var generatedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".git", ".vs", "bin", "obj", "artifacts", "worktrees" };
+var generatedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".git", ".vs", ".claude", "bin", "obj", "artifacts", "worktrees" };
 var sourceExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     { ".cs", ".xaml", ".json", ".iss", ".ps1", ".bat", ".pubxml", ".hlsl", ".props", ".csproj", ".sln", ".md", ".yml" };
 void CheckDirectory(System.IO.DirectoryInfo folder)
@@ -271,6 +271,85 @@ Check(desktopA, "window", AppBarEdge.Left);
 Console.WriteLine("PASS: desktop isolation, window precedence, JSON restart round-trip, scoped removal, legacy settings.");
 Console.WriteLine("PASS: stable per-window rules outrank legacy title rules while legacy assignments remain readable.");
 
+var clockType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Controls.Clock");
+var canShowSecondsMethod = clockType.GetMethod("ClockCanShowSeconds", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+var nextTickDelayMethod = clockType.GetMethod("GetNextTickDelay", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+bool CanShowSeconds(bool showSeconds, bool overrideFormat, string format) =>
+    (bool)canShowSecondsMethod.Invoke(null, new object[] { showSeconds, overrideFormat, format });
+TimeSpan NextTickDelay(DateTime now, bool secondsVisible) =>
+    (TimeSpan)nextTickDelayMethod.Invoke(null, new object[] { now, secondsVisible });
+if (!CanShowSeconds(true, false, null) ||
+    CanShowSeconds(false, false, null) ||
+    !CanShowSeconds(false, true, "h:mm:ss tt") ||
+    CanShowSeconds(false, true, "h:mm tt") ||
+    CanShowSeconds(false, false, "h:mm:ss tt"))
+    throw new Exception("Clock seconds-visibility rule mismatch.");
+Console.WriteLine("PASS: clock format can show seconds only via ShowClockSeconds or an override format containing 's'.");
+DateTime midSecond = new DateTime(2026, 1, 1, 12, 0, 30, 500);
+TimeSpan delayWithSeconds = NextTickDelay(midSecond, true);
+TimeSpan delayWithoutSeconds = NextTickDelay(midSecond, false);
+if (delayWithSeconds <= TimeSpan.FromMilliseconds(500) || delayWithSeconds >= TimeSpan.FromMilliseconds(600))
+    throw new Exception($"Seconds-visible tick should re-arm for the next second, got {delayWithSeconds}.");
+if (delayWithoutSeconds <= TimeSpan.FromMilliseconds(29500) || delayWithoutSeconds >= TimeSpan.FromMilliseconds(29600))
+    throw new Exception($"Seconds-hidden tick should re-arm for the next minute, got {delayWithoutSeconds}.");
+DateTime nearRollover = new DateTime(2026, 1, 1, 12, 0, 59, 990);
+TimeSpan delayNearRollover = NextTickDelay(nearRollover, true);
+if (delayNearRollover <= TimeSpan.FromMilliseconds(10) || delayNearRollover >= TimeSpan.FromMilliseconds(60))
+    throw new Exception($"Tick just before a second boundary should fire ~10ms later plus a small margin, got {delayNearRollover}.");
+DateTime onBoundary = new DateTime(2026, 1, 1, 12, 1, 0, 0);
+TimeSpan delayOnBoundarySeconds = NextTickDelay(onBoundary, true);
+TimeSpan delayOnBoundaryMinutes = NextTickDelay(onBoundary, false);
+if (delayOnBoundarySeconds <= TimeSpan.FromSeconds(1) || delayOnBoundarySeconds >= TimeSpan.FromMilliseconds(1100))
+    throw new Exception($"Tick exactly on a second boundary should re-arm a full second later, got {delayOnBoundarySeconds}.");
+if (delayOnBoundaryMinutes <= TimeSpan.FromMinutes(1) || delayOnBoundaryMinutes >= TimeSpan.FromMinutes(1) + TimeSpan.FromMilliseconds(100))
+    throw new Exception($"Tick exactly on a minute boundary should re-arm a full minute later, got {delayOnBoundaryMinutes}.");
+Console.WriteLine("PASS: clock re-arms for the next second boundary when seconds are visible and the next minute boundary otherwise, landing just after it with a small margin.");
+
+var virtualDesktopContextType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.VirtualDesktopContext");
+var buildSessionPathMethod = virtualDesktopContextType.GetMethod("BuildSessionPath", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+string builtSessionPath = (string)buildSessionPathMethod.Invoke(null, new object[] { 7 });
+if (builtSessionPath != @"Software\Microsoft\Windows\CurrentVersion\Explorer\SessionInfo\7\VirtualDesktops")
+    throw new Exception("Session desktop registry path formula changed: " + builtSessionPath);
+var treeWatchType = virtualDesktopContextType.GetNestedType("RegistryTreeWatch", System.Reflection.BindingFlags.NonPublic);
+var parentPathMethod = treeWatchType.GetMethod("ParentPath", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+var ancestorChainFromMethod = treeWatchType.GetMethod("AncestorChainFrom", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+string ParentOf(string path) => (string)parentPathMethod.Invoke(null, new object[] { path });
+string[] AncestorsOf(string path) => ((System.Collections.IEnumerable)ancestorChainFromMethod.Invoke(null, new object[] { path })).Cast<string>().ToArray();
+if (ParentOf(builtSessionPath) != @"Software\Microsoft\Windows\CurrentVersion\Explorer\SessionInfo\7" ||
+    ParentOf("NoBackslashHere") != null)
+    throw new Exception("Registry watch parent-path computation is wrong.");
+var expectedAncestorChain = new[]
+{
+    @"Software\Microsoft\Windows\CurrentVersion\Explorer\SessionInfo\7",
+    @"Software\Microsoft\Windows\CurrentVersion\Explorer\SessionInfo",
+    @"Software\Microsoft\Windows\CurrentVersion\Explorer",
+    @"Software\Microsoft\Windows\CurrentVersion",
+    @"Software\Microsoft\Windows",
+    @"Software\Microsoft",
+    @"Software",
+};
+if (!AncestorsOf(builtSessionPath).SequenceEqual(expectedAncestorChain))
+    throw new Exception("Registry watch ancestor chain is wrong: " + string.Join(" | ", AncestorsOf(builtSessionPath)));
+Console.WriteLine("PASS: virtual-desktop session registry path is computed once from a cached session ID, and its watch climbs to the nearest existing ancestor so a missing-at-start or Explorer-recreated desktop key is picked back up.");
+
+string taskButtonSource = System.IO.File.ReadAllText(System.IO.Path.Combine(repositoryRoot.FullName,
+    "UltraWinBar", "UI", "Tasks", "Buttons", "TaskButton.xaml.cs"));
+int taskButtonLoadedStart = taskButtonSource.IndexOf("private void TaskButton_OnLoaded");
+int taskButtonLoadedEnd = taskButtonSource.IndexOf("private void Window_GetButtonRect", taskButtonLoadedStart);
+if (taskButtonLoadedStart < 0 || taskButtonLoadedEnd < 0)
+    throw new Exception("Could not locate TaskButton_OnLoaded to check its idempotency guard.");
+string taskButtonLoadedBody = taskButtonSource.Substring(taskButtonLoadedStart, taskButtonLoadedEnd - taskButtonLoadedStart);
+int isLoadedGuardIndex = taskButtonLoadedBody.IndexOf("if (_isLoaded)");
+int settingsSubscribeIndex = taskButtonLoadedBody.IndexOf("Settings.Instance.PropertyChanged += Settings_PropertyChanged;");
+int dragHandlerCreateIndex = taskButtonLoadedBody.IndexOf("dragHandler = new DelayedActivationHandler");
+int animateCallIndex = taskButtonLoadedBody.IndexOf("Animate();");
+if (isLoadedGuardIndex < 0 || settingsSubscribeIndex < 0 || dragHandlerCreateIndex < 0 || animateCallIndex < 0 ||
+    isLoadedGuardIndex > settingsSubscribeIndex || isLoadedGuardIndex > dragHandlerCreateIndex || isLoadedGuardIndex > animateCallIndex)
+    throw new Exception("TaskButton_OnLoaded must return early when already loaded, before re-subscribing, replacing dragHandler, or replaying the slide-in animation.");
+if (System.Text.RegularExpressions.Regex.Matches(taskButtonLoadedBody, @"_isLoaded\s*=\s*true").Count != 1)
+    throw new Exception("TaskButton_OnLoaded should set _isLoaded exactly once, after the idempotency guard.");
+Console.WriteLine("PASS: a repeated TaskButton Loaded without an intervening Unloaded is a no-op and does not re-subscribe, replace dragHandler, or replay the slide-in animation.");
+
 string persistenceDirectory = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "UltraWinBar-settings-" + Guid.NewGuid().ToString("N"));
 System.IO.Directory.CreateDirectory(persistenceDirectory);
 try
@@ -297,6 +376,101 @@ finally
     System.IO.Directory.Delete(persistenceDirectory, true);
 }
 Console.WriteLine("PASS: settings coalesce writes, flush latest values, fall back safely, and preserve corrupt files.");
+
+string debounceDirectory = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "UltraWinBar-settings-debounce-" + Guid.NewGuid().ToString("N"));
+System.IO.Directory.CreateDirectory(debounceDirectory);
+try
+{
+    var managerType = typeof(SettingsManager<PersistenceFixture>);
+    var serializeCountField = managerType.GetField("SerializeCount", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+    var saveTimerElapsedMethod = managerType.GetMethod("SaveTimerElapsed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+    long SerializeCountOf(object instance) => (long)serializeCountField.GetValue(instance);
+
+    // A burst of changes must serialize once (on flush), not once per change.
+    string burstPath = System.IO.Path.Combine(debounceDirectory, "burst.json");
+    var burstManager = new SettingsManager<PersistenceFixture>(burstPath, new PersistenceFixture { Value = "default" });
+    for (int i = 0; i < 5; i++)
+        burstManager.Settings = new PersistenceFixture { Value = $"v{i}" };
+    if (SerializeCountOf(burstManager) != 0)
+        throw new Exception($"A burst of settings changes must not serialize before flush/debounce; serialized {SerializeCountOf(burstManager)} times.");
+    burstManager.Flush();
+    if (SerializeCountOf(burstManager) != 1)
+        throw new Exception($"A burst of settings changes must serialize exactly once on flush; serialized {SerializeCountOf(burstManager)} times.");
+    if (JsonSerializer.Deserialize<PersistenceFixture>(System.IO.File.ReadAllText(burstPath))?.Value != "v4")
+        throw new Exception("Flush after a burst did not persist the latest value.");
+
+    // Flush must persist the latest value synchronously even over a pending debounce.
+    burstManager.Settings = new PersistenceFixture { Value = "pending" };
+    burstManager.Flush();
+    if (SerializeCountOf(burstManager) != 2)
+        throw new Exception("Flush over a pending debounce should serialize exactly once more.");
+    if (JsonSerializer.Deserialize<PersistenceFixture>(System.IO.File.ReadAllText(burstPath))?.Value != "pending")
+        throw new Exception("Flush did not persist the latest value over a pending debounce.");
+
+    var previousContext = System.Threading.SynchronizationContext.Current;
+    try
+    {
+        // No captured SynchronizationContext (console/tests): debounce elapsing must
+        // serialize inline rather than posting anywhere.
+        System.Threading.SynchronizationContext.SetSynchronizationContext(null);
+        string fallbackPath = System.IO.Path.Combine(debounceDirectory, "fallback.json");
+        var fallbackManager = new SettingsManager<PersistenceFixture>(fallbackPath, new PersistenceFixture { Value = "default" });
+        fallbackManager.Settings = new PersistenceFixture { Value = "fallback-value" };
+        if (SerializeCountOf(fallbackManager) != 0)
+            throw new Exception("A settings change must not serialize before the debounce fires, even with no captured context.");
+        saveTimerElapsedMethod.Invoke(fallbackManager, new object[] { null });
+        if (SerializeCountOf(fallbackManager) != 1)
+            throw new Exception("Debounce elapsing with no captured SynchronizationContext must serialize inline.");
+        fallbackManager.Flush();
+        if (JsonSerializer.Deserialize<PersistenceFixture>(System.IO.File.ReadAllText(fallbackPath))?.Value != "fallback-value")
+            throw new Exception("No-context fallback did not persist the debounced value.");
+
+        // Settings is constructed before the UI dispatcher runs; the first change made under a
+        // context must adopt it, and serialization must be posted there, not run inline.
+        var recordingContext = new RecordingSyncContext();
+        string postedPath = System.IO.Path.Combine(debounceDirectory, "posted.json");
+        var postedManager = new SettingsManager<PersistenceFixture>(postedPath, new PersistenceFixture { Value = "default" });
+        System.Threading.SynchronizationContext.SetSynchronizationContext(recordingContext);
+        postedManager.Settings = new PersistenceFixture { Value = "posted-value" };
+        System.Threading.SynchronizationContext.SetSynchronizationContext(null);
+        saveTimerElapsedMethod.Invoke(postedManager, new object[] { null });
+        if (recordingContext.PostCount != 1 || SerializeCountOf(postedManager) != 0)
+            throw new Exception("Debounce elapsing must post serialization to the owner context adopted from the first change, not run inline.");
+        recordingContext.Pump();
+        if (SerializeCountOf(postedManager) != 1)
+            throw new Exception("Posting to the owner context did not serialize the settings.");
+        postedManager.Flush();
+        if (JsonSerializer.Deserialize<PersistenceFixture>(System.IO.File.ReadAllText(postedPath))?.Value != "posted-value")
+            throw new Exception("Serialization posted to the owner context did not persist the latest value.");
+    }
+    finally
+    {
+        System.Threading.SynchronizationContext.SetSynchronizationContext(previousContext);
+    }
+}
+finally
+{
+    System.IO.Directory.Delete(debounceDirectory, true);
+}
+Console.WriteLine("PASS: settings changes debounce serialization to once per burst, flush forces it inline, and the no-context/posted-context paths each serialize exactly once.");
+
+var loggerType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.ManagedShellLogger");
+var retentionField = loggerType.GetField("LogRetention", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+if ((TimeSpan)retentionField.GetValue(null) != TimeSpan.FromDays(7))
+    throw new Exception("Log retention must be 7 days.");
+
+var rollingLogType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.RollingFileLog");
+var shouldRollMethod = rollingLogType.GetMethod("ShouldRoll", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+var buildNameMethod = rollingLogType.GetMethod("BuildLogFileName", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+bool RollAt(long size, long cap) => (bool)shouldRollMethod.Invoke(null, new object[] { size, cap });
+if (RollAt(19 * 1024 * 1024, 20 * 1024 * 1024) || !RollAt(20 * 1024 * 1024, 20 * 1024 * 1024) || !RollAt(21 * 1024 * 1024, 20 * 1024 * 1024))
+    throw new Exception("Roll-over decision must trigger once size reaches the cap, not before.");
+var rollTimestamp = new DateTime(2026, 1, 2, 3, 4, 5, 6);
+string firstRollName = (string)buildNameMethod.Invoke(null, new object[] { rollTimestamp, 0 });
+string secondRollName = (string)buildNameMethod.Invoke(null, new object[] { rollTimestamp, 1 });
+if (firstRollName == secondRollName)
+    throw new Exception("Successive rolls within the same process must produce unique file names even with identical timestamps.");
+Console.WriteLine("PASS: log retention is 7 days and the roll-over decision and file naming are deterministic and collision-free.");
 
 var settingsType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.Settings");
 var settings = Activator.CreateInstance(settingsType);
@@ -348,6 +522,55 @@ if (!HasUniqueForeignWindow(0, 1) || HasUniqueForeignWindow(1, 1) ||
     HasUniqueForeignWindow(0, 2) || HasUniqueForeignWindow(0, 0))
     throw new Exception("Activation could pre-move an unrelated or ambiguous window.");
 Console.WriteLine("PASS: pre-move requires exactly one foreign window and no current window.");
+
+var completesDoubleClick = guardType.GetMethod("CompletesDoubleClick", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+if (completesDoubleClick == null) throw new Exception("Double-click completion decision is missing.");
+bool CompletesDoubleClick(bool previousOnDesktop, long previousAt, long now, int previousX, int previousY,
+    int x, int y, uint doubleClickMs, int xTolerance, int yTolerance) =>
+    (bool)completesDoubleClick.Invoke(null, new object[]
+        { previousOnDesktop, previousAt, now, previousX, previousY, x, y, doubleClickMs, xTolerance, yTolerance });
+if (CompletesDoubleClick(false, 0, 100, 10, 10, 12, 11, 500, 4, 4))
+    throw new Exception("A completed double-click was recognized without a preceding first click.");
+if (!CompletesDoubleClick(true, 0, 100, 10, 10, 12, 11, 500, 4, 4))
+    throw new Exception("A same-position click inside the double-click window and tolerance was not recognized.");
+if (CompletesDoubleClick(true, 0, 600, 10, 10, 12, 11, 500, 4, 4))
+    throw new Exception("A click after the double-click window elapsed was still recognized.");
+if (CompletesDoubleClick(true, 0, 100, 10, 10, 20, 11, 500, 4, 4))
+    throw new Exception("A click outside the position tolerance was still recognized.");
+
+var hookThreadType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.DesktopActivationHookThread");
+if (hookThreadType == null) throw new Exception("Desktop activation hook thread host is missing.");
+object CreateHookThread(Func<bool> install, Action uninstall) =>
+    Activator.CreateInstance(hookThreadType, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
+        null, new object[] { install, uninstall }, null);
+bool ThrowsFromFailedInstall(Func<bool> install)
+{
+    try { CreateHookThread(install, () => { }); }
+    catch (System.Reflection.TargetInvocationException error) when (error.InnerException is InvalidOperationException) { return true; }
+    return false;
+}
+if (!ThrowsFromFailedInstall(() => false))
+    throw new Exception("Hook thread host did not throw when install returned false.");
+if (!ThrowsFromFailedInstall(() => throw new InvalidOperationException("install failed")))
+    throw new Exception("Hook thread host did not surface an install exception.");
+
+int callerThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
+int installThreadId = -1, uninstallThreadId = -1;
+bool uninstallCalled = false;
+object host = CreateHookThread(
+    () => { installThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId; return true; },
+    () => { uninstallThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId; uninstallCalled = true; });
+if (installThreadId == -1) throw new Exception("Ctor returned before the install callback completed.");
+if (installThreadId == callerThreadId) throw new Exception("Install callback ran on the caller thread instead of a dedicated host thread.");
+var disposeStopwatch = System.Diagnostics.Stopwatch.StartNew();
+((IDisposable)host).Dispose();
+disposeStopwatch.Stop();
+if (disposeStopwatch.ElapsedMilliseconds > 1500)
+    throw new Exception("Disposing the hook thread host took too long; WM_QUIT may not have reached the message loop.");
+if (!uninstallCalled) throw new Exception("Disposing the hook thread host did not run the uninstall callback.");
+if (uninstallThreadId != installThreadId) throw new Exception("Uninstall did not run on the same thread that installed the hook.");
+((IDisposable)host).Dispose();
+Console.WriteLine("PASS: double-click completion is a pure per-click decision; the hook thread host waits for install, runs callbacks off the caller thread, and disposes idempotently without deadlock.");
 if (args.Contains("--shortcut-probe"))
 {
     var resolver = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.DesktopShortcutResolver");
@@ -380,6 +603,43 @@ if (unpinned["AllDesktopApplications"].AsArray().Count != 0)
     throw new Exception("Removed desktop pin remains persisted.");
 Console.WriteLine("PASS: persistent desktop pins round-trip, deduplication, removal, and empty defaults.");
 
+var pinsRestoreType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.PersistentDesktopPins");
+var requiresPinRestoreMethod = pinsRestoreType?.GetMethod("RequiresPinRestore", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+if (requiresPinRestoreMethod == null) throw new Exception("Desktop pin restore trigger policy is missing.");
+bool RequiresPinRestore(System.Collections.Specialized.NotifyCollectionChangedAction action) =>
+    (bool)requiresPinRestoreMethod.Invoke(null, new object[] { action });
+if (!RequiresPinRestore(System.Collections.Specialized.NotifyCollectionChangedAction.Add) ||
+    !RequiresPinRestore(System.Collections.Specialized.NotifyCollectionChangedAction.Reset) ||
+    RequiresPinRestore(System.Collections.Specialized.NotifyCollectionChangedAction.Remove) ||
+    RequiresPinRestore(System.Collections.Specialized.NotifyCollectionChangedAction.Replace) ||
+    RequiresPinRestore(System.Collections.Specialized.NotifyCollectionChangedAction.Move))
+    throw new Exception("Desktop pin restore must trigger only on window-list additions or a full reset, never on activation.");
+Console.WriteLine("PASS: desktop pin restore triggers only for added windows or an Explorer reset, never on window activation.");
+
+var taskRecoveryType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.TaskWindowRecovery");
+var canStyleAddMethod = taskRecoveryType?.GetMethod("CanStyleAddToTaskbar", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+var requiresPanelRefreshMethod = taskRecoveryType?.GetMethod("RequiresPanelRefresh", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+if (canStyleAddMethod == null || requiresPanelRefreshMethod == null)
+    throw new Exception("Task window recovery style prefilter or panel-refresh policy is missing.");
+bool CanStyleAddToTaskbar(int extendedStyle, bool hasNoOwner, bool taskListNotDeleted) =>
+    (bool)canStyleAddMethod.Invoke(null, new object[] { extendedStyle, hasNoOwner, taskListNotDeleted });
+const int wsExToolWindow = 0x80, wsExAppWindow = 0x40000, wsExNoActivate = 0x8000000;
+if (!CanStyleAddToTaskbar(0, true, true) ||
+    CanStyleAddToTaskbar(wsExToolWindow, true, true) ||
+    CanStyleAddToTaskbar(wsExToolWindow | wsExAppWindow, true, true) ||
+    CanStyleAddToTaskbar(0, false, true) ||
+    !CanStyleAddToTaskbar(wsExAppWindow, false, true) ||
+    CanStyleAddToTaskbar(wsExNoActivate, true, true) ||
+    !CanStyleAddToTaskbar(wsExNoActivate | wsExAppWindow, true, true) ||
+    CanStyleAddToTaskbar(0, true, false))
+    throw new Exception("Taskbar-eligibility prefilter diverges from ApplicationWindow.CanAddToTaskbar's owned/tool-window/no-activate/deleted rules.");
+bool RequiresPanelRefresh(bool windowAdded, bool showInTaskbarChanged) =>
+    (bool)requiresPanelRefreshMethod.Invoke(null, new object[] { windowAdded, showInTaskbarChanged });
+if (RequiresPanelRefresh(false, false) || !RequiresPanelRefresh(true, false) ||
+    !RequiresPanelRefresh(false, true) || !RequiresPanelRefresh(true, true))
+    throw new Exception("Panel refresh must be skipped unless a window was added or its ShowInTaskbar value changed.");
+Console.WriteLine("PASS: task window recovery prefilters window styles exactly like CanAddToTaskbar and refreshes panels only on an actual change.");
+
 var windowKeys = new[] { TaskOrderIdentifier.CreateKey(100, 200, 300),
     TaskOrderIdentifier.CreateKey(100, 200, 301), TaskOrderIdentifier.CreateKey(100, 200, 302) };
 var desired = new[] { windowKeys[2], windowKeys[0], windowKeys[1] };
@@ -391,6 +651,76 @@ foreach (var discovery in new[] { windowKeys, windowKeys.Reverse().ToArray(), ne
 if (TaskOrderIdentifier.CreateKey(100, 201, 300) == windowKeys[0])
     throw new Exception("Reused process/window handle shares an order identity.");
 Console.WriteLine("PASS: window identities restore identical order across discovery permutations and distinguish process lifetimes.");
+
+var pruneEntriesMethod = typeof(TaskOrderIdentifier).GetMethod("PruneDeadWindowEntries", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+var pruneAssignmentsMethod = typeof(TaskOrderIdentifier).GetMethod("PruneDeadWindowAssignments", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+var reconcileMethod = typeof(TaskOrderIdentifier).GetMethod("ReconcilePrimaryWindowKey", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+if (pruneEntriesMethod == null || pruneAssignmentsMethod == null || reconcileMethod == null)
+    throw new Exception("TaskOrder maintenance functions are missing.");
+string liveWindowA = TaskOrderIdentifier.CreateKey(1, 100, 10);
+string liveWindowB = TaskOrderIdentifier.CreateKey(2, 200, 20);
+string closedWindow = TaskOrderIdentifier.CreateKey(3, 300, 30);
+var liveWindowKeys = new HashSet<string> { liveWindowA, liveWindowB };
+var taskOrderEntries = new List<TaskOrderEntry>
+{
+    new() { Edge = AppBarEdge.Bottom, DesktopId = desktopA, Identifier = "pin:exe:browser" },
+    new() { Edge = AppBarEdge.Bottom, DesktopId = desktopA, Identifier = closedWindow },
+    new() { Edge = AppBarEdge.Left, DesktopId = desktopB, Identifier = liveWindowA },
+    new() { Edge = AppBarEdge.Left, DesktopId = desktopB, Identifier = "exe:app.exe#2" },
+    new() { Edge = AppBarEdge.Top, DesktopId = Guid.Empty, Identifier = closedWindow },
+    new() { Edge = AppBarEdge.Top, DesktopId = Guid.Empty, Identifier = liveWindowB },
+    new() { Edge = AppBarEdge.Right, DesktopId = desktopA, Identifier = "class:Notepad|title:Untitled" },
+};
+var prunedTaskOrder = (List<TaskOrderEntry>)pruneEntriesMethod.Invoke(null, new object[] { taskOrderEntries, liveWindowKeys });
+if (prunedTaskOrder == null) throw new Exception("Dead window TaskOrder entries across multiple scopes were not pruned.");
+if (!prunedTaskOrder.Select(entry => entry.Identifier).SequenceEqual(
+    new[] { "pin:exe:browser", liveWindowA, "exe:app.exe#2", liveWindowB, "class:Notepad|title:Untitled" }))
+    throw new Exception("TaskOrder pruning changed relative order or dropped a pin/legacy/exe/live-window key.");
+if (!prunedTaskOrder.Any(entry => entry.Edge == AppBarEdge.Left && entry.DesktopId == desktopB && entry.Identifier == liveWindowA) ||
+    !prunedTaskOrder.Any(entry => entry.Edge == AppBarEdge.Top && entry.DesktopId == Guid.Empty && entry.Identifier == liveWindowB))
+    throw new Exception("TaskOrder pruning must remove dead window keys across every edge/desktop scope at once.");
+if (pruneEntriesMethod.Invoke(null, new object[] { prunedTaskOrder, liveWindowKeys }) != null)
+    throw new Exception("Re-pruning an already-clean TaskOrder list must be a no-op.");
+var taskbarAssignments = new List<TaskbarAssignment>
+{
+    new() { Identifier = "exe:app.exe", Mode = TaskAssignmentMode.ExecutablePath, Edge = AppBarEdge.Bottom, DesktopId = desktopA },
+    new() { Identifier = closedWindow, Mode = TaskAssignmentMode.WindowClassAndTitle, Edge = AppBarEdge.Left, DesktopId = desktopA },
+    new() { Identifier = liveWindowA, Mode = TaskAssignmentMode.WindowClassAndTitle, Edge = AppBarEdge.Right, DesktopId = desktopB },
+    new() { Identifier = "class:Notepad|title:Untitled", Mode = TaskAssignmentMode.WindowClassAndTitle, Edge = AppBarEdge.Top, DesktopId = Guid.Empty },
+    new() { Identifier = liveWindowB, Mode = TaskAssignmentMode.WindowClassAndTitle, Edge = AppBarEdge.Bottom, DesktopId = desktopB },
+};
+var prunedAssignments = (List<TaskbarAssignment>)pruneAssignmentsMethod.Invoke(null, new object[] { taskbarAssignments, liveWindowKeys });
+if (prunedAssignments == null) throw new Exception("Dead per-window TaskbarAssignments were not pruned.");
+if (!prunedAssignments.Select(assignment => assignment.Identifier).SequenceEqual(
+    new[] { "exe:app.exe", liveWindowA, "class:Notepad|title:Untitled", liveWindowB }))
+    throw new Exception("TaskbarAssignments pruning changed relative order or dropped a live-window/legacy/exe assignment.");
+if (pruneAssignmentsMethod.Invoke(null, new object[] { prunedAssignments, liveWindowKeys }) != null)
+    throw new Exception("Re-pruning an already-clean TaskbarAssignments list must be a no-op.");
+string ReconcilePrimaryWindowKey(string primary, string selected, HashSet<string> live) =>
+    (string)reconcileMethod.Invoke(null, new object[] { primary, selected, live });
+if (ReconcilePrimaryWindowKey(closedWindow, liveWindowA, liveWindowKeys) != liveWindowA)
+    throw new Exception("A pin bound to a closed window did not adopt the newly selected live window.");
+if (ReconcilePrimaryWindowKey(null, liveWindowA, liveWindowKeys) != liveWindowA)
+    throw new Exception("A pin with no recorded window did not adopt the newly selected live window.");
+if (ReconcilePrimaryWindowKey(liveWindowA, liveWindowA, liveWindowKeys) != liveWindowA)
+    throw new Exception("Pin-key reconciliation is not idempotent for an already-live primary key.");
+if (ReconcilePrimaryWindowKey(liveWindowA, liveWindowB, liveWindowKeys) != liveWindowA)
+    throw new Exception("Pin-key reconciliation must not flip between two live windows of the same pinned application.");
+if (ReconcilePrimaryWindowKey(closedWindow, null, liveWindowKeys) != closedWindow)
+    throw new Exception("Pin-key reconciliation must not discard the recorded key when no window is currently selected.");
+var liveKeysMethod = typeof(TaskOrderIdentifier).GetMethod("LiveKeys", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+using (var undiscoveredWindow = new System.Windows.Forms.Form())
+{
+    uint ownProcessId = (uint)Environment.ProcessId;
+    string undiscoveredKey = TaskOrderIdentifier.CreateKey(ownProcessId, 1, undiscoveredWindow.Handle.ToInt64());
+    string foreignOwnerKey = TaskOrderIdentifier.CreateKey(ownProcessId + 1, 1, undiscoveredWindow.Handle.ToInt64());
+    string destroyedKey = TaskOrderIdentifier.CreateKey(ownProcessId, 1, 0x7FFFFFF0);
+    var storedLiveKeys = (HashSet<string>)liveKeysMethod.Invoke(null, new object[] { null,
+        new[] { undiscoveredKey, foreignOwnerKey, destroyedKey, "pin:exe:C:\\app.exe", null } });
+    if (!storedLiveKeys.SetEquals(new[] { undiscoveredKey }))
+        throw new Exception("Stored window keys must stay live while their window still exists, even before the task source discovers it.");
+}
+Console.WriteLine("PASS: dead window keys are pruned from every TaskOrder/TaskbarAssignments scope while pins, legacy, exe, and live-window entries keep their relative order and pruning is idempotent; pin-key reconciliation adopts a newly live window once, stays idempotent, and never flips between two live windows.");
 
 foreach (var example in new[] {
     (new DateTime(2016, 12, 1), "01 Kislev 5777"),
@@ -456,10 +786,43 @@ var rightTarget = StartMenuPlacement.GetTarget(menu, bar, area, AppBarEdge.Right
 if (rightTarget.X != bar.Left - menu.Width) throw new Exception("Right menu width ignored");
 Console.WriteLine("PASS: Start menu bounds for every edge and text direction; full menu size used.");
 
+var startMenuMonitorType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.StartMenuMonitor");
+var shouldHookMenuEvents = startMenuMonitorType?.GetMethod("ShouldHookMenuEvents", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+if (shouldHookMenuEvents == null) throw new Exception("Start menu event hook policy is missing.");
+bool ShouldHookMenuEvents(bool hasPlacement, bool hasActivatedTaskbar) =>
+    (bool)shouldHookMenuEvents.Invoke(null, new object[] { hasPlacement, hasActivatedTaskbar });
+if (ShouldHookMenuEvents(false, false) || !ShouldHookMenuEvents(true, false) ||
+    !ShouldHookMenuEvents(false, true) || !ShouldHookMenuEvents(true, true))
+    throw new Exception("Menu event hook must stay installed exactly while placement correction or a pending taskbar activation needs it.");
+Console.WriteLine("PASS: Start menu WinEvent hook is required only while placement correction or a pending taskbar activation needs it, not permanently.");
+
 internal sealed class PersistenceFixture : IMigratableSettings
 {
     public bool MigrationPerformed => false;
     public string Value { get; set; }
+}
+
+// Stand-in for a UI dispatcher: records what was posted without running it until Pump is called.
+internal sealed class RecordingSyncContext : System.Threading.SynchronizationContext
+{
+    public int PostCount;
+    private System.Threading.SendOrPostCallback _callback;
+    private object _state;
+
+    public override void Post(System.Threading.SendOrPostCallback d, object state)
+    {
+        PostCount++;
+        _callback = d;
+        _state = state;
+    }
+
+    public void Pump()
+    {
+        var callback = _callback;
+        var state = _state;
+        _callback = null;
+        callback?.Invoke(state);
+    }
 }
 
 internal static class DesktopInteropProbe

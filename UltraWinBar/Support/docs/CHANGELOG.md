@@ -13,6 +13,28 @@ has been published yet.
 
 ### Fixed
 
+- Prune task-order entries and per-window taskbar assignments whose window no
+  longer exists; the saved order previously grew with every window ever opened.
+  Entries of windows that still exist but are not yet listed are kept.
+- Stop an endless task-list rebuild loop when a pinned application's primary
+  window could not be verified through its process; liveness now comes from the
+  current window list.
+- Stop rebuilding every task list and re-checking all-desktop application pins
+  on each window activation; pins are restored only when windows are added or
+  the task list is reset.
+- Skip windows that can never become task buttons before creating task objects
+  during desktop-switch recovery, and refresh panels only when something changed.
+- Serialize settings once per burst of changes on the UI thread instead of on
+  every property change; shutdown still saves the latest state synchronously.
+- Keep logs for 7 days instead of 7 hours and roll to a new file at 20 MB.
+- Run the desktop-activation mouse hook on its own thread so a busy UI thread no
+  longer delays mouse input system-wide or lets Windows silently remove the hook.
+- Install the Start menu placement event hook only while a Start menu is being
+  positioned instead of listening to all system object events permanently.
+- Update the clock at the next second or minute boundary instead of every 200 ms.
+- Re-attach the virtual-desktop registry watch when Explorer creates or recreates
+  its desktop key, so desktop switches keep being detected after an Explorer restart.
+- Ignore repeated Loaded events on task buttons to avoid duplicate subscriptions.
 - Coalesce work-area recovery events and pause recovery after repeated resets
   to prevent conflicts from continuously resizing desktop windows. Pauses grow
   from 1 to 5 to 15 minutes while a conflict persists, a single probe runs after
