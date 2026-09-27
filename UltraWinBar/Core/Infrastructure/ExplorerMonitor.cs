@@ -12,6 +12,9 @@ namespace UltraWinBar.Utilities
     {
         private ExplorerMonitorWindow _explorerMonitorWindow;
 
+        // Raised on the UI thread after TaskbarCreated; COM proxies into the old explorer.exe are dead.
+        public static event EventHandler ExplorerRestarted;
+
         public void ExplorerMonitorStart(WindowManager windowManagerRef, ShellManager shellManager)
         {
             if (_explorerMonitorWindow != null) { return; } // Prevent multiple monitors.
@@ -56,6 +59,7 @@ namespace UltraWinBar.Utilities
                             // Re-initialize the tasks service to prevent leftover File Explorer windows.
                             _shellManager.Tasks.Dispose();
                             _shellManager.Tasks.Initialize(true);
+                            ExplorerRestarted?.Invoke(null, EventArgs.Empty);
                         }
                         catch (Exception ex)
                         {

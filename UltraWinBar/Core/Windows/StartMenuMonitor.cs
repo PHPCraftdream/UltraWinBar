@@ -26,6 +26,19 @@ namespace UltraWinBar.Utilities
         private IntPtr _taskbarHwndActivated;
         private int _staleActivationTicks;
 
+        // HRESULTs seen when explorer.exe (host of IAppVisibility) restarts and the RCW's proxy is severed.
+        private const int RPC_E_DISCONNECTED = unchecked((int)0x80010108);
+        private const int RPC_S_SERVER_UNAVAILABLE = unchecked((int)0x800706BA);
+        private const int CO_E_OBJNOTCONNECTED = unchecked((int)0x800401FD);
+        private static readonly TimeSpan VisibilityHelperRecreateThrottle = TimeSpan.FromSeconds(2);
+        private DateTime _lastVisibilityHelperRecreateUtc = DateTime.MinValue;
+
+        // Fast (100ms) poll only while the menu is visible, being positioned, or a Start button
+        // press is pending a response; otherwise a slow safety poll, since LauncherVisibilityChanged
+        // (Win10+ events) drives the common open/close transitions instantly.
+        private static readonly TimeSpan FastPollInterval = TimeSpan.FromMilliseconds(100);
+        private static readonly TimeSpan SlowPollInterval = TimeSpan.FromMilliseconds(1500);
+
         // Fast path for the modern Start menu: EVENT_SYSTEM_FOREGROUND fires the instant it
         // becomes the foreground window, instead of waiting for the next 100ms poller tick
         // (during which the window is already visibly painted at the OS's default position).
@@ -47,13 +60,76 @@ namespace UltraWinBar.Utilities
 
         public event EventHandler<StartMenuMonitorEventArgs> StartMenuVisibilityChanged;
 
-        public StartMenuMonitor(AppVisibilityHelper appVisibilityHelper)
+        // Owns the AppVisibilityHelper (rather than taking one by constructor injection) so it
+        // can transparently recreate it after explorer.exe restarts kill the underlying COM sink.
+        public StartMenuMonitor()
         {
-            _appVisibilityHelper = appVisibilityHelper;
+            // Poller must exist before the AppVisibilityHelper is wired up: its event can in
+            // principle fire synchronously from Advise() and reach UpdateMenuEventHook.
             setupPoller();
             setupForegroundHook();
             _menuEventProc = MenuEventProc;
             // Hooked lazily by UpdateMenuEventHook once positioning is relevant, not for the process lifetime.
+            _appVisibilityHelper = CreateAppVisibilityHelper();
+            ExplorerMonitor.ExplorerRestarted += ExplorerMonitor_ExplorerRestarted;
+        }
+
+        private AppVisibilityHelper CreateAppVisibilityHelper()
+        {
+            var helper = new AppVisibilityHelper(true);
+            helper.LauncherVisibilityChanged += OnLauncherVisibilityChanged;
+            return helper;
+        }
+
+        private void DisposeAppVisibilityHelper()
+        {
+            if (_appVisibilityHelper == null) return;
+            _appVisibilityHelper.LauncherVisibilityChanged -= OnLauncherVisibilityChanged;
+            try { _appVisibilityHelper.Dispose(); } catch (Exception) { }
+            _appVisibilityHelper = null;
+        }
+
+        private static bool IsComDisconnected(Exception error)
+        {
+            if (error is InvalidComObjectException) return true;
+            if (error is COMException com)
+            {
+                int hr = com.HResult;
+                return hr == RPC_E_DISCONNECTED || hr == RPC_S_SERVER_UNAVAILABLE || hr == CO_E_OBJNOTCONNECTED;
+            }
+            return false;
+        }
+
+        private void RecreateAppVisibilityHelperIfDisconnected(Exception error)
+        {
+            if (!IsComDisconnected(error)) return;
+            DateTime now = DateTime.UtcNow;
+            if (now - _lastVisibilityHelperRecreateUtc < VisibilityHelperRecreateThrottle) return;
+            _lastVisibilityHelperRecreateUtc = now;
+            RecreateAppVisibilityHelper();
+            ShellLogger.Warning($"StartMenuMonitor: AppVisibilityHelper COM disconnected ({error.Message}); recreated");
+        }
+
+        private void RecreateAppVisibilityHelper()
+        {
+            DisposeAppVisibilityHelper();
+            _appVisibilityHelper = CreateAppVisibilityHelper();
+        }
+
+        // IsLauncherVisible ignores HRESULTs, so a dead proxy fails silently; recreate on shell restart.
+        private void ExplorerMonitor_ExplorerRestarted(object sender, EventArgs e)
+        {
+            _lastVisibilityHelperRecreateUtc = DateTime.UtcNow;
+            RecreateAppVisibilityHelper();
+        }
+
+        // COM sink callback, not necessarily on the UI thread; re-run the poll logic there without waiting for a tick.
+        private void OnLauncherVisibilityChanged(object sender, LauncherVisibilityEventArgs e)
+        {
+            _poller?.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (_poller?.IsEnabled == true) poller_Tick(this, EventArgs.Empty);
+            }));
         }
 
         // Pure so it's testable by reflection without constructing a StartMenuMonitor.
@@ -72,6 +148,10 @@ namespace UltraWinBar.Utilities
                 UnhookWinEvent(_menuEventHook);
                 _menuEventHook = IntPtr.Zero;
             }
+
+            // Assigning Interval restarts the timer, so only on change.
+            TimeSpan interval = (_isVisible || shouldHook) ? FastPollInterval : SlowPollInterval;
+            if (_poller != null && _poller.Interval != interval) _poller.Interval = interval;
         }
 
         private void MenuEventProc(IntPtr hook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint thread, uint time)
@@ -144,7 +224,7 @@ namespace UltraWinBar.Utilities
             {
                 _poller = new DispatcherTimer
                 {
-                    Interval = TimeSpan.FromMilliseconds(100)
+                    Interval = SlowPollInterval
                 };
 
                 _poller.Tick += poller_Tick;
@@ -239,7 +319,16 @@ namespace UltraWinBar.Utilities
                 return false;
             }
 
-            return _appVisibilityHelper.IsLauncherVisible();
+            try
+            {
+                return _appVisibilityHelper.IsLauncherVisible();
+            }
+            catch (Exception error) when (error is COMException || error is InvalidComObjectException)
+            {
+                ShellLogger.Warning($"StartMenuMonitor: IsLauncherVisible COM failed: {error.Message}");
+                RecreateAppVisibilityHelperIfDisconnected(error);
+                return false;
+            }
         }
 
         private bool isClassicStartMenuOpen()
@@ -597,6 +686,8 @@ namespace UltraWinBar.Utilities
         {
             _poller?.Stop();
             _correctPlacement = null;
+            ExplorerMonitor.ExplorerRestarted -= ExplorerMonitor_ExplorerRestarted;
+            DisposeAppVisibilityHelper();
             if (_menuEventHook != IntPtr.Zero)
             {
                 UnhookWinEvent(_menuEventHook);

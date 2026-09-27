@@ -26,9 +26,17 @@ namespace UltraWinBar.Utilities
         private const string GlobalPath = @"Software\Microsoft\Windows\CurrentVersion\Explorer\VirtualDesktops";
         private static readonly int SessionId = ReadSessionId();
         private static readonly string SessionPath = BuildSessionPath(SessionId);
+        private static readonly Guid ManagerClsid = new Guid("AA509086-5CA9-4C25-8F95-589D3C07B48A");
+        // HRESULTs seen when explorer.exe (host of the manager) restarts and the RCW's proxy is severed.
+        private const int RPC_E_DISCONNECTED = unchecked((int)0x80010108);
+        private const int RPC_S_SERVER_UNAVAILABLE = unchecked((int)0x800706BA);
+        private const int CO_E_OBJNOTCONNECTED = unchecked((int)0x800401FD);
+        private static readonly TimeSpan RecreateThrottle = TimeSpan.FromSeconds(2);
         private readonly Dispatcher dispatcher = Application.Current.Dispatcher;
         private readonly List<RegistryTreeWatch> watches = new List<RegistryTreeWatch>();
+        private readonly object managerGate = new object();
         private IDesktopManager manager;
+        private DateTime lastRecreateUtc = DateTime.MinValue;
         private bool disposed;
         public static VirtualDesktopContext Instance { get; private set; }
         public Guid CurrentId { get; private set; }
@@ -46,11 +54,11 @@ namespace UltraWinBar.Utilities
         public VirtualDesktopContext()
         {
             Instance = this;
-            try { manager = (IDesktopManager)Activator.CreateInstance(Type.GetTypeFromCLSID(new Guid("AA509086-5CA9-4C25-8F95-589D3C07B48A"))); }
-            catch (COMException) { }
+            manager = CreateManager();
             CurrentId = ReadCurrent();
             foreach (string path in new[] { GlobalPath, SessionPath })
                 watches.Add(new RegistryTreeWatch(path, dispatcher, () => dispatcher.BeginInvoke(new Action(Refresh))));
+            ExplorerMonitor.ExplorerRestarted += ExplorerMonitor_ExplorerRestarted;
             ShellLogger.Info($"Virtual desktop: {CurrentId}");
         }
 
@@ -78,11 +86,61 @@ namespace UltraWinBar.Utilities
 
         public Guid CurrentIdSnapshot() => ReadCurrent();
 
+        private static IDesktopManager CreateManager()
+        {
+            try { return (IDesktopManager)Activator.CreateInstance(Type.GetTypeFromCLSID(ManagerClsid)); }
+            catch (COMException) { return null; }
+        }
+
+        // Explorer restarts sever the proxy: PreserveSig calls return these HRESULTs, others throw.
+        private static bool IsDisconnected(int hr) =>
+            hr == RPC_E_DISCONNECTED || hr == RPC_S_SERVER_UNAVAILABLE || hr == CO_E_OBJNOTCONNECTED;
+
+        private static bool IsDisconnected(Exception error) =>
+            error is InvalidComObjectException || (error is COMException && IsDisconnected(error.HResult));
+
+        private int Checked(int hr)
+        {
+            if (IsDisconnected(hr)) RecreateManager($"HRESULT 0x{hr:X8}", force: false);
+            return hr;
+        }
+
+        private void OnComError(Exception error)
+        {
+            if (IsDisconnected(error)) RecreateManager(error.Message, force: false);
+        }
+
+        private void ExplorerMonitor_ExplorerRestarted(object sender, EventArgs e) => RecreateManager("explorer restarted", force: true);
+
+        // Throttled so a dead shell doesn't cause a CoCreateInstance storm.
+        private void RecreateManager(string reason, bool force)
+        {
+            if (disposed) return;
+            lock (managerGate)
+            {
+                DateTime now = DateTime.UtcNow;
+                if (!force && now - lastRecreateUtc < RecreateThrottle) return;
+                lastRecreateUtc = now;
+                var stale = manager;
+                manager = CreateManager();
+                if (stale != null)
+                {
+                    try { Marshal.ReleaseComObject(stale); } catch (Exception) { }
+                }
+                ShellLogger.Warning($"Virtual desktop manager recreated ({reason})");
+            }
+        }
+
         public bool TryGetWindowDesktopId(IntPtr hwnd, out Guid id)
         {
             id = Guid.Empty;
-            try { return manager != null && manager.GetWindowDesktopId(hwnd, out id) >= 0 && id != Guid.Empty; }
-            catch (COMException) { return false; }
+            var current = manager;
+            try { return current != null && Checked(current.GetWindowDesktopId(hwnd, out id)) >= 0 && id != Guid.Empty; }
+            catch (Exception error) when (error is COMException || error is InvalidComObjectException)
+            {
+                OnComError(error);
+                return false;
+            }
         }
 
         public Guid DesktopForWindow(IntPtr hwnd)
@@ -94,13 +152,15 @@ namespace UltraWinBar.Utilities
         public bool TryMoveWindowToDesktop(IntPtr hwnd, Guid destination)
         {
             if (hwnd == IntPtr.Zero || destination == Guid.Empty) return false;
+            var current = manager;
             try
             {
-                if (manager != null && manager.MoveWindowToDesktop(hwnd, ref destination) >= 0) return true;
+                if (current != null && Checked(current.MoveWindowToDesktop(hwnd, ref destination)) >= 0) return true;
             }
-            catch (COMException error)
+            catch (Exception error) when (error is COMException || error is InvalidComObjectException)
             {
                 ShellLogger.Warning($"Desktop move COM failed for {hwnd}: {error.Message}");
+                OnComError(error);
             }
 
             if (!DesktopActions.IsSupported) return false;
@@ -119,16 +179,25 @@ namespace UltraWinBar.Utilities
 
         public bool IsOnCurrentDesktop(IntPtr hwnd)
         {
-            try { return manager == null || manager.IsWindowOnCurrentVirtualDesktop(hwnd, out bool current) < 0 || current; }
-            catch (COMException) { return true; }
+            var current = manager;
+            try { return current == null || Checked(current.IsWindowOnCurrentVirtualDesktop(hwnd, out bool onCurrent)) < 0 || onCurrent; }
+            catch (Exception error) when (error is COMException || error is InvalidComObjectException)
+            {
+                OnComError(error);
+                return true;
+            }
         }
 
         public void Dispose()
         {
             disposed = true;
+            ExplorerMonitor.ExplorerRestarted -= ExplorerMonitor_ExplorerRestarted;
             foreach (var watch in watches) watch.Dispose();
-            if (manager != null) Marshal.ReleaseComObject(manager);
-            manager = null;
+            lock (managerGate)
+            {
+                if (manager != null) Marshal.ReleaseComObject(manager);
+                manager = null;
+            }
             Instance = null;
         }
 

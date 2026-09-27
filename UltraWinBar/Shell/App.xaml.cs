@@ -40,7 +40,7 @@ namespace UltraWinBar
             _shellManager = SetupManagedShell();
 
             _explorerMonitor = new ExplorerMonitor();
-            _startMenuMonitor = new StartMenuMonitor(new AppVisibilityHelper(false));
+            _startMenuMonitor = new StartMenuMonitor();
             _dictionaryManager = new DictionaryManager();
             _updater = new Updater();
             _hotkeyManager = new HotkeyManager();
