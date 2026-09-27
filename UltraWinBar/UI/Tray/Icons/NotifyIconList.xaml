@@ -13,7 +13,8 @@
         </ResourceDictionary>
     </UserControl.Resources>
     <Border CornerRadius="6" BorderThickness="1" Padding="1"
-            BorderBrush="#405F788F" Background="{DynamicResource TrayBackground}">
+            BorderBrush="#405F788F" Background="{DynamicResource TrayBackground}"
+            MouseEnter="TrayArea_OnMouseEnter">
     <StackPanel>
         <StackPanel.Orientation>
             <Binding Converter="{StaticResource edgeOrientationConverter}"

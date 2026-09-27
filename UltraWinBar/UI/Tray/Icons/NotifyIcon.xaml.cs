@@ -16,6 +16,10 @@ namespace UltraWinBar.Controls
     /// </summary>
     public partial class NotifyIcon : UserControl
     {
+        // Apps that spam notifications for weeks can pile up MissedNotifications with expired
+        // balloons ManagedShell never prunes on its own; cap how many we keep per icon.
+        private const int MaxMissedNotifications = 10;
+
         private bool isLoaded;
         private ManagedShell.WindowsTray.NotifyIcon TrayIcon;
 
@@ -96,6 +100,9 @@ namespace UltraWinBar.Controls
 
                 TrayIcon.NotificationBalloonShown += TrayIcon_NotificationBalloonShown;
 
+                // Prune before looking, in case this icon piled up expired balloons while unbound.
+                PruneMissedNotifications(TrayIcon);
+
                 // If a notification was received before we started listening, it will be here. Show the first one that is not expired.
                 NotificationBalloon firstUnexpiredNotification = TrayIcon.MissedNotifications.FirstOrDefault(balloon => balloon.Received.AddMilliseconds(balloon.Timeout) > DateTime.Now);
 
@@ -117,6 +124,23 @@ namespace UltraWinBar.Controls
                 TrayIcon.PropertyChanged -= TrayIcon_OnPropertyChanged;
             }
             isLoaded = false;
+        }
+
+        // Drops expired balloons and caps the rest; call on the UI thread, outside CollectionChanged.
+        internal static void PruneMissedNotifications(ManagedShell.WindowsTray.NotifyIcon trayIcon)
+        {
+            var missed = trayIcon.MissedNotifications;
+            DateTime now = DateTime.Now;
+
+            foreach (NotificationBalloon expired in missed.Where(balloon => balloon.Received.AddMilliseconds(balloon.Timeout) <= now).ToList())
+            {
+                missed.Remove(expired);
+            }
+
+            while (missed.Count > MaxMissedNotifications)
+            {
+                missed.RemoveAt(0);
+            }
         }
 
         private void TrayIcon_OnPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)

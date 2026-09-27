@@ -1,4 +1,5 @@
 ﻿using GongSolutions.Wpf.DragDrop;
+using ManagedShell.Interop;
 using ManagedShell.WindowsTray;
 using UltraWinBar.Extensions;
 using UltraWinBar.Utilities;
@@ -11,6 +12,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 using System.Windows.Threading;
 using Tray = ManagedShell.WindowsTray;
 
@@ -134,6 +136,9 @@ namespace UltraWinBar.Controls
 
             Tray.NotifyIcon notifyIcon = e.Balloon.NotifyIcon;
 
+            // ManagedShell appends unhandled balloons to MissedNotifications after this event.
+            Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => NotifyIcon.PruneMissedNotifications(notifyIcon)));
+
             if (NotificationArea.PinnedIcons.Contains(notifyIcon))
             {
                 // Do not promote pinned icons (they're already there!)
@@ -231,6 +236,31 @@ namespace UltraWinBar.Controls
             else
             {
                 NotifyIconToggleButton.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void TrayArea_OnMouseEnter(object sender, MouseEventArgs e)
+        {
+            SweepDeadIcons();
+        }
+
+        // Icons whose owner process died without sending NIM_DELETE stay in TrayIcons forever
+        // (ManagedShell only self-heals via mouse-hover on that specific icon, which never
+        // happens for one we've hidden). Sweep on tray-area hover, removing through the same
+        // ObservableCollection ManagedShell itself uses so its internal state stays consistent.
+        private void SweepDeadIcons()
+        {
+            if (NotificationArea == null)
+            {
+                return;
+            }
+
+            foreach (Tray.NotifyIcon icon in NotificationArea.TrayIcons.ToList())
+            {
+                if (icon.HWnd == IntPtr.Zero || !NativeMethods.IsWindow(icon.HWnd))
+                {
+                    NotificationArea.TrayIcons.Remove(icon);
+                }
             }
         }
 
