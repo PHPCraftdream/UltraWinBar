@@ -56,6 +56,15 @@ has been published yet.
   backoff when Explorer has not registered them yet after a restart, instead of
   losing desktop filtering or Start detection until UltraWinBar restarts.
 - Re-read the current desktop before re-checking windows from cloak events.
+- Release closed panels: tray and task views are detached from ManagedShell's
+  app-lifetime collections, which kept every panel ever created alive (about
+  1 MB each) across theme, language, edge and display changes. The hidden
+  Quick Launch toolbar no longer keeps a folder watcher per panel.
+- Reopen panels once per settings change instead of up to four times.
+- Recreate shell COM objects before reopening panels after an Explorer
+  restart, and re-filter panels when the desktop manager becomes available.
+- Cache window desktops per dispatcher pass for task-assignment filtering and
+  skip all-desktop pin restores for windows of apps that were not remembered.
 - Stop leaking inverted tray-icon effects (and the panels holding them) through
   a static shader event, and guard repeated Loaded events on the Start button
   and task thumbnails.
