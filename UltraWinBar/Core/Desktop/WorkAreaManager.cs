@@ -32,14 +32,20 @@ namespace UltraWinBar.Utilities
 
         public static bool IsCurrent(NativeMethods.Rect expected)
         {
-            var current = new NativeMethods.Rect();
-            return NativeMethods.SystemParametersInfo((int)NativeMethods.SPI.GETWORKAREA, 0, ref current, 0) &&
+            return TryGetCurrent(out var current) &&
                 current.Left == expected.Left && current.Top == expected.Top &&
                 current.Right == expected.Right && current.Bottom == expected.Bottom;
         }
 
+        public static bool TryGetCurrent(out NativeMethods.Rect current)
+        {
+            current = new NativeMethods.Rect();
+            return NativeMethods.SystemParametersInfo((int)NativeMethods.SPI.GETWORKAREA, 0, ref current, 0);
+        }
+
         public static void Apply(NativeMethods.Rect workArea, uint UltraWinBarProcessId)
         {
+            if (IsCurrent(workArea)) return;
             if (!NativeMethods.SystemParametersInfo((int)NativeMethods.SPI.SETWORKAREA, 0, ref workArea, 0))
             {
                 ManagedShell.Common.Logging.ShellLogger.Error("WorkAreaManager: Failed to set the work area.");
@@ -108,7 +114,7 @@ namespace UltraWinBar.Utilities
             IntPtr settingName = Marshal.StringToHGlobalUni("WorkArea");
             try
             {
-                if (!EnumWindows((hWnd, lParam) =>
+                if (EnumWindows((hWnd, lParam) =>
                 {
                     GetWindowThreadProcessId(hWnd, out uint processId);
                     if (processId == UltraWinBarProcessId)
@@ -142,6 +148,48 @@ namespace UltraWinBar.Utilities
             {
                 Marshal.FreeHGlobal(settingName);
             }
+        }
+    }
+
+    internal enum WorkAreaRecoveryResult { Unchanged, Deferred, Applied, Suspended }
+
+    internal sealed class WorkAreaRecovery
+    {
+        private bool recovering;
+        private bool attempted;
+        private long lastAttempt;
+        private int attempts;
+        internal bool IsSuspended { get; private set; }
+
+        internal WorkAreaRecoveryResult Recover(long now, Func<bool> isCurrent, Action apply)
+        {
+            if (IsSuspended || recovering) return WorkAreaRecoveryResult.Deferred;
+            recovering = true;
+            try
+            {
+                if (isCurrent()) return WorkAreaRecoveryResult.Unchanged;
+                if (attempted && now - lastAttempt < 2000) return WorkAreaRecoveryResult.Deferred;
+                if (attempted && now - lastAttempt >= 60000) attempts = 0;
+                if (attempts >= 3)
+                {
+                    IsSuspended = true;
+                    return WorkAreaRecoveryResult.Suspended;
+                }
+
+                attempted = true;
+                lastAttempt = now;
+                attempts++;
+                apply();
+                return WorkAreaRecoveryResult.Applied;
+            }
+            finally { recovering = false; }
+        }
+
+        internal void Reset()
+        {
+            IsSuspended = false;
+            attempted = false;
+            attempts = 0;
         }
     }
 }

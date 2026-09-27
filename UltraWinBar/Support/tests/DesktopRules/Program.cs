@@ -135,6 +135,48 @@ if (!IsCurrentWorkArea(liveWorkArea)) throw new Exception("The current system wo
 liveWorkArea.Left++;
 if (IsCurrentWorkArea(liveWorkArea)) throw new Exception("A lost work area was not detected.");
 Console.WriteLine("PASS: system work-area reconciliation detects a changed rectangle without writing system state.");
+var recoveryType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.WorkAreaRecovery");
+var recoverMethod = recoveryType?.GetMethod("Recover", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+if (recoverMethod == null) throw new Exception("Work-area recovery controller is missing.");
+object NewRecovery() => Activator.CreateInstance(recoveryType, true);
+string RecoverArea(object controller, long time, Func<bool> current, Action apply) =>
+    recoverMethod.Invoke(controller, new object[] { time, current, apply }).ToString();
+var recovery = NewRecovery();
+int workAreaWrites = 0;
+Action writeWorkArea = () =>
+{
+    workAreaWrites++;
+    if (RecoverArea(recovery, 0, () => false, () => workAreaWrites++) != "Deferred")
+        throw new Exception("A reentrant work-area notification was not suppressed.");
+};
+if (RecoverArea(recovery, 0, () => true, writeWorkArea) != "Unchanged" || workAreaWrites != 0 ||
+    RecoverArea(recovery, 0, () => false, writeWorkArea) != "Applied")
+    throw new Exception("Work-area recovery wrote an unchanged area or missed the initial reset.");
+foreach (long time in new long[] { 1, 100, 500, 1999 })
+    if (RecoverArea(recovery, time, () => false, writeWorkArea) != "Deferred")
+        throw new Exception("A burst of work-area notifications bypassed the cooldown.");
+if (RecoverArea(recovery, 2000, () => false, writeWorkArea) != "Applied" ||
+    RecoverArea(recovery, 4000, () => false, writeWorkArea) != "Applied" ||
+    RecoverArea(recovery, 6000, () => false, writeWorkArea) != "Suspended" || workAreaWrites != 3 ||
+    RecoverArea(recovery, 600000, () => throw new Exception("Suspended recovery still read OS state."), writeWorkArea) != "Deferred")
+    throw new Exception("Competing work-area changes can cause unbounded desktop resizing.");
+recoveryType.GetMethod("Reset", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(recovery, null);
+if (RecoverArea(recovery, 600000, () => false, writeWorkArea) != "Applied" || workAreaWrites != 4)
+    throw new Exception("An explicit layout reset did not enable work-area recovery.");
+var delayedRecovery = NewRecovery();
+foreach (long time in new long[] { 0, 2000, 4000, 64000 })
+    if (RecoverArea(delayedRecovery, time, () => false, () => { }) != "Applied")
+        throw new Exception("Isolated work-area resets incorrectly exhausted the recovery budget.");
+var failedRecovery = NewRecovery();
+try
+{
+    RecoverArea(failedRecovery, 0, () => false, () => throw new InvalidOperationException("Rejected work-area write."));
+    throw new Exception("Expected the injected work-area write to fail.");
+}
+catch (System.Reflection.TargetInvocationException error) when (error.InnerException is InvalidOperationException) { }
+if (RecoverArea(failedRecovery, 2000, () => false, () => { }) != "Applied")
+    throw new Exception("A failed write permanently held the recovery reentrancy guard.");
+Console.WriteLine("PASS: repeated and reentrant work-area resets are bounded; conflicts stop writes until layout changes.");
 if (Array.IndexOf(args, "--themes") >= 0) ThemeChecks.Run();
 if (ReleaseEndpoints.Releases != "https://github.com/PHPCraftdream/UltraWinBar/releases" ||
     ReleaseEndpoints.LatestReleaseApi != "https://api.github.com/repos/PHPCraftdream/UltraWinBar/releases/latest")

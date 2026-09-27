@@ -13,6 +13,11 @@ has been published yet.
 
 ### Fixed
 
+- Coalesce work-area recovery events and suspend recovery after repeated resets
+  to prevent conflicts from continuously resizing desktop windows.
+- Stop correcting window bounds on every location-change event, and suppress
+  repeated placement attempts when applications refuse the requested bounds.
+- Report work-area notification enumeration failures only when enumeration fails.
 - Restore the reserved screen work area if Windows or Explorer clears it while
   the panels remain open, so maximized windows continue to avoid the panels.
 - Keep maximized window geometry under Windows control instead of resizing it

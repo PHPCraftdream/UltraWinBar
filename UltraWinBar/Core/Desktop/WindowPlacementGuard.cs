@@ -22,20 +22,19 @@ namespace UltraWinBar.Utilities
         private readonly WinEventProc callback;
         private readonly Dispatcher dispatcher = Application.Current.Dispatcher;
         private readonly HashSet<IntPtr> pending = new HashSet<IntPtr>();
-        private readonly Dictionary<IntPtr, (NativeMethods.Rect Outer, Rect Area)> lastAttempt = new Dictionary<IntPtr, (NativeMethods.Rect, Rect)>();
-        private readonly Action ensureWorkArea;
-        private readonly IntPtr showHook, foregroundHook, moveHook, locationHook;
+        private readonly Dictionary<IntPtr, (NativeMethods.Rect Outer, Rect Area, long At)> lastAttempt = new Dictionary<IntPtr, (NativeMethods.Rect, Rect, long)>();
+        private readonly Action requestWorkAreaRecovery;
+        private readonly IntPtr showHook, foregroundHook, moveHook;
         private IntPtr movingWindow;
         private bool disposed;
 
-        public WindowPlacementGuard(Action ensureWorkArea)
+        public WindowPlacementGuard(Action requestWorkAreaRecovery)
         {
-            this.ensureWorkArea = ensureWorkArea;
+            this.requestWorkAreaRecovery = requestWorkAreaRecovery;
             callback = OnWindowEvent;
             showHook = SetWinEventHook(0x8002, 0x8002, IntPtr.Zero, callback, 0, 0, 0);
             foregroundHook = SetWinEventHook(3, 3, IntPtr.Zero, callback, 0, 0, 0);
             moveHook = SetWinEventHook(0x000A, 0x000B, IntPtr.Zero, callback, 0, 0, 0);
-            locationHook = SetWinEventHook(0x800B, 0x800B, IntPtr.Zero, callback, 0, 0, 0);
         }
 
         internal static Rect AvailableArea(System.Drawing.Rectangle bounds)
@@ -75,11 +74,14 @@ namespace UltraWinBar.Utilities
         private void OnWindowEvent(IntPtr hook, uint type, IntPtr hwnd, int obj, int child, uint thread, uint time)
         {
             if (disposed || hwnd == IntPtr.Zero || obj != 0 || child != 0) return;
-            if (type == 0x8002 || type == 3) ensureWorkArea?.Invoke();
+            if (type == 3) requestWorkAreaRecovery?.Invoke();
             if (type == 0x000A) { movingWindow = hwnd; return; }
-            if (type == 0x000B) movingWindow = IntPtr.Zero;
+            if (type == 0x000B)
+            {
+                movingWindow = IntPtr.Zero;
+                lastAttempt.Remove(hwnd);
+            }
             if (movingWindow == hwnd) return;
-            if (type != 0x800B) lastAttempt.Remove(hwnd);
             if (GetAncestor(hwnd, 2) != hwnd || !NativeMethods.IsWindowVisible(hwnd) || IsIconic(hwnd)) return;
             int style = NativeMethods.GetWindowLong(hwnd, NativeMethods.WindowLongFlags.GWL_STYLE);
             if ((style & 0x00C00000) != 0x00C00000) return;
@@ -94,7 +96,7 @@ namespace UltraWinBar.Utilities
         private void Constrain(IntPtr hwnd)
         {
             if (VirtualDesktopContext.Instance?.IsOnCurrentDesktop(hwnd) == false) return;
-            if (!NativeMethods.IsWindow(hwnd) || !NativeMethods.IsWindowVisible(hwnd) || IsIconic(hwnd) ||
+            if (movingWindow == hwnd || !NativeMethods.IsWindow(hwnd) || !NativeMethods.IsWindowVisible(hwnd) || IsIconic(hwnd) ||
                 GetAncestor(hwnd, 2) != hwnd) return;
             int style = NativeMethods.GetWindowLong(hwnd, NativeMethods.WindowLongFlags.GWL_STYLE);
             if ((style & 0x00C00000) != 0x00C00000) return;
@@ -102,27 +104,26 @@ namespace UltraWinBar.Utilities
             if (!NativeMethods.GetWindowRect(hwnd, out NativeMethods.Rect outer)) return;
             var screen = System.Windows.Forms.Screen.FromHandle(hwnd);
             var area = AvailableArea(screen.Bounds);
-            if (lastAttempt.TryGetValue(hwnd, out var previous) && previous.Outer.Equals(outer) &&
-                previous.Area.Equals(area)) return;
+            long now = Environment.TickCount64;
+            if (lastAttempt.TryGetValue(hwnd, out var previous) &&
+                (now - previous.At < 1000 || previous.Outer.Equals(outer) && previous.Area.Equals(area))) return;
             var visible = outer;
             if (DwmGetWindowAttribute(hwnd, 9, out var frame, Marshal.SizeOf<NativeMethods.Rect>()) == 0 &&
                 frame.Width > 0 && frame.Height > 0) visible = frame;
             var target = PlanPlacement(visible, area, IsZoomed(hwnd));
             if (!target.HasValue) return;
             if (lastAttempt.Count > 256) lastAttempt.Clear();
-            if (NativeMethods.SetWindowPos(hwnd, IntPtr.Zero,
+            lastAttempt[hwnd] = (outer, area, now);
+            NativeMethods.SetWindowPos(hwnd, IntPtr.Zero,
                 (int)target.Value.X - (visible.Left - outer.Left), (int)target.Value.Y - (visible.Top - outer.Top),
                 (int)target.Value.Width + outer.Width - visible.Width, (int)target.Value.Height + outer.Height - visible.Height,
-                (int)(NativeMethods.SetWindowPosFlags.SWP_NOACTIVATE | NativeMethods.SetWindowPosFlags.SWP_NOZORDER)))
-            {
-                lastAttempt[hwnd] = (outer, area);
-            }
+                (int)(NativeMethods.SetWindowPosFlags.SWP_NOACTIVATE | NativeMethods.SetWindowPosFlags.SWP_NOZORDER));
         }
 
         public void Dispose()
         {
             disposed = true;
-            foreach (var hook in new[] { showHook, foregroundHook, moveHook, locationHook })
+            foreach (var hook in new[] { showHook, foregroundHook, moveHook })
                 if (hook != IntPtr.Zero) UnhookWinEvent(hook);
         }
     }

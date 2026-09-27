@@ -24,6 +24,9 @@ namespace UltraWinBar.Utilities
         private NativeMethods.Rect _originalWorkArea;
         private NativeMethods.Rect? _expectedWorkArea;
         private WindowPlacementGuard _placementGuard;
+        private readonly WorkAreaRecovery _workAreaRecovery = new WorkAreaRecovery();
+        private readonly DispatcherTimer _workAreaRecoveryTimer;
+        private bool _disposed;
 
         private readonly DictionaryManager _dictionaryManager;
         private readonly ExplorerMonitor _explorerMonitor;
@@ -42,6 +45,11 @@ namespace UltraWinBar.Utilities
             _startMenuMonitor = startMenuMonitor;
             _updater = updater;
             _hotkeyManager = hotkeyManager;
+            _workAreaRecoveryTimer = new DispatcherTimer(DispatcherPriority.Background)
+            {
+                Interval = TimeSpan.FromMilliseconds(500)
+            };
+            _workAreaRecoveryTimer.Tick += RecoverWorkArea;
 
             NativeMethods.SystemParametersInfo((int)NativeMethods.SPI.GETWORKAREA, 0, ref _originalWorkArea, 0);
 
@@ -49,7 +57,7 @@ namespace UltraWinBar.Utilities
 
             openTaskbars();
 
-            _placementGuard = new WindowPlacementGuard(EnsureManualWorkArea);
+            _placementGuard = new WindowPlacementGuard(QueueManualWorkAreaRecovery);
 
             _explorerMonitor.ExplorerMonitorStart(this, _shellManager);
 
@@ -112,7 +120,7 @@ namespace UltraWinBar.Utilities
 
             if (_manualWorkArea)
             {
-                EnsureManualWorkArea();
+                QueueManualWorkAreaRecovery();
                 return;
             }
 
@@ -286,6 +294,7 @@ namespace UltraWinBar.Utilities
             finally
             {
                 _isOpeningTaskbars = false;
+                QueueManualWorkAreaRecovery();
             }
         }
 
@@ -322,18 +331,36 @@ namespace UltraWinBar.Utilities
                 }
             }
 
-            _expectedWorkArea = layout.WorkArea;
-            WorkAreaManager.Apply(layout.WorkArea, (uint)Process.GetCurrentProcess().Id);
+            if (!_expectedWorkArea.HasValue || !_expectedWorkArea.Value.Equals(layout.WorkArea))
+            {
+                _workAreaRecovery.Reset();
+                _expectedWorkArea = layout.WorkArea;
+                WorkAreaManager.Apply(layout.WorkArea, (uint)Process.GetCurrentProcess().Id);
+            }
+            else QueueManualWorkAreaRecovery();
             ShellLogger.Debug($"WindowManager: Applied manual work area {FormatRect(layout.WorkArea)}");
         }
 
-        private void EnsureManualWorkArea()
+        private void QueueManualWorkAreaRecovery()
         {
-            if (!_manualWorkArea || _isOpeningTaskbars || !_expectedWorkArea.HasValue ||
-                WorkAreaManager.IsCurrent(_expectedWorkArea.Value)) return;
+            if (_disposed || !_manualWorkArea || _isOpeningTaskbars || !_expectedWorkArea.HasValue ||
+                _workAreaRecovery.IsSuspended || _workAreaRecoveryTimer.IsEnabled) return;
+            _workAreaRecoveryTimer.Start();
+        }
 
-            ShellLogger.Warning($"WindowManager: Restoring lost work area {FormatRect(_expectedWorkArea.Value)}");
-            WorkAreaManager.Apply(_expectedWorkArea.Value, (uint)Process.GetCurrentProcess().Id);
+        private void RecoverWorkArea(object sender, EventArgs e)
+        {
+            _workAreaRecoveryTimer.Stop();
+            if (_disposed || !_manualWorkArea || _isOpeningTaskbars || !_expectedWorkArea.HasValue ||
+                _workAreaRecovery.IsSuspended || !WorkAreaManager.TryGetCurrent(out var actual)) return;
+            var expected = _expectedWorkArea.Value;
+            var result = _workAreaRecovery.Recover(Environment.TickCount64,
+                () => actual.Equals(expected),
+                () => WorkAreaManager.Apply(expected, (uint)Process.GetCurrentProcess().Id));
+            if (result == WorkAreaRecoveryResult.Applied)
+                ShellLogger.Warning($"WindowManager: Restored work area from {FormatRect(actual)} to {FormatRect(expected)}");
+            else if (result == WorkAreaRecoveryResult.Suspended)
+                ShellLogger.Warning("WindowManager: Repeated work-area conflict; automatic recovery suspended until panel layout changes.");
         }
 
         private static string FormatRect(NativeMethods.Rect rect)
@@ -402,6 +429,9 @@ namespace UltraWinBar.Utilities
 
         public void Dispose()
         {
+            _disposed = true;
+            _workAreaRecoveryTimer.Stop();
+            _workAreaRecoveryTimer.Tick -= RecoverWorkArea;
             _placementGuard?.Dispose();
             if (_manualWorkArea)
             {
