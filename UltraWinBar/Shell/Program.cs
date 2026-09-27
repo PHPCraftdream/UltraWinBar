@@ -39,7 +39,7 @@ namespace UltraWinBar
             return app.Run();
         }
 
-        internal static void StartWorkAreaWatchdog(NativeMethods.Rect workArea)
+        internal static Process StartWorkAreaWatchdog(NativeMethods.Rect workArea)
         {
             ProcessStartInfo startInfo = new ProcessStartInfo
             {
@@ -54,7 +54,38 @@ namespace UltraWinBar
             startInfo.ArgumentList.Add(workArea.Top.ToString(CultureInfo.InvariantCulture));
             startInfo.ArgumentList.Add(workArea.Right.ToString(CultureInfo.InvariantCulture));
             startInfo.ArgumentList.Add(workArea.Bottom.ToString(CultureInfo.InvariantCulture));
-            Process.Start(startInfo);
+            return Process.Start(startInfo);
+        }
+
+        /// Swaps a stale watchdog for one carrying the current work area. Kills the old
+        /// child by our own handle (never by image name) before starting the replacement,
+        /// so a burst of display-change events can't leave orphans behind.
+        internal static Process RestartWorkAreaWatchdog(Process previous, NativeMethods.Rect workArea)
+        {
+            StopWorkAreaWatchdog(previous);
+            return StartWorkAreaWatchdog(workArea);
+        }
+
+        private static void StopWorkAreaWatchdog(Process watchdog)
+        {
+            if (watchdog == null)
+            {
+                return;
+            }
+
+            try
+            {
+                if (!watchdog.HasExited)
+                {
+                    watchdog.Kill();
+                }
+            }
+            catch (InvalidOperationException) { }
+            catch (System.ComponentModel.Win32Exception) { }
+            finally
+            {
+                watchdog.Dispose();
+            }
         }
 
         private static int RunWorkAreaWatchdog(string[] args)

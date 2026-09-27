@@ -23,6 +23,8 @@ namespace UltraWinBar.Utilities
         private List<AppBarScreen> _screenState = new List<AppBarScreen>();
         private List<Taskbar> _taskbars = new List<Taskbar>();
         private NativeMethods.Rect _originalWorkArea;
+        private NativeMethods.Rect _originalMonitorBounds;
+        private Process _workAreaWatchdogProcess;
         private NativeMethods.Rect? _expectedWorkArea;
         private WindowPlacementGuard _placementGuard;
         private readonly WorkAreaRecovery _workAreaRecovery = new WorkAreaRecovery();
@@ -50,6 +52,7 @@ namespace UltraWinBar.Utilities
             _workAreaRecoveryTimer.Tick += RecoverWorkArea;
 
             NativeMethods.SystemParametersInfo((int)NativeMethods.SPI.GETWORKAREA, 0, ref _originalWorkArea, 0);
+            _originalMonitorBounds = ToRect(AppBarScreen.FromPrimaryScreen().Bounds);
 
             _shellManager.ExplorerHelper.HideExplorerTaskbar = true;
 
@@ -215,7 +218,7 @@ namespace UltraWinBar.Utilities
 
             if (_manualWorkArea && !_workAreaWatchdogStarted)
             {
-                Program.StartWorkAreaWatchdog(_originalWorkArea);
+                _workAreaWatchdogProcess = Program.StartWorkAreaWatchdog(_originalWorkArea);
                 _workAreaWatchdogStarted = true;
             }
 
@@ -305,13 +308,7 @@ namespace UltraWinBar.Utilities
             }
 
             AppBarScreen screen = _screenState[0];
-            NativeMethods.Rect screenRect = new NativeMethods.Rect
-            {
-                Left = screen.Bounds.Left,
-                Top = screen.Bounds.Top,
-                Right = screen.Bounds.Right,
-                Bottom = screen.Bounds.Bottom
-            };
+            NativeMethods.Rect screenRect = ToRect(screen.Bounds);
 
             var layout = PanelLayout.Calculate(screenRect,
                 Settings.Instance.ResolvedEdgeOrder.FindAll(edge => taskbars.Exists(candidate => candidate.AppBarEdge == edge)),
@@ -428,7 +425,76 @@ namespace UltraWinBar.Utilities
                 }
             }
 
+            UpdateOriginalWorkArea(newScreens);
             return true;
+        }
+
+        // The primary monitor's bounds may have moved/resized (resolution, monitor swap, DPI).
+        // _originalWorkArea was captured against the old bounds, so it no longer describes
+        // "the work area other appbars/Explorer's taskbar would leave us on the current monitor".
+        // Re-derive it by keeping the insets (what others reserved) fixed and re-applying them
+        // to the new monitor bounds, rather than trusting the live SPI value, which in manual
+        // mode reflects our own last-applied layout rather than the true original.
+        private void UpdateOriginalWorkArea(List<AppBarScreen> newScreens)
+        {
+            AppBarScreen primary = newScreens.Find(s => s.Primary) ?? (newScreens.Count > 0 ? newScreens[0] : null);
+            if (primary == null)
+            {
+                return;
+            }
+
+            NativeMethods.Rect newBounds = ToRect(primary.Bounds);
+            if (newBounds.Equals(_originalMonitorBounds))
+            {
+                return;
+            }
+
+            NativeMethods.Rect recomputed = TranslateWorkArea(_originalWorkArea, _originalMonitorBounds, newBounds);
+
+            ShellLogger.Debug($"WindowManager: Original work area recomputed from {FormatRect(_originalWorkArea)} to {FormatRect(recomputed)} (monitor {FormatRect(_originalMonitorBounds)} -> {FormatRect(newBounds)})");
+
+            _originalWorkArea = recomputed;
+            _originalMonitorBounds = newBounds;
+
+            RestartWorkAreaWatchdogIfNeeded();
+        }
+
+        internal static NativeMethods.Rect TranslateWorkArea(NativeMethods.Rect workArea, NativeMethods.Rect oldBounds, NativeMethods.Rect newBounds)
+        {
+            NativeMethods.Rect recomputed = new NativeMethods.Rect
+            {
+                Left = newBounds.Left + (workArea.Left - oldBounds.Left),
+                Top = newBounds.Top + (workArea.Top - oldBounds.Top),
+                Right = newBounds.Right - (oldBounds.Right - workArea.Right),
+                Bottom = newBounds.Bottom - (oldBounds.Bottom - workArea.Bottom)
+            };
+
+            // Insets no longer fit the new bounds (e.g. DPI change skewed them) - fall back to
+            // the full monitor rather than ship a degenerate/inverted rect.
+            return recomputed.Right <= recomputed.Left || recomputed.Bottom <= recomputed.Top ? newBounds : recomputed;
+        }
+
+        private void RestartWorkAreaWatchdogIfNeeded()
+        {
+            // Not started yet: the next transition into manual mode will start it with the
+            // now-current _originalWorkArea, nothing to do.
+            if (!_workAreaWatchdogStarted)
+            {
+                return;
+            }
+
+            _workAreaWatchdogProcess = Program.RestartWorkAreaWatchdog(_workAreaWatchdogProcess, _originalWorkArea);
+        }
+
+        private static NativeMethods.Rect ToRect(System.Drawing.Rectangle bounds)
+        {
+            return new NativeMethods.Rect
+            {
+                Left = bounds.Left,
+                Top = bounds.Top,
+                Right = bounds.Right,
+                Bottom = bounds.Bottom
+            };
         }
 
         private void resetScreenCache()
