@@ -135,7 +135,9 @@
   are saved before an automatic restart after a crash.
 - The Start menu opens beside the panels, not over them, also when opened with
   the Windows key or when its visibility notification arrives before it takes
-  focus.
+  focus. With Open Shell, about half of the Start button presses left the menu
+  where Open Shell put it: the menu takes focus as a hidden placeholder and is
+  shown ~50 ms later, and a poll in that gap dropped the placement as "closed".
 
 ## 2.2.0 (2026-09-28)
 

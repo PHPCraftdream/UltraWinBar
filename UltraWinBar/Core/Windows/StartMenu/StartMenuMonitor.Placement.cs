@@ -44,7 +44,7 @@ namespace UltraWinBar.Utilities
 
         private IntPtr hMonitorByClass(string className)
         {
-            IntPtr hStartMenu = FindWindowEx(IntPtr.Zero, IntPtr.Zero, className, IntPtr.Zero);
+            IntPtr hStartMenu = FindVisibleWindowByClass(className);
 
             if (hStartMenu == IntPtr.Zero)
             {
@@ -56,7 +56,7 @@ namespace UltraWinBar.Utilities
 
         private void relocateStartMenuByClass(string className)
         {
-            IntPtr hStartMenu = FindWindowEx(IntPtr.Zero, IntPtr.Zero, className, IntPtr.Zero);
+            IntPtr hStartMenu = FindVisibleWindowByClass(className);
             if (hStartMenu == IntPtr.Zero)
             {
                 return;
@@ -128,6 +128,8 @@ namespace UltraWinBar.Utilities
             int userPictureOffsetY = 0;
             _positionedMenu = hStartMenu;
             _positionedTaskbar = anchor;
+            _positionedMenuShown = IsWindowVisible(hStartMenu) && !IsCloaked(hStartMenu);
+            _openingTicks = 0;
             _correctPlacement = () =>
             {
                 if (!IsWindow(hStartMenu))

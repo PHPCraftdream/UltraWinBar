@@ -28,6 +28,10 @@ namespace UltraWinBar.Utilities
         // Panel whose Start button opened the menu; unlike _taskbarHwndActivated, kept until the menu closes.
         private IntPtr _placementTaskbar;
         private IntPtr _positionedTaskbar;
+        // Open Shell's menu takes focus as a hidden placeholder and is shown ~50 ms later; until then it is opening, not closed.
+        private bool _positionedMenuShown;
+        private int _openingTicks;
+        private const int MaxOpeningTicks = 20;
         private int _staleActivationTicks;
 
         // Fast (100ms) poll only while the menu is visible, being positioned, or a Start button
@@ -122,7 +126,7 @@ namespace UltraWinBar.Utilities
             if (hwnd == IntPtr.Zero || idObject != 0 || idChild != 0 || _correctingPlacement) return;
             if (eventType == 0x8001 || eventType == 0x8003)
             {
-                if (hwnd == _positionedMenu)
+                if (hwnd == _positionedMenu && (eventType == 0x8001 || _positionedMenuShown))
                 {
                     _positionedMenu = IntPtr.Zero;
                     _correctPlacement = null;
@@ -131,6 +135,7 @@ namespace UltraWinBar.Utilities
                 return;
             }
             if (eventType != 0x8002 && eventType != 0x800B) return;
+            if (eventType == 0x8002 && hwnd == _positionedMenu) _positionedMenuShown = true;
             if (_correctPlacement == null && _placementTaskbar == IntPtr.Zero) return;
             var name = new StringBuilder(256);
             GetClassName(hwnd, name, name.Capacity);
@@ -232,10 +237,18 @@ namespace UltraWinBar.Utilities
                 startHmonitor = hMonitorOpenShellMenu();
             }
 
-            setVisibility(newIsVisible, startHmonitor);
+            // A placeholder not shown yet is still opening: dropping it here left the menu where Open Shell put it.
+            bool opening = false;
+            if (_positionedMenu != IntPtr.Zero && IsWindow(_positionedMenu) && !_positionedMenuShown)
+            {
+                if (IsWindowVisible(_positionedMenu) && !IsCloaked(_positionedMenu)) _positionedMenuShown = true;
+                else opening = ++_openingTicks <= MaxOpeningTicks;
+            }
+
+            if (newIsVisible || !opening) setVisibility(newIsVisible, startHmonitor);
 
             // Safety net for a missed HIDE/DESTROY; the modern Start window is cloaked on close rather than hidden.
-            if (_positionedMenu != IntPtr.Zero && (!IsWindow(_positionedMenu) || !IsWindowVisible(_positionedMenu) || IsCloaked(_positionedMenu)))
+            if (_positionedMenu != IntPtr.Zero && !opening && (!IsWindow(_positionedMenu) || !IsWindowVisible(_positionedMenu) || IsCloaked(_positionedMenu)))
             {
                 _positionedMenu = IntPtr.Zero;
                 _correctPlacement = null;
@@ -313,16 +326,17 @@ namespace UltraWinBar.Utilities
             return isVisibleByClass("OpenShell.CMenuContainer");
         }
 
-        private bool isVisibleByClass(string className)
+        private bool isVisibleByClass(string className) => FindVisibleWindowByClass(className) != IntPtr.Zero;
+
+        // Open Shell can keep several menu containers; the first in Z-order may be a hidden one.
+        private static IntPtr FindVisibleWindowByClass(string className)
         {
-            IntPtr hStartMenu = FindWindowEx(IntPtr.Zero, IntPtr.Zero, className, IntPtr.Zero);
-
-            if (hStartMenu == IntPtr.Zero)
+            IntPtr hwnd = IntPtr.Zero;
+            while ((hwnd = FindWindowEx(IntPtr.Zero, hwnd, className, IntPtr.Zero)) != IntPtr.Zero)
             {
-                return false;
+                if (IsWindowVisible(hwnd)) return hwnd;
             }
-
-            return IsWindowVisible(hStartMenu);
+            return IntPtr.Zero;
         }
 
         public void Dispose()
