@@ -25,13 +25,14 @@ namespace UltraWinBar.Utilities
             {
                 if (x is ApplicationWindow a && y is ApplicationWindow b)
                 {
-                    List<string> desiredOrder = Settings.Instance.GetTaskOrderForEdge(_taskList.HostEdge);
+                    // Cached ranks: O(1) per comparison instead of rebuilding and scanning the order list.
+                    IReadOnlyDictionary<string, int> ranks = Settings.Instance.GetTaskOrderRanks(_taskList.HostEdge);
 
                     string idA = TaskOrderIdentifier.Get(a, _taskList.Tasks);
                     string idB = TaskOrderIdentifier.Get(b, _taskList.Tasks);
 
-                    int indexA = idA != null ? desiredOrder.IndexOf(idA) : -1;
-                    int indexB = idB != null ? desiredOrder.IndexOf(idB) : -1;
+                    int indexA = idA != null && ranks.TryGetValue(idA, out int rankA) ? rankA : -1;
+                    int indexB = idB != null && ranks.TryGetValue(idB, out int rankB) ? rankB : -1;
 
                     if (indexA < 0 && indexB < 0)
                     {

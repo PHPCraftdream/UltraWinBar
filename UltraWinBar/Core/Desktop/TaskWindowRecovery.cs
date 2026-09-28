@@ -3,7 +3,6 @@ using ManagedShell.WindowsTasks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Threading;
 using static ManagedShell.Interop.NativeMethods;
@@ -12,16 +11,10 @@ namespace UltraWinBar.Utilities
 {
     internal sealed class TaskWindowRecovery : IDisposable
     {
-        private delegate void EventProc(IntPtr hook, uint type, IntPtr hwnd, int obj, int child, uint thread, uint time);
-        [DllImport("user32.dll")]
-        private static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr module, EventProc callback, uint process, uint thread, uint flags);
-        [DllImport("user32.dll")]
-        private static extern bool UnhookWinEvent(IntPtr hook);
         private readonly TasksService service;
         private readonly IList<ApplicationWindow> windows;
         private readonly VirtualDesktopContext desktops;
-        private readonly EventProc callback;
-        private readonly IntPtr hook;
+        private readonly WinEventHook cloakHook;
         private readonly HashSet<IntPtr> pending = new HashSet<IntPtr>();
         private readonly HashSet<IntPtr> cloakChanged = new HashSet<IntPtr>();
         private bool queued;
@@ -33,9 +26,8 @@ namespace UltraWinBar.Utilities
             this.desktops = desktops;
             windows = tasks.GroupedWindows.SourceCollection as IList<ApplicationWindow>
                 ?? throw new InvalidOperationException("Task window source is not mutable.");
-            callback = OnCloakChanged;
-            hook = SetWinEventHook(EVENT_OBJECT_CLOAKED, EVENT_OBJECT_UNCLOAKED, IntPtr.Zero, callback, 0, 0, 2);
-            if (hook == IntPtr.Zero) ShellLogger.Error("Task recovery: cloak hook unavailable.");
+            cloakHook = new WinEventHook("Task recovery cloak hook", EVENT_OBJECT_CLOAKED, EVENT_OBJECT_UNCLOAKED,
+                OnCloakChanged, WinEventHook.SkipOwnProcess);
             desktops.Changed += DesktopChanged;
             desktops.ManagerRecovered += ManagerRecovered;
             EnumerateCurrentWindows();
@@ -56,7 +48,7 @@ namespace UltraWinBar.Utilities
             {
                 if (IsWindowVisible(hwnd)) pending.Add(hwnd);
                 return true;
-            }, 0);
+            }, IntPtr.Zero);
             Queue();
         }
 
@@ -64,7 +56,7 @@ namespace UltraWinBar.Utilities
         private const uint EVENT_OBJECT_UNCLOAKED = 0x8018;
 
         // Cloak flips when a window moves between desktops; uncloaked windows may also be missing from the task source.
-        private void OnCloakChanged(IntPtr hook, uint type, IntPtr hwnd, int obj, int child, uint thread, uint time)
+        private void OnCloakChanged(uint type, IntPtr hwnd, int obj, int child)
         {
             if (disposed || hwnd == IntPtr.Zero || obj != 0 || child != 0) return;
             if (type == EVENT_OBJECT_UNCLOAKED) pending.Add(hwnd);
@@ -158,7 +150,7 @@ namespace UltraWinBar.Utilities
             disposed = true;
             desktops.Changed -= DesktopChanged;
             desktops.ManagerRecovered -= ManagerRecovered;
-            if (hook != IntPtr.Zero) UnhookWinEvent(hook);
+            cloakHook.Dispose();
             pending.Clear();
             cloakChanged.Clear();
         }

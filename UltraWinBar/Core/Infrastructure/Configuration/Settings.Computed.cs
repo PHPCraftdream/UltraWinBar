@@ -152,6 +152,31 @@ namespace UltraWinBar.Utilities
             return result;
         }
 
+        // TaskOrder is only ever replaced, never mutated, so its reference versions the cache.
+        private readonly Dictionary<(AppBarEdge, Guid), (List<TaskOrderEntry> Source, Dictionary<string, int> Ranks)> taskOrderRanks = new();
+
+        /// <summary>
+        /// Position of each identifier in GetTaskOrderForEdge, for O(1) lookups while sorting.
+        /// </summary>
+        internal IReadOnlyDictionary<string, int> GetTaskOrderRanks(AppBarEdge edge)
+        {
+            Guid desktop = VirtualDesktopContext.Instance?.CurrentId ?? Guid.Empty;
+            if (taskOrderRanks.TryGetValue((edge, desktop), out var cached) && ReferenceEquals(cached.Source, TaskOrder))
+                return cached.Ranks;
+            var ranks = RanksOf(GetTaskOrderForEdge(edge, desktop));
+            taskOrderRanks[(edge, desktop)] = (TaskOrder, ranks);
+            return ranks;
+        }
+
+        // First position of each identifier, as List.IndexOf would report it.
+        internal static Dictionary<string, int> RanksOf(List<string> order)
+        {
+            var ranks = new Dictionary<string, int>();
+            for (int i = 0; i < order.Count; i++)
+                if (order[i] != null) ranks.TryAdd(order[i], i);
+            return ranks;
+        }
+
         /// <summary>
         /// Replaces the saved order for one edge, preserving other edges' entries untouched.
         /// </summary>

@@ -10,36 +10,20 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
+using static ManagedShell.Interop.NativeMethods;
 
 namespace UltraWinBar.Utilities
 {
     internal sealed class DesktopActivationGuard : IDisposable
     {
-        private delegate void WinEventProc(IntPtr hook, uint type, IntPtr hwnd, int obj, int child, uint thread, uint time);
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr module, WinEventProc callback, uint process, uint thread, uint flags);
-        [DllImport("user32.dll")]
-        private static extern bool UnhookWinEvent(IntPtr hook);
         [DllImport("user32.dll")]
         private static extern IntPtr WindowFromPoint(LowLevelMouseHook.POINT point);
         [DllImport("user32.dll")]
-        private static extern IntPtr GetParent(IntPtr hwnd);
-        [DllImport("user32.dll")]
         private static extern IntPtr GetAncestor(IntPtr hwnd, uint flags);
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        private static extern int GetClassName(IntPtr hwnd, StringBuilder name, int length);
         [DllImport("user32.dll")]
         private static extern uint GetDoubleClickTime();
         [DllImport("user32.dll")]
-        private static extern int GetSystemMetrics(int index);
-        [DllImport("user32.dll")]
         private static extern short GetAsyncKeyState(int key);
-        [DllImport("user32.dll")]
-        private static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint processId);
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetForegroundWindow();
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetShellWindow();
         [DllImport("user32.dll")]
         private static extern bool GetLastInputInfo(ref LastInputInfo info);
 
@@ -58,8 +42,7 @@ namespace UltraWinBar.Utilities
         private readonly Dispatcher dispatcher;
         private readonly LowLevelMouseHook mouseHook;
         private readonly DesktopActivationHookThread hookThread;
-        private readonly WinEventProc foregroundCallback;
-        private readonly IntPtr foregroundHook;
+        private readonly WinEventHook foregroundHook;
         private readonly uint ownProcessId = (uint)Process.GetCurrentProcess().Id;
         private LowLevelMouseHook.POINT previousDownPoint;
         private long previousDownAt;
@@ -111,14 +94,12 @@ namespace UltraWinBar.Utilities
                 throw new InvalidOperationException("Desktop activation mouse hook is unavailable.", error);
             }
 
-            foregroundCallback = OnForeground;
-            foregroundHook = SetWinEventHook(ForegroundEvent, ForegroundEvent, IntPtr.Zero,
-                foregroundCallback, 0, 0, 2);
-            if (foregroundHook == IntPtr.Zero)
+            foregroundHook = new WinEventHook("DesktopActivation foreground hook", ForegroundEvent, ForegroundEvent,
+                OnForeground, WinEventHook.SkipOwnProcess);
+            if (!foregroundHook.IsInstalled)
             {
-                int error = Marshal.GetLastWin32Error();
                 hookThread.Dispose();
-                throw new InvalidOperationException($"Desktop activation foreground hook failed: {error}");
+                throw new InvalidOperationException("Desktop activation foreground hook failed.");
             }
 
             desktops.Changed += OnDesktopChanged;
@@ -462,7 +443,7 @@ namespace UltraWinBar.Utilities
             return name.ToString() is "Progman" or "WorkerW" or "SHELLDLL_DefView";
         }
 
-        private void OnForeground(IntPtr hook, uint type, IntPtr hwnd, int obj, int child, uint thread, uint time)
+        private void OnForeground(uint type, IntPtr hwnd, int obj, int child)
         {
             if (disposed || !armed || hwnd == IntPtr.Zero || obj != 0 || child != 0) return;
             try
@@ -617,93 +598,8 @@ namespace UltraWinBar.Utilities
             disposed = true;
             desktops.Changed -= OnDesktopChanged;
             hookThread.Dispose();
-            UnhookWinEvent(foregroundHook);
+            foregroundHook.Dispose();
             ShellLogger.Info("DesktopActivation: experimental guard disabled.");
-        }
-    }
-
-    // Hosts a Win32 hook on a dedicated thread with its own message loop, so a slow UI thread never
-    // delays delivery of the hook to the rest of the system. Install/uninstall are injectable for testing.
-    internal sealed class DesktopActivationHookThread : IDisposable
-    {
-        [DllImport("user32.dll")]
-        private static extern bool PostThreadMessage(uint threadId, uint msg, UIntPtr wParam, IntPtr lParam);
-        [DllImport("user32.dll")]
-        private static extern int GetMessage(out MSG msg, IntPtr hwnd, uint min, uint max);
-        [DllImport("user32.dll")]
-        private static extern bool TranslateMessage(ref MSG msg);
-        [DllImport("user32.dll")]
-        private static extern IntPtr DispatchMessage(ref MSG msg);
-        [DllImport("user32.dll")]
-        private static extern bool PeekMessage(out MSG msg, IntPtr hwnd, uint min, uint max, uint remove);
-        [DllImport("kernel32.dll")]
-        private static extern uint GetCurrentThreadId();
-
-        private const uint WM_QUIT = 0x0012;
-        private const int JoinTimeoutMs = 2000;
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct MSG
-        {
-            public IntPtr hwnd;
-            public uint message;
-            public UIntPtr wParam;
-            public IntPtr lParam;
-            public uint time;
-            public int ptX;
-            public int ptY;
-        }
-
-        private readonly Thread thread;
-        private volatile uint hookThreadId;
-        private bool disposed;
-
-        internal DesktopActivationHookThread(Func<bool> install, Action uninstall)
-        {
-            var ready = new ManualResetEventSlim(false);
-            bool installed = false;
-            Exception failure = null;
-            thread = new Thread(() =>
-            {
-                // Create the message queue before publishing the thread id, or an early WM_QUIT is silently dropped.
-                PeekMessage(out _, IntPtr.Zero, 0, 0, 0);
-                hookThreadId = GetCurrentThreadId();
-                try { installed = install(); }
-                catch (Exception error) { failure = error; }
-                finally { ready.Set(); }
-                if (!installed) return;
-                try
-                {
-                    int result;
-                    while ((result = GetMessage(out MSG msg, IntPtr.Zero, 0, 0)) > 0)
-                    {
-                        TranslateMessage(ref msg);
-                        DispatchMessage(ref msg);
-                    }
-                    if (result < 0) ShellLogger.Warning("DesktopActivation: hook thread message loop failed.");
-                }
-                finally
-                {
-                    try { uninstall(); }
-                    catch (Exception error) { ShellLogger.Warning($"DesktopActivation: hook thread teardown failed: {error.Message}"); }
-                }
-            })
-            { IsBackground = true, Name = "UltraWinBar Desktop Activation Hook" };
-            thread.Start();
-            // No timeout: giving up early would leave a late-installed hook running with no owner.
-            ready.Wait();
-            ready.Dispose();
-            if (failure != null) throw new InvalidOperationException("Desktop activation hook installation failed.", failure);
-            if (!installed) throw new InvalidOperationException("Desktop activation hook installation failed.");
-        }
-
-        public void Dispose()
-        {
-            if (disposed) return;
-            disposed = true;
-            uint id = hookThreadId;
-            if (id != 0) PostThreadMessage(id, WM_QUIT, UIntPtr.Zero, IntPtr.Zero);
-            if (Thread.CurrentThread != thread) thread.Join(JoinTimeoutMs);
         }
     }
 }

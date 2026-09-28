@@ -12,29 +12,23 @@ namespace UltraWinBar.Utilities
 {
     internal sealed class WindowPlacementGuard : IDisposable
     {
-        private delegate void WinEventProc(IntPtr hook, uint type, IntPtr hwnd, int obj, int child, uint thread, uint time);
-        [DllImport("user32.dll")] private static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr module, WinEventProc callback, uint process, uint thread, uint flags);
-        [DllImport("user32.dll")] private static extern bool UnhookWinEvent(IntPtr hook);
-        [DllImport("user32.dll")] private static extern bool IsIconic(IntPtr hwnd);
         [DllImport("user32.dll")] private static extern bool IsZoomed(IntPtr hwnd);
         [DllImport("user32.dll")] private static extern IntPtr GetAncestor(IntPtr hwnd, uint flags);
         [DllImport("dwmapi.dll")] private static extern int DwmGetWindowAttribute(IntPtr hwnd, uint attribute, out NativeMethods.Rect value, int size);
-        private readonly WinEventProc callback;
         private readonly Dispatcher dispatcher = Application.Current.Dispatcher;
         private readonly HashSet<IntPtr> pending = new HashSet<IntPtr>();
         private readonly Dictionary<IntPtr, (NativeMethods.Rect Outer, Rect Area, long At)> lastAttempt = new Dictionary<IntPtr, (NativeMethods.Rect, Rect, long)>();
         private readonly Action requestWorkAreaRecovery;
-        private readonly IntPtr showHook, foregroundHook, moveHook;
+        private readonly WinEventHook showHook, foregroundHook, moveHook;
         private IntPtr movingWindow;
         private bool disposed;
 
         public WindowPlacementGuard(Action requestWorkAreaRecovery)
         {
             this.requestWorkAreaRecovery = requestWorkAreaRecovery;
-            callback = OnWindowEvent;
-            showHook = SetWinEventHook(0x8002, 0x8002, IntPtr.Zero, callback, 0, 0, 0);
-            foregroundHook = SetWinEventHook(3, 3, IntPtr.Zero, callback, 0, 0, 0);
-            moveHook = SetWinEventHook(0x000A, 0x000B, IntPtr.Zero, callback, 0, 0, 0);
+            showHook = new WinEventHook("Window placement show hook", 0x8002, 0x8002, HandleWindowEvent);
+            foregroundHook = new WinEventHook("Window placement foreground hook", 3, 3, HandleWindowEvent);
+            moveHook = new WinEventHook("Window placement move hook", 0x000A, 0x000B, HandleWindowEvent);
         }
 
         internal static Rect AvailableArea(System.Drawing.Rectangle bounds)
@@ -71,7 +65,7 @@ namespace UltraWinBar.Utilities
             return new Rect(x, y, width, height);
         }
 
-        private void OnWindowEvent(IntPtr hook, uint type, IntPtr hwnd, int obj, int child, uint thread, uint time)
+        private void HandleWindowEvent(uint type, IntPtr hwnd, int obj, int child)
         {
             if (disposed || hwnd == IntPtr.Zero || obj != 0 || child != 0) return;
             if (type == 3) requestWorkAreaRecovery?.Invoke();
@@ -82,7 +76,7 @@ namespace UltraWinBar.Utilities
                 lastAttempt.Remove(hwnd);
             }
             if (movingWindow == hwnd) return;
-            if (GetAncestor(hwnd, 2) != hwnd || !NativeMethods.IsWindowVisible(hwnd) || IsIconic(hwnd)) return;
+            if (GetAncestor(hwnd, 2) != hwnd || !NativeMethods.IsWindowVisible(hwnd) || NativeMethods.IsIconic(hwnd)) return;
             int style = NativeMethods.GetWindowLong(hwnd, NativeMethods.WindowLongFlags.GWL_STYLE);
             if ((style & 0x00C00000) != 0x00C00000) return;
             if (!pending.Add(hwnd)) return;
@@ -96,7 +90,7 @@ namespace UltraWinBar.Utilities
         private void Constrain(IntPtr hwnd)
         {
             if (VirtualDesktopContext.Instance?.IsOnCurrentDesktop(hwnd) == false) return;
-            if (movingWindow == hwnd || !NativeMethods.IsWindow(hwnd) || !NativeMethods.IsWindowVisible(hwnd) || IsIconic(hwnd) ||
+            if (movingWindow == hwnd || !NativeMethods.IsWindow(hwnd) || !NativeMethods.IsWindowVisible(hwnd) || NativeMethods.IsIconic(hwnd) ||
                 GetAncestor(hwnd, 2) != hwnd) return;
             int style = NativeMethods.GetWindowLong(hwnd, NativeMethods.WindowLongFlags.GWL_STYLE);
             if ((style & 0x00C00000) != 0x00C00000) return;
@@ -123,8 +117,9 @@ namespace UltraWinBar.Utilities
         public void Dispose()
         {
             disposed = true;
-            foreach (var hook in new[] { showHook, foregroundHook, moveHook })
-                if (hook != IntPtr.Zero) UnhookWinEvent(hook);
+            showHook.Dispose();
+            foregroundHook.Dispose();
+            moveHook.Dispose();
         }
     }
 }

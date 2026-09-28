@@ -15,12 +15,12 @@ namespace UltraWinBar.Utilities
         public static extern IntPtr SetWindowsHookEx(int idHook, LowLevelMouseProcDelegate callback, IntPtr hInstance, uint threadId);
 
         [DllImport("user32.dll")]
-        public static extern IntPtr CallNextHookEx(IntPtr idHook, int nCode, uint wParam, IntPtr lParam);
+        public static extern IntPtr CallNextHookEx(IntPtr idHook, int nCode, IntPtr wParam, IntPtr lParam);
 
         [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern IntPtr GetModuleHandle(string lpModuleName);
 
-        public delegate IntPtr LowLevelMouseProcDelegate(int code, uint wParam, IntPtr lParam);
+        public delegate IntPtr LowLevelMouseProcDelegate(int code, IntPtr wParam, IntPtr lParam);
 
         const int WH_MOUSE_LL = 14;
 
@@ -53,6 +53,8 @@ namespace UltraWinBar.Utilities
         // callback thunk while Windows still calls it (access violation in unknown code).
         private static readonly HashSet<LowLevelMouseHook> _installed = new HashSet<LowLevelMouseHook>();
 
+        internal static int InstalledCount { get { lock (_installed) return _installed.Count; } }
+
         private IntPtr _hook = IntPtr.Zero;
         private LowLevelMouseProcDelegate _hookDelegate;
 
@@ -77,7 +79,7 @@ namespace UltraWinBar.Utilities
             }
         }
 
-        private IntPtr MouseHookProc(int code, uint wParam, IntPtr lParam)
+        private IntPtr MouseHookProc(int code, IntPtr wParam, IntPtr lParam)
         {
             if (code < 0)
             {
@@ -86,7 +88,7 @@ namespace UltraWinBar.Utilities
 
             LowLevelMouseEventArgs args = new LowLevelMouseEventArgs
             {
-                Message = (WM)wParam,
+                Message = (WM)(uint)wParam.ToInt64(),
                 HookStruct = (MSLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(MSLLHOOKSTRUCT))
             };
 

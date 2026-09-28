@@ -3,6 +3,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using static ManagedShell.Interop.NativeMethods;
 
 namespace UltraWinBar.Utilities
 {
@@ -17,15 +18,6 @@ namespace UltraWinBar.Utilities
 
         [DllImport("user32.dll")]
         private static extern bool EnumWindows(EnumWindowsProc callback, IntPtr lParam);
-
-        [DllImport("user32.dll")]
-        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
-
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        private static extern int GetClassName(IntPtr hWnd, StringBuilder className, int maxCount);
-
-        [DllImport("user32.dll")]
-        private static extern bool IsWindowVisible(IntPtr hWnd);
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         private static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint message, IntPtr wParam,

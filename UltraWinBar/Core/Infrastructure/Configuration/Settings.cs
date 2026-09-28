@@ -33,13 +33,18 @@ namespace UltraWinBar.Utilities
             _settingsManager.Flush();
         }
 
-        private static string _settingsPath = "UltraWinBar.settings.json".InLocalAppData();
+        // The test runner points this at a scratch file so it can never touch the user's settings.
+        private static string _settingsPath = Environment.GetEnvironmentVariable("ULTRAWINBAR_SETTINGS_PATH") is { Length: > 0 } overridePath
+            ? overridePath : "UltraWinBar.settings.json".InLocalAppData();
         private static bool _isInitializing = true;
         private static SettingsManager<Settings> _settingsManager = new(_settingsPath, new Settings());
 
         private bool _migrationPerformed = false;
         public bool MigrationPerformed { get => _migrationPerformed; }
         public event PropertyChangedEventHandler PropertyChanged;
+
+        // Health diagnostics: a steadily growing count means a leaked subscriber.
+        internal int PropertyChangedSubscriberCount => PropertyChanged?.GetInvocationList().Length ?? 0;
 
         // This should not be used directly! Unfortunately it must be public for JsonSerializer.
         public Settings()
@@ -49,7 +54,9 @@ namespace UltraWinBar.Utilities
 
         private void Settings_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (_isInitializing)
+            // Only the live instance persists: any other Settings object (defaults, a stray instance)
+            // must never replace the user's settings file.
+            if (_isInitializing || !ReferenceEquals(this, instance))
             {
                 return;
             }
@@ -535,132 +542,7 @@ namespace UltraWinBar.Utilities
             set => Set(ref _allowBlurBehind, value);
         }
 
-        // Extra taskbars beyond the primary edge.
-        private List<AppBarEdge> _additionalEdges = [AppBarEdge.Left, AppBarEdge.Top, AppBarEdge.Bottom];
-        public List<AppBarEdge> AdditionalEdges
-        {
-            get => _additionalEdges;
-            set => Set(ref _additionalEdges, value);
-        }
-
-        // Taskbar hosting the notification area. There is only ever one.
-        private AppBarEdge _trayEdge = AppBarEdge.Bottom;
-        public AppBarEdge TrayEdge
-        {
-            get => _trayEdge;
-            set => SetEnum(ref _trayEdge, value);
-        }
-
-        // Taskbar hosting the clock. There is only ever one, independent of the tray.
-        private AppBarEdge _clockEdge = AppBarEdge.Right;
-        public AppBarEdge ClockEdge
-        {
-            get => _clockEdge;
-            set => SetEnum(ref _clockEdge, value);
-        }
-
-        // Taskbar hosting the start button. There is only ever one.
-        private AppBarEdge _startButtonEdge = AppBarEdge.Right;
-        public AppBarEdge StartButtonEdge
-        {
-            get => _startButtonEdge;
-            set => SetEnum(ref _startButtonEdge, value);
-        }
-
-        // Taskbar hosting the input language indicator. There is only ever one.
-        private AppBarEdge _languageEdge = AppBarEdge.Right;
-        public AppBarEdge LanguageEdge
-        {
-            get => _languageEdge;
-            set => SetEnum(ref _languageEdge, value);
-        }
-
-        // Taskbar new, unpinned windows open on by default ("Make main" on a taskbar's
-        // context menu sets this). Independent of Edge, which is the primary taskbar's
-        // physical location, not where unassigned windows land.
-        private AppBarEdge _defaultTaskEdge = AppBarEdge.Bottom;
-        public AppBarEdge DefaultTaskEdge
-        {
-            get => _defaultTaskEdge;
-            set => SetEnum(ref _defaultTaskEdge, value);
-        }
-
-        // Which taskbar each window/application is pinned to, once dragged there by the
-        // user (plain drag = that window only, Ctrl+drag = the whole application).
-        private List<TaskbarAssignment> _taskbarAssignments = [];
-        public List<TaskbarAssignment> TaskbarAssignments
-        {
-            get => _taskbarAssignments;
-            set => Set(ref _taskbarAssignments, value);
-        }
-
-        // Per-edge task button order, keyed by TaskAssignmentManager's WindowClassAndTitle
-        // identifier. Relative position among entries sharing an Edge defines that edge's
-        // order; entries for other edges may be interleaved.
-        private List<PinnedApplication> _pinnedApplications = [];
-        public List<PinnedApplication> PinnedApplications
-        {
-            get => _pinnedApplications;
-            set => Set(ref _pinnedApplications, value ?? []);
-        }
-
-        private List<TaskOrderEntry> _taskOrder = [];
-        private List<string> _allDesktopApplications = [];
-        public List<string> AllDesktopApplications
-        {
-            get => _allDesktopApplications;
-            set => Set(ref _allDesktopApplications, (value ?? []).Where(id => !string.IsNullOrWhiteSpace(id)).Distinct(StringComparer.Ordinal).ToList());
-        }
-
-        private bool _desktopPinPreferencesInitialized;
-        public bool DesktopPinPreferencesInitialized
-        {
-            get => _desktopPinPreferencesInitialized;
-            set => Set(ref _desktopPinPreferencesInitialized, value);
-        }
-
-        public List<TaskOrderEntry> TaskOrder
-        {
-            get => _taskOrder;
-            set => Set(ref _taskOrder, value);
-        }
-
-        // Which taskbar each Quick Launch shortcut is shown on. Order within an edge is
-        // still governed by QuickLaunchOrder below; this only controls edge membership.
-        private List<QuickLaunchAssignment> _quickLaunchAssignments = [];
-        public List<QuickLaunchAssignment> QuickLaunchAssignments
-        {
-            get => _quickLaunchAssignments;
-            set => Set(ref _quickLaunchAssignments, value);
-        }
-
-        // Edges the user has explicitly "stretched", most-recent first. An edge here
-        // registers with the OS AppBar API before edges not listed, so it keeps its full
-        // length and neighboring taskbars shrink to make room for it instead.
-        private List<AppBarEdge> _edgePriority = [AppBarEdge.Top, AppBarEdge.Left];
-        public List<AppBarEdge> EdgePriority
-        {
-            get => _edgePriority;
-            set => Set(ref _edgePriority, value);
-        }
-
-        // Per-edge taskbar size override. Each edge is either horizontal or vertical, never
-        // both, so one Size field covers RowCount (horizontal) or TaskbarWidth (vertical).
-        // Edges without an entry fall back to the global RowCount/TaskbarWidth default below.
-        private List<EdgeSizeSetting> _edgeSizes =
-        [
-            new EdgeSizeSetting { Edge = AppBarEdge.Bottom, Size = 1 },
-            new EdgeSizeSetting { Edge = AppBarEdge.Right, Size = 2 },
-            new EdgeSizeSetting { Edge = AppBarEdge.Left, Size = 2 },
-            new EdgeSizeSetting { Edge = AppBarEdge.Top, Size = 1 }
-        ];
-        public List<EdgeSizeSetting> EdgeSizes
-        {
-            get => _edgeSizes;
-            set => Set(ref _edgeSizes, value);
-        }
         #endregion
-
 
         #region Old Properties
         public bool? MiddleMouseToClose
@@ -703,107 +585,4 @@ namespace UltraWinBar.Utilities
         }
         #endregion
     }
-
-    #region Enums
-    public enum InvertIconsOption
-    {
-        WhenNeededByTheme,
-        Always,
-        Never
-    }
-
-    public enum MultiMonOption
-    {
-        AllTaskbars,
-        SameAsWindow,
-        SameAsWindowAndPrimary
-    }
-
-    public enum TaskMiddleClickOption
-    {
-        DoNothing,
-        OpenNewInstance,
-        CloseTask
-    }
-    public enum TaskWheelActionOption
-    {
-        DoNothing,
-        ShowHideWindow
-    }
-
-    public enum ClockClickOption
-    {
-        DoNothing,
-        OpenAeroCalendar,
-        OpenModernCalendar,
-        OpenNotificationCenter,
-    }
-
-    public enum WinNumHotkeysOption
-    {
-        WindowsDefault,
-        SwitchTasks,
-        InvokeQuickLaunch,
-    }
-
-    public enum NotifyIconBehavior
-    {
-        HideWhenInactive,
-        AlwaysHide,
-        AlwaysShow,
-        Remove
-    }
-
-    /// <summary>
-    /// How a window is identified for a taskbar assignment: chosen per drag by whether
-    /// Ctrl is held, not a global setting.
-    /// </summary>
-    public enum TaskAssignmentMode
-    {
-        /// <summary>
-        /// Group by executable (Ctrl+drag), so every window of an application shares one taskbar.
-        /// </summary>
-        ExecutablePath,
-
-        /// <summary>
-        /// Identify one window lifetime (plain drag). The enum name stays for JSON compatibility.
-        /// </summary>
-        WindowClassAndTitle
-    }
-    #endregion
-
-    #region Structs
-    public struct NotifyIconBehaviorSetting
-    {
-        public string Identifier {  get; set; }
-        public NotifyIconBehavior Behavior { get; set; }
-    }
-
-    public struct TaskbarAssignment
-    {
-        public Guid DesktopId { get; set; }
-        public string Identifier { get; set; }
-        public AppBarEdge Edge { get; set; }
-        public TaskAssignmentMode Mode { get; set; }
-    }
-
-    public struct EdgeSizeSetting
-    {
-        public AppBarEdge Edge { get; set; }
-        public int Size { get; set; }
-    }
-
-    public struct QuickLaunchAssignment
-    {
-        public string Path { get; set; }
-        public AppBarEdge Edge { get; set; }
-    }
-
-    public struct TaskOrderEntry
-    {
-        public Guid DesktopId { get; set; }
-        public AppBarEdge Edge { get; set; }
-        public string Identifier { get; set; }
-    }
-    #endregion
 }
