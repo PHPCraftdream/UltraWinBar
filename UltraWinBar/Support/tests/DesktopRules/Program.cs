@@ -18,6 +18,7 @@ while (repositoryRoot != null && !System.IO.File.Exists(System.IO.Path.Combine(r
     repositoryRoot = repositoryRoot.Parent;
 if (repositoryRoot == null) throw new Exception("Repository root not found for structure checks.");
 
+LoggingChecks.Run(args, repositoryRoot);
 StructureChecks.Run(args, repositoryRoot);
 LayoutChecks.Run(args, repositoryRoot);
 EnvironmentChecks.Run(args, repositoryRoot);
