@@ -34,7 +34,7 @@
   "MultiMonMode": 0,
   "TaskbarScale": 1.2,
   "TrayIconSize": 20,
-  "DebugLogging": true,
+  "DebugLogging": false,
   "DebugLogMasks": [
     "*",
     "!NotificationArea:*",

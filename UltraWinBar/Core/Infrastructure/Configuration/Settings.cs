@@ -388,7 +388,7 @@ namespace UltraWinBar.Utilities
             set => Set(ref _trayIconSize, double.IsNaN(value) ? 20 : Math.Clamp(value, 16, 32));
         }
 
-        private bool _debugLogging = true;
+        private bool _debugLogging = false;
         public bool DebugLogging
         {
             get => _debugLogging;
