@@ -73,6 +73,10 @@ namespace UltraWinBar.Utilities
         // The launcher visibility proxy restarts itself; the immersive launcher cache is ours to drop.
         private void ExplorerMonitor_ExplorerRestarted(object sender, EventArgs e)
         {
+            // Reset ImmersiveShellHelper's cached shell/factory first: GetImmersiveLauncher_* below
+            // pulls the shell from there, so a fresh launcher must not be connected via a dead shell.
+            ImmersiveShellHelper.Reset();
+
             // The cached IImmersiveLauncher/monitor RCWs point at the old explorer.exe process;
             // drop them so the next Start press re-queries fresh ones instead of failing with
             // RPC_E_DISCONNECTED/RPC_S_SERVER_UNAVAILABLE until our app itself restarts.
