@@ -1,9 +1,11 @@
 using ManagedShell.Common.Logging;
 using ManagedShell.Common.Logging.Observers;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace UltraWinBar.Utilities
 {
@@ -101,17 +103,27 @@ namespace UltraWinBar.Utilities
     // tracked by summing message lengths (no per-line FileInfo stat). The roll swaps
     // only the inner FileLog under _lock, so the FilteredLog/ShellLogger attachment
     // above never needs to detach/re-attach.
+    //
+    // Writing is off the caller's thread: Debug/Info/Warning are queued and written+flushed in
+    // batches by one background writer thread. Error/Fatal (and the one-time overflow report)
+    // write and flush synchronously so they, and anything already queued ahead of them, are on
+    // disk before the call returns - this is what keeps the last lines before a crash intact,
+    // since App.xaml.cs logs Error before every FailFast.
     internal sealed class RollingFileLog : ILog, IDisposable
     {
         internal const long DefaultMaxSizeBytes = 20 * 1024 * 1024;
+        internal const int DefaultMaxQueueDepth = 2000;
         // Once rotation fails (disk full, access denied), don't retry the filesystem on every
         // single log line; back off and try again no more often than this.
         private const int RotationRetryBackoffMs = 30_000;
+        // Bounded wait for the writer thread to drain on Dispose; never block shutdown forever.
+        private const int DrainOnDisposeMs = 2000;
 
         private readonly string _logPath;
         private readonly string _logExt;
         private readonly TimeSpan _retention;
         private readonly long _maxSizeBytes;
+        private readonly int _maxQueueDepth;
         private readonly object _lock = new object();
         private FileLog _current;
         private long _currentSize;
@@ -119,17 +131,31 @@ namespace UltraWinBar.Utilities
         private long _nextRotationAttemptTicks;
         private bool _rotationFailureReported;
 
+        private readonly object _queueLock = new object();
+        private readonly Queue<LogEventArgs> _pending = new Queue<LogEventArgs>();
+        private readonly SemaphoreSlim _pendingSignal = new SemaphoreSlim(0, int.MaxValue);
+        private readonly ManualResetEventSlim _idle = new ManualResetEventSlim(true);
+        // Test-only hook: held open in production. A test resets it to pause the writer thread
+        // so it can deterministically overflow the queue without racing a live consumer.
+        private readonly ManualResetEventSlim _writerGate = new ManualResetEventSlim(true);
+        private readonly Thread _writerThread;
+        private volatile bool _shuttingDown;
+        private long _droppedQueuedLines;
+
         // Count of messages that could not be written to any file (current is unavailable).
         // A failed roll alone does not count here: the old file keeps being written to.
         internal long LostLines { get; private set; }
 
-        public RollingFileLog(string logPath, string logExt, TimeSpan retention, long maxSizeBytes = DefaultMaxSizeBytes)
+        public RollingFileLog(string logPath, string logExt, TimeSpan retention, long maxSizeBytes = DefaultMaxSizeBytes, int maxQueueDepth = DefaultMaxQueueDepth)
         {
             _logPath = logPath;
             _logExt = logExt;
             _retention = retention;
             _maxSizeBytes = maxSizeBytes;
+            _maxQueueDepth = maxQueueDepth;
             _current = OpenNewFile();
+            _writerThread = new Thread(WriterLoop) { IsBackground = true, Name = "UltraWinBar-LogWriter" };
+            _writerThread.Start();
         }
 
         internal static bool ShouldRoll(long currentSize, long maxSizeBytes) => currentSize >= maxSizeBytes;
@@ -148,32 +174,157 @@ namespace UltraWinBar.Utilities
 
         public void Log(object sender, LogEventArgs e)
         {
+            if (e.Severity == LogSeverity.Error || e.Severity == LogSeverity.Fatal)
+            {
+                // Crash paths log Error/Fatal right before FailFast: write immediately, and drain
+                // anything already queued first so the file stays in chronological order.
+                WriteDirect(e);
+                return;
+            }
+
+            long freedDrops = 0;
+            lock (_queueLock)
+            {
+                if (_pending.Count >= _maxQueueDepth)
+                {
+                    _droppedQueuedLines++;
+                    return;
+                }
+
+                if (_droppedQueuedLines > 0)
+                {
+                    freedDrops = _droppedQueuedLines;
+                    _droppedQueuedLines = 0;
+                }
+
+                _pending.Enqueue(e);
+                _idle.Reset();
+            }
+            _pendingSignal.Release();
+
+            if (freedDrops > 0)
+            {
+                WriteDirect(new LogEventArgs(LogSeverity.Warning, $"Log queue overflow: dropped {freedDrops} line(s).", null, DateTime.Now));
+            }
+        }
+
+        private void WriterLoop()
+        {
+            while (true)
+            {
+                _pendingSignal.Wait();
+                _writerGate.Wait();
+                bool shuttingDown = _shuttingDown;
+                DrainOnePass();
+                if (shuttingDown)
+                {
+                    return;
+                }
+            }
+        }
+
+        // Writes and flushes one batch: everything currently queued, one flush at the end.
+        private void DrainOnePass()
+        {
             lock (_lock)
             {
-                try
+                DrainQueueLocked();
+                FlushCurrent();
+            }
+
+            lock (_queueLock)
+            {
+                if (_pending.Count == 0)
                 {
-                    _currentSize += (e.Message?.Length ?? 0) + 32;
-
-                    if (ShouldRoll(_currentSize, _maxSizeBytes) && Environment.TickCount64 >= _nextRotationAttemptTicks)
-                    {
-                        TryRoll();
-                    }
-
-                    if (_current != null)
-                    {
-                        _current.Log(sender, e);
-                    }
-                    else
-                    {
-                        LostLines++;
-                    }
+                    _idle.Set();
                 }
-                catch (Exception ex)
+            }
+        }
+
+        // Writes straight to disk, ahead of the queue: used for Error/Fatal and the one-time
+        // overflow report, so they land on disk before the call returns.
+        private void WriteDirect(LogEventArgs e)
+        {
+            lock (_lock)
+            {
+                DrainQueueLocked();
+                WriteOneLocked(e);
+                FlushCurrent();
+            }
+
+            lock (_queueLock)
+            {
+                if (_pending.Count == 0)
                 {
-                    // The logger must never throw into its caller, which can be a native callback.
+                    _idle.Set();
+                }
+            }
+        }
+
+        // Must be called with _lock held.
+        private void DrainQueueLocked()
+        {
+            List<LogEventArgs> batch = null;
+            lock (_queueLock)
+            {
+                if (_pending.Count > 0)
+                {
+                    batch = new List<LogEventArgs>(_pending);
+                    _pending.Clear();
+                }
+            }
+
+            if (batch == null)
+            {
+                return;
+            }
+
+            foreach (LogEventArgs item in batch)
+            {
+                WriteOneLocked(item);
+            }
+        }
+
+        // Must be called with _lock held. Rolls if needed and writes to the current file, but
+        // does not flush - the caller (batch or immediate write) decides when to flush.
+        private void WriteOneLocked(LogEventArgs e)
+        {
+            try
+            {
+                _currentSize += (e.Message?.Length ?? 0) + 32;
+
+                if (ShouldRoll(_currentSize, _maxSizeBytes) && Environment.TickCount64 >= _nextRotationAttemptTicks)
+                {
+                    TryRoll();
+                }
+
+                if (_current != null)
+                {
+                    _current.Log(this, e);
+                }
+                else
+                {
                     LostLines++;
-                    ReportFailureOnce(ex);
                 }
+            }
+            catch (Exception ex)
+            {
+                // The logger must never throw into its caller, which can be a native callback.
+                LostLines++;
+                ReportFailureOnce(ex);
+            }
+        }
+
+        // Must be called with _lock held.
+        private void FlushCurrent()
+        {
+            try
+            {
+                _current?.Flush();
+            }
+            catch (Exception ex)
+            {
+                ReportFailureOnce(ex);
             }
         }
 
@@ -212,6 +363,7 @@ namespace UltraWinBar.Utilities
             try
             {
                 _current?.Log(this, new LogEventArgs(LogSeverity.Error, $"Logging error: {ex.Message}", null, DateTime.Now));
+                _current?.Flush();
             }
             catch
             {
@@ -219,17 +371,53 @@ namespace UltraWinBar.Utilities
             }
         }
 
+        // Test hook: blocks until the queue has been fully drained, or the timeout elapses.
+        internal bool WaitForIdle(int timeoutMs) => _idle.Wait(timeoutMs);
+
         public void Dispose()
         {
-            lock (_lock)
+            _shuttingDown = true;
+            try
             {
-                try
+                _pendingSignal.Release();
+            }
+            catch
+            {
+                // Disposal must not throw.
+            }
+
+            try
+            {
+                _writerThread.Join(DrainOnDisposeMs);
+            }
+            catch
+            {
+                // Disposal must not throw.
+            }
+
+            // TryEnter with its own short bound: if the writer thread is still stuck inside
+            // _lock past the join above (e.g. a hung disk write), Dispose must still return
+            // within a bounded time rather than wait on that lock forever.
+            bool lockTaken = false;
+            try
+            {
+                Monitor.TryEnter(_lock, 250, ref lockTaken);
+                if (lockTaken)
                 {
+                    // In case the writer thread didn't finish draining within the bound above.
+                    DrainQueueLocked();
                     _current?.Dispose();
                 }
-                catch
+            }
+            catch
+            {
+                // Disposal must not throw either.
+            }
+            finally
+            {
+                if (lockTaken)
                 {
-                    // Disposal must not throw either.
+                    Monitor.Exit(_lock);
                 }
             }
         }

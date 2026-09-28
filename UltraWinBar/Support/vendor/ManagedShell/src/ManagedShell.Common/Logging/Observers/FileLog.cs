@@ -36,9 +36,27 @@ namespace ManagedShell.Common.Logging.Observers
                 Directory.CreateDirectory(_fileInfo.DirectoryName);
 
             var stream = File.AppendText(_fileInfo.FullName);
-            stream.AutoFlush = true;
 
+            // UltraWinBar: no AutoFlush here. The caller (RollingFileLog) batches writes on a
+            // background thread and controls when to flush, so a hot logging path never blocks
+            // on a synchronous disk flush per line.
             _textWriter = TextWriter.Synchronized(stream);
+        }
+
+        /// <summary>
+        /// Flushes buffered writes to disk. The caller decides when (batch boundary, Error/Fatal,
+        /// or shutdown) so writes aren't flushed one line at a time.
+        /// </summary>
+        public void Flush()
+        {
+            try
+            {
+                _textWriter.Flush();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Error flushing FileLog: " + ex.ToString());
+            }
         }
 
         /// <summary>
@@ -106,7 +124,6 @@ namespace ManagedShell.Common.Logging.Observers
             try
             {
                 _textWriter.WriteLine(stringBuilder.ToString());
-                _textWriter.Flush();
             }
             catch (Exception ex)
             {
