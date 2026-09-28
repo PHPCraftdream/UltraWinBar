@@ -1,9 +1,40 @@
 using ManagedShell.Common.Logging;
 using System;
+using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 
 namespace ManagedShell.Common.Native
 {
+    // K19: minimal status contract so the health line can count unavailable proxies without each
+    // call site tracking its own state.
+    internal interface IShellComProxyStatus
+    {
+        bool HasValue { get; }
+    }
+
+    // Registers every live ShellComProxy<T> (weak identity via reference-equality dictionary keys)
+    // so a health snapshot can ask "how many are currently down" without polling call sites.
+    internal static class ShellComProxyRegistry
+    {
+        private static readonly ConcurrentDictionary<IShellComProxyStatus, byte> instances = new ConcurrentDictionary<IShellComProxyStatus, byte>();
+
+        internal static void Register(IShellComProxyStatus proxy) => instances[proxy] = 0;
+
+        internal static void Unregister(IShellComProxyStatus proxy) => instances.TryRemove(proxy, out _);
+
+        internal static int Count => instances.Count;
+
+        internal static int UnavailableCount()
+        {
+            int count = 0;
+            foreach (var proxy in instances.Keys)
+            {
+                if (!proxy.HasValue) count++;
+            }
+            return count;
+        }
+    }
+
     // UltraWinBar (K12): moved from the app so ManagedShell's own Explorer-hosted COM objects can
     // use the same recreate-with-backoff policy. One policy for COM objects hosted by explorer.exe
     // (they die with it): detect a severed proxy, drop it, recreate lazily with 2/5/15/60 s backoff,
@@ -31,7 +62,7 @@ namespace ManagedShell.Common.Native
 
     // Thread-safe holder of one Explorer-hosted object. Consumers call Get() on every use and never
     // cache the result; Check()/Report() feed call outcomes back so a dead proxy is replaced.
-    internal sealed class ShellComProxy<T> : IDisposable where T : class
+    internal sealed class ShellComProxy<T> : IDisposable, IShellComProxyStatus where T : class
     {
         private readonly string name;
         private readonly Func<T> create;
@@ -59,9 +90,11 @@ namespace ManagedShell.Common.Native
             this.release = release;
             value = TryCreate();
             ExplorerLifecycle.Restarted += ExplorerLifecycle_Restarted;
+            ShellComProxyRegistry.Register(this);
         }
 
         internal bool HasValue { get { lock (gate) return value != null; } }
+        bool IShellComProxyStatus.HasValue => HasValue;
 
         // Current object, lazily recreated with backoff; null while unavailable.
         internal T Get()
@@ -176,6 +209,7 @@ namespace ManagedShell.Common.Native
 
         public void Dispose()
         {
+            ShellComProxyRegistry.Unregister(this);
             ExplorerLifecycle.Restarted -= ExplorerLifecycle_Restarted;
             T stale;
             lock (gate)

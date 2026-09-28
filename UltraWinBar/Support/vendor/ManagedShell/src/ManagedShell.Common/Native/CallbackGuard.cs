@@ -1,6 +1,7 @@
 using ManagedShell.Common.Logging;
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ManagedShell.Common.Native
@@ -26,6 +27,9 @@ namespace ManagedShell.Common.Native
         }
 
         internal static int FailureCount(string source) => failures.TryGetValue(source, out int count) ? count : 0;
+
+        // Total across all sources, for the health line (K19).
+        internal static int TotalFailureCount => failures.Values.Sum();
 
         // Last-chance logging: background-thread exceptions otherwise leave no trace in our log.
         internal static void InstallGlobalHandlers()
