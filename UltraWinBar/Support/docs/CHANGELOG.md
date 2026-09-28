@@ -1,6 +1,9 @@
 # Changelog
 
-## Unreleased
+## 2.3.0 (2026-09-28)
+
+The Nerdbank.GitVersioning prefix moves from `2.2` to `2.3`; the version height
+is offset so this release is exactly 2.3.0.
 
 ### Changed
 
