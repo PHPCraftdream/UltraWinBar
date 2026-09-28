@@ -71,6 +71,7 @@ namespace ManagedShell
 
             AppBarManager.Dispose();
             FullScreenHelper.Dispose();
+            ExplorerHelper.Dispose(); // UltraWinBar: unhook the taskbar-show WinEvent hook
             NotificationArea?.Dispose();
             Tasks?.Dispose();
         }

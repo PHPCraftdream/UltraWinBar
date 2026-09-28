@@ -27,3 +27,7 @@ not changed; every local modification is listed below and marked in code with `U
   `ActivateKeyboardLayout`, `SendNotifyMessage`); the truncating `int` overloads of
   `CloseHandle`, `PostMessage` and `SendNotifyMessage` are removed. `ITrayNotify` bools marshal as
   `BOOL`; `IOleCommandTarget.Exec` VARIANT parameters are explicit.
+- `ExplorerHelper`: the 100 ms `taskbarMonitor` poll that kept Explorer's taskbar hidden is now a
+  `SetWinEventHook(EVENT_OBJECT_SHOW)` watch on `Shell_TrayWnd`/`Shell_SecondaryTrayWnd`, with the
+  timer kept as a 2 s safety net (hook install/uninstall track timer start/stop; `ExplorerHelper`
+  is now `IDisposable` and unhooks on dispose).

@@ -1981,6 +1981,7 @@ namespace ManagedShell.Interop
         public static int EVENT_OBJECT_CLOAKED = 0x8017;
         public static int EVENT_OBJECT_UNCLOAKED = 0x8018;
         public static int EVENT_OBJECT_LOCATIONCHANGE = 0x800B;
+        public static int EVENT_OBJECT_SHOW = 0x8002; // UltraWinBar: used by ExplorerHelper's event-driven taskbar watch
 
         public delegate void WinEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
 
