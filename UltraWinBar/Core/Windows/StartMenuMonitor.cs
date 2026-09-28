@@ -254,7 +254,18 @@ namespace UltraWinBar.Utilities
             // Modern Start (Win10/11) and Open Shell Menu both become foreground when they
             // open; classic Start (DV2ControlHost) does not reliably, so it stays on the
             // poller below.
-            if (className != "Windows.UI.Core.CoreWindow" && className != "OpenShell.CMenuContainer")
+            if (className == "Windows.UI.Core.CoreWindow")
+            {
+                // CoreWindow is shared by Search, Action Center, notification flyouts, the
+                // emoji/input panel, etc. Only treat it as Start opening if we caused this
+                // (Start button/ShowStartMenu already set _taskbarHwndActivated) or the
+                // immersive launcher itself reports visible (e.g. a bare Win-key press).
+                if (_taskbarHwndActivated == IntPtr.Zero && !isModernStartMenuOpen())
+                {
+                    return;
+                }
+            }
+            else if (className != "OpenShell.CMenuContainer")
             {
                 return;
             }
