@@ -80,18 +80,21 @@ namespace ManagedShell.WindowsTasks
             if ((mbi.Protect & PAGE_GUARD) != 0) return 0;
             if ((mbi.Protect & PAGE_READABLE) == 0) return 0;
 
-            long regionEnd = mbi.BaseAddress.ToInt64() + (long)mbi.RegionSize;
-            long available = regionEnd - address.ToInt64();
+            long regionEnd = Addr(mbi.BaseAddress) + (long)mbi.RegionSize;
+            long available = regionEnd - Addr(address);
             if (available <= 0) return 0;
 
             return (int)Math.Min(available, maxBytes);
         }
 
+        // Unsigned: ToInt64 sign-extends 32-bit addresses above 2 GB.
+        private static long Addr(IntPtr p) => unchecked((long)(ulong)(nuint)(nint)p);
+
         private static bool FitsInRegion(IntPtr address, int size, MEMORY_BASIC_INFORMATION mbi)
         {
-            long regionStart = mbi.BaseAddress.ToInt64();
+            long regionStart = Addr(mbi.BaseAddress);
             long regionEnd = regionStart + (long)mbi.RegionSize;
-            long rangeStart = address.ToInt64();
+            long rangeStart = Addr(address);
             long rangeEnd = rangeStart + size;
             return rangeStart >= regionStart && rangeEnd <= regionEnd;
         }
