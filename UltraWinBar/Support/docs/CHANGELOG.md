@@ -4,6 +4,9 @@
 
 ### Changed
 
+- The taskbar list's per-window, per-panel edge filter no longer rebuilds the
+  enabled-edges list or rescans every saved taskbar assignment on each refresh;
+  both are cached and only invalidated when the settings they depend on change.
 - Application and legacy window identifiers used for task pins, order and panel
   assignments are cached per window instead of rebuilt on every call; the cache
   refreshes when the source values change (for example a UWP window's

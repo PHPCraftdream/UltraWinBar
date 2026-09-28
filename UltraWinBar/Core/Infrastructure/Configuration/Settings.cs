@@ -66,6 +66,7 @@ namespace UltraWinBar.Utilities
 
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = "")
         {
+            InvalidateEdgeCaches(propertyName);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 

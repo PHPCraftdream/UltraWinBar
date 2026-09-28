@@ -83,7 +83,7 @@ namespace UltraWinBar.Utilities
             string appId = GetIdentifier(window, TaskAssignmentMode.ExecutablePath);
 
             Guid desktop = VirtualDesktopContext.Instance?.DesktopForWindowCached(window.Handle) ?? Guid.Empty;
-            return ResolveEdge(Settings.Instance.TaskbarAssignments, desktop, windowId, legacyWindowId, appId);
+            return ResolveEdgeIndexed(Settings.Instance.TaskbarAssignments, desktop, windowId, legacyWindowId, appId);
         }
 
         public static AppBarEdge? ResolveEdge(IEnumerable<TaskbarAssignment> assignments, Guid desktop, string windowId, string appId)
@@ -100,20 +100,102 @@ namespace UltraWinBar.Utilities
 
             foreach (var assignment in assignments)
             {
-                if (assignment.DesktopId != desktop && assignment.DesktopId != Guid.Empty) continue;
-                int scopeScore = assignment.DesktopId == desktop ? 4 : 0;
-                if (assignment.Mode == TaskAssignmentMode.WindowClassAndTitle && windowId != null && assignment.Identifier == windowId)
+                ApplyCandidate(assignment, desktop, windowId, legacyWindowId, appId, ref bestScore, ref edge);
+            }
+
+            return edge;
+        }
+
+        /// <summary>
+        /// Scores one assignment against the three candidate identifiers and, if it's the new
+        /// best match, updates bestScore/edge. Shared by the linear ResolveEdge (used directly
+        /// by tests) and the indexed lookup below, so both apply identical desktop/mode/score
+        /// semantics.
+        /// </summary>
+        private static void ApplyCandidate(TaskbarAssignment assignment, Guid desktop, string windowId, string legacyWindowId, string appId,
+            ref int bestScore, ref AppBarEdge? edge)
+        {
+            if (assignment.DesktopId != desktop && assignment.DesktopId != Guid.Empty) return;
+            int scopeScore = assignment.DesktopId == desktop ? 4 : 0;
+            if (assignment.Mode == TaskAssignmentMode.WindowClassAndTitle && windowId != null && assignment.Identifier == windowId)
+            {
+                if (scopeScore + 3 >= bestScore) { bestScore = scopeScore + 3; edge = assignment.Edge; }
+            }
+            else if (assignment.Mode == TaskAssignmentMode.WindowClassAndTitle && legacyWindowId != null && assignment.Identifier == legacyWindowId)
+            {
+                if (scopeScore + 2 >= bestScore) { bestScore = scopeScore + 2; edge = assignment.Edge; }
+            }
+            else if (assignment.Mode == TaskAssignmentMode.ExecutablePath && appId != null && assignment.Identifier == appId)
+            {
+                if (scopeScore + 1 >= bestScore) { bestScore = scopeScore + 1; edge = assignment.Edge; }
+            }
+        }
+
+        // Groups a TaskbarAssignments list by Identifier, preserving each identifier's original
+        // relative order, so GetAssignedEdge only has to look at the 1-3 candidate identifiers
+        // instead of scanning every assignment. Keyed by the List<TaskbarAssignment> instance
+        // itself: Settings always replaces that list wholesale on any change (see
+        // Settings.TaskbarAssignments/PruneDeadTaskbarAssignments), so a stale index is never
+        // reused for changed content, and the entry is collected once the list is replaced.
+        private static readonly ConditionalWeakTable<List<TaskbarAssignment>, Dictionary<string, List<(int Index, TaskbarAssignment Assignment)>>> assignmentIndexes = new();
+
+        private static Dictionary<string, List<(int Index, TaskbarAssignment Assignment)>> GetAssignmentIndex(List<TaskbarAssignment> assignments)
+        {
+            return assignmentIndexes.GetValue(assignments, list =>
+            {
+                var index = new Dictionary<string, List<(int Index, TaskbarAssignment Assignment)>>(StringComparer.Ordinal);
+                for (int i = 0; i < list.Count; i++)
                 {
-                    if (scopeScore + 3 >= bestScore) { bestScore = scopeScore + 3; edge = assignment.Edge; }
+                    string identifier = list[i].Identifier;
+                    if (identifier == null) continue;
+
+                    if (!index.TryGetValue(identifier, out var bucket))
+                    {
+                        bucket = new List<(int, TaskbarAssignment)>();
+                        index[identifier] = bucket;
+                    }
+
+                    bucket.Add((i, list[i]));
                 }
-                else if (assignment.Mode == TaskAssignmentMode.WindowClassAndTitle && legacyWindowId != null && assignment.Identifier == legacyWindowId)
+
+                return index;
+            });
+        }
+
+        /// <summary>
+        /// Same result as ResolveEdge(assignments, ...), but only visits assignments whose
+        /// Identifier matches one of the (up to 3) candidate identifiers, via a per-list index.
+        /// Candidates are folded in their original list order so ties resolve identically to the
+        /// linear scan (later entries win).
+        /// </summary>
+        private static AppBarEdge? ResolveEdgeIndexed(List<TaskbarAssignment> assignments, Guid desktop, string windowId, string legacyWindowId, string appId)
+        {
+            if (assignments == null || assignments.Count == 0) return null;
+
+            var index = GetAssignmentIndex(assignments);
+            Dictionary<int, TaskbarAssignment> candidates = null;
+
+            void Collect(string identifier)
+            {
+                if (identifier == null || !index.TryGetValue(identifier, out var bucket)) return;
+                candidates ??= new Dictionary<int, TaskbarAssignment>();
+                foreach (var (i, assignment) in bucket)
                 {
-                    if (scopeScore + 2 >= bestScore) { bestScore = scopeScore + 2; edge = assignment.Edge; }
+                    candidates[i] = assignment;
                 }
-                else if (assignment.Mode == TaskAssignmentMode.ExecutablePath && appId != null && assignment.Identifier == appId)
-                {
-                    if (scopeScore + 1 >= bestScore) { bestScore = scopeScore + 1; edge = assignment.Edge; }
-                }
+            }
+
+            Collect(windowId);
+            Collect(legacyWindowId);
+            Collect(appId);
+
+            if (candidates == null) return null;
+
+            AppBarEdge? edge = null;
+            int bestScore = 0;
+            foreach (int i in candidates.Keys.OrderBy(i => i))
+            {
+                ApplyCandidate(candidates[i], desktop, windowId, legacyWindowId, appId, ref bestScore, ref edge);
             }
 
             return edge;

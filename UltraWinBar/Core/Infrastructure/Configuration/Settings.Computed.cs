@@ -11,54 +11,107 @@ namespace UltraWinBar.Utilities
         #region Computed helpers
         // Read-only, so these are not written to UltraWinBar.settings.json.
 
+        // EnabledEdges/Resolved*Edge used to be recomputed (EnabledEdges allocating a fresh list)
+        // on every get, and Tasks_Filter reads them for every window x every panel on each list
+        // refresh. Cached here and invalidated from OnPropertyChanged (Settings.cs) whenever the
+        // inputs they depend on change, instead of via external subscriptions.
+        private List<AppBarEdge> _enabledEdgesCache;
+        private AppBarEdge? _resolvedTrayEdgeCache;
+        private AppBarEdge? _resolvedClockEdgeCache;
+        private AppBarEdge? _resolvedStartButtonEdgeCache;
+        private AppBarEdge? _resolvedLanguageEdgeCache;
+        private AppBarEdge? _resolvedDefaultTaskEdgeCache;
+
         /// <summary>
-        /// Every edge that should have a taskbar: the primary one plus any extras.
+        /// Invalidates the EnabledEdges/Resolved*Edge caches above when a property they're
+        /// derived from changes. Called from OnPropertyChanged for every property, so it must
+        /// stay cheap for the common case (no match).
+        /// </summary>
+        private void InvalidateEdgeCaches(string propertyName)
+        {
+            switch (propertyName)
+            {
+                case nameof(Edge):
+                case nameof(AdditionalEdges):
+                    _enabledEdgesCache = null;
+                    _resolvedTrayEdgeCache = null;
+                    _resolvedClockEdgeCache = null;
+                    _resolvedStartButtonEdgeCache = null;
+                    _resolvedLanguageEdgeCache = null;
+                    _resolvedDefaultTaskEdgeCache = null;
+                    break;
+                case nameof(TrayEdge):
+                    _resolvedTrayEdgeCache = null;
+                    break;
+                case nameof(ClockEdge):
+                    _resolvedClockEdgeCache = null;
+                    break;
+                case nameof(StartButtonEdge):
+                    _resolvedStartButtonEdgeCache = null;
+                    break;
+                case nameof(LanguageEdge):
+                    _resolvedLanguageEdgeCache = null;
+                    break;
+                case nameof(DefaultTaskEdge):
+                    _resolvedDefaultTaskEdgeCache = null;
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Every edge that should have a taskbar: the primary one plus any extras. The returned
+        /// list is cached and shared, so it's exposed read-only — callers must not mutate it.
         /// </summary>
         // System.Text.Json serializes read-only collection properties regardless of
         // IgnoreReadOnlyProperties, so this needs an explicit opt-out.
         [JsonIgnore]
-        public List<AppBarEdge> EnabledEdges
+        public IReadOnlyList<AppBarEdge> EnabledEdges
         {
             get
             {
-                List<AppBarEdge> edges = [Edge];
-
-                foreach (AppBarEdge edge in AdditionalEdges)
+                if (_enabledEdgesCache == null)
                 {
-                    if (!edges.Contains(edge))
+                    List<AppBarEdge> edges = [Edge];
+
+                    foreach (AppBarEdge edge in AdditionalEdges)
                     {
-                        edges.Add(edge);
+                        if (!edges.Contains(edge))
+                        {
+                            edges.Add(edge);
+                        }
                     }
+
+                    _enabledEdgesCache = edges;
                 }
 
-                return edges;
+                return _enabledEdgesCache;
             }
         }
 
         /// <summary>
         /// TrayEdge, falling back to the primary edge if that taskbar isn't open.
         /// </summary>
-        public AppBarEdge ResolvedTrayEdge => EnabledEdges.Contains(TrayEdge) ? TrayEdge : Edge;
+        public AppBarEdge ResolvedTrayEdge => _resolvedTrayEdgeCache ??= EnabledEdges.Contains(TrayEdge) ? TrayEdge : Edge;
 
         /// <summary>
         /// ClockEdge, falling back to the primary edge if that taskbar isn't open.
         /// </summary>
-        public AppBarEdge ResolvedClockEdge => EnabledEdges.Contains(ClockEdge) ? ClockEdge : Edge;
+        public AppBarEdge ResolvedClockEdge => _resolvedClockEdgeCache ??= EnabledEdges.Contains(ClockEdge) ? ClockEdge : Edge;
 
         /// <summary>
         /// StartButtonEdge, falling back to the primary edge if that taskbar isn't open.
         /// </summary>
-        public AppBarEdge ResolvedStartButtonEdge => EnabledEdges.Contains(StartButtonEdge) ? StartButtonEdge : Edge;
+        public AppBarEdge ResolvedStartButtonEdge => _resolvedStartButtonEdgeCache ??= EnabledEdges.Contains(StartButtonEdge) ? StartButtonEdge : Edge;
 
         /// <summary>
         /// LanguageEdge, falling back to the primary edge if that taskbar isn't open.
         /// </summary>
-        public AppBarEdge ResolvedLanguageEdge => EnabledEdges.Contains(LanguageEdge) ? LanguageEdge : Edge;
+        public AppBarEdge ResolvedLanguageEdge => _resolvedLanguageEdgeCache ??= EnabledEdges.Contains(LanguageEdge) ? LanguageEdge : Edge;
 
         /// <summary>
         /// DefaultTaskEdge, falling back to the primary edge if that taskbar isn't open.
         /// </summary>
-        public AppBarEdge ResolvedDefaultTaskEdge => EnabledEdges.Contains(DefaultTaskEdge) ? DefaultTaskEdge : Edge;
+        public AppBarEdge ResolvedDefaultTaskEdge => _resolvedDefaultTaskEdgeCache ??= EnabledEdges.Contains(DefaultTaskEdge) ? DefaultTaskEdge : Edge;
 
         /// <summary>
         /// The order taskbars should register with the OS AppBar API on each screen.
@@ -71,7 +124,7 @@ namespace UltraWinBar.Utilities
         {
             get
             {
-                List<AppBarEdge> enabled = EnabledEdges;
+                IReadOnlyList<AppBarEdge> enabled = EnabledEdges;
                 List<AppBarEdge> order = [];
 
                 foreach (AppBarEdge edge in EdgePriority)
