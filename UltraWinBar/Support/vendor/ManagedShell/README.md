@@ -57,3 +57,8 @@ not changed; every local modification is listed below and marked in code with `U
   checked before use (a failed `OpenProcess` no longer sends `TB_GETBUTTON` with a null remote
   pointer); the per-item `AllocHGlobal` blocks and `VirtualFreeEx`/`CloseHandle` are released in
   `finally` instead of leaking on early return or an exception.
+- `ImmersiveShellHelper`: added `Reset()`, called by the app on `TaskbarCreated`, to drop the
+  static `_immersiveShell`/experience-manager caches that otherwise stay dead forever after an
+  Explorer restart; calls on a cached manager that fail with a severed-proxy HRESULT now reset and
+  retry once. Raw `GetExperienceManager`/`QueryInterface` pointers are released in `finally`, and
+  `WindowsDeleteString` now runs in `finally` even if `GetExperienceManager` throws.

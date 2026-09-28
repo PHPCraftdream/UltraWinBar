@@ -1,4 +1,4 @@
-﻿using ManagedShell.Common.Helpers;
+using ManagedShell.Common.Helpers;
 using ManagedShell.Common.Logging;
 using ManagedShell.UWPInterop.Interfaces;
 using System;
@@ -17,6 +17,16 @@ namespace ManagedShell.UWPInterop
         private static Guid IID_TrayClockFlyoutExperienceManager = new Guid("b1604325-6b59-427b-bf1b-80a2db02d3d8");
         private static Guid IID_TrayMtcUvcFlyoutExperienceManager = new Guid("7154c95d-c519-49bd-a97e-645bbfabe111");
 
+        // Explorer-hosted proxies: RPC_E_DISCONNECTED, RPC_S_SERVER_UNAVAILABLE, CO_E_OBJNOTCONNECTED,
+        // RPC_E_SERVER_DIED, RPC_E_SERVER_DIED_DNE all mean the server side (explorer.exe) is gone.
+        private const int RPC_E_DISCONNECTED = unchecked((int)0x80010108);
+        private const int RPC_S_SERVER_UNAVAILABLE = unchecked((int)0x800706BA);
+        private const int CO_E_OBJNOTCONNECTED = unchecked((int)0x800401FD);
+        private const int RPC_E_SERVER_DIED = unchecked((int)0x80010007);
+        private const int RPC_E_SERVER_DIED_DNE = unchecked((int)0x80010012);
+
+        private static readonly object _gate = new object();
+
         private static Interfaces.IServiceProvider _immersiveShell;
         private static IShellExperienceManagerFactory _shellExperienceManagerFactory;
         private static IActionCenterExperienceManager _actionCenterExperienceManager;
@@ -26,6 +36,78 @@ namespace ManagedShell.UWPInterop
         private static ITrayBatteryFlyoutExperienceManager _trayBatteryFlyoutExperienceManager;
         private static ITrayClockFlyoutExperienceManager _trayClockFlyoutExperienceManager;
         private static ITrayMtcUvcFlyoutExperienceManager _trayMtcUvcFlyoutExperienceManager;
+
+        // Drops every cached Explorer-hosted COM object. Call after explorer.exe restarts, since the
+        // old proxies are permanently dead; the next use recreates them lazily. Idempotent.
+        public static void Reset()
+        {
+            lock (_gate)
+            {
+                Release(ref _trayMtcUvcFlyoutExperienceManager);
+                Release(ref _trayClockFlyoutExperienceManager);
+                Release(ref _trayBatteryFlyoutExperienceManager);
+                Release(ref _networkFlyoutExperienceManager_20H1);
+                Release(ref _networkFlyoutExperienceManager);
+                Release(ref _controlCenterExperienceManager);
+                Release(ref _actionCenterExperienceManager);
+                Release(ref _shellExperienceManagerFactory);
+                Release(ref _immersiveShell);
+            }
+        }
+
+        // Clears a cached field and releases its RCW; safe on an already-null field.
+        private static void Release<T>(ref T comObject) where T : class
+        {
+            T stale = comObject;
+            comObject = null;
+            if (stale == null) return;
+
+            try
+            {
+                if (Marshal.IsComObject(stale))
+                {
+                    Marshal.FinalReleaseComObject(stale);
+                }
+            }
+            catch (Exception ex)
+            {
+                ShellLogger.Warning($"ImmersiveShell: Unable to release {typeof(T).Name}: {ex.Message}");
+            }
+        }
+
+        private static bool IsDisconnected(int hr) =>
+            hr == RPC_E_DISCONNECTED || hr == RPC_S_SERVER_UNAVAILABLE || hr == CO_E_OBJNOTCONNECTED ||
+            hr == RPC_E_SERVER_DIED || hr == RPC_E_SERVER_DIED_DNE;
+
+        private static bool IsDisconnected(Exception ex) =>
+            ex is InvalidComObjectException || (ex is COMException && IsDisconnected(ex.HResult));
+
+        // Runs a call against a cached Explorer-hosted object; on a severed proxy, drops every
+        // cache and retries once so callers stay simple (no per-call-site reset/retry logic).
+        private static void InvokeWithDisconnectRetry(string opName, Action action)
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception ex) when (IsDisconnected(ex))
+            {
+                ShellLogger.Warning($"ImmersiveShell: {opName} found a severed Explorer proxy ({ex.Message}); resetting and retrying.");
+                Reset();
+                try
+                {
+                    action();
+                }
+                catch (Exception ex2)
+                {
+                    ShellLogger.Warning($"ImmersiveShell: {opName} failed after reset: {ex2}");
+                }
+            }
+            catch (Exception ex)
+            {
+                ShellLogger.Warning($"ImmersiveShell: {opName} failed: {ex}");
+            }
+        }
 
         public static void AllowExplorerFocus()
         {
@@ -93,9 +175,9 @@ namespace ManagedShell.UWPInterop
             _shellExperienceManagerFactory ??= GetShellExperienceManagerFactory();
             if (_shellExperienceManagerFactory == null) return IntPtr.Zero;
 
+            IntPtr hString = IntPtr.Zero;
             try
             {
-                IntPtr hString = IntPtr.Zero;
                 if (NativeMethods.WindowsCreateString(experienceManager, experienceManager.Length, ref hString) != 0)
                 {
                     ShellLogger.Warning("ImmersiveShell: Unable to create experience manager string");
@@ -103,7 +185,6 @@ namespace ManagedShell.UWPInterop
                 }
 
                 _shellExperienceManagerFactory.GetExperienceManager(hString, out IntPtr pExperienceManagerInterface);
-                NativeMethods.WindowsDeleteString(hString);
                 return pExperienceManagerInterface;
             }
             catch (Exception ex)
@@ -111,6 +192,42 @@ namespace ManagedShell.UWPInterop
                 ShellLogger.Warning($"ImmersiveShell: Unable to create experience manager: {ex}");
                 return IntPtr.Zero;
             }
+            finally
+            {
+                // Must run even if GetExperienceManager threw, or the HSTRING leaks.
+                if (hString != IntPtr.Zero) NativeMethods.WindowsDeleteString(hString);
+            }
+        }
+
+        // Queries iid off the factory-created experience manager and wraps it as T, releasing both
+        // raw COM references (the factory's pp and QueryInterface's out) so only the returned RCW
+        // holds a reference.
+        private static T QueryExperienceManager<T>(string experienceManagerName, ref Guid iid, string typeName) where T : class
+        {
+            IntPtr pExperienceManagerInterface = IntPtr.Zero;
+            IntPtr pManager = IntPtr.Zero;
+            try
+            {
+                pExperienceManagerInterface = GetExperienceManagerFromFactory(experienceManagerName);
+                if (pExperienceManagerInterface == IntPtr.Zero) return null;
+
+                if (Marshal.QueryInterface(pExperienceManagerInterface, ref iid, out pManager) == 0)
+                {
+                    return (T)Marshal.GetObjectForIUnknown(pManager);
+                }
+
+                ShellLogger.Warning($"ImmersiveShell: Unable to query {typeName}");
+            }
+            catch (Exception ex)
+            {
+                ShellLogger.Warning($"ImmersiveShell: Unable to get {typeName}: {ex}");
+            }
+            finally
+            {
+                if (pExperienceManagerInterface != IntPtr.Zero) Marshal.Release(pExperienceManagerInterface);
+                if (pManager != IntPtr.Zero) Marshal.Release(pManager);
+            }
+            return null;
         }
 
         public static IActionCenterExperienceManager GetActionCenterExperienceManager()
@@ -121,23 +238,8 @@ namespace ManagedShell.UWPInterop
                 return null;
             }
 
-            try
-            {
-                IntPtr pExperienceManagerInterface = GetExperienceManagerFromFactory("Windows.Internal.ShellExperience.ActionCenter");
-                if (pExperienceManagerInterface == IntPtr.Zero) return null;
-
-                if (Marshal.QueryInterface(pExperienceManagerInterface, ref IID_ActionCenterExperienceManager, out IntPtr pActionCenterManager) == 0)
-                {
-                    return (IActionCenterExperienceManager)Marshal.GetObjectForIUnknown(pActionCenterManager);
-                }
-
-                ShellLogger.Warning("ImmersiveShell: Unable to query IActionCenterExperienceManager");
-            }
-            catch (Exception ex)
-            {
-                ShellLogger.Warning($"ImmersiveShell: Unable to get IActionCenterExperienceManager: {ex}");
-            }
-            return null;
+            return QueryExperienceManager<IActionCenterExperienceManager>(
+                "Windows.Internal.ShellExperience.ActionCenter", ref IID_ActionCenterExperienceManager, nameof(IActionCenterExperienceManager));
         }
 
         public static IControlCenterExperienceManager GetControlCenterExperienceManager()
@@ -148,23 +250,8 @@ namespace ManagedShell.UWPInterop
                 return null;
             }
 
-            try
-            {
-                IntPtr pExperienceManagerInterface = GetExperienceManagerFromFactory("Windows.Internal.ShellExperience.ControlCenter");
-                if (pExperienceManagerInterface == IntPtr.Zero) return null;
-
-                if (Marshal.QueryInterface(pExperienceManagerInterface, ref IID_ControlCenterExperienceManager, out IntPtr pControlCenterManager) == 0)
-                {
-                    return (IControlCenterExperienceManager)Marshal.GetObjectForIUnknown(pControlCenterManager);
-                }
-
-                ShellLogger.Warning("ImmersiveShell: Unable to query IControlCenterExperienceManager");
-            }
-            catch (Exception ex)
-            {
-                ShellLogger.Warning($"ImmersiveShell: Unable to get IControlCenterExperienceManager: {ex}");
-            }
-            return null;
+            return QueryExperienceManager<IControlCenterExperienceManager>(
+                "Windows.Internal.ShellExperience.ControlCenter", ref IID_ControlCenterExperienceManager, nameof(IControlCenterExperienceManager));
         }
 
         internal static INetworkFlyoutExperienceManager GetNetworkExperienceManager()
@@ -175,23 +262,8 @@ namespace ManagedShell.UWPInterop
                 return null;
             }
 
-            try
-            {
-                IntPtr pExperienceManagerInterface = GetExperienceManagerFromFactory("Windows.Internal.ShellExperience.NetworkFlyout");
-                if (pExperienceManagerInterface == IntPtr.Zero) return null;
-
-                if (Marshal.QueryInterface(pExperienceManagerInterface, ref IID_NetworkFlyoutExperienceManager, out IntPtr pNetworkManager) == 0)
-                {
-                    return (INetworkFlyoutExperienceManager)Marshal.GetObjectForIUnknown(pNetworkManager);
-                }
-
-                ShellLogger.Warning("ImmersiveShell: Unable to query INetworkFlyoutExperienceManager");
-            }
-            catch (Exception ex)
-            {
-                ShellLogger.Warning($"ImmersiveShell: Unable to get INetworkFlyoutExperienceManager: {ex}");
-            }
-            return null;
+            return QueryExperienceManager<INetworkFlyoutExperienceManager>(
+                "Windows.Internal.ShellExperience.NetworkFlyout", ref IID_NetworkFlyoutExperienceManager, nameof(INetworkFlyoutExperienceManager));
         }
 
         internal static INetworkFlyoutExperienceManager_20H1 GetNetworkExperienceManager_20H1()
@@ -202,23 +274,8 @@ namespace ManagedShell.UWPInterop
                 return null;
             }
 
-            try
-            {
-                IntPtr pExperienceManagerInterface = GetExperienceManagerFromFactory("Windows.Internal.ShellExperience.NetworkFlyout");
-                if (pExperienceManagerInterface == IntPtr.Zero) return null;
-
-                if (Marshal.QueryInterface(pExperienceManagerInterface, ref IID_NetworkFlyoutExperienceManager_20H1, out IntPtr pNetworkManager) == 0)
-                {
-                    return (INetworkFlyoutExperienceManager_20H1)Marshal.GetObjectForIUnknown(pNetworkManager);
-                }
-
-                ShellLogger.Warning("ImmersiveShell: Unable to query INetworkFlyoutExperienceManager_20H1");
-            }
-            catch (Exception ex)
-            {
-                ShellLogger.Warning($"ImmersiveShell: Unable to get INetworkFlyoutExperienceManager_20H1: {ex}");
-            }
-            return null;
+            return QueryExperienceManager<INetworkFlyoutExperienceManager_20H1>(
+                "Windows.Internal.ShellExperience.NetworkFlyout", ref IID_NetworkFlyoutExperienceManager_20H1, nameof(INetworkFlyoutExperienceManager_20H1));
         }
 
         internal static ITrayBatteryFlyoutExperienceManager GetBatteryExperienceManager()
@@ -229,23 +286,8 @@ namespace ManagedShell.UWPInterop
                 return null;
             }
 
-            try
-            {
-                IntPtr pExperienceManagerInterface = GetExperienceManagerFromFactory("Windows.Internal.ShellExperience.TrayBatteryFlyout");
-                if (pExperienceManagerInterface == IntPtr.Zero) return null;
-
-                if (Marshal.QueryInterface(pExperienceManagerInterface, ref IID_TrayBatteryFlyoutExperienceManager, out IntPtr pBatteryManager) == 0)
-                {
-                    return (ITrayBatteryFlyoutExperienceManager)Marshal.GetObjectForIUnknown(pBatteryManager);
-                }
-
-                ShellLogger.Warning("ImmersiveShell: Unable to query ITrayBatteryFlyoutExperienceManager");
-            }
-            catch (Exception ex)
-            {
-                ShellLogger.Warning($"ImmersiveShell: Unable to get ITrayBatteryFlyoutExperienceManager: {ex}");
-            }
-            return null;
+            return QueryExperienceManager<ITrayBatteryFlyoutExperienceManager>(
+                "Windows.Internal.ShellExperience.TrayBatteryFlyout", ref IID_TrayBatteryFlyoutExperienceManager, nameof(ITrayBatteryFlyoutExperienceManager));
         }
 
         internal static ITrayClockFlyoutExperienceManager GetTrayClockFlyoutExperienceManager()
@@ -256,23 +298,8 @@ namespace ManagedShell.UWPInterop
                 return null;
             }
 
-            try
-            {
-                IntPtr pExperienceManagerInterface = GetExperienceManagerFromFactory("Windows.Internal.ShellExperience.TrayClockFlyout");
-                if (pExperienceManagerInterface == IntPtr.Zero) return null;
-
-                if (Marshal.QueryInterface(pExperienceManagerInterface, ref IID_TrayClockFlyoutExperienceManager, out IntPtr pClockFlyoutManager) == 0)
-                {
-                    return (ITrayClockFlyoutExperienceManager)Marshal.GetObjectForIUnknown(pClockFlyoutManager);
-                }
-
-                ShellLogger.Warning("ImmersiveShell: Unable to query ITrayClockFlyoutExperienceManager");
-            }
-            catch (Exception ex)
-            {
-                ShellLogger.Warning($"ImmersiveShell: Unable to get ITrayClockFlyoutExperienceManager: {ex}");
-            }
-            return null;
+            return QueryExperienceManager<ITrayClockFlyoutExperienceManager>(
+                "Windows.Internal.ShellExperience.TrayClockFlyout", ref IID_TrayClockFlyoutExperienceManager, nameof(ITrayClockFlyoutExperienceManager));
         }
 
         internal static ITrayMtcUvcFlyoutExperienceManager GetMtcUtcExperienceManager()
@@ -283,77 +310,46 @@ namespace ManagedShell.UWPInterop
                 return null;
             }
 
-            try
-            {
-                IntPtr pExperienceManagerInterface = GetExperienceManagerFromFactory("Windows.Internal.ShellExperience.MtcUvc");
-                if (pExperienceManagerInterface == IntPtr.Zero) return null;
-
-                if (Marshal.QueryInterface(pExperienceManagerInterface, ref IID_TrayMtcUvcFlyoutExperienceManager, out IntPtr pMtcUvcManager) == 0)
-                {
-                    return (ITrayMtcUvcFlyoutExperienceManager)Marshal.GetObjectForIUnknown(pMtcUvcManager);
-                }
-
-                ShellLogger.Warning("ImmersiveShell: Unable to query ITrayMtcUvcFlyoutExperienceManager");
-            }
-            catch (Exception ex)
-            {
-                ShellLogger.Warning($"ImmersiveShell: Unable to get ITrayMtcUvcFlyoutExperienceManager: {ex}");
-            }
-            return null;
+            return QueryExperienceManager<ITrayMtcUvcFlyoutExperienceManager>(
+                "Windows.Internal.ShellExperience.MtcUvc", ref IID_TrayMtcUvcFlyoutExperienceManager, nameof(ITrayMtcUvcFlyoutExperienceManager));
         }
         #endregion
 
         #region Experience manager helpers
         public static void ShowBatteryFlyout(Interop.NativeMethods.Rect anchorRect)
         {
-            _trayBatteryFlyoutExperienceManager ??= GetBatteryExperienceManager();
             AllowExplorerFocus();
-
-            try
+            InvokeWithDisconnectRetry("show battery flyout", () =>
             {
+                _trayBatteryFlyoutExperienceManager ??= GetBatteryExperienceManager();
                 _trayBatteryFlyoutExperienceManager?.ShowFlyout(new Windows.Foundation.Rect(anchorRect.Left, anchorRect.Top, anchorRect.Width, anchorRect.Height));
-            }
-            catch (Exception ex)
-            {
-                ShellLogger.Warning($"ImmersiveShell: Unable to show battery flyout: {ex}");
-            }
+            });
         }
 
         public static void ShowClockFlyout(Interop.NativeMethods.Rect anchorRect)
         {
-            _trayClockFlyoutExperienceManager ??= GetTrayClockFlyoutExperienceManager();
             AllowExplorerFocus();
-
-            try
+            InvokeWithDisconnectRetry("show clock flyout", () =>
             {
+                _trayClockFlyoutExperienceManager ??= GetTrayClockFlyoutExperienceManager();
                 _trayClockFlyoutExperienceManager?.ShowFlyout(new Windows.Foundation.Rect(anchorRect.Left, anchorRect.Top, anchorRect.Width, anchorRect.Height));
-            }
-            catch (Exception ex)
-            {
-                ShellLogger.Warning($"ImmersiveShell: Unable to show clock flyout: {ex}");
-            }
+            });
         }
 
         public static void ShowSoundFlyout(Interop.NativeMethods.Rect anchorRect)
         {
-            _trayMtcUvcFlyoutExperienceManager ??= GetMtcUtcExperienceManager();
             AllowExplorerFocus();
-
-            try
+            InvokeWithDisconnectRetry("show sound flyout", () =>
             {
+                _trayMtcUvcFlyoutExperienceManager ??= GetMtcUtcExperienceManager();
                 _trayMtcUvcFlyoutExperienceManager?.ShowFlyout(new Windows.Foundation.Rect(anchorRect.Left, anchorRect.Top, anchorRect.Width, anchorRect.Height));
-            }
-            catch (Exception ex)
-            {
-                ShellLogger.Warning($"ImmersiveShell: Unable to show sound flyout: {ex}");
-            }
+            });
         }
 
         public static void ShowNetworkFlyout(Interop.NativeMethods.Rect anchorRect)
         {
             AllowExplorerFocus();
-
-            try
+            InvokeWithDisconnectRetry("show network flyout", () =>
             {
                 if (EnvironmentHelper.IsWindows1020H1OrBetter)
                 {
@@ -365,41 +361,27 @@ namespace ManagedShell.UWPInterop
                     _networkFlyoutExperienceManager ??= GetNetworkExperienceManager();
                     _networkFlyoutExperienceManager?.ShowFlyout(new Windows.Foundation.Rect(anchorRect.Left, anchorRect.Top, anchorRect.Width, anchorRect.Height));
                 }
-            }
-            catch (Exception ex)
-            {
-                ShellLogger.Warning($"ImmersiveShell: Unable to show network flyout: {ex}");
-            }
+            });
         }
 
         public static void ShowActionCenter()
         {
-            _actionCenterExperienceManager ??= GetActionCenterExperienceManager();
             AllowExplorerFocus();
-
-            try
+            InvokeWithDisconnectRetry("show action center", () =>
             {
+                _actionCenterExperienceManager ??= GetActionCenterExperienceManager();
                 _actionCenterExperienceManager?.HotKeyInvoked(0);
-            }
-            catch (Exception ex)
-            {
-                ShellLogger.Warning($"ImmersiveShell: Unable to show action center: {ex}");
-            }
+            });
         }
 
         public static void ShowControlCenter()
         {
-            _controlCenterExperienceManager ??= GetControlCenterExperienceManager();
             AllowExplorerFocus();
-
-            try
+            InvokeWithDisconnectRetry("show control center", () =>
             {
+                _controlCenterExperienceManager ??= GetControlCenterExperienceManager();
                 _controlCenterExperienceManager?.HotKeyInvoked(0);
-            }
-            catch (Exception ex)
-            {
-                ShellLogger.Warning($"ImmersiveShell: Unable to show control center: {ex}");
-            }
+            });
         }
         #endregion
     }
