@@ -70,3 +70,27 @@ not changed; every local modification is listed below and marked in code with `U
   whole uptime and concurrent `Debug`/`Info`/... calls can't corrupt it. `OnLog` invokes each
   attached observer independently, so one throwing observer no longer stops the rest or escapes
   into the caller.
+- `TasksService.Dispose`/`Initialize`: `cloakEventHook`/`moveEventHook` (and `_HookWin`) are zeroed
+  on `Dispose`, so a following `Initialize` (e.g. `ExplorerMonitor` on `TaskbarCreated`) reinstalls
+  them instead of finding a stale non-zero handle and skipping the hook. A failed `Initialize` rolls
+  back only what that attempt installed, so a retry does not create a second hook window and
+  double-process shell hook messages.
+- `TasksService`: removed `Debugger.Break()` from `ShellWinProc`'s catch (logs instead);
+  `CloakEventCallback`/`MoveEventCallback` (WinEvent callbacks that run our code, including COM
+  calls, via `PropertyChanged`) are now wrapped in `try`/`catch`; `getInitialWindows`'s `EnumWindows`
+  callback only collects handles, adding to `Windows` (and its `CollectionChanged` handlers/filters)
+  after `EnumWindows` returns.
+- `TasksService.ShellWinProc` (`HSHELL_GETMINRECT`) and `ApplicationWindow.SetOverlayIconDescription`:
+  `lParam`/`SHLockShared` results are pointers from an arbitrary process in the session, not
+  marshaled by the system. A new `MemorySafety` helper validates a pointer with `VirtualQuery`
+  (committed, read/write, not `PAGE_GUARD`/`PAGE_NOACCESS`, whole struct inside the region) before
+  `GETMINRECT` reads/writes `SHELLHOOKINFO`; the overlay description is read with a bounded length
+  (`ApplicationWindow.ReadBoundedString`, capped at 260 chars) instead of an unbounded
+  `PtrToStringAuto`.
+- `TasksService.windowsProperty`: `DependencyProperty.Register` moved from an instance field to a
+  static readonly registration (a second `TasksService` used to throw); the default value is no
+  longer a shared `ObservableCollection` — each instance creates its own in its constructor.
+- `ApplicationWindow`: icon loading resets `_iconLoading` in a `finally`, so a throwing lookup no
+  longer sticks the icon at "loading" forever; `PropertyChanged` is raised on the owner thread's
+  `Dispatcher` (captured at construction) instead of the icon-loading STA thread, and fires
+  synchronously when there is none (e.g. tests).
