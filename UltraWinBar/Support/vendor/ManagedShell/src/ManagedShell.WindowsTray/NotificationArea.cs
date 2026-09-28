@@ -31,6 +31,13 @@ namespace ManagedShell.WindowsTray
             VOLUME_GUID
         };
 
+        // R9-N: parsed once instead of re-parsing the GUID string on every tray message.
+        private static readonly Guid VolumeGuid = new Guid(VOLUME_GUID);
+        private static readonly Guid HealthGuid = new Guid(HEALTH_GUID);
+        private static readonly Guid MeetNowGuid = new Guid(MEETNOW_GUID);
+        private static readonly Guid NetworkGuid = new Guid(NETWORK_GUID);
+        private static readonly Guid PowerGuid = new Guid(POWER_GUID);
+
         internal static readonly List<string> Win11ActionCenterIcons = EnvironmentHelper.IsWindows1122H2OrBetter ? new List<string>()
         {
             // In 22H2, the network and power flyouts work again
@@ -258,7 +265,7 @@ namespace ManagedShell.WindowsTray
                 else if (dwMessage == 2)
                     return MakeLParamIntPtr(icon.Placement.Right, icon.Placement.Bottom);
             }
-            else if (guidItem == new Guid(VOLUME_GUID))
+            else if (guidItem == VolumeGuid)
             {
                 // If the shell is using sndvol32 as a volume control, it won't have a corresponding
                 // tray icon in Windows 10+, but it still requests the icon location. Provide the tray.
@@ -271,14 +278,41 @@ namespace ManagedShell.WindowsTray
             return IntPtr.Zero;
         }
 
+        // R9-N: look up an existing icon before allocating; a new NotifyIcon (and its
+        // MissedNotifications collection) is only constructed for a genuinely new icon.
+        private NotifyIcon FindIcon(SafeNotifyIconData nicData)
+        {
+            foreach (NotifyIcon ti in TrayIcons)
+            {
+                if (ti.Equals(nicData))
+                {
+                    return ti;
+                }
+            }
+
+            return null;
+        }
+
+        // Matches the pre-R9-N lookup used for NIM_DELETE: hWnd+UID only (the temporary NotifyIcon
+        // built there never had GUID set from nicData, so GUID-based matching never applied).
+        private NotifyIcon FindIconByHandle(IntPtr hWnd, uint uid)
+        {
+            foreach (NotifyIcon ti in TrayIcons)
+            {
+                if (ti.HWnd.Equals(hWnd) && ti.UID.Equals(uid))
+                {
+                    return ti;
+                }
+            }
+
+            return null;
+        }
+
         private bool SysTrayCallback(uint message, SafeNotifyIconData nicData)
         {
             // We always need hWnd for new icons, or for existing icons if no GUID is present
             if (nicData.hWnd == IntPtr.Zero && (nicData.guidItem == Guid.Empty || (NIM)message == NIM.NIM_ADD))
                 return false;
-
-            NotifyIcon trayIcon = new NotifyIcon(this, nicData.hWnd);
-            trayIcon.UID = nicData.uID;
 
             lock (_lockObject)
             {
@@ -286,28 +320,29 @@ namespace ManagedShell.WindowsTray
                 {
                     try
                     {
-                        bool exists = false;
                         bool titleChanged = false;
 
                         // hide icons while we are shell which require UWP support & we have a separate implementation for
-                        if (nicData.guidItem == new Guid(VOLUME_GUID) && ((EnvironmentHelper.IsAppRunningAsShell && EnvironmentHelper.IsWindows10OrBetter) || GroupPolicyHelper.HideScaVolume))
+                        if (nicData.guidItem == VolumeGuid && ((EnvironmentHelper.IsAppRunningAsShell && EnvironmentHelper.IsWindows10OrBetter) || GroupPolicyHelper.HideScaVolume))
                             return false;
 
                         // hide icons per group policy
-                        if ((nicData.guidItem == new Guid(HEALTH_GUID) && GroupPolicyHelper.HideScaHealth) ||
-                            (nicData.guidItem == new Guid(MEETNOW_GUID) && GroupPolicyHelper.HideScaMeetNow) ||
-                            (nicData.guidItem == new Guid(NETWORK_GUID) && GroupPolicyHelper.HideScaNetwork) ||
-                            (nicData.guidItem == new Guid(POWER_GUID) && GroupPolicyHelper.HideScaPower))
+                        if ((nicData.guidItem == HealthGuid && GroupPolicyHelper.HideScaHealth) ||
+                            (nicData.guidItem == MeetNowGuid && GroupPolicyHelper.HideScaMeetNow) ||
+                            (nicData.guidItem == NetworkGuid && GroupPolicyHelper.HideScaNetwork) ||
+                            (nicData.guidItem == PowerGuid && GroupPolicyHelper.HideScaPower))
                             return false;
 
-                        foreach (NotifyIcon ti in TrayIcons)
+                        NotifyIcon trayIcon = FindIcon(nicData);
+                        bool exists = trayIcon != null;
+
+                        if (!exists)
                         {
-                            if (ti.Equals(nicData))
-                            {
-                                exists = true;
-                                trayIcon = ti;
-                                break;
-                            }
+                            // we need a valid hWnd to add a new icon
+                            if (nicData.hWnd == IntPtr.Zero)
+                                return false;
+
+                            trayIcon = new NotifyIcon(this, nicData.hWnd) { UID = nicData.uID };
                         }
 
                         if ((NIF.STATE & nicData.uFlags) != 0)
@@ -408,16 +443,14 @@ namespace ManagedShell.WindowsTray
                 {
                     try
                     {
-                        foreach (var icon in TrayIcons)
+                        NotifyIcon icon = FindIconByHandle(nicData.hWnd, nicData.uID);
+                        if (icon != null)
                         {
-                            if (icon.Equals(trayIcon))
-                            {
-                                TrayIcons.Remove(trayIcon);
+                            TrayIcons.Remove(icon);
 
-                                ShellLogger.Debug($"NotificationArea: Removed: {icon.Title}");
+                            ShellLogger.Debug($"NotificationArea: Removed: {icon.Title}");
 
-                                return true;
-                            }
+                            return true;
                         }
 
                         return false;
@@ -434,14 +467,11 @@ namespace ManagedShell.WindowsTray
                         return false;
                     }
 
-                    foreach (NotifyIcon ti in TrayIcons)
+                    NotifyIcon ti = FindIcon(nicData);
+                    if (ti != null)
                     {
-                        if (ti.Equals(nicData))
-                        {
-                            ti.Version = nicData.uVersion;
-                            ShellLogger.Debug($"NotificationArea: Modified version to {ti.Version} on: {ti.Title}");
-                            break;
-                        }
+                        ti.Version = nicData.uVersion;
+                        ShellLogger.Debug($"NotificationArea: Modified version to {ti.Version} on: {ti.Title}");
                     }
                 }
             }
