@@ -41,41 +41,77 @@ namespace UltraWinBar.Utilities
 
             using var mmf = MemoryMappedFile.CreateFromFile(shellTrayProcessPath, FileMode.Open, null, 0, MemoryMappedFileAccess.Read);
             using var stream = mmf.CreateViewStream(0, 0, MemoryMappedFileAccess.Read);
-            using var reader = new BinaryReader(stream);
-            byte[] data = reader.ReadBytes((int)stream.Length);
+            return ScanForLongestRun(stream);
+        }
 
-            var offsets = new List<int>();
-            for (int i = 0; i <= data.Length - 8; i += 8)
-            {
-                if (IsValidEntryAt(data, i))
-                    offsets.Add(i);
-            }
+        private const int ENTRY_SIZE = 8;
 
-            int bestStart = 0, bestCount = 0;
-            foreach (int start in offsets)
+        /// <summary>
+        /// Single forward pass over the stream in ENTRY_SIZE-aligned windows: O(N) time, and the
+        /// only bytes retained are those of the current and best candidate runs (not the whole
+        /// file). Replaces a full-file copy plus an O(K^2) List.Contains scan over candidate
+        /// offsets.
+        /// </summary>
+        internal static List<Entry> ScanForLongestRun(Stream stream)
+        {
+            const int WINDOW_ENTRIES = 8192; // 64 KiB read buffer, aligned to ENTRY_SIZE
+            byte[] buffer = new byte[ENTRY_SIZE * WINDOW_ENTRIES];
+
+            List<Entry> currentRun = new List<Entry>();
+            List<Entry> bestRun = new List<Entry>();
+
+            int read;
+            while ((read = ReadWindow(stream, buffer)) > 0)
             {
-                int count = 1;
-                while (offsets.Contains(start + count * 8)) count++;
-                if (count > bestCount)
+                for (int i = 0; i + ENTRY_SIZE <= read; i += ENTRY_SIZE)
                 {
-                    bestStart = start;
-                    bestCount = count;
+                    if (IsValidEntryAt(buffer, i))
+                    {
+                        currentRun.Add(new Entry
+                        {
+                            VirtualKey = buffer[i],
+                            Modifier = buffer[i + 4]
+                        });
+                    }
+                    else if (currentRun.Count > 0)
+                    {
+                        if (currentRun.Count > bestRun.Count)
+                        {
+                            (bestRun, currentRun) = (currentRun, bestRun);
+                        }
+
+                        currentRun.Clear();
+                    }
                 }
             }
 
-            var table = new List<Entry>(bestCount);
-            for (int i = 0; i < bestCount; i++)
+            if (currentRun.Count > bestRun.Count)
             {
-                int off = bestStart + i * 8;
-                table.Add(new Entry
-                {
-                    Id = i + 500, // Shell_TrayWnd hotkey IDs start at 500
-                    VirtualKey = data[off],
-                    Modifier = data[off + 4]
-                });
+                bestRun = currentRun;
             }
 
-            return table;
+            // Shell_TrayWnd hotkey IDs start at 500, contiguous regardless of where the run was found.
+            for (int i = 0; i < bestRun.Count; i++)
+            {
+                Entry e = bestRun[i];
+                e.Id = i + 500;
+                bestRun[i] = e;
+            }
+
+            return bestRun;
+        }
+
+        // Fills buffer as much as the stream allows; may return less than buffer.Length only at EOF.
+        private static int ReadWindow(Stream stream, byte[] buffer)
+        {
+            int total = 0;
+            int read;
+            while (total < buffer.Length && (read = stream.Read(buffer, total, buffer.Length - total)) > 0)
+            {
+                total += read;
+            }
+
+            return total;
         }
 
         /// <summary>
@@ -86,7 +122,6 @@ namespace UltraWinBar.Utilities
         /// <returns>True if the bytes at offset match the hotkey entry pattern</returns>
         private static bool IsValidEntryAt(byte[] bytes, int offset)
         {
-            const int ENTRY_SIZE = 8;
             if (offset % ENTRY_SIZE != 0)
                 return false;
 
