@@ -23,6 +23,7 @@ internal static class NativeCallbackChecks
         CheckNativeCallbackEnumWindowsWrap();
         CheckInputHookHostSharesOneHookAcrossSubscribers();
         CheckInputHookHostMarshalsHookData();
+        CheckInputHookHostDeliversOnSubscriberThread();
         CheckRegistryValueWatchFiresReArmsAndDisposes();
     }
 
@@ -251,6 +252,46 @@ internal static class NativeCallbackChecks
             received.HookStruct.mouseData != sample.mouseData || received.HookStruct.time != 987654)
             throw new Exception("The hook callback did not marshal MSLLHOOKSTRUCT fields correctly.");
         Console.WriteLine("PASS: the hook callback marshals MSLLHOOKSTRUCT by value (Marshal.PtrToStructure<T>) without losing data.");
+    }
+
+    // Drag handlers touch WPF objects: events reach them on their own Dispatcher, not the hook thread;
+    // only onHookThread subscribers (synchronous swallow decisions) run inline.
+    private static void CheckInputHookHostDeliversOnSubscriberThread()
+    {
+        Dispatcher ownerDispatcher = null;
+        int ownerThreadId = 0, uiThreadId = -1, inlineThreadId = -1;
+        var ready = new ManualResetEventSlim(false);
+        var ownerThread = new Thread(() =>
+        {
+            ownerDispatcher = Dispatcher.CurrentDispatcher;
+            ownerThreadId = Environment.CurrentManagedThreadId;
+            ready.Set();
+            Dispatcher.Run();
+        });
+        ownerThread.SetApartmentState(ApartmentState.STA);
+        ownerThread.Start();
+        ready.Wait();
+        IDisposable ui = ownerDispatcher.Invoke(() => InputHookHost.SubscribeMouse("NativeCallbackChecks: ui subscriber",
+            (s, e) => uiThreadId = Environment.CurrentManagedThreadId));
+        IDisposable inline = InputHookHost.SubscribeMouse("NativeCallbackChecks: hook-thread subscriber",
+            (s, e) => inlineThreadId = Environment.CurrentManagedThreadId, onHookThread: true);
+        try
+        {
+            InputHookHost.Dispatch(null, new LowLevelMouseHook.LowLevelMouseEventArgs { Message = ManagedShell.Interop.NativeMethods.WM.MOUSEMOVE });
+            ownerDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
+            if (inlineThreadId != Environment.CurrentManagedThreadId)
+                throw new Exception("An onHookThread subscriber must run inline on the hook thread.");
+            if (uiThreadId != ownerThreadId)
+                throw new Exception("A UI subscriber must receive hook events on its own Dispatcher thread.");
+        }
+        finally
+        {
+            inline.Dispose();
+            ownerDispatcher.Invoke(ui.Dispose);
+            ownerDispatcher.InvokeShutdown();
+            ownerThread.Join();
+        }
+        Console.WriteLine("PASS: InputHookHost delivers mouse events on the subscriber's Dispatcher; only onHookThread subscribers run inline.");
     }
 
     // R9-L (K18, Н11): RegistryValueWatch replaces two copies that had drifted apart. Watches a

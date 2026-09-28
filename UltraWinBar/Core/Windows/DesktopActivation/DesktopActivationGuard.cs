@@ -87,7 +87,7 @@ namespace UltraWinBar.Utilities
             dispatcher = System.Windows.Application.Current.Dispatcher;
             try
             {
-                mouseSubscription = InputHookHost.SubscribeMouse("DesktopActivation mouse hook", OnMouseEvent);
+                mouseSubscription = InputHookHost.SubscribeMouse("DesktopActivation mouse hook", OnMouseEvent, onHookThread: true);
             }
             catch (Exception error)
             {
