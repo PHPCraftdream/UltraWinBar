@@ -20,7 +20,7 @@ namespace UltraWinBar
     public partial class Taskbar
     {
         #region Clock/tray drag between taskbars
-        private LowLevelMouseHook _elementDragHook;
+        private IDisposable _elementDragHookSubscription;
         private LowLevelMouseHook.POINT _elementDragStartScreenPos;
         private bool _isDraggingElement;
         private Action<AppBarEdge> _elementDragTarget;
@@ -44,7 +44,7 @@ namespace UltraWinBar
         // Observe the threshold without consuming ordinary clicks.
         private void StartElementDragHook(Action<AppBarEdge> onDroppedOnEdge, string glyph)
         {
-            if (Settings.Instance.EnabledEdges.Count < 2 || _elementDragHook != null)
+            if (Settings.Instance.EnabledEdges.Count < 2 || _elementDragHookSubscription != null)
             {
                 return;
             }
@@ -59,9 +59,16 @@ namespace UltraWinBar
             };
             _isDraggingElement = false;
 
-            _elementDragHook = new LowLevelMouseHook();
-            _elementDragHook.LowLevelMouseEvent += ElementDragHook_LowLevelMouseEvent;
-            if (!_elementDragHook.Initialize()) StopElementDragHook();
+            // R9-L: shared dedicated hook thread instead of a UI-thread hook for this drag (review Н14).
+            try
+            {
+                _elementDragHookSubscription = InputHookHost.SubscribeMouse("Taskbar element drag", ElementDragHook_LowLevelMouseEvent);
+            }
+            catch (Exception error)
+            {
+                ShellLogger.Warning($"Panel element drag hook could not be initialized: {error.Message}");
+                StopElementDragHook();
+            }
         }
 
         private void ElementDragHook_LowLevelMouseEvent(object sender, LowLevelMouseHook.LowLevelMouseEventArgs e)
@@ -100,14 +107,13 @@ namespace UltraWinBar
 
         private void StopElementDragHook()
         {
-            if (_elementDragHook == null)
+            if (_elementDragHookSubscription == null)
             {
                 return;
             }
 
-            _elementDragHook.LowLevelMouseEvent -= ElementDragHook_LowLevelMouseEvent;
-            _elementDragHook.Dispose();
-            _elementDragHook = null;
+            _elementDragHookSubscription.Dispose();
+            _elementDragHookSubscription = null;
             _isDraggingElement = false;
             _elementDragTarget = null;
         }

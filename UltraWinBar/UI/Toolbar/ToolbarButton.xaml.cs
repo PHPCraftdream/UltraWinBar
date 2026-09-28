@@ -1,6 +1,7 @@
 ﻿using ManagedShell.ShellFolders;
 using UltraWinBar.Utilities;
 using ManagedShell.Common.Logging;
+using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,7 +15,7 @@ namespace UltraWinBar.Controls
     /// </summary>
     public partial class ToolbarButton : UserControl
     {
-        private LowLevelMouseHook _dragHook;
+        private IDisposable _dragHookSubscription;
         private LowLevelMouseHook.POINT _dragStartScreenPos;
         private bool _isDraggingToTaskbar;
         private Taskbar _sourceTaskbar;
@@ -52,7 +53,7 @@ namespace UltraWinBar.Controls
         #region Drag (reorder within panel, or move to another taskbar)
         private void ToolbarButton_OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (_dragHook != null)
+            if (_dragHookSubscription != null)
             {
                 return;
             }
@@ -67,11 +68,14 @@ namespace UltraWinBar.Controls
             };
             _isDraggingToTaskbar = false;
 
-            _dragHook = new LowLevelMouseHook();
-            _dragHook.LowLevelMouseEvent += DragHook_LowLevelMouseEvent;
-            if (!_dragHook.Initialize())
+            // R9-L: shared dedicated hook thread instead of a UI-thread hook for this drag (review Н14).
+            try
             {
-                ShellLogger.Warning("Toolbar drag hook could not be initialized.");
+                _dragHookSubscription = InputHookHost.SubscribeMouse("Toolbar button drag", DragHook_LowLevelMouseEvent);
+            }
+            catch (Exception error)
+            {
+                ShellLogger.Warning($"Toolbar drag hook could not be initialized: {error.Message}");
                 StopDragHook();
                 e.Handled = false;
             }
@@ -161,16 +165,18 @@ namespace UltraWinBar.Controls
 
         private void StopDragHook()
         {
-            if (_dragHook == null)
+            if (_dragHookSubscription == null)
             {
                 return;
             }
 
-            _dragHook.LowLevelMouseEvent -= DragHook_LowLevelMouseEvent;
-            _dragHook.Dispose();
-            _dragHook = null;
+            _dragHookSubscription.Dispose();
+            _dragHookSubscription = null;
             _isDraggingToTaskbar = false;
-            Cursor = Cursors.Arrow;
+            // R9-L: StopDragHook can now run on the shared hook thread (the *BUTTONUP cases below
+            // call it directly), which does not own this DependencyObject; Cursor must be set via
+            // the dispatcher.
+            Dispatcher.BeginInvoke(new Action(() => Cursor = Cursors.Arrow));
         }
         #endregion
     }

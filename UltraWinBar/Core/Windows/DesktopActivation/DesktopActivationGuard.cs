@@ -41,8 +41,9 @@ namespace UltraWinBar.Utilities
         private readonly VirtualDesktopContext desktops;
         private readonly Tasks tasks;
         private readonly Dispatcher dispatcher;
-        private readonly LowLevelMouseHook mouseHook;
-        private readonly DesktopActivationHookThread hookThread;
+        // R9-L: shared with panel/element/toolbar drag via InputHookHost instead of a private
+        // LowLevelMouseHook + dedicated thread (review Н14, К18): one hook thread for the app.
+        private readonly IDisposable mouseSubscription;
         // R9-H: shared with TrayService's EVENT_SYSTEM_FOREGROUND/SkipOwnProcess subscription via
         // the hub instead of a private WinEventHook (review section 5).
         private readonly WinEventHub.Subscription foregroundSubscription;
@@ -84,16 +85,12 @@ namespace UltraWinBar.Utilities
             this.desktops = desktops;
             this.tasks = tasks;
             dispatcher = System.Windows.Application.Current.Dispatcher;
-            mouseHook = new LowLevelMouseHook();
-            mouseHook.LowLevelMouseEvent += OnMouseEvent;
             try
             {
-                // Hosting on a dedicated thread keeps a stalled UI thread from lagging every mouse event system-wide.
-                hookThread = new DesktopActivationHookThread(mouseHook.Initialize, TeardownMouseHook);
+                mouseSubscription = InputHookHost.SubscribeMouse("DesktopActivation mouse hook", OnMouseEvent);
             }
             catch (Exception error)
             {
-                mouseHook.LowLevelMouseEvent -= OnMouseEvent;
                 throw new InvalidOperationException("Desktop activation mouse hook is unavailable.", error);
             }
 
@@ -102,20 +99,13 @@ namespace UltraWinBar.Utilities
             if (!foregroundSubscription.IsInstalled)
             {
                 foregroundSubscription.Dispose();
-                hookThread.Dispose();
+                mouseSubscription.Dispose();
                 throw new InvalidOperationException("Desktop activation foreground hook failed.");
             }
 
             desktops.Changed += OnDesktopChanged;
             ShellLogger.Info("DesktopActivation: experimental guard enabled.");
             _ = Task.Run(DesktopShortcutResolver.ReadSelectedShortcut);
-        }
-
-        // Runs on the hook thread after its message loop exits, so unhook happens on the thread that installed it.
-        private void TeardownMouseHook()
-        {
-            mouseHook.LowLevelMouseEvent -= OnMouseEvent;
-            mouseHook.Dispose();
         }
 
         internal static bool ShouldMoveWindow(Guid origin, Guid current, Guid owner, bool onCurrent, long ageMs) =>
@@ -601,7 +591,7 @@ namespace UltraWinBar.Utilities
             if (disposed) return;
             disposed = true;
             desktops.Changed -= OnDesktopChanged;
-            hookThread.Dispose();
+            mouseSubscription.Dispose();
             foregroundSubscription.Dispose();
             ShellLogger.Info("DesktopActivation: experimental guard disabled.");
         }

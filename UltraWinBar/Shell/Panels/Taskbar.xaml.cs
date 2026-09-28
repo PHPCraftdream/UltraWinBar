@@ -42,7 +42,7 @@ namespace UltraWinBar
         }
 
         private bool _startMenuOpen;
-        private LowLevelMouseHook _mouseDragHook;
+        private IDisposable _mouseDragHookSubscription;
         private Point? _mouseDragStart = null;
         private bool _mouseDragResize = false;
         private readonly DictionaryManager _dictionaryManager;

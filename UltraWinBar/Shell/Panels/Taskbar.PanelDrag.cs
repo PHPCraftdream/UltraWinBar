@@ -154,7 +154,10 @@ namespace UltraWinBar
                     AppBarEdge newEdge = DragCoordsToScreenEdge(e.HookStruct.pt.X, e.HookStruct.pt.Y);
                     if (newEdge != AppBarEdge)
                     {
-                        MoveToEdge(newEdge);
+                        // MoveToEdge writes Settings and can reopen taskbars: never run it on the hook
+                        // thread (review Н14). Capture the edge; a queued reopen must not race a later
+                        // drag update still reading a stale AppBarEdge off the hook thread.
+                        Dispatcher.BeginInvoke(() => MoveToEdge(newEdge));
                     }
                     break;
                 case NativeMethods.WM.LBUTTONUP:
@@ -205,16 +208,20 @@ namespace UltraWinBar
 
         private void StartMouseDragHook()
         {
-            if (_mouseDragHook != null)
+            if (_mouseDragHookSubscription != null)
             {
                 return;
             }
 
-            _mouseDragHook = new LowLevelMouseHook();
-            _mouseDragHook.LowLevelMouseEvent += MouseDragHook_LowLevelMouseEvent;
-            if (!_mouseDragHook.Initialize())
+            // R9-L: shared dedicated hook thread instead of installing a hook on the UI thread
+            // (review Н14) for the lifetime of this drag.
+            try
             {
-                ShellLogger.Warning("Mouse drag hook could not be initialized.");
+                _mouseDragHookSubscription = InputHookHost.SubscribeMouse("Taskbar panel drag", MouseDragHook_LowLevelMouseEvent);
+            }
+            catch (Exception error)
+            {
+                ShellLogger.Warning($"Mouse drag hook could not be initialized: {error.Message}");
                 StopMouseDragHook();
                 return;
             }
@@ -226,14 +233,13 @@ namespace UltraWinBar
 
         private void StopMouseDragHook()
         {
-            if (_mouseDragHook == null)
+            if (_mouseDragHookSubscription == null)
             {
                 return;
             }
 
-            _mouseDragHook.LowLevelMouseEvent -= MouseDragHook_LowLevelMouseEvent;
-            _mouseDragHook.Dispose();
-            _mouseDragHook = null;
+            _mouseDragHookSubscription.Dispose();
+            _mouseDragHookSubscription = null;
             _mouseDragStart = null;
             _mouseDragResize = false;
 
