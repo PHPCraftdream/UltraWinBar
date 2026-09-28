@@ -6,6 +6,8 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using ManagedShell.AppBar;
 using ManagedShell.Interop;
+using System.Threading;
+using System.Windows.Threading;
 using UltraWinBar.Utilities;
 
 // Mechanical guard for the interop bug class behind the 2026-09-28 crash: signatures the
@@ -102,7 +104,104 @@ internal static class InteropChecks
         if (after != before + 1)
             throw new Exception("TrayService.WndProc must catch exceptions from its body and report them via the rate-limited counter.");
         Console.WriteLine("PASS: TrayService.WndProc catches a malformed message payload and reports it instead of crashing.");
+        CheckWinEventHookForeignThreadDispose();
+        Console.WriteLine("PASS: WinEventHook.Dispose from a foreign thread keeps the hook and its delegate rooted until the owning thread's Dispatcher actually unhooks it.");
+
+        foreach (var (typeName, assemblyName) in new (string TypeName, string AssemblyName)[]
+        {
+            ("UltraWinBar.Utilities.ExplorerMonitor+ExplorerMonitorWindow", null),
+            ("UltraWinBar.Utilities.HotkeyManager+HotkeyListenerWindow", null),
+            ("ManagedShell.Common.SupportingClasses.NativeWindowEx", "ManagedShell.Common"),
+        })
+        {
+            var owner = assemblyName == null ? typeof(TaskAssignmentManager).Assembly : Assembly.Load(assemblyName);
+            var type = owner.GetType(typeName) ?? throw new Exception($"{typeName} is missing.");
+            var overridden = type.GetMethod("OnThreadException", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+            if (overridden == null)
+                throw new Exception($"{typeName} must override OnThreadException; NativeWindow's default silently swallows WndProc exceptions.");
+        }
+        Console.WriteLine("PASS: native windows override OnThreadException instead of silently swallowing WndProc exceptions.");
     }
+
+    // Dispose from a thread other than the one that installed the hook must not touch the hook
+    // synchronously (UnhookWinEvent fails off-thread): it must marshal to the owner's Dispatcher and
+    // keep the hook - and its delegate - rooted (still in `installed`) until that runs.
+    private static void CheckWinEventHookForeignThreadDispose()
+    {
+        Type hookType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.WinEventHook")
+            ?? throw new Exception("WinEventHook primitive is missing.");
+        Type handlerType = hookType.GetNestedType("Handler", BindingFlags.NonPublic)
+            ?? throw new Exception("WinEventHook.Handler delegate is missing.");
+        uint outOfContext = (uint)hookType.GetField("OutOfContext", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+        MethodInfo handlerMethod = typeof(InteropChecks).GetMethod(nameof(NoOpWinEventHandler), BindingFlags.Static | BindingFlags.NonPublic);
+        Delegate handler = Delegate.CreateDelegate(handlerType, handlerMethod);
+        var ctor = hookType.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, null,
+            new[] { typeof(string), typeof(uint), typeof(uint), handlerType, typeof(uint) }, null)
+            ?? throw new Exception("WinEventHook constructor signature changed.");
+        var isInstalled = hookType.GetProperty("IsInstalled", BindingFlags.Instance | BindingFlags.NonPublic)
+            ?? throw new Exception("WinEventHook.IsInstalled is missing.");
+        var installedCount = hookType.GetProperty("InstalledCount", BindingFlags.Static | BindingFlags.NonPublic)
+            ?? throw new Exception("WinEventHook.InstalledCount is missing.");
+        var dispose = hookType.GetMethod("Dispose", BindingFlags.Instance | BindingFlags.Public);
+
+        Dispatcher dispatcherA = null;
+        object hookRef = null;
+        Exception installError = null;
+        var ready = new ManualResetEventSlim(false);
+        var threadA = new Thread(() =>
+        {
+            try
+            {
+                dispatcherA = Dispatcher.CurrentDispatcher;
+                hookRef = ctor.Invoke(new object[] { "foreign-thread dispose test", (uint)0x7FFF, (uint)0x7FFF, handler, outOfContext });
+            }
+            catch (Exception error) { installError = error; }
+            finally { ready.Set(); }
+            Dispatcher.Run();
+        });
+        threadA.IsBackground = true;
+        threadA.Start();
+        ready.Wait();
+        if (installError != null) throw installError;
+        if (hookRef == null || !(bool)isInstalled.GetValue(hookRef))
+            throw new Exception("Test WinEvent hook failed to install; cannot verify foreign-thread Dispose.");
+
+        try
+        {
+            int installedBefore = (int)installedCount.GetValue(null);
+
+            // Occupy thread A's dispatcher loop, at the same priority Dispose's BeginInvoke uses
+            // (Normal), so the marshalled Unhook cannot run until released and stays FIFO-ordered
+            // behind this action.
+            var block = new ManualResetEventSlim(false);
+            dispatcherA.BeginInvoke(DispatcherPriority.Normal, new Action(() => block.Wait()));
+
+            // Dispose from this (foreign) thread: must not unhook synchronously.
+            dispose.Invoke(hookRef, null);
+
+            if (!(bool)isInstalled.GetValue(hookRef))
+                throw new Exception("Dispose from a foreign thread must not clear the hook before the owning thread unhooks it.");
+            if ((int)installedCount.GetValue(null) != installedBefore)
+                throw new Exception("Dispose from a foreign thread must keep the hook (and its delegate) rooted until the owning thread unhooks it.");
+
+            // Let thread A drain its queue: the blocking action, then the marshalled Unhook. Same
+            // Normal priority as above keeps this strictly behind Unhook in the FIFO queue.
+            block.Set();
+            dispatcherA.Invoke(new Action(() => { }), DispatcherPriority.Normal);
+
+            if ((bool)isInstalled.GetValue(hookRef))
+                throw new Exception("The owning thread must actually unhook once the marshalled Dispose runs.");
+            if ((int)installedCount.GetValue(null) != installedBefore - 1)
+                throw new Exception("The hook must leave the rooted set once it is actually unhooked.");
+        }
+        finally
+        {
+            dispatcherA.InvokeShutdown();
+            threadA.Join();
+        }
+    }
+
+    private static void NoOpWinEventHandler(uint eventType, IntPtr hwnd, int idObject, int idChild) { }
 
     internal static void Check(Assembly assembly, List<string> problems, bool strictReturns)
     {

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Windows.Threading;
 
 namespace UltraWinBar.Utilities
 {
@@ -18,7 +20,7 @@ namespace UltraWinBar.Utilities
 
         [DllImport("user32.dll", SetLastError = true)]
         private static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr module, WinEventProc callback, uint process, uint thread, uint flags);
-        [DllImport("user32.dll")]
+        [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool UnhookWinEvent(IntPtr hook);
         [DllImport("kernel32.dll")]
@@ -29,6 +31,7 @@ namespace UltraWinBar.Utilities
         private readonly Handler handler;
         private readonly WinEventProc callback;
         private readonly uint ownerThread;
+        private readonly Dispatcher ownerDispatcher;
         private IntPtr hook;
 
         internal static int InstalledCount { get { lock (installed) return installed.Count; } }
@@ -39,6 +42,7 @@ namespace UltraWinBar.Utilities
             this.handler = handler;
             callback = OnEvent;
             ownerThread = GetCurrentThreadId();
+            ownerDispatcher = Dispatcher.FromThread(Thread.CurrentThread);
             hook = SetWinEventHook(eventMin, eventMax, IntPtr.Zero, callback, 0, 0, flags);
             if (hook != IntPtr.Zero) { lock (installed) installed.Add(this); }
             else ManagedShell.Common.Logging.ShellLogger.Error($"{name}: SetWinEventHook failed ({Marshal.GetLastWin32Error()}).");
@@ -54,13 +58,38 @@ namespace UltraWinBar.Utilities
         }
 
         // Safe inside this hook's own out-of-context callback: it only stops future dispatch.
+        // UnhookWinEvent must run on the installing thread. Off-thread Dispose marshals the actual
+        // unhook there via its Dispatcher; until that runs, this object stays in `installed` (rooted)
+        // so user32 never calls into a collected thunk.
         public void Dispose()
         {
             if (hook == IntPtr.Zero) return;
+            if (GetCurrentThreadId() == ownerThread) { Unhook(); return; }
+
+            if (ownerDispatcher != null && !ownerDispatcher.HasShutdownStarted && !ownerDispatcher.HasShutdownFinished)
+            {
+                ownerDispatcher.BeginInvoke(new Action(Unhook));
+            }
+            else
+            {
+                ManagedShell.Common.Logging.ShellLogger.Error(
+                    $"{name}: Dispose called off the installing thread with no reachable Dispatcher; keeping the hook and its delegate rooted to avoid a dangling thunk.");
+            }
+        }
+
+        private void Unhook()
+        {
+            if (hook == IntPtr.Zero) return;
             Debug.Assert(GetCurrentThreadId() == ownerThread, $"{name}: WinEvent hooks must be removed on the installing thread.");
-            UnhookWinEvent(hook);
-            hook = IntPtr.Zero;
-            lock (installed) installed.Remove(this);
+            if (UnhookWinEvent(hook))
+            {
+                hook = IntPtr.Zero;
+                lock (installed) installed.Remove(this);
+            }
+            else
+            {
+                ManagedShell.Common.Logging.ShellLogger.Error($"{name}: UnhookWinEvent failed ({Marshal.GetLastWin32Error()}); keeping the delegate rooted.");
+            }
         }
     }
 }
