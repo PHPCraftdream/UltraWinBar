@@ -25,6 +25,11 @@ namespace UltraWinBar.Controls
 
         const int WM_IME_CONTROL = 0x0283;
 
+        // SendMessageTimeout flags/timeout for ImeChk, so a hung foreground app
+        // cannot block the taskbar UI thread.
+        const uint SMTO_ABORTIFHUNG = 0x0002;
+        const uint IME_CHK_TIMEOUT_MS = 100;
+
         const uint IME_CMODE_NATIVE = 0x0001;
         const uint IME_CMODE_KATAKANA = 0x0002;  // only effect under IME_CMODE_NATIVE
         const uint IME_CMODE_FULLSHAPE = 0x0008;
@@ -553,6 +558,15 @@ namespace UltraWinBar.Controls
             return RetSts;
         }
 
+        // Non-blocking WM_IME_CONTROL query for ImeChk's per-tick polling.
+        // Returns false on failure/timeout; caller keeps the previously shown state.
+        private bool TryImeChkSendMessage(IntPtr hImeWnd, uint wParam, out IntPtr result)
+        {
+            result = IntPtr.Zero;
+            return SendMessageTimeout(hImeWnd, WM_IME_CONTROL, (IntPtr)wParam, (IntPtr)0,
+                SMTO_ABORTIFHUNG, IME_CHK_TIMEOUT_MS, ref result) != 0;
+        }
+
         private void ImeChk_Event(object sender, EventArgs args)
         {
             ((DispatcherTimer)sender).Stop();
@@ -594,13 +608,20 @@ namespace UltraWinBar.Controls
 
                 NewInputMode = 0;
 
-                ImeOpenStatus = (int)SendMessage(hImeWnd, WM_IME_CONTROL, (IntPtr)IMC_GETOPENSTATUS, (IntPtr)0);
+                if (!TryImeChkSendMessage(hImeWnd, IMC_GETOPENSTATUS, out IntPtr openStatusResult))
+                    return;     // IME window not responding; keep previously shown state
+                ImeOpenStatus = (int)openStatusResult;
 
                 if (ImeOpenStatus != 0)
                 {
                     // conversion enabled
-                    NewInputFlag = (uint)SendMessage(hImeWnd, WM_IME_CONTROL, (IntPtr)IMC_GETCONVERSIONMODE, (IntPtr)0);
-                    NewImmConversion = (uint)SendMessage(hImeWnd, WM_IME_CONTROL, (IntPtr)IMC_GETSENTENCEMODE, (IntPtr)0);
+                    if (!TryImeChkSendMessage(hImeWnd, IMC_GETCONVERSIONMODE, out IntPtr conversionModeResult))
+                        return;     // IME window not responding; keep previously shown state
+                    NewInputFlag = (uint)conversionModeResult;
+
+                    if (!TryImeChkSendMessage(hImeWnd, IMC_GETSENTENCEMODE, out IntPtr sentenceModeResult))
+                        return;     // IME window not responding; keep previously shown state
+                    NewImmConversion = (uint)sentenceModeResult;
 
                     if (GetRegKanaMd())
                     {
