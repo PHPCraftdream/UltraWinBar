@@ -32,18 +32,24 @@ namespace UltraWinBar.Controls
             set { SetValue(HostProperty, value); }
         }
 
+        // A layout switch raises no system-wide event, so a poll stays as the fallback; EVENT_SYSTEM_FOREGROUND
+        // (installed in StartWatch) catches the common case immediately, letting the idle poll run rarely.
+        private const uint EventSystemForeground = 3;
+        private const int LayoutPollIdleMs = 750;
+
         private readonly DispatcherTimer layoutWatch = new DispatcherTimer(DispatcherPriority.Background);
         private readonly CultureInfoToLocaleNameConverter _localeConverter = new CultureInfoToLocaleNameConverter();
 
         private bool _isLoaded;
         private IntPtr _lastHkl = IntPtr.Zero;
+        private WinEventHook _foregroundHook;
 
         public InputLanguage()
         {
             InitializeComponent();
             DataContext = this;
 
-            layoutWatch.Interval = TimeSpan.FromMilliseconds(200);
+            layoutWatch.Interval = TimeSpan.FromMilliseconds(LayoutPollIdleMs);
             layoutWatch.Tick += LayoutWatchTick;
         }
 
@@ -142,9 +148,18 @@ namespace UltraWinBar.Controls
         {
             TrySetLocaleIdentifier(GetActiveKeyboardLayout());
 
+            _foregroundHook ??= new WinEventHook("InputLanguage foreground hook", EventSystemForeground, EventSystemForeground, OnForeground);
             layoutWatch.Start();
 
             Visibility = Visibility.Visible;
+        }
+
+        // Installed on the UI thread, so the out-of-context callback arrives on this dispatcher's
+        // own message loop; no re-check of whether the layout actually changed is needed beyond
+        // LayoutWatchTick's own hkl comparison.
+        private void OnForeground(uint eventType, IntPtr hwnd, int idObject, int idChild)
+        {
+            LayoutWatchTick(this, EventArgs.Empty);
         }
 
         private void JapaneseImeAdd()
@@ -225,6 +240,8 @@ namespace UltraWinBar.Controls
         private void StopWatch()
         {
             layoutWatch.Stop();
+            _foregroundHook?.Dispose();
+            _foregroundHook = null;
 
             Visibility = Visibility.Collapsed;
         }

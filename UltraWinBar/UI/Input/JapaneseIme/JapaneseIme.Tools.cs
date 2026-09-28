@@ -208,43 +208,98 @@ namespace UltraWinBar.Controls
             return RetSts;
         }
 
-        // Determining whether input is kana or romaji
-        // does not work via the API and requires reading the registry.
+        // Determining whether input is kana or romaji does not work via the API and requires
+        // reading the registry. kanaMd only changes when the user flips kana/romaji input, not
+        // per keystroke, so the value is cached and a registry watch (RegNotifyChangeKeyValue,
+        // same technique as VirtualDesktopContext.RegistryWatch) invalidates it instead of
+        // re-reading the registry on every ImeCheckTimer tick.
+        private const string RegKeyStrKanaMd = @"Software\AppDataLow\Software\Microsoft\IME\15.0\IMEJP\MSIME";
+
         private bool GetRegKanaMd()
         {
-            bool RetMode;
+            if (_kanaMdCached) return _kanaMdValue;
+            if (!ReadRegKanaMd(out bool isKana)) return false;   // key missing; nothing to cache/watch yet
 
-            string RegKeyStrKanaMd = @"Software\AppDataLow\Software\Microsoft\IME\15.0\IMEJP\MSIME";
-            int ChkWk;
+            _kanaMdCached = true;
+            _kanaMdValue = isKana;
+            EnsureKanaMdWatch();
+            return isKana;
+        }
 
-            UIntPtr hKey;
-
-            uint GetType, GetData;
-            uint GetLen = REG_SIZE_DWORD;
+        private static bool ReadRegKanaMd(out bool isKana)
+        {
+            isKana = false;
 
             unchecked
             {
-                if ((ChkWk = RegOpenKey((UIntPtr)RegistryHive.CurrentUser, RegKeyStrKanaMd, out hKey)) != ERROR_SUCCESS)
+                if (RegOpenKey((UIntPtr)RegistryHive.CurrentUser, RegKeyStrKanaMd, out UIntPtr hKey) != ERROR_SUCCESS)
                     return false;   // If unknown, treat as "roma"
+
+                uint length = REG_SIZE_DWORD;
+                int result = RegQueryValueEx(hKey, "kanaMd", (IntPtr)0, out uint type, out uint data, ref length);
+                RegCloseKey(hKey);
+
+                // Unreadable/unexpected value: matches the pre-cache behavior of defaulting to kana here.
+                isKana = result != ERROR_SUCCESS || type != REG_DWORD || data == 1;
+                return true;
             }
+        }
 
-            ChkWk = RegQueryValueEx(hKey, "kanaMd", (IntPtr)0, out GetType, out GetData, ref GetLen);
+        private void EnsureKanaMdWatch()
+        {
+            if (_kanaMdWatch != null) return;
+            var key = Registry.CurrentUser.OpenSubKey(RegKeyStrKanaMd);
+            if (key == null) return;
+            _kanaMdWatch = new KanaModeWatch(key, () => _kanaMdCached = false);
+        }
 
-            RegCloseKey(hKey);
+        // Mirrors VirtualDesktopContext.RegistryWatch: RegNotifyChangeKeyValue arms once and
+        // re-arms itself from the callback thread, so a kana/romaji change is picked up without polling.
+        private sealed class KanaModeWatch : IDisposable
+        {
+            [DllImport("advapi32.dll")]
+            private static extern int RegNotifyChangeKeyValue(IntPtr key, bool watchSubtree, uint filter, IntPtr signal, bool asynchronous);
+            private const uint ValueChangeFilter = 0x00000004; // REG_NOTIFY_CHANGE_LAST_SET
 
-            if (ChkWk == ERROR_SUCCESS && GetType == REG_DWORD)
+            private readonly RegistryKey key;
+            private readonly AutoResetEvent signal = new AutoResetEvent(false);
+            private readonly RegisteredWaitHandle wait;
+            private readonly object gate = new object();
+            private bool disposed;
+
+            public KanaModeWatch(RegistryKey key, Action changed)
             {
-                if (GetData == 1)
-                    RetMode = true;		// 1: kana
-                else
-                    RetMode = false;	// 2: roma
-            }
-            else
-            {
-                RetMode = true;		// If unknown, treat as "roma"
+                this.key = key;
+                wait = ThreadPool.RegisterWaitForSingleObject(signal, (_, __) =>
+                {
+                    try
+                    {
+                        lock (gate)
+                        {
+                            if (disposed) return;
+                            Arm();
+                            changed();
+                        }
+                    }
+                    catch (Exception error) { CallbackGuard.Report("Japanese IME kanaMd watch", error); }
+                }, null, Timeout.Infinite, false);
+                Arm();
             }
 
-            return RetMode;
+            private void Arm() => RegNotifyChangeKeyValue(key.Handle.DangerousGetHandle(), false, ValueChangeFilter,
+                signal.SafeWaitHandle.DangerousGetHandle(), true);
+
+            public void Dispose()
+            {
+                lock (gate)
+                {
+                    if (disposed) return;
+                    disposed = true;
+                    wait.Unregister(null);
+                    key.Dispose();
+                    signal.Dispose();
+                }
+            }
         }
 
         // Switching between Kana input and Romaji input

@@ -88,5 +88,56 @@ internal static class ClockChecks
         if (System.Text.RegularExpressions.Regex.Matches(taskButtonLoadedBody, @"_isLoaded\s*=\s*true").Count != 1)
             throw new Exception("TaskButton_OnLoaded should set _isLoaded exactly once, after the idempotency guard.");
         Console.WriteLine("PASS: a repeated TaskButton Loaded without an intervening Unloaded is a no-op and does not re-subscribe, replace dragHandler, or replay the slide-in animation.");
+
+        var inputLanguageType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Controls.InputLanguage")
+            ?? throw new Exception("Input language indicator is missing.");
+        const System.Reflection.BindingFlags staticNonPublic = System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic;
+        uint foregroundEvent = (uint)inputLanguageType.GetField("EventSystemForeground", staticNonPublic).GetValue(null);
+        int idlePollMs = (int)inputLanguageType.GetField("LayoutPollIdleMs", staticNonPublic).GetValue(null);
+        if (foregroundEvent != 3)
+            throw new Exception("Input language foreground hook must watch EVENT_SYSTEM_FOREGROUND (3).");
+        if (idlePollMs < 500 || idlePollMs > 1000)
+            throw new Exception($"Input language idle poll must stay a cheap 500-1000ms fallback, was {idlePollMs}ms.");
+        string inputLanguageSource = System.IO.File.ReadAllText(System.IO.Path.Combine(
+            repositoryRoot.FullName, "UltraWinBar", "UI", "Input", "InputLanguage.xaml.cs"));
+        int startWatchStart = inputLanguageSource.IndexOf("private void StartWatch()");
+        int startWatchEnd = inputLanguageSource.IndexOf("private void OnForeground", startWatchStart);
+        int stopWatchStart = inputLanguageSource.IndexOf("private void StopWatch()");
+        int stopWatchEnd = inputLanguageSource.IndexOf("private void Settings_PropertyChanged", stopWatchStart);
+        if (startWatchStart < 0 || startWatchEnd < 0 || stopWatchStart < 0 || stopWatchEnd < 0)
+            throw new Exception("Could not locate StartWatch/StopWatch to check the foreground hook lifecycle.");
+        string startWatchBody = inputLanguageSource.Substring(startWatchStart, startWatchEnd - startWatchStart);
+        string stopWatchBody = inputLanguageSource.Substring(stopWatchStart, stopWatchEnd - stopWatchStart);
+        if (!startWatchBody.Contains("new WinEventHook") || !startWatchBody.Contains("layoutWatch.Start()") ||
+            !stopWatchBody.Contains("_foregroundHook?.Dispose()") || !stopWatchBody.Contains("layoutWatch.Stop()"))
+            throw new Exception("StartWatch/StopWatch must install and dispose the foreground WinEventHook together with the poll timer.");
+        Console.WriteLine("PASS: input language layout watch reacts to EVENT_SYSTEM_FOREGROUND, falls back to a 500-1000ms idle poll, and installs/disposes the hook alongside the poll timer.");
+
+        var japaneseImeType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Controls.JapaneseIme")
+            ?? throw new Exception("Japanese IME indicator is missing.");
+        var getRegKanaMd = japaneseImeType.GetMethod("GetRegKanaMd", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        var kanaMdCachedField = japaneseImeType.GetField("_kanaMdCached", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        var kanaMdValueField = japaneseImeType.GetField("_kanaMdValue", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        var kanaMdWatchField = japaneseImeType.GetField("_kanaMdWatch", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        if (getRegKanaMd == null || kanaMdCachedField == null || kanaMdValueField == null || kanaMdWatchField == null)
+            throw new Exception("Japanese IME kanaMd cache fields are missing.");
+        // Bypasses the UserControl constructor (its XAML binds Settings.Instance, forbidden in tests):
+        // GetRegKanaMd/the cache fields under test touch nothing InitializeComponent would have set up.
+        object imeInstance = System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(japaneseImeType);
+        foreach (bool cachedValue in new[] { true, false })
+        {
+            kanaMdCachedField.SetValue(imeInstance, true);
+            kanaMdValueField.SetValue(imeInstance, cachedValue);
+            if ((bool)getRegKanaMd.Invoke(imeInstance, null) != cachedValue)
+                throw new Exception("A cached kanaMd value must be reused as-is instead of being re-read from the registry.");
+        }
+        kanaMdCachedField.SetValue(imeInstance, false);
+        kanaMdWatchField.SetValue(imeInstance, null);
+        bool liveResult = (bool)getRegKanaMd.Invoke(imeInstance, null);
+        bool cachedAfterLiveRead = (bool)kanaMdCachedField.GetValue(imeInstance);
+        bool watchArmedAfterLiveRead = kanaMdWatchField.GetValue(imeInstance) != null;
+        if (cachedAfterLiveRead != watchArmedAfterLiveRead)
+            throw new Exception("A live kanaMd read must cache the value and arm the registry watch together, or do neither.");
+        Console.WriteLine($"PASS: a cached kanaMd is reused without a registry read; an uncached read (found={cachedAfterLiveRead}, value={liveResult}) arms its registry watch exactly when it caches.");
     }
 }

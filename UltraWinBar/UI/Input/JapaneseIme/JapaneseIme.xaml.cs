@@ -72,6 +72,9 @@ namespace UltraWinBar.Controls
         private readonly DispatcherTimer ImeCheckTimer = new DispatcherTimer(DispatcherPriority.Background);
 
         private bool _isLoaded;
+        private bool _kanaMdCached;
+        private bool _kanaMdValue;
+        private KanaModeWatch _kanaMdWatch;
 
         public static readonly DependencyProperty JapaneseImeEnabledProperty = DependencyProperty.Register(nameof(JapaneseImeEnabled), typeof(bool), typeof(JapaneseIme));
 
@@ -327,6 +330,9 @@ namespace UltraWinBar.Controls
         private void UserControl_Unloaded(object sender, RoutedEventArgs e)
         {
             ImeCheckTimer.Stop();
+            _kanaMdWatch?.Dispose();
+            _kanaMdWatch = null;
+            _kanaMdCached = false;
 
             _isLoaded = false;
         }
