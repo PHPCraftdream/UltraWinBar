@@ -1,8 +1,8 @@
 ﻿using ManagedShell.Common.Helpers;
 using ManagedShell.Common.Logging;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -14,6 +14,90 @@ using static ManagedShell.Interop.NativeMethods;
 
 namespace ManagedShell.WindowsTasks
 {
+    // Trust-boundary helper (Н5): validates a foreign pointer with VirtualQuery before it is
+    // dereferenced. Pure and static so it can be exercised with garbage input in tests.
+    internal static class MemorySafety
+    {
+        private const uint MEM_COMMIT = 0x1000;
+        private const uint PAGE_GUARD = 0x100;
+        private const uint PAGE_READABLE = 0x02 /*READONLY*/ | 0x04 /*READWRITE*/ | 0x08 /*WRITECOPY*/
+                                          | 0x20 /*EXECUTE_READ*/ | 0x40 /*EXECUTE_READWRITE*/ | 0x80 /*EXECUTE_WRITECOPY*/;
+        private const uint PAGE_WRITABLE = 0x04 /*READWRITE*/ | 0x08 /*WRITECOPY*/ | 0x40 /*EXECUTE_READWRITE*/ | 0x80 /*EXECUTE_WRITECOPY*/;
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MEMORY_BASIC_INFORMATION
+        {
+            public IntPtr BaseAddress;
+            public IntPtr AllocationBase;
+            public uint AllocationProtect;
+            public UIntPtr RegionSize;
+            public uint State;
+            public uint Protect;
+            public uint Type;
+        }
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern UIntPtr VirtualQuery(IntPtr lpAddress, out MEMORY_BASIC_INFORMATION lpBuffer, UIntPtr dwLength);
+
+        private static bool TryQuery(IntPtr address, out MEMORY_BASIC_INFORMATION mbi)
+        {
+            mbi = default;
+            if (address == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            UIntPtr size = (UIntPtr)Marshal.SizeOf<MEMORY_BASIC_INFORMATION>();
+            return VirtualQuery(address, out mbi, size) != UIntPtr.Zero;
+        }
+
+        // True only if [address, address+size) lies entirely inside one committed region that is
+        // both readable and writable (not PAGE_GUARD / PAGE_NOACCESS).
+        internal static bool IsReadWritable(IntPtr address, int size)
+        {
+            if (address == IntPtr.Zero || size <= 0 || !TryQuery(address, out var mbi))
+            {
+                return false;
+            }
+
+            if (mbi.State != MEM_COMMIT) return false;
+            if ((mbi.Protect & PAGE_GUARD) != 0) return false;
+            if ((mbi.Protect & PAGE_WRITABLE) == 0) return false;
+
+            return FitsInRegion(address, size, mbi);
+        }
+
+        // Bytes readable from address to the end of its committed, readable region, capped at
+        // maxBytes; 0 if address is not safely readable at all.
+        internal static int GetReadableByteCount(IntPtr address, int maxBytes)
+        {
+            if (address == IntPtr.Zero || maxBytes <= 0 || !TryQuery(address, out var mbi))
+            {
+                return 0;
+            }
+
+            if (mbi.State != MEM_COMMIT) return 0;
+            if ((mbi.Protect & PAGE_GUARD) != 0) return 0;
+            if ((mbi.Protect & PAGE_READABLE) == 0) return 0;
+
+            long regionEnd = mbi.BaseAddress.ToInt64() + (long)mbi.RegionSize;
+            long available = regionEnd - address.ToInt64();
+            if (available <= 0) return 0;
+
+            return (int)Math.Min(available, maxBytes);
+        }
+
+        private static bool FitsInRegion(IntPtr address, int size, MEMORY_BASIC_INFORMATION mbi)
+        {
+            long regionStart = mbi.BaseAddress.ToInt64();
+            long regionEnd = regionStart + (long)mbi.RegionSize;
+            long rangeStart = address.ToInt64();
+            long rangeEnd = rangeStart + size;
+            return rangeStart >= regionStart && rangeEnd <= regionEnd;
+        }
+    }
+
+
     public class TasksService : DependencyObject, IDisposable
     {
         public static readonly IconSize DEFAULT_ICON_SIZE = IconSize.Small;
@@ -74,6 +158,9 @@ namespace ManagedShell.WindowsTasks
         
         public TasksService(IconSize iconSize)
         {
+            // UltraWinBar (Н15): per-instance collection; the DependencyProperty default must
+            // never be a shared instance.
+            Windows = new ObservableCollection<ApplicationWindow>();
             TaskIconSize = iconSize;
         }
 
@@ -84,6 +171,14 @@ namespace ManagedShell.WindowsTasks
                 return;
             }
 
+            // UltraWinBar (Н3): track what this attempt actually installed so a mid-init failure
+            // can be rolled back instead of leaving a second, half-registered hook window behind.
+            bool hookWinCreated = false;
+            bool shellHookRegistered = false;
+            bool messageReceivedHooked = false;
+            bool cloakHookInstalledHere = false;
+            bool moveHookInstalledHere = false;
+
             try
             {
                 ShellLogger.Debug("TasksService: Starting");
@@ -91,16 +186,19 @@ namespace ManagedShell.WindowsTasks
                 // create window to receive task events
                 _HookWin = new NativeWindowEx();
                 _HookWin.CreateHandle(new CreateParams());
+                hookWinCreated = true;
 
                 // prevent other shells from working properly
                 SetTaskmanWindow(_HookWin.Handle);
 
                 // register to receive task events
                 RegisterShellHookWindow(_HookWin.Handle);
+                shellHookRegistered = true;
                 WM_SHELLHOOKMESSAGE = RegisterWindowMessage("SHELLHOOK");
                 WM_TASKBARCREATEDMESSAGE = RegisterWindowMessage("TaskbarCreated");
                 TASKBARBUTTONCREATEDMESSAGE = RegisterWindowMessage("TaskbarButtonCreated");
                 _HookWin.MessageReceived += ShellWinProc;
+                messageReceivedHooked = true;
 
                 if (EnvironmentHelper.IsWindows8OrBetter)
                 {
@@ -117,6 +215,7 @@ namespace ManagedShell.WindowsTasks
                             0,
                             0,
                             WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
+                        cloakHookInstalledHere = cloakEventHook != IntPtr.Zero;
                     }
                 }
 
@@ -136,6 +235,7 @@ namespace ManagedShell.WindowsTasks
                             0,
                             0,
                             WINEVENT_OUTOFCONTEXT);
+                        moveHookInstalledHere = moveEventHook != IntPtr.Zero;
                     }
                 }
 
@@ -153,6 +253,30 @@ namespace ManagedShell.WindowsTasks
             catch (Exception ex)
             {
                 ShellLogger.Info("TasksService: Unable to start: " + ex.Message);
+
+                // Roll back only what this attempt installed, so a retry does not double-register.
+                if (cloakHookInstalledHere && cloakEventHook != IntPtr.Zero)
+                {
+                    UnhookWinEvent(cloakEventHook);
+                    cloakEventHook = IntPtr.Zero;
+                }
+
+                if (moveHookInstalledHere && moveEventHook != IntPtr.Zero)
+                {
+                    UnhookWinEvent(moveEventHook);
+                    moveEventHook = IntPtr.Zero;
+                }
+
+                if (_HookWin != null)
+                {
+                    if (messageReceivedHooked) _HookWin.MessageReceived -= ShellWinProc;
+                    if (shellHookRegistered) DeregisterShellHookWindow(_HookWin.Handle);
+                    if (hookWinCreated) _HookWin.DestroyHandle();
+                }
+
+                _HookWin = null;
+                setTaskbarListHwnd(IntPtr.Zero);
+                Windows.Clear();
             }
         }
 
@@ -170,7 +294,26 @@ namespace ManagedShell.WindowsTasks
 
         private void getInitialWindows()
         {
+            // UltraWinBar (Н6): EnumWindows calls back into native code on every window in the
+            // session; only collect handles here. Windows.Add (CollectionChanged handlers, task
+            // filters, COM calls) runs afterward, off the enumeration callback.
+            List<IntPtr> handles = new List<IntPtr>();
+
             EnumWindows((hwnd, lParam) =>
+            {
+                try
+                {
+                    handles.Add(hwnd);
+                }
+                catch (Exception ex)
+                {
+                    ShellLogger.Error("TasksService: Error in getInitialWindows EnumWindows callback.", ex);
+                }
+
+                return true;
+            }, IntPtr.Zero);
+
+            foreach (IntPtr hwnd in handles)
             {
                 ApplicationWindow win = new ApplicationWindow(this, hwnd);
 
@@ -180,9 +323,7 @@ namespace ManagedShell.WindowsTasks
 
                     sendTaskbarButtonCreatedMessage(win.Handle);
                 }
-
-                return true;
-            }, IntPtr.Zero);
+            }
 
             IntPtr hWndForeground = GetForegroundWindow();
             if (Windows.Any(i => i.Handle == hWndForeground && i.ShowInTaskbar))
@@ -199,9 +340,27 @@ namespace ManagedShell.WindowsTasks
             {
                 ShellLogger.Debug("TasksService: Deregistering hooks");
                 DeregisterShellHookWindow(_HookWin.Handle);
-                if (cloakEventHook != IntPtr.Zero) UnhookWinEvent(cloakEventHook);
-                if (moveEventHook != IntPtr.Zero) UnhookWinEvent(moveEventHook);
+
+                // UltraWinBar (Н3): zero the static handles so a following Initialize reinstalls
+                // them instead of finding a stale non-zero handle and skipping the hook.
+                if (cloakEventHook != IntPtr.Zero)
+                {
+                    UnhookWinEvent(cloakEventHook);
+                    cloakEventHook = IntPtr.Zero;
+                }
+
+                if (moveEventHook != IntPtr.Zero)
+                {
+                    UnhookWinEvent(moveEventHook);
+                    moveEventHook = IntPtr.Zero;
+                }
+
+                cloakEventProc = null;
+                moveEventProc = null;
+
+                _HookWin.MessageReceived -= ShellWinProc;
                 _HookWin.DestroyHandle();
+                _HookWin = null;
                 setTaskbarListHwnd(IntPtr.Zero);
                 IsInitialized = false;
                 Windows.Clear();
@@ -489,6 +648,15 @@ namespace ManagedShell.WindowsTasks
                                 }
 
                             case HSHELL.GETMINRECT:
+                                // UltraWinBar (Н5): SHELLHOOK is a registered message any process
+                                // in the session can post; lParam is not marshaled by the system.
+                                // Validate the pointer before reading or writing through it.
+                                if (!MemorySafety.IsReadWritable(msg.LParam, Marshal.SizeOf<SHELLHOOKINFO>()))
+                                {
+                                    ShellLogger.Error($"TasksService: Rejected GETMINRECT with an invalid pointer ({msg.LParam}).");
+                                    break;
+                                }
+
                                 SHELLHOOKINFO minRectInfo = Marshal.PtrToStructure<SHELLHOOKINFO>(msg.LParam);
                                 if (Windows.Any(i => i.Handle == minRectInfo.hwnd))
                                 {
@@ -519,7 +687,6 @@ namespace ManagedShell.WindowsTasks
                 catch (Exception ex)
                 {
                     ShellLogger.Error("TasksService: Error in ShellWinProc. ", ex);
-                    Debugger.Break();
                 }
             }
             else if (msg.Msg == WM_TASKBARCREATEDMESSAGE)
@@ -672,26 +839,43 @@ namespace ManagedShell.WindowsTasks
 
         private void MoveEventCallback(IntPtr hWinEventHook, uint eventType, IntPtr hWnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
         {
-            if (hWnd != IntPtr.Zero && idObject == 0 && idChild == 0)
+            // UltraWinBar (Н6): WinEvent callback into user code (PropertyChanged -> our
+            // filters -> possible COM call); an unhandled exception here escapes into user32.
+            try
             {
-                if (Windows.Any(i => i.Handle == hWnd))
+                if (hWnd != IntPtr.Zero && idObject == 0 && idChild == 0)
                 {
-                    ApplicationWindow win = Windows.First(wnd => wnd.Handle == hWnd);
-                    win.SetMonitor();
+                    if (Windows.Any(i => i.Handle == hWnd))
+                    {
+                        ApplicationWindow win = Windows.First(wnd => wnd.Handle == hWnd);
+                        win.SetMonitor();
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                ShellLogger.Error("TasksService: Error in MoveEventCallback.", ex);
             }
         }
 
         private void CloakEventCallback(IntPtr hWinEventHook, uint eventType, IntPtr hWnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
         {
-            if (hWnd != IntPtr.Zero && idObject == 0 && idChild == 0)
+            // UltraWinBar (Н6): same trust boundary as MoveEventCallback above.
+            try
             {
-                if (Windows.Any(i => i.Handle == hWnd))
+                if (hWnd != IntPtr.Zero && idObject == 0 && idChild == 0)
                 {
-                    ApplicationWindow win = Windows.First(wnd => wnd.Handle == hWnd);
-                    ShellLogger.Debug($"TasksService: {(eventType == EVENT_OBJECT_CLOAKED ? "Cloak" : "Uncloak")} event received for {win.Title}");
-                    win.SetShowInTaskbar();
+                    if (Windows.Any(i => i.Handle == hWnd))
+                    {
+                        ApplicationWindow win = Windows.First(wnd => wnd.Handle == hWnd);
+                        ShellLogger.Debug($"TasksService: {(eventType == EVENT_OBJECT_CLOAKED ? "Cloak" : "Uncloak")} event received for {win.Title}");
+                        win.SetShowInTaskbar();
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                ShellLogger.Error("TasksService: Error in CloakEventCallback.", ex);
             }
         }
 
@@ -767,8 +951,10 @@ namespace ManagedShell.WindowsTasks
             }
         }
 
-        private DependencyProperty windowsProperty = DependencyProperty.Register("Windows",
+        // UltraWinBar (Н15): static registration (a second TasksService would otherwise throw);
+        // default value left null so each instance gets its own collection in its constructor.
+        private static readonly DependencyProperty windowsProperty = DependencyProperty.Register("Windows",
             typeof(ObservableCollection<ApplicationWindow>), typeof(TasksService),
-            new PropertyMetadata(new ObservableCollection<ApplicationWindow>()));
+            new PropertyMetadata(null));
     }
 }
