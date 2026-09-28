@@ -10,7 +10,6 @@ using System.Windows.Input;
 using System.Windows.Media.Animation;
 using ManagedShell.AppBar;
 using ManagedShell.Common.Helpers;
-using ManagedShell.Common.Logging;
 using ManagedShell.Interop;
 using ManagedShell.WindowsTasks;
 using UltraWinBar.Converters;
@@ -382,8 +381,7 @@ namespace UltraWinBar.Controls
                 _dragStartScreenPos = System.Windows.Forms.Cursor.Position;
                 _isTaskDragArmed = true;
                 _isDraggingToTaskbar = false;
-                bool captured = Mouse.Capture(AppButton, CaptureMode.Element);
-                ShellLogger.Debug($"Task drag: down at {_dragStartScreenPos.X},{_dragStartScreenPos.Y}; captured={captured}");
+                Mouse.Capture(AppButton, CaptureMode.Element);
             }
         }
 
@@ -411,7 +409,6 @@ namespace UltraWinBar.Controls
                 }
 
                 _isDraggingToTaskbar = true;
-                ShellLogger.Debug($"Task drag: threshold at {screenPoint.X},{screenPoint.Y}");
             }
 
             UpdateTaskDragFeedback(screenPoint);
@@ -427,7 +424,6 @@ namespace UltraWinBar.Controls
 
             bool wasDragging = _isDraggingToTaskbar;
             System.Drawing.Point screenPoint = System.Windows.Forms.Cursor.Position;
-            ShellLogger.Debug($"Task drag: up at {screenPoint.X},{screenPoint.Y}; dragging={wasDragging}");
             _isTaskDragArmed = false;
             _isDraggingToTaskbar = false;
             ClearTaskDragFeedback();
@@ -470,7 +466,6 @@ namespace UltraWinBar.Controls
             {
                 _dragFeedbackTaskList?.HideTaskInsertionIndicator();
                 _dragFeedbackTaskList = targetTaskList;
-                ShellLogger.Debug($"Task drag: feedback target={targetTaskbar?.AppBarEdge.ToString() ?? "none"}");
             }
 
             if (targetTaskList == null)
@@ -493,7 +488,6 @@ namespace UltraWinBar.Controls
         private void CompleteDragToTaskbar(System.Drawing.Point pt)
         {
             Taskbar targetTaskbar = FindTaskbarAtScreenPoint(pt);
-            ShellLogger.Debug($"Task drag: drop target={targetTaskbar?.AppBarEdge.ToString() ?? "none"} at {pt.X},{pt.Y}");
 
             if (targetTaskbar == null)
             {

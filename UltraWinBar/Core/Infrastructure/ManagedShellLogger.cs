@@ -2,11 +2,16 @@ using ManagedShell.Common.Logging;
 using ManagedShell.Common.Logging.Observers;
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace UltraWinBar.Utilities
 {
     class ManagedShellLogger : IDisposable
     {
+        // The app is GUI-only; ConsoleLog writes to a console window that doesn't exist unless
+        // one was attached (e.g. launched from a terminal), so only attach it in that case.
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr GetConsoleWindow();
         internal static readonly TimeSpan LogRetention = TimeSpan.FromDays(7);
 
         private string _logPath = "Logs".InLocalAppData();
@@ -45,8 +50,11 @@ namespace UltraWinBar.Utilities
 
             SetupFileLog();
 
-            _filteredConsoleLog = new FilteredLog(new ConsoleLog(), Settings.Instance.DebugLogMasks);
-            ShellLogger.Attach(_filteredConsoleLog, true);
+            if (GetConsoleWindow() != IntPtr.Zero)
+            {
+                _filteredConsoleLog = new FilteredLog(new ConsoleLog(), Settings.Instance.DebugLogMasks);
+                ShellLogger.Attach(_filteredConsoleLog, true);
+            }
         }
 
         private void SetupFileLog()

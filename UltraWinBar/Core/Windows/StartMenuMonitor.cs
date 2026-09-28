@@ -252,8 +252,6 @@ namespace UltraWinBar.Utilities
             StringBuilder cName = new StringBuilder(256);
             GetClassName(hwnd, cName, cName.Capacity);
             string className = cName.ToString();
-            if (ShellLogger.Severity <= LogSeverity.Debug)
-                ShellLogger.Debug($"StartMenuMonitor DIAG: foreground changed, hwnd={hwnd}, class={className}");
 
             // Modern Start (Win10/11) and Open Shell Menu both become foreground when they
             // open; classic Start (DV2ControlHost) does not reliably, so it stays on the
@@ -274,8 +272,6 @@ namespace UltraWinBar.Utilities
                 return;
             }
 
-            if (ShellLogger.Severity <= LogSeverity.Debug)
-                ShellLogger.Debug($"StartMenuMonitor DIAG: foreground hook matched {className}, relocating");
             relocateStartMenu(hwnd);
             setVisibility(true, MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST));
         }
@@ -417,8 +413,6 @@ namespace UltraWinBar.Utilities
             IntPtr hwndForeground = GetForegroundWindow();
             StringBuilder cName = new StringBuilder(256);
             GetClassName(hwndForeground, cName, cName.Capacity);
-            if (ShellLogger.Severity <= LogSeverity.Debug)
-                ShellLogger.Debug($"StartMenuMonitor DIAG: poller tick, isModernStartMenuOpen=true, foreground hwnd={hwndForeground}, class={cName}");
             if (cName.ToString() == "Windows.UI.Core.CoreWindow")
             {
                 // When the modern Start menu opens, it gains focus, so this is probably it.
@@ -479,7 +473,7 @@ namespace UltraWinBar.Utilities
             FlowDirection flowDirection = Application.Current.FindResource("flow_direction") as FlowDirection? ?? FlowDirection.LeftToRight;
             GetWindowRect(hStartMenu, out ManagedShell.Interop.NativeMethods.Rect startMenuRect);
             GetWindowRect(_taskbarHwndActivated, out ManagedShell.Interop.NativeMethods.Rect taskbarRect);
-            ShellLogger.Debug($"StartMenuMonitor DIAG: relocateStartMenu entered, hStartMenu={hStartMenu}, currentRect=({startMenuRect.Left},{startMenuRect.Top},{startMenuRect.Right},{startMenuRect.Bottom}), taskbarRect=({taskbarRect.Left},{taskbarRect.Top},{taskbarRect.Right},{taskbarRect.Bottom})");
+            ShellLogger.Debug($"StartMenuMonitor: relocateStartMenu entered, hStartMenu={hStartMenu}, currentRect=({startMenuRect.Left},{startMenuRect.Top},{startMenuRect.Right},{startMenuRect.Bottom}), taskbarRect=({taskbarRect.Left},{taskbarRect.Top},{taskbarRect.Right},{taskbarRect.Bottom})");
 
             // Use the edge of whichever taskbar the button was actually pressed on, not
             // the primary one — with multiple taskbars they can differ.
@@ -502,7 +496,7 @@ namespace UltraWinBar.Utilities
             if (!menuAlreadyAtTarget && startMenuRect.Width > 200 && startMenuRect.Height > 200)
             {
                 bool moved = SetWindowPos(hStartMenu, IntPtr.Zero, x, y, 0, 0, (int)(SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOZORDER | SetWindowPosFlags.SWP_NOACTIVATE));
-                ShellLogger.Debug($"StartMenuMonitor DIAG: SetWindowPos target=({x},{y}) returned {moved}");
+                ShellLogger.Debug($"StartMenuMonitor: SetWindowPos target=({x},{y}) returned {moved}");
             }
 
             // Open Shell first exposes a 101x100 placeholder, then creates its full menu and
@@ -539,7 +533,6 @@ namespace UltraWinBar.Utilities
 
                 if (currentRect.Left != x || currentRect.Top != y)
                 {
-                    ShellLogger.Debug($"StartMenuMonitor DIAG: Start menu drifted to ({currentRect.Left},{currentRect.Top}), re-applying target=({x},{y})");
                     SetWindowPos(hStartMenu, IntPtr.Zero, x, y, 0, 0, (int)(SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOZORDER | SetWindowPosFlags.SWP_NOACTIVATE));
                 }
 
@@ -560,7 +553,7 @@ namespace UltraWinBar.Utilities
                         userPictureOffsetX = userPictureRect.Left - referenceMenuRect.Left;
                         userPictureOffsetY = userPictureRect.Top - referenceMenuRect.Top;
                         hasUserPictureOffset = true;
-                        ShellLogger.Debug($"StartMenuMonitor DIAG: captured user-picture offset=({userPictureOffsetX},{userPictureOffsetY})");
+                        ShellLogger.Debug($"StartMenuMonitor: captured user-picture offset=({userPictureOffsetX},{userPictureOffsetY})");
                     }
                 }
 
@@ -687,8 +680,6 @@ namespace UltraWinBar.Utilities
 
         internal void ShowStartMenu(IntPtr taskbarHwnd)
         {
-            var diagStopwatch = System.Diagnostics.Stopwatch.StartNew();
-            ShellLogger.Debug("StartMenuMonitor DIAG: ShowStartMenu entered");
             _taskbarHwndActivated = taskbarHwnd;
             UpdateMenuEventHook();
             if (TryOpenShellDirectInvoke()) return;
@@ -698,7 +689,7 @@ namespace UltraWinBar.Utilities
                 FindWindowEx(IntPtr.Zero, IntPtr.Zero, "DV2ControlHost", IntPtr.Zero) != IntPtr.Zero)
             {
                 // Invoke once, without a delayed second request that can toggle the menu closed.
-                ShellLogger.Debug("StartMenuMonitor DIAG: falling back to ShellHelper.ShowStartMenu (SendInput) — OpenShell/DV2ControlHost detected or pre-Win10");
+                ShellLogger.Debug("StartMenuMonitor: falling back to ShellHelper.ShowStartMenu (SendInput) — OpenShell/DV2ControlHost detected or pre-Win10");
                 ShellHelper.ShowStartMenu();
                 return;
             }
@@ -712,11 +703,9 @@ namespace UltraWinBar.Utilities
                 if (EnvironmentHelper.IsWindows10RS1OrBetter)
                 {
                     IImmersiveLauncher_Win10RS1 immersiveLauncher = GetImmersiveLauncher_Win10RS1(taskbarHwnd);
-                    ShellLogger.Debug($"StartMenuMonitor DIAG: GetImmersiveLauncher_Win10RS1 returned {(immersiveLauncher != null ? "non-null" : "null")} at {diagStopwatch.ElapsedMilliseconds}ms");
                     if (immersiveLauncher != null)
                     {
                         int hr = immersiveLauncher.ShowStartView(IMMERSIVELAUNCHERSHOWMETHOD.ILSM_STARTBUTTON, IMMERSIVELAUNCHERSHOWFLAGS.ILSF_IGNORE_SET_FOREGROUND_ERROR);
-                        ShellLogger.Debug($"StartMenuMonitor DIAG: ShowStartView returned hr={hr} at {diagStopwatch.ElapsedMilliseconds}ms");
                         if (hr == 0)
                         {
                             return;
