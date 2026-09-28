@@ -17,6 +17,8 @@ namespace UltraWinBar.Utilities
         private readonly VirtualDesktopContext desktops;
         private readonly INotifyCollectionChanged windows;
         private readonly List<ApplicationWindow> pendingWindows = new List<ApplicationWindow>();
+        private const int MaxImportScanAttempts = 5;
+        private int importScanAttempts;
         private bool queued;
         private bool fullRestore;
         private bool disposed;
@@ -27,7 +29,10 @@ namespace UltraWinBar.Utilities
             this.desktops = desktops;
             windows = tasks.GroupedWindows.SourceCollection as INotifyCollectionChanged;
             if (windows != null) windows.CollectionChanged += WindowsChanged;
-            desktops.Changed += DesktopChanged;
+            // Not desktops.Changed: Windows keeps all-desktop pins across switches, so a plain
+            // desktop switch never needs a restore. Only a manager recreation (Explorer restart,
+            // virtual desktop service reconnect) can have dropped pins made while it was down.
+            desktops.ManagerRecovered += ManagerRecovered;
             Settings.Instance.PropertyChanged += SettingsChanged;
             fullRestore = true;
             Queue();
@@ -51,7 +56,9 @@ namespace UltraWinBar.Utilities
             foreach (var window in e.NewItems.OfType<ApplicationWindow>()) pendingWindows.Add(window);
             if (pendingWindows.Count > 0) Queue();
         }
-        private void DesktopChanged(object sender, EventArgs e)
+        // Manager was recreated after being null (Explorer restart or service reconnect): pins
+        // set while it was unavailable never landed, so a full restore is worth its COM cost here.
+        private void ManagerRecovered(object sender, EventArgs e)
         {
             fullRestore = true;
             Queue();
@@ -121,6 +128,12 @@ namespace UltraWinBar.Utilities
             catch (Exception error) { ShellLogger.Warning($"Desktop pins unavailable: {error.Message}"); }
         }
 
+        // A window whose id lookup never succeeds (e.g. the virtual desktop service is briefly
+        // down at startup) must still let the scan retry; a persistently failing window must not
+        // keep it incomplete forever, so give up and keep the partial result after maxAttempts.
+        internal static bool ShouldFinalizeImportScan(bool scanComplete, int attempts, int maxAttempts) =>
+            scanComplete || attempts >= maxAttempts;
+
         private void Restore()
         {
             try
@@ -143,8 +156,10 @@ namespace UltraWinBar.Utilities
                             ShellLogger.Debug($"Desktop pin import skipped {window.Handle}: {error.Message}");
                         }
                     }
-                    if (scanComplete)
+                    importScanAttempts = scanComplete ? 0 : importScanAttempts + 1;
+                    if (ShouldFinalizeImportScan(scanComplete, importScanAttempts, MaxImportScanAttempts))
                     {
+                        if (!scanComplete) ShellLogger.Warning($"Desktop pin import gave up after {importScanAttempts} attempts; using partial results.");
                         Settings.Instance.AllDesktopApplications = ids;
                         Settings.Instance.DesktopPinPreferencesInitialized = true;
                     }
@@ -167,7 +182,7 @@ namespace UltraWinBar.Utilities
         {
             disposed = true;
             if (windows != null) windows.CollectionChanged -= WindowsChanged;
-            desktops.Changed -= DesktopChanged;
+            desktops.ManagerRecovered -= ManagerRecovered;
             Settings.Instance.PropertyChanged -= SettingsChanged;
         }
     }
