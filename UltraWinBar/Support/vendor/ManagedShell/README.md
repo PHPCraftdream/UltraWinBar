@@ -65,3 +65,8 @@ not changed; every local modification is listed below and marked in code with `U
 - `NativeWindowEx.OnThreadException` now logs via `ShellLogger.Error` instead of the WinForms
   default (silently swallowing the exception). ManagedShell has no visibility into the app's
   `CallbackGuard`, so this only logs.
+- `ShellLogger._orphanedEvents`: bounded ring buffer (500, oldest dropped) instead of an
+  unbounded, unsynchronized `List`, so a never-attached observer no longer leaks memory for the
+  whole uptime and concurrent `Debug`/`Info`/... calls can't corrupt it. `OnLog` invokes each
+  attached observer independently, so one throwing observer no longer stops the rest or escapes
+  into the caller.

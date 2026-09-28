@@ -32,8 +32,14 @@ namespace ManagedShell.Common.Logging
         private static bool _isWarning;
         private static LogSeverity _severity;
 
-        // Contains the orphaned log events recorded before any observers are attached.
-        private static List<LogEventArgs> _orphanedEvents = new List<LogEventArgs>();
+        // UltraWinBar: bounded ring buffer for events raised before any observer attaches: keeps
+        // the newest MaxOrphanedEvents and counts the rest as dropped, instead of growing without
+        // limit for the whole uptime if no observer ever attaches. Guarded by _orphanLock so
+        // concurrent Debug/Info/... calls from multiple threads never corrupt it.
+        private const int MaxOrphanedEvents = 500;
+        private static readonly object _orphanLock = new object();
+        private static readonly Queue<LogEventArgs> _orphanedEvents = new Queue<LogEventArgs>();
+        private static long _droppedOrphanedEvents;
 
         /// <summary>
         /// Private constructor. Initializes default severity to "Debug".
@@ -204,13 +210,39 @@ namespace ManagedShell.Common.Logging
         /// <param name="e">Log event parameters.</param>
         public static void OnLog(LogEventArgs e)
         {
-            if (Log != null)
+            LogEventHandler handler = Log;
+            if (handler != null)
             {
-                Log(null, e);
+                InvokeObservers(handler, e);
             }
             else
             {
-                _orphanedEvents.Add(e);
+                lock (_orphanLock)
+                {
+                    if (_orphanedEvents.Count >= MaxOrphanedEvents)
+                    {
+                        _orphanedEvents.Dequeue();
+                        _droppedOrphanedEvents++;
+                    }
+                    _orphanedEvents.Enqueue(e);
+                }
+            }
+        }
+
+        // UltraWinBar: each observer is invoked independently. One observer throwing must not
+        // stop the rest from being notified, and must not escape ShellLogger into the caller
+        // (which can be a native callback).
+        private static void InvokeObservers(LogEventHandler handler, LogEventArgs e)
+        {
+            foreach (LogEventHandler observer in handler.GetInvocationList())
+            {
+                try
+                {
+                    observer(null, e);
+                }
+                catch
+                {
+                }
             }
         }
 
@@ -254,17 +286,25 @@ namespace ManagedShell.Common.Logging
         /// </summary>
         private static void FlushOrphanedLogEvents()
         {
-            if (Log == null)
+            // UltraWinBar: snapshot-and-clear under the lock, then dispatch outside it, so an
+            // observer logging from within its own Log() can't deadlock or re-enter mid-mutation.
+            LogEventArgs[] snapshot;
+            lock (_orphanLock)
             {
-                return;
+                if (_orphanedEvents.Count == 0)
+                {
+                    return;
+                }
+
+                snapshot = new LogEventArgs[_orphanedEvents.Count];
+                _orphanedEvents.CopyTo(snapshot, 0);
+                _orphanedEvents.Clear();
             }
 
-            foreach (var log in _orphanedEvents)
+            foreach (var log in snapshot)
             {
                 OnLog(log);
             }
-
-            _orphanedEvents.Clear();
         }
     }
 }
