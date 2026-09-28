@@ -31,3 +31,7 @@ not changed; every local modification is listed below and marked in code with `U
   `SetWinEventHook(EVENT_OBJECT_SHOW)` watch on `Shell_TrayWnd`/`Shell_SecondaryTrayWnd`, with the
   timer kept as a 2 s safety net (hook install/uninstall track timer start/stop; `ExplorerHelper`
   is now `IDisposable` and unhooks on dispose).
+- `TrayService`: the 100 ms `trayMonitor` poll that kept our tray window ahead of a rival
+  `Shell_TrayWnd` is now event-driven — out-of-context hooks on `EVENT_OBJECT_SHOW` and
+  `EVENT_SYSTEM_FOREGROUND` (other processes only), plus our own `WM_WINDOWPOSCHANGED`, schedule
+  the same check via `Dispatcher.BeginInvoke`; the timer now only runs every 2 s as a safety net.

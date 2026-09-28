@@ -3,6 +3,7 @@ using ManagedShell.Common.Logging;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows.Threading;
 using static ManagedShell.Interop.NativeMethods;
 
@@ -24,7 +25,15 @@ namespace ManagedShell.WindowsTray
         private IntPtr HwndFwd;
         private IntPtr hInstance = Marshal.GetHINSTANCE(typeof(TrayService).Module);
 
+        // UltraWinBar: slow safety net only; the real-time watch is the WinEvent hook below.
         private readonly DispatcherTimer trayMonitor = new DispatcherTimer(DispatcherPriority.Background);
+
+        // UltraWinBar: event-driven replacement for the old 100 ms poll. Hooked/unhooked together
+        // with the safety timer so both always match Suspend/Resume state.
+        private WinEventProc trayEventProc;
+        private IntPtr trayObjectEventHook = IntPtr.Zero;
+        private IntPtr trayForegroundEventHook = IntPtr.Zero;
+        private bool trayCheckQueued;
 
         public TrayService()
         {
@@ -83,6 +92,7 @@ namespace ManagedShell.WindowsTray
             if (HwndTray != IntPtr.Zero)
             {
                 trayMonitor.Stop();
+                UnhookTrayEvents();
                 SetWindowPos(HwndTray, (IntPtr)WindowZOrder.HWND_BOTTOM, 0, 0, 0, 0,
                     (int)SetWindowPosFlags.SWP_NOMOVE | (int)SetWindowPosFlags.SWP_NOACTIVATE |
                     (int)SetWindowPosFlags.SWP_NOSIZE);
@@ -96,6 +106,7 @@ namespace ManagedShell.WindowsTray
             {
                 SetWindowsTrayBottommost();
                 MakeTrayTopmost();
+                HookTrayEvents();
                 trayMonitor.Start();
             }
         }
@@ -145,6 +156,7 @@ namespace ManagedShell.WindowsTray
         public void Dispose()
         {
             trayMonitor.Stop();
+            UnhookTrayEvents();
             DestroyWindows();
 
             if (!EnvironmentHelper.IsAppRunningAsShell)
@@ -260,6 +272,14 @@ namespace ManagedShell.WindowsTray
 
                         ShellLogger.Debug($"TrayService: {TrayWndClass} became visible; hiding");
                     }
+
+                    // UltraWinBar: our own z-order moved (not just a move/resize); something may
+                    // have pushed us out of the topmost band, so re-check instead of waiting for
+                    // the safety timer.
+                    if (hWnd == HwndTray && (wndPos.flags & SetWindowPosFlags.SWP_NOZORDER) == 0)
+                    {
+                        ScheduleTrayCheck();
+                    }
                     break;
             }
 
@@ -361,11 +381,18 @@ namespace ManagedShell.WindowsTray
 
         private void SetupTrayMonitor()
         {
-            trayMonitor.Interval = new TimeSpan(0, 0, 0, 0, 100);
+            // UltraWinBar: was a 100 ms poll; the WinEvent hook now does the real-time work and
+            // this is only a slow safety net for whatever it misses.
+            trayMonitor.Interval = new TimeSpan(0, 0, 2);
             trayMonitor.Tick += TrayMonitor_Tick;
         }
 
         private void TrayMonitor_Tick(object sender, EventArgs e)
+        {
+            CheckTrayZOrder();
+        }
+
+        private void CheckTrayZOrder()
         {
             if (HwndTray == IntPtr.Zero) return;
 
@@ -375,6 +402,99 @@ namespace ManagedShell.WindowsTray
 
             ShellLogger.Debug("TrayService: Raising Shell_TrayWnd");
             MakeTrayTopmost();
+        }
+
+        // UltraWinBar: install a WinEvent hook so we react to another Shell_TrayWnd appearing
+        // instead of polling for it. Must run on the dispatcher thread (message-pump bound hook).
+        private void HookTrayEvents()
+        {
+            if (trayObjectEventHook != IntPtr.Zero || trayForegroundEventHook != IntPtr.Zero) return;
+
+            trayEventProc = TrayWinEventCallback;
+
+            // SHOW only: CREATE..REORDER would marshal every object event in the session onto the UI thread
+            trayObjectEventHook = SetWinEventHook(
+                EVENT_OBJECT_SHOW,
+                EVENT_OBJECT_SHOW,
+                IntPtr.Zero,
+                trayEventProc,
+                0,
+                0,
+                WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
+
+            trayForegroundEventHook = SetWinEventHook(
+                EVENT_SYSTEM_FOREGROUND,
+                EVENT_SYSTEM_FOREGROUND,
+                IntPtr.Zero,
+                trayEventProc,
+                0,
+                0,
+                WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
+        }
+
+        private void UnhookTrayEvents()
+        {
+            if (trayObjectEventHook != IntPtr.Zero)
+            {
+                UnhookWinEvent(trayObjectEventHook);
+                trayObjectEventHook = IntPtr.Zero;
+            }
+
+            if (trayForegroundEventHook != IntPtr.Zero)
+            {
+                UnhookWinEvent(trayForegroundEventHook);
+                trayForegroundEventHook = IntPtr.Zero;
+            }
+
+            trayEventProc = null;
+        }
+
+        private void TrayWinEventCallback(IntPtr hWinEventHook, uint eventType, IntPtr hWnd, int idObject,
+            int idChild, uint dwEventThread, uint dwmsEventTime)
+        {
+            try
+            {
+                if (HwndTray == IntPtr.Zero) return;
+
+                if (eventType != EVENT_SYSTEM_FOREGROUND &&
+                    eventType != EVENT_OBJECT_SHOW)
+                {
+                    return;
+                }
+
+                // cheap filter before GetClassName: whole top-level windows only, never our own
+                if (hWnd == IntPtr.Zero || hWnd == HwndTray || idObject != 0 || idChild != 0 ||
+                    GetParent(hWnd) != IntPtr.Zero)
+                {
+                    return;
+                }
+
+                StringBuilder className = new StringBuilder(32);
+                GetClassName(hWnd, className, className.Capacity);
+                if (className.ToString() == TrayWndClass)
+                {
+                    ScheduleTrayCheck();
+                }
+            }
+            catch (Exception ex)
+            {
+                // UltraWinBar: this runs on a native call frame; nothing may throw back into it.
+                ShellLogger.Error("TrayService: Error handling tray WinEvent", ex);
+            }
+        }
+
+        // UltraWinBar: coalesce bursts of WinEvents (and our own WM_WINDOWPOSCHANGED) into a
+        // single deferred check instead of running MakeTrayTopmost inline per event.
+        private void ScheduleTrayCheck()
+        {
+            if (trayCheckQueued) return;
+            trayCheckQueued = true;
+
+            trayMonitor.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
+            {
+                trayCheckQueued = false;
+                CheckTrayZOrder();
+            }));
         }
 
         private void SetWindowsTrayBottommost()
