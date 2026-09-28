@@ -71,7 +71,8 @@ namespace UltraWinBar.Utilities
                     System.Globalization.CultureInfo.InvariantCulture, out handle);
         }
 
-        private static bool WindowStillExists(string key)
+        // internal: also used directly as TaskModelInput.WindowStillExists by TaskModelHost (#128).
+        internal static bool WindowStillExists(string key)
         {
             if (!TryParseWindowKey(key, out uint processId, out long handle)) return false;
             var hwnd = new IntPtr(handle);

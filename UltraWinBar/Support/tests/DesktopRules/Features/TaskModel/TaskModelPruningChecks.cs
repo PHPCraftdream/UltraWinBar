@@ -14,7 +14,7 @@ internal static class TaskModelPruningChecks
     private const AppBarEdge Edge = AppBarEdge.Bottom;
 
     private static TaskWindowSnapshot Window(object id, string key) =>
-        new() { Window = id, Key = key, PassesFilter = _ => true };
+        new() { Window = id, Key = key };
 
     private static TaskModelInput MakeInput(IReadOnlyList<TaskWindowSnapshot> windows, IReadOnlyList<TaskOrderEntry> taskOrder,
         IReadOnlyList<TaskbarAssignment> assignments = null, IReadOnlyList<PinSnapshot> pins = null,
@@ -24,7 +24,7 @@ internal static class TaskModelPruningChecks
         TaskOrder = taskOrder,
         TaskbarAssignments = assignments ?? Array.Empty<TaskbarAssignment>(),
         Pins = pins ?? Array.Empty<PinSnapshot>(),
-        EnabledEdges = new[] { Edge },
+        Panels = new[] { new TaskPanelRequest { PanelId = Edge, Edge = Edge, Filter = _ => true } },
         WindowStillExists = windowStillExists
     };
 
@@ -90,7 +90,8 @@ internal static class TaskModelPruningChecks
         {
             Windows = new[] { live1 },
             TaskOrder = multiEdgeOrder,
-            EnabledEdges = new[] { AppBarEdge.Bottom, AppBarEdge.Top, AppBarEdge.Left },
+            Panels = new[] { AppBarEdge.Bottom, AppBarEdge.Top, AppBarEdge.Left }
+                .Select(e => new TaskPanelRequest { PanelId = e, Edge = e, Filter = _ => true }).ToList(),
         };
         var multiEdgeResult = TaskModel.Compute(multiEdgeInput);
         if (multiEdgeResult.PrunedTaskOrder == null || multiEdgeResult.PrunedTaskOrder.Any(e => e.Identifier == dead1))

@@ -46,6 +46,7 @@ TaskModelOrderingChecks.Run(args, repositoryRoot);
 TaskModelPinChecks.Run(args, repositoryRoot);
 TaskModelPruningChecks.Run(args, repositoryRoot);
 TaskModelEquivalenceChecks.Run(args, repositoryRoot);
+TaskModelHostChecks.Run(args, repositoryRoot);
 const System.Reflection.BindingFlags hidden = System.Reflection.BindingFlags.NonPublic |
     System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Instance;
 var settingsType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.Settings");

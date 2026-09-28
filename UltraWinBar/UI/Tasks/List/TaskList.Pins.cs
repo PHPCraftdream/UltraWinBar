@@ -1,3 +1,4 @@
+using ManagedShell.AppBar;
 using ManagedShell.Common.Logging;
 using ManagedShell.WindowsTasks;
 using UltraWinBar.Utilities;
@@ -6,132 +7,30 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
-using System.Windows.Threading;
 
 namespace UltraWinBar.Controls
 {
-    public partial class TaskList
+    // Task #128: TaskList no longer computes its own LiveKeys/pruning/order — TaskModelHost runs
+    // one TaskModel.Compute pass per dispatcher tick covering every registered panel, and hands
+    // each panel its own slice back through ITaskModelPanel.Apply.
+    public partial class TaskList : ITaskModelPanel
     {
         private readonly ObservableCollection<object> displayedTasks = new ObservableCollection<object>();
-        private Dictionary<object, string> displayKeys = new Dictionary<object, string>();
-        private bool rebuildPending;
+        private IReadOnlyDictionary<object, string> displayKeys = new Dictionary<object, string>();
         private string lastOrderSnapshot;
-        private static readonly List<ApplicationWindow> EmptyWindows = new List<ApplicationWindow>();
 
-        internal void QueueTaskRebuild()
+        internal void QueueTaskRebuild() => TaskModelHost.Instance.RequestPass(Dispatcher);
+
+        bool ITaskModelPanel.IsLoaded => isLoaded;
+        AppBarEdge ITaskModelPanel.Edge => HostEdge;
+        Func<object, bool> ITaskModelPanel.Filter => Tasks_Filter;
+        Tasks ITaskModelPanel.Tasks => Tasks;
+        IReadOnlyDictionary<object, string> ITaskModelPanel.PreviousDisplayKeys => displayKeys;
+
+        void ITaskModelPanel.Apply(TaskModelEdgeResult result)
         {
-            if (rebuildPending) return;
-            rebuildPending = true;
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                rebuildPending = false;
-                if (!isLoaded) return;
-                RebuildDisplayedTasks();
-            }), DispatcherPriority.Background);
-        }
-
-        private void RebuildDisplayedTasks()
-        {
-            var liveKeys = TaskOrderIdentifier.LiveKeys(Tasks,
-                Settings.Instance.TaskOrder.Select(entry => entry.Identifier)
-                    .Concat(Settings.Instance.TaskbarAssignments.Select(assignment => assignment.Identifier))
-                    .Concat(Settings.Instance.PinnedApplications.Select(pin => pin.PrimaryWindowKey)));
-            Settings.Instance.PruneDeadTaskOrderEntries(liveKeys);
-            Settings.Instance.PruneDeadTaskbarAssignments(liveKeys);
-
-            var windows = taskbarItems?.Cast<object>().OfType<ApplicationWindow>().ToList()
-                ?? new List<ApplicationWindow>();
-            var pins = Settings.Instance.PinnedApplications.Where(p => p.Edge == HostEdge && p.OnCurrentDesktop)
-                .GroupBy(p => p.Identifier).Select(g => g.First()).ToList();
-            var order = Settings.Instance.GetTaskOrderForEdge(HostEdge);
-            var orderSet = new HashSet<string>(order);
-            var legacyIndex = new Dictionary<string, int>();
-            for (int i = 0; i < order.Count; i++)
-                if (order[i] != null && !legacyIndex.ContainsKey(order[i])) legacyIndex[order[i]] = i;
-            var legacyKeys = TaskOrderIdentifier.GetLegacyBatch(windows, Tasks);
-            foreach (var window in windows)
-            {
-                string key = TaskOrderIdentifier.Get(window, Tasks);
-                if (orderSet.Contains(key)) continue;
-                string legacyKey = legacyKeys[window];
-                if (legacyKey != null && legacyIndex.TryGetValue(legacyKey, out int index))
-                {
-                    orderSet.Remove(order[index]);
-                    order[index] = key;
-                    orderSet.Add(key);
-                    legacyIndex.Remove(legacyKey);
-                    legacyIndex[key] = index;
-                }
-            }
-            bool pinsChanged = false;
-            var keys = new Dictionary<object, string>();
-            var claimed = new HashSet<ApplicationWindow>();
-            var items = new List<object>();
-            var windowsByAppId = TaskAssignmentManager.GroupByExecutableIdentifier(windows);
-            foreach (var pin in pins)
-            {
-                // Pins are deduplicated by Identifier above, so two pins never share an
-                // app-identifier group; the claimed filter only matters within this pin's own
-                // group (a member already placed as the primary window further down).
-                var group = (windowsByAppId.TryGetValue(pin.Identifier, out var candidates) ? candidates : EmptyWindows)
-                    .Where(w => !claimed.Contains(w)).ToList();
-                var window = group.FirstOrDefault(w => TaskOrderIdentifier.Get(w, Tasks) == pin.PrimaryWindowKey)
-                    ?? group.FirstOrDefault(w => displayKeys.TryGetValue(w, out string key) && key == pin.OrderKey)
-                    ?? group.FirstOrDefault(w => !orderSet.Contains(TaskOrderIdentifier.Get(w, Tasks)))
-                    ?? group.FirstOrDefault();
-                if (window != null)
-                {
-                    string reconciled = TaskOrderIdentifier.ReconcilePrimaryWindowKey(
-                        pin.PrimaryWindowKey, TaskOrderIdentifier.Get(window, Tasks), liveKeys);
-                    if (reconciled != pin.PrimaryWindowKey)
-                    {
-                        pin.PrimaryWindowKey = reconciled;
-                        pinsChanged = true;
-                    }
-                }
-                object item = window ?? (object)pin;
-                foreach (var member in group) claimed.Add(member);
-                items.Add(item);
-                keys[item] = pin.OrderKey;
-                foreach (var member in group.Where(w => !ReferenceEquals(w, window)))
-                {
-                    items.Add(member);
-                    keys[member] = TaskOrderIdentifier.Get(member, Tasks) ?? "hwnd:" + member.Handle;
-                }
-            }
-            foreach (var window in windows.Where(w => !claimed.Contains(w)))
-            {
-                items.Add(window);
-                keys[window] = TaskOrderIdentifier.Get(window, Tasks) ?? "hwnd:" + window.Handle;
-            }
-            var orderIndexes = new Dictionary<string, int>();
-            int nullOrderIndex = -1;
-            for (int i = 0; i < order.Count; i++)
-            {
-                string orderKey = order[i];
-                if (orderKey == null)
-                {
-                    if (nullOrderIndex < 0) nullOrderIndex = i;
-                }
-                else if (!orderIndexes.ContainsKey(orderKey))
-                {
-                    orderIndexes.Add(orderKey, i);
-                }
-            }
-            items = items.OrderBy(item =>
-            {
-                string itemKey = keys[item];
-                int index = itemKey == null
-                    ? nullOrderIndex
-                    : orderIndexes.TryGetValue(itemKey, out int orderIndex) ? orderIndex : -1;
-                return index < 0 ? int.MaxValue : index;
-            }).ToList();
-            displayKeys = keys;
-            TaskListDiff.Reconcile(displayedTasks, items);
-            foreach (var item in items)
-                if (orderSet.Add(keys[item])) order.Add(keys[item]);
-            Settings.Instance.SetTaskOrderForEdge(HostEdge, order);
-            if (pinsChanged) Settings.Instance.PinnedApplications = Settings.Instance.PinnedApplications.ToList();
+            displayKeys = result.DisplayKeys;
+            TaskListDiff.Reconcile(displayedTasks, result.Items);
             if (Settings.Instance.DebugLogging)
             {
                 string snapshot = string.Join("|", displayedTasks.Select(item => displayKeys[item]));

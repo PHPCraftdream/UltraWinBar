@@ -4,29 +4,28 @@ using System.Linq;
 using ManagedShell.AppBar;
 using UltraWinBar.Utilities;
 
-// Task #127: covers TaskModel.Compute's pin handling — every branch of a pin's representative-
+// Task #127/#128: covers TaskModel.Compute's pin handling — every branch of a pin's representative-
 // window pick (PrimaryWindowKey match, previous display key match, an untracked window, plain
 // first-available), pin deduplication by Identifier, PrimaryWindowKey reconciliation, and windows
-// split across edges by their per-edge filter (a multi-panel snapshot in one Compute call).
+// split across panels by each panel's own Filter (a multi-panel snapshot in one Compute call).
 internal static class TaskModelPinChecks
 {
     private const AppBarEdge Edge = AppBarEdge.Bottom;
 
-    private static TaskWindowSnapshot Window(object id, string key, string appId, Func<AppBarEdge, bool> filter = null) =>
-        new() { Window = id, Key = key, FallbackKey = "hwnd:" + id, AppIdentifier = appId, PassesFilter = filter ?? (_ => true) };
+    private static TaskWindowSnapshot Window(object id, string key, string appId) =>
+        new() { Window = id, Key = key, FallbackKey = "hwnd:" + id, AppIdentifier = appId };
 
     private static PinSnapshot Pin(object id, string identifier, string primaryWindowKey, AppBarEdge edge = Edge, bool onCurrentDesktop = true) =>
         new() { Pin = id, Edge = edge, Identifier = identifier, PrimaryWindowKey = primaryWindowKey, OrderKey = "pin:" + identifier, OnCurrentDesktop = onCurrentDesktop };
 
     private static TaskModelInput MakeInput(IReadOnlyList<TaskWindowSnapshot> windows, IReadOnlyList<PinSnapshot> pins,
-        IReadOnlyList<TaskOrderEntry> taskOrder = null, IReadOnlyList<AppBarEdge> edges = null,
-        IReadOnlyDictionary<AppBarEdge, IReadOnlyDictionary<object, string>> previousDisplayKeys = null) => new()
+        IReadOnlyList<TaskOrderEntry> taskOrder = null, IReadOnlyDictionary<object, string> previousDisplayKeys = null,
+        IReadOnlyList<TaskPanelRequest> panels = null) => new()
     {
         Windows = windows,
         Pins = pins,
         TaskOrder = taskOrder ?? Array.Empty<TaskOrderEntry>(),
-        EnabledEdges = edges ?? new[] { Edge },
-        PreviousDisplayKeys = previousDisplayKeys
+        Panels = panels ?? new[] { new TaskPanelRequest { PanelId = Edge, Edge = Edge, Filter = _ => true, PreviousDisplayKeys = previousDisplayKeys } },
     };
 
     internal static void Run(string[] args, System.IO.DirectoryInfo repositoryRoot)
@@ -44,11 +43,11 @@ internal static class TaskModelPinChecks
         var a2 = Window("a2", "kA2", "app");
         var pinA = Pin("pinA", "app", primaryWindowKey: "kA2");
         var byPrimary = TaskModel.Compute(MakeInput(new[] { a1, a2 }, new[] { pinA }));
-        if (!byPrimary.Edges[Edge].Items.SequenceEqual(new object[] { "a2", "a1" }))
+        if (!byPrimary.Panels[Edge].Items.SequenceEqual(new object[] { "a2", "a1" }))
             throw new Exception("The window matching PrimaryWindowKey must be chosen as the pin's representative.");
         var pinAReversed = Pin("pinA", "app", primaryWindowKey: "kA1");
         var byPrimaryReversed = TaskModel.Compute(MakeInput(new[] { a1, a2 }, new[] { pinAReversed }));
-        if (!byPrimaryReversed.Edges[Edge].Items.SequenceEqual(new object[] { "a1", "a2" }))
+        if (!byPrimaryReversed.Panels[Edge].Items.SequenceEqual(new object[] { "a1", "a2" }))
             throw new Exception("PrimaryWindowKey selection must track which window it names, not always the first or last.");
         Console.WriteLine("PASS: a pin's representative window is the one matching PrimaryWindowKey, whichever position it is in.");
 
@@ -59,9 +58,8 @@ internal static class TaskModelPinChecks
         var b2 = Window("b2", "kB2", "app");
         var pinB = Pin("pinB", "app", primaryWindowKey: "kDead");
         var previousForB = new Dictionary<object, string> { ["b2"] = "pin:app" };
-        var previousB = new Dictionary<AppBarEdge, IReadOnlyDictionary<object, string>> { [Edge] = previousForB };
-        var byPrevious = TaskModel.Compute(MakeInput(new[] { b1, b2 }, new[] { pinB }, previousDisplayKeys: previousB));
-        if (!byPrevious.Edges[Edge].Items.SequenceEqual(new object[] { "b2", "b1" }))
+        var byPrevious = TaskModel.Compute(MakeInput(new[] { b1, b2 }, new[] { pinB }, previousDisplayKeys: previousForB));
+        if (!byPrevious.Panels[Edge].Items.SequenceEqual(new object[] { "b2", "b1" }))
             throw new Exception("With no PrimaryWindowKey match, the window previously displayed under the pin's OrderKey must be kept as representative.");
         Console.WriteLine("PASS: a pin falls back to its previous representative window (by last rebuild's DisplayKeys) when PrimaryWindowKey no longer matches.");
 
@@ -78,7 +76,7 @@ internal static class TaskModelPinChecks
         foreach (var group in new[] { new[] { c1, c2 }, new[] { c2, c1 } })
         {
             var byUntracked = TaskModel.Compute(MakeInput(group, new[] { pinC }, trackedOrder));
-            var displayKeys = byUntracked.Edges[Edge].DisplayKeys;
+            var displayKeys = byUntracked.Panels[Edge].DisplayKeys;
             if (displayKeys["c2"] != "pin:app" || displayKeys["c1"] != "kC1")
                 throw new Exception("With no key/previous match, an untracked (not-yet-in-saved-order) window must be preferred as representative.");
         }
@@ -94,11 +92,11 @@ internal static class TaskModelPinChecks
         var d2 = Window("d2", "kD2", "app");
         var pinD = Pin("pinD", "app", primaryWindowKey: "kDead");
         var firstD1 = TaskModel.Compute(MakeInput(new[] { d1, d2 }, new[] { pinD }, bothTrackedOrder));
-        var keysD1 = firstD1.Edges[Edge].DisplayKeys;
+        var keysD1 = firstD1.Panels[Edge].DisplayKeys;
         if (keysD1["d1"] != "pin:app" || keysD1["d2"] != "kD2")
             throw new Exception("With no other match and every candidate tracked, the first window in group order must be chosen.");
         var firstD2 = TaskModel.Compute(MakeInput(new[] { d2, d1 }, new[] { pinD }, bothTrackedOrder));
-        var keysD2 = firstD2.Edges[Edge].DisplayKeys;
+        var keysD2 = firstD2.Panels[Edge].DisplayKeys;
         if (keysD2["d2"] != "pin:app" || keysD2["d1"] != "kD1")
             throw new Exception("The final fallback must be group order, not window identity.");
         Console.WriteLine("PASS: with no key/previous/untracked match, a pin's representative falls back to the first window in group order.");
@@ -113,10 +111,10 @@ internal static class TaskModelPinChecks
         var firstPin = Pin("first", "app", primaryWindowKey: "kE1");
         var secondPin = Pin("second", "app", primaryWindowKey: "kE2");
         var deduped = TaskModel.Compute(MakeInput(new[] { e1, e2 }, new[] { firstPin, secondPin }));
-        var items = deduped.Edges[Edge].Items;
+        var items = deduped.Panels[Edge].Items;
         if (items.Contains("second"))
             throw new Exception("A duplicate pin (same Identifier) must be dropped; only the first-listed pin survives.");
-        if (!deduped.Edges[Edge].DisplayKeys.TryGetValue("e1", out string e1Key) || e1Key != "pin:app")
+        if (!deduped.Panels[Edge].DisplayKeys.TryGetValue("e1", out string e1Key) || e1Key != "pin:app")
             throw new Exception("The surviving pin's Identifier must claim the app's windows.");
         if (!items.SequenceEqual(new object[] { "e1", "e2" }))
             throw new Exception("A dropped duplicate pin must not change which windows are claimed or their order.");
@@ -128,7 +126,7 @@ internal static class TaskModelPinChecks
         var pinF = Pin("pinF", "appF", primaryWindowKey: "kF1");
         var pinG = Pin("pinG", "appG", primaryWindowKey: "kG1");
         var independent = TaskModel.Compute(MakeInput(new[] { f1, g1 }, new[] { pinF, pinG }));
-        if (!independent.Edges[Edge].Items.ToHashSet().SetEquals(new object[] { "f1", "g1" }))
+        if (!independent.Panels[Edge].Items.ToHashSet().SetEquals(new object[] { "f1", "g1" }))
             throw new Exception("Independent pins must each claim only their own app's windows.");
         Console.WriteLine("PASS: pins for different applications claim only their own window group.");
     }
@@ -169,7 +167,7 @@ internal static class TaskModelPinChecks
         // No window at all for the pin's app: the pin itself is the item, and no reconciliation happens.
         var pinOrphan = Pin("pinOrphan", "missingApp", primaryWindowKey: "kWhatever");
         var orphanResult = TaskModel.Compute(MakeInput(Array.Empty<TaskWindowSnapshot>(), new[] { pinOrphan }));
-        if (!orphanResult.Edges[Edge].Items.SequenceEqual(new object[] { "pinOrphan" }))
+        if (!orphanResult.Panels[Edge].Items.SequenceEqual(new object[] { "pinOrphan" }))
             throw new Exception("A pin with no matching window must appear as itself in the item list.");
         if (orphanResult.PinPrimaryWindowKeyChanges.Any(c => Equals(c.Pin, "pinOrphan")))
             throw new Exception("A pin with no matching window must not attempt PrimaryWindowKey reconciliation.");
@@ -180,19 +178,24 @@ internal static class TaskModelPinChecks
     private static void RunMultiEdgeChecks()
     {
         const AppBarEdge top = AppBarEdge.Top;
-        var bottomOnly = Window("bottomOnly", "kBottom", null, filter: e => e == Edge);
-        var topOnly = Window("topOnly", "kTop", null, filter: e => e == top);
-        var both = Window("both", "kBoth", null, filter: _ => true);
+        var bottomOnly = Window("bottomOnly", "kBottom", null);
+        var topOnly = Window("topOnly", "kTop", null);
+        var both = Window("both", "kBoth", null);
         var pinBottom = Pin("pinBottom", "appBottom", primaryWindowKey: null, edge: Edge);
 
-        var result = TaskModel.Compute(MakeInput(new[] { bottomOnly, topOnly, both }, new[] { pinBottom }, edges: new[] { Edge, top }));
+        var panels = new[]
+        {
+            new TaskPanelRequest { PanelId = Edge, Edge = Edge, Filter = id => Equals(id, "bottomOnly") || Equals(id, "both") },
+            new TaskPanelRequest { PanelId = top, Edge = top, Filter = id => Equals(id, "topOnly") || Equals(id, "both") },
+        };
+        var result = TaskModel.Compute(MakeInput(new[] { bottomOnly, topOnly, both }, new[] { pinBottom }, panels: panels));
 
-        if (!result.Edges[Edge].Items.ToHashSet().SetEquals(new object[] { "bottomOnly", "both", "pinBottom" }))
-            throw new Exception("A window whose filter fails an edge must not appear in that edge's items.");
-        if (!result.Edges[top].Items.ToHashSet().SetEquals(new object[] { "topOnly", "both" }))
-            throw new Exception("Each edge must independently include only the windows that pass its own filter.");
-        if (result.Edges[top].Items.Contains("pinBottom") || !result.Edges[Edge].DisplayKeys.ContainsKey("bottomOnly"))
-            throw new Exception("A pin scoped to one edge must not appear on another edge's task list.");
-        Console.WriteLine("PASS: TaskModel.Compute builds every edge's window/pin list independently from one snapshot, split by each window's per-edge filter and each pin's own Edge.");
+        if (!result.Panels[Edge].Items.ToHashSet().SetEquals(new object[] { "bottomOnly", "both", "pinBottom" }))
+            throw new Exception("A window whose filter fails a panel must not appear in that panel's items.");
+        if (!result.Panels[top].Items.ToHashSet().SetEquals(new object[] { "topOnly", "both" }))
+            throw new Exception("Each panel must independently include only the windows that pass its own filter.");
+        if (result.Panels[top].Items.Contains("pinBottom") || !result.Panels[Edge].DisplayKeys.ContainsKey("bottomOnly"))
+            throw new Exception("A pin scoped to one edge must not appear on another panel's task list.");
+        Console.WriteLine("PASS: TaskModel.Compute builds every panel's window/pin list independently from one snapshot, split by each panel's own Filter and each pin's own Edge.");
     }
 }

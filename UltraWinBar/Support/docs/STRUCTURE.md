@@ -22,9 +22,15 @@ directories are outside this limit.
   `WinEventHook` (rooted, exception-safe WinEvent hooks), `CallbackGuard`, and
   `ShellComProxy` (Explorer-hosted COM objects recreated after Explorer restarts).
 - `Core/Panels/Tasks` holds task order/assignment/diff helpers plus `TaskModel`:
-  a pure, WPF-free function that computes every taskbar edge's ordered task list
-  (and TaskOrder/TaskbarAssignments pruning, pin reconciliation) from one snapshot,
-  in a single pass instead of once per panel.
+  a pure, WPF-free function that computes every registered panel's ordered task
+  list (and TaskOrder/TaskbarAssignments pruning, pin reconciliation) from one
+  snapshot in a single pass, and `TaskModelHost`, the coordinator every
+  `TaskList` panel registers with on load/unregisters on unload (weakly, so a
+  missed unregister still lets a closed panel be collected); it runs one
+  `TaskModel.Compute` pass per dispatcher tick for every live panel — including
+  several panels sharing an edge under multi-monitor mode, chained in
+  registration order — and applies the resulting Settings writes once, outside
+  any panel's view update.
 - Tests in `Support/tests/DesktopRules` are split into `Features` (task order,
   pins and assignments under `Features/Tasks`; `TaskModel` under `Features/TaskModel`),
   `Platform`, `Native` and `Logging` suites; `Program.cs` only orders them and runs

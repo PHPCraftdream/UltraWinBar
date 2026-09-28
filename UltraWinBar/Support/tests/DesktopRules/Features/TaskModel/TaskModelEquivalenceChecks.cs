@@ -4,17 +4,19 @@ using System.Linq;
 using ManagedShell.AppBar;
 using UltraWinBar.Utilities;
 
-// Task #127: differential test between TaskModel.Compute and an independently transcribed copy
-// of the original TaskList.Pins.cs RebuildDisplayedTasks algorithm (adapted to TaskModel's pure
-// snapshot inputs instead of ApplicationWindow/PinnedApplication/Settings). Mirrors the pattern
-// already used for GroupByExecutableIdentifier/TaskListDiff.Reconcile in TaskGroupingAndDiffChecks:
-// build both, compare on crafted scenarios covering every rule at once, then on seeded-random ones.
+// Task #127/#128: differential test between TaskModel.Compute and an independently transcribed
+// reference implementation. Covers both single-panel-per-edge scenarios (#127) and #128's
+// multi-panel-same-edge chaining: several panels (e.g. one per monitor under Settings.ShowMultiMon)
+// registered on one edge, each with its own Filter and PreviousDisplayKeys, processed in list order
+// and seeing the previous same-edge panel's order/pin reconciliation — equivalent to the old
+// sequential per-panel RebuildDisplayedTasks + SetTaskOrderForEdge calls, which mutated the shared
+// TaskOrder/PinnedApplication state directly between panels.
 internal static class TaskModelEquivalenceChecks
 {
-    // Faithful re-transcription of RebuildDisplayedTasks's per-panel body, generalized to every
-    // edge in one call. Deliberately written independently of TaskModel.cs's structure (inline
-    // loops instead of shared private helpers) so a transcription slip in one is unlikely to be
-    // mirrored in the other. Reuses TaskOrderIdentifier's pure helpers, same as TaskModel does —
+    // Faithful, independently structured re-transcription of TaskModel's algorithm (inline loops,
+    // a mutable "current primary key"/"current edge order" dictionary threaded across panels,
+    // instead of TaskModel.cs's own private helpers), so a transcription slip in one is unlikely to
+    // be mirrored in the other. Reuses TaskOrderIdentifier's pure helpers, same as TaskModel does —
     // those already have their own dedicated tests (TaskOrderChecks.cs).
     private static class ReferenceModel
     {
@@ -38,45 +40,59 @@ internal static class TaskModelEquivalenceChecks
             var prunedAssignments = TaskOrderIdentifier.PruneDeadWindowAssignments(new List<TaskbarAssignment>(assignmentsIn), liveKeys);
             var effectiveOrder = prunedOrder ?? new List<TaskOrderEntry>(taskOrderIn);
 
-            var edgeResults = new Dictionary<AppBarEdge, TaskModelEdgeResult>();
-            var allPinChanges = new List<PinPrimaryWindowKeyChange>();
-            foreach (var edge in (input.EnabledEdges ?? Array.Empty<AppBarEdge>()).Distinct())
+            // Each pin's live PrimaryWindowKey, mutated as panels on its edge reconcile it in turn —
+            // mirrors the old code mutating the shared PinnedApplication instance directly.
+            var currentPrimary = new Dictionary<object, string>();
+            foreach (var p in pins) currentPrimary[p.Pin] = p.PrimaryWindowKey;
+
+            // Each edge's running order, seeded on first use from the (already pruned) TaskOrder,
+            // then replaced by whichever panel on that edge ran last.
+            var edgeOrder = new Dictionary<AppBarEdge, List<string>>();
+            var panelResults = new Dictionary<object, TaskModelEdgeResult>();
+
+            foreach (var panel in input.Panels ?? Array.Empty<TaskPanelRequest>())
             {
-                IReadOnlyDictionary<object, string> previous = null;
-                input.PreviousDisplayKeys?.TryGetValue(edge, out previous);
-                var (items, displayKeys, savedOrder, pinChanges) =
-                    ComputeEdge(edge, windows, pins, effectiveOrder, input.CurrentDesktopId, liveKeys, previous ?? new Dictionary<object, string>());
-                edgeResults[edge] = new TaskModelEdgeResult { Items = items, DisplayKeys = displayKeys, SavedOrder = savedOrder };
-                allPinChanges.AddRange(pinChanges);
+                if (!edgeOrder.TryGetValue(panel.Edge, out var orderSeed))
+                {
+                    bool scoped = effectiveOrder.Any(e => e.Edge == panel.Edge && e.DesktopId == input.CurrentDesktopId);
+                    var scope = scoped ? input.CurrentDesktopId : Guid.Empty;
+                    orderSeed = effectiveOrder.Where(e => e.Edge == panel.Edge && e.DesktopId == scope).Select(e => e.Identifier).ToList();
+                }
+
+                var (items, keys, savedOrder) = ComputePanel(panel, orderSeed, windows, pins, currentPrimary, liveKeys);
+                edgeOrder[panel.Edge] = savedOrder;
+                panelResults[panel.PanelId] = new TaskModelEdgeResult { Items = items, DisplayKeys = keys, SavedOrder = savedOrder };
             }
+
+            var pinChanges = new List<PinPrimaryWindowKeyChange>();
+            foreach (var p in pins)
+                if (currentPrimary[p.Pin] != p.PrimaryWindowKey)
+                    pinChanges.Add(new PinPrimaryWindowKeyChange { Pin = p.Pin, NewPrimaryWindowKey = currentPrimary[p.Pin] });
 
             return new TaskModelResult
             {
                 LiveKeys = liveKeys,
                 PrunedTaskOrder = prunedOrder,
                 PrunedTaskbarAssignments = prunedAssignments,
-                PinPrimaryWindowKeyChanges = allPinChanges,
-                Edges = edgeResults
+                PinPrimaryWindowKeyChanges = pinChanges,
+                Panels = panelResults,
+                SavedOrders = edgeOrder
             };
         }
 
-        private static (List<object> Items, Dictionary<object, string> DisplayKeys, List<string> SavedOrder, List<PinPrimaryWindowKeyChange> PinChanges)
-            ComputeEdge(AppBarEdge edge, IReadOnlyList<TaskWindowSnapshot> allWindows, IReadOnlyList<PinSnapshot> allPins,
-                List<TaskOrderEntry> taskOrder, Guid desktopId, HashSet<string> liveKeys, IReadOnlyDictionary<object, string> previousDisplayKeys)
+        private static (List<object> Items, Dictionary<object, string> DisplayKeys, List<string> SavedOrder) ComputePanel(
+            TaskPanelRequest panel, List<string> orderSeed, IReadOnlyList<TaskWindowSnapshot> allWindows,
+            IReadOnlyList<PinSnapshot> allPins, Dictionary<object, string> currentPrimary, HashSet<string> liveKeys)
         {
-            var windows = allWindows.Where(w => w.PassesFilter(edge)).ToList();
+            var previousDisplayKeys = panel.PreviousDisplayKeys ?? new Dictionary<object, string>();
+            var windows = allWindows.Where(w => panel.Filter != null && panel.Filter(w.Window)).ToList();
 
             var pins = new List<PinSnapshot>();
             var seenPinIds = new HashSet<string>();
             foreach (var pin in allPins)
-                if (pin.Edge == edge && pin.OnCurrentDesktop && seenPinIds.Add(pin.Identifier)) pins.Add(pin);
+                if (pin.Edge == panel.Edge && pin.OnCurrentDesktop && seenPinIds.Add(pin.Identifier)) pins.Add(pin);
 
-            bool hasScopedOrder = false;
-            foreach (var entry in taskOrder) if (entry.Edge == edge && entry.DesktopId == desktopId) { hasScopedOrder = true; break; }
-            var order = new List<string>();
-            foreach (var entry in taskOrder)
-                if (entry.Edge == edge && entry.DesktopId == (hasScopedOrder ? desktopId : Guid.Empty)) order.Add(entry.Identifier);
-
+            var order = new List<string>(orderSeed);
             var orderSet = new HashSet<string>(order);
             var legacyIndex = new Dictionary<string, int>();
             for (int i = 0; i < order.Count; i++)
@@ -103,7 +119,6 @@ internal static class TaskModelEquivalenceChecks
                 list.Add(window);
             }
 
-            var pinChanges = new List<PinPrimaryWindowKeyChange>();
             var keys = new Dictionary<object, string>();
             var claimed = new HashSet<TaskWindowSnapshot>();
             var items = new List<object>();
@@ -114,8 +129,10 @@ internal static class TaskModelEquivalenceChecks
                 var group = new List<TaskWindowSnapshot>();
                 foreach (var candidate in candidates) if (!claimed.Contains(candidate)) group.Add(candidate);
 
+                string effectivePrimary = currentPrimary.TryGetValue(pin.Pin, out var overridden) ? overridden : pin.PrimaryWindowKey;
+
                 TaskWindowSnapshot chosen = null;
-                foreach (var candidate in group) if (candidate.Key == pin.PrimaryWindowKey) { chosen = candidate; break; }
+                foreach (var candidate in group) if (candidate.Key == effectivePrimary) { chosen = candidate; break; }
                 if (chosen == null)
                     foreach (var candidate in group)
                         if (previousDisplayKeys.TryGetValue(candidate.Window, out string previousKey) && previousKey == pin.OrderKey) { chosen = candidate; break; }
@@ -126,9 +143,8 @@ internal static class TaskModelEquivalenceChecks
 
                 if (chosen != null)
                 {
-                    string reconciled = TaskOrderIdentifier.ReconcilePrimaryWindowKey(pin.PrimaryWindowKey, chosen.Key, liveKeys);
-                    if (reconciled != pin.PrimaryWindowKey)
-                        pinChanges.Add(new PinPrimaryWindowKeyChange { Pin = pin.Pin, NewPrimaryWindowKey = reconciled });
+                    string reconciled = TaskOrderIdentifier.ReconcilePrimaryWindowKey(effectivePrimary, chosen.Key, liveKeys);
+                    if (reconciled != effectivePrimary) currentPrimary[pin.Pin] = reconciled;
                 }
 
                 object item = chosen != null ? chosen.Window : pin.Pin;
@@ -166,7 +182,7 @@ internal static class TaskModelEquivalenceChecks
             foreach (var item in sorted)
                 if (orderSet.Add(keys[item])) order.Add(keys[item]);
 
-            return (sorted, keys, order, pinChanges);
+            return (sorted, keys, order);
         }
     }
 
@@ -193,19 +209,24 @@ internal static class TaskModelEquivalenceChecks
         if (expectedChanges.Count != actualChanges.Count ||
             !expectedChanges.OrderBy(c => c.Pin?.ToString()).SequenceEqual(actualChanges.OrderBy(c => c.Pin?.ToString())))
             throw new Exception($"{context}: PinPrimaryWindowKeyChanges diverged.");
-        if (!expected.Edges.Keys.ToHashSet().SetEquals(actual.Edges.Keys))
-            throw new Exception($"{context}: the set of computed edges diverged.");
-        foreach (var edge in expected.Edges.Keys)
+        if (!expected.Panels.Keys.ToHashSet().SetEquals(actual.Panels.Keys))
+            throw new Exception($"{context}: the set of computed panels diverged.");
+        foreach (var panelId in expected.Panels.Keys)
         {
-            var e = expected.Edges[edge];
-            var a = actual.Edges[edge];
+            var e = expected.Panels[panelId];
+            var a = actual.Panels[panelId];
             if (!e.Items.SequenceEqual(a.Items))
-                throw new Exception($"{context}/{edge}: Items diverged.");
+                throw new Exception($"{context}/{panelId}: Items diverged.");
             if (e.DisplayKeys.Count != a.DisplayKeys.Count || e.DisplayKeys.Any(kv => !a.DisplayKeys.TryGetValue(kv.Key, out string v) || v != kv.Value))
-                throw new Exception($"{context}/{edge}: DisplayKeys diverged.");
+                throw new Exception($"{context}/{panelId}: DisplayKeys diverged.");
             if (!e.SavedOrder.SequenceEqual(a.SavedOrder))
-                throw new Exception($"{context}/{edge}: SavedOrder diverged.");
+                throw new Exception($"{context}/{panelId}: SavedOrder diverged.");
         }
+        if (!expected.SavedOrders.Keys.ToHashSet().SetEquals(actual.SavedOrders.Keys))
+            throw new Exception($"{context}: the set of edges with a final SavedOrders entry diverged.");
+        foreach (var edge in expected.SavedOrders.Keys)
+            if (!expected.SavedOrders[edge].SequenceEqual(actual.SavedOrders[edge]))
+                throw new Exception($"{context}/{edge}: final SavedOrders diverged.");
     }
 
     private static void Compare(TaskModelInput input, string context)
@@ -217,7 +238,11 @@ internal static class TaskModelEquivalenceChecks
     {
         RunCraftedScenarios();
         RunRandomizedScenarios();
+        RunMultiPanelSameEdgeScenarios();
     }
+
+    private static TaskWindowSnapshot Win(object id, string key, string legacyKey = null, string appId = null, string fallback = null) =>
+        new() { Window = id, Key = key, LegacyKey = legacyKey, AppIdentifier = appId, FallbackKey = fallback ?? "hwnd:" + id };
 
     private static void RunCraftedScenarios()
     {
@@ -227,10 +252,10 @@ internal static class TaskModelEquivalenceChecks
         // Everything at once: saved order, a brand-new window, legacy migration, a pinned app
         // with several windows (one chosen by PrimaryWindowKey), a solo/orphan pin, a dead
         // TaskOrder entry, a dead TaskbarAssignment, and two edges splitting the window set.
-        var w1 = new TaskWindowSnapshot { Window = "w1", Key = "window:v2:w1", AppIdentifier = "appA", PassesFilter = e => e == bottom };
-        var w2 = new TaskWindowSnapshot { Window = "w2", Key = "window:v2:w2", AppIdentifier = "appA", PassesFilter = e => e == bottom };
-        var w3 = new TaskWindowSnapshot { Window = "w3", Key = "window:v2:w3new", LegacyKey = "class:Old|title:W3", AppIdentifier = "appB", PassesFilter = e => e == bottom };
-        var w4 = new TaskWindowSnapshot { Window = "w4", Key = "window:v2:w4", AppIdentifier = "appC", PassesFilter = e => e == top };
+        var w1 = Win("w1", "window:v2:w1", appId: "appA");
+        var w2 = Win("w2", "window:v2:w2", appId: "appA");
+        var w3 = Win("w3", "window:v2:w3new", legacyKey: "class:Old|title:W3", appId: "appB");
+        var w4 = Win("w4", "window:v2:w4", appId: "appC");
         var pinAppA = new PinSnapshot { Pin = "pinA", Edge = bottom, Identifier = "appA", PrimaryWindowKey = "window:v2:w2", OrderKey = "pin:appA", OnCurrentDesktop = true };
         var pinOrphan = new PinSnapshot { Pin = "pinOrphan", Edge = bottom, Identifier = "appZ", PrimaryWindowKey = "window:v2:dead", OrderKey = "pin:appZ", OnCurrentDesktop = true };
         var taskOrder = new List<TaskOrderEntry>
@@ -245,26 +270,33 @@ internal static class TaskModelEquivalenceChecks
             new() { Mode = TaskAssignmentMode.WindowClassAndTitle, Identifier = "window:v2:w1", Edge = bottom },
             new() { Mode = TaskAssignmentMode.WindowClassAndTitle, Identifier = "window:v2:deadAssignment", Edge = bottom },
         };
+        bool BottomFilter(object w) => Equals(w, "w1") || Equals(w, "w2") || Equals(w, "w3");
+        bool TopFilter(object w) => Equals(w, "w4");
+        var panels = new[]
+        {
+            new TaskPanelRequest { PanelId = bottom, Edge = bottom, Filter = BottomFilter },
+            new TaskPanelRequest { PanelId = top, Edge = top, Filter = TopFilter },
+        };
         var craftedInput = new TaskModelInput
         {
             Windows = new[] { w1, w2, w3, w4 },
             Pins = new[] { pinAppA, pinOrphan },
             TaskOrder = taskOrder,
             TaskbarAssignments = assignments,
-            EnabledEdges = new[] { bottom, top },
+            Panels = panels,
             CurrentDesktopId = desktopA,
         };
         Compare(craftedInput, "Crafted: saved order + new window + legacy migration + pin selection/orphan + pruning + two edges");
 
-        // Idempotence round-trip through both implementations: apply TaskModel's own SavedOrder
-        // back and re-run both; they must still agree (and agree with themselves).
+        // Idempotence round-trip: apply the model's own final per-edge SavedOrders back and
+        // re-run; both implementations must still agree (and agree with themselves).
         var first = TaskModel.Compute(craftedInput);
-        var rewrittenOrder = TaskModel.ApplyOrderForEdge(first.PrunedTaskOrder ?? taskOrder, bottom, desktopA, first.Edges[bottom].SavedOrder);
-        rewrittenOrder = TaskModel.ApplyOrderForEdge(rewrittenOrder, top, desktopA, first.Edges[top].SavedOrder);
-        var previous = new Dictionary<AppBarEdge, IReadOnlyDictionary<object, string>>
+        var rewrittenOrder = TaskModel.ApplyOrderForEdge(first.PrunedTaskOrder ?? taskOrder, bottom, desktopA, first.SavedOrders[bottom]);
+        rewrittenOrder = TaskModel.ApplyOrderForEdge(rewrittenOrder, top, desktopA, first.SavedOrders[top]);
+        var panelsRound2 = new[]
         {
-            [bottom] = first.Edges[bottom].DisplayKeys,
-            [top] = first.Edges[top].DisplayKeys,
+            new TaskPanelRequest { PanelId = bottom, Edge = bottom, Filter = BottomFilter, PreviousDisplayKeys = first.Panels[bottom].DisplayKeys },
+            new TaskPanelRequest { PanelId = top, Edge = top, Filter = TopFilter, PreviousDisplayKeys = first.Panels[top].DisplayKeys },
         };
         var secondInput = new TaskModelInput
         {
@@ -272,11 +304,10 @@ internal static class TaskModelEquivalenceChecks
             Pins = craftedInput.Pins,
             TaskOrder = rewrittenOrder,
             TaskbarAssignments = first.PrunedTaskbarAssignments ?? assignments,
-            EnabledEdges = craftedInput.EnabledEdges,
+            Panels = panelsRound2,
             CurrentDesktopId = desktopA,
-            PreviousDisplayKeys = previous,
         };
-        Compare(secondInput, "Crafted round 2 (fed back through TaskModel's own SavedOrder/DisplayKeys)");
+        Compare(secondInput, "Crafted round 2 (fed back through TaskModel's own SavedOrders/DisplayKeys)");
         Console.WriteLine("PASS: TaskModel.Compute matches an independently transcribed reference implementation on a crafted scenario exercising every rule at once, across two rounds.");
     }
 
@@ -291,6 +322,7 @@ internal static class TaskModelEquivalenceChecks
             int windowCount = random.Next(0, 14);
             var windows = new List<TaskWindowSnapshot>();
             var windowKeys = new List<string>();
+            var allowedEdgesByWindow = new Dictionary<object, HashSet<AppBarEdge>>();
             for (int i = 0; i < windowCount; i++)
             {
                 string key = $"window:v2:{trial}:{i}";
@@ -299,15 +331,15 @@ internal static class TaskModelEquivalenceChecks
                 string appId = random.Next(6) == 0 ? null : $"app{random.Next(4)}";
                 var passesEdges = edges.Where(_ => random.Next(2) == 0).ToArray();
                 if (passesEdges.Length == 0) passesEdges = new[] { edges[random.Next(edges.Length)] };
-                var allowed = new HashSet<AppBarEdge>(passesEdges);
+                object id = $"w{trial}_{i}";
+                allowedEdgesByWindow[id] = new HashSet<AppBarEdge>(passesEdges);
                 windows.Add(new TaskWindowSnapshot
                 {
-                    Window = $"w{trial}_{i}",
+                    Window = id,
                     Key = key,
                     LegacyKey = legacyKey,
                     FallbackKey = "hwnd:" + i,
                     AppIdentifier = appId,
-                    PassesFilter = allowed.Contains
                 });
             }
 
@@ -365,14 +397,20 @@ internal static class TaskModelEquivalenceChecks
                 .Select(i => $"window:v2:phantom{i}"));
             bool WindowStillExists(string key) => phantomAlive.Contains(key);
 
-            IReadOnlyDictionary<AppBarEdge, IReadOnlyDictionary<object, string>> previous = null;
-            if (random.Next(2) == 0 && windows.Count > 0)
+            // One panel per edge — this trial exercises the single-panel-per-edge path; multi-panel
+            // same-edge chaining is covered separately in RunMultiPanelSameEdgeScenarios.
+            var panels = edges.Select(edge =>
             {
-                var map = new Dictionary<object, string>();
-                foreach (var w in windows.Where(_ => random.Next(2) == 0))
-                    map[w.Window] = random.Next(2) == 0 ? w.Key : pins.Count > 0 ? pins[random.Next(pins.Count)].OrderKey : w.Key;
-                previous = new Dictionary<AppBarEdge, IReadOnlyDictionary<object, string>> { [edges[random.Next(edges.Length)]] = map };
-            }
+                IReadOnlyDictionary<object, string> previous = null;
+                if (random.Next(2) == 0 && windows.Count > 0)
+                {
+                    var map = new Dictionary<object, string>();
+                    foreach (var w in windows.Where(_ => random.Next(2) == 0))
+                        map[w.Window] = random.Next(2) == 0 ? w.Key : pins.Count > 0 ? pins[random.Next(pins.Count)].OrderKey : w.Key;
+                    previous = map;
+                }
+                return new TaskPanelRequest { PanelId = edge, Edge = edge, Filter = w => allowedEdgesByWindow.TryGetValue(w, out var set) && set.Contains(edge), PreviousDisplayKeys = previous };
+            }).ToList();
 
             var input = new TaskModelInput
             {
@@ -380,13 +418,137 @@ internal static class TaskModelEquivalenceChecks
                 Pins = pins,
                 TaskOrder = taskOrder,
                 TaskbarAssignments = assignments,
-                EnabledEdges = edges,
+                Panels = panels,
                 CurrentDesktopId = desktops[random.Next(desktops.Length)],
                 WindowStillExists = WindowStillExists,
-                PreviousDisplayKeys = previous
             };
             Compare(input, $"Randomized trial {trial}");
         }
         Console.WriteLine("PASS: TaskModel.Compute matches the reference implementation across 200 randomized scenarios covering ordering, legacy migration, pin selection/reconciliation, pruning, multi-edge splits, and desktop scoping.");
+    }
+
+    private static void RunMultiPanelSameEdgeScenarios()
+    {
+        const AppBarEdge edge = AppBarEdge.Bottom;
+
+        // Crafted: two panels (two monitors) on the same edge. Panel 1 sees only windows m1/shared;
+        // panel 2 sees only m2/shared. A pin for "app" has candidates on both monitors: panel 1
+        // reconciles the pin to its own monitor's window first; panel 2 must see that already-
+        // reconciled PrimaryWindowKey (not the original), matching the old sequential per-panel
+        // mutation of the shared PinnedApplication instance.
+        var m1 = Win("m1", "window:v2:m1", appId: "app");
+        var m2 = Win("m2", "window:v2:m2", appId: "app");
+        var pin = new PinSnapshot { Pin = "pinApp", Edge = edge, Identifier = "app", PrimaryWindowKey = "window:v2:dead", OrderKey = "pin:app", OnCurrentDesktop = true };
+        var panel1 = new TaskPanelRequest { PanelId = "monitor1", Edge = edge, Filter = w => Equals(w, "m1") };
+        var panel2 = new TaskPanelRequest { PanelId = "monitor2", Edge = edge, Filter = w => Equals(w, "m2") };
+        var chainedInput = new TaskModelInput
+        {
+            Windows = new[] { m1, m2 },
+            Pins = new[] { pin },
+            Panels = new[] { panel1, panel2 },
+        };
+        Compare(chainedInput, "Multi-panel same edge: pin reconciliation chains from the first panel to the second");
+
+        var chainedResult = TaskModel.Compute(chainedInput);
+        var change = chainedResult.PinPrimaryWindowKeyChanges.SingleOrDefault(c => Equals(c.Pin, "pinApp"));
+        if (change.Pin == null || change.NewPrimaryWindowKey != "window:v2:m1")
+            throw new Exception("Panel 1 (processed first) must claim the pin's representative, since it is the only monitor with a live candidate at that point.");
+        Console.WriteLine("PASS: a pin's PrimaryWindowKey reconciled by the first same-edge panel is visible (final) even though a second panel on the same edge also has a candidate.");
+
+        // Crafted: order chaining. Panel 1 discovers a brand-new window and appends its key;
+        // panel 2 on the same edge must start from panel 1's SavedOrder (see the appended key),
+        // not re-read the original TaskOrder — exactly like sequential SetTaskOrderForEdge calls.
+        var n1 = Win("n1", "window:v2:n1");
+        var n2 = Win("n2", "window:v2:n2");
+        var orderPanels = new[]
+        {
+            new TaskPanelRequest { PanelId = "p1", Edge = edge, Filter = w => Equals(w, "n1") },
+            new TaskPanelRequest { PanelId = "p2", Edge = edge, Filter = w => Equals(w, "n1") || Equals(w, "n2") },
+        };
+        var orderInput = new TaskModelInput { Windows = new[] { n1, n2 }, Panels = orderPanels };
+        Compare(orderInput, "Multi-panel same edge: order chaining (second panel starts from the first panel's SavedOrder)");
+        var orderResult = TaskModel.Compute(orderInput);
+        if (!orderResult.Panels["p2"].SavedOrder.SequenceEqual(new[] { "window:v2:n1", "window:v2:n2" }))
+            throw new Exception("The second same-edge panel must start from the first panel's SavedOrder, so n1 (discovered first) keeps its earlier slot.");
+        if (!orderResult.SavedOrders[edge].SequenceEqual(orderResult.Panels["p2"].SavedOrder))
+            throw new Exception("The edge's final SavedOrders entry must equal the last same-edge panel's SavedOrder.");
+        Console.WriteLine("PASS: same-edge panels chain their order — the last panel's SavedOrder is the edge's final persisted order.");
+
+        // Randomized: 2-3 panels per edge (multi-monitor), each with a random window/edge subset,
+        // against the reference implementation's independent chaining.
+        var random = new Random(128128);
+        var edges = new[] { AppBarEdge.Bottom, AppBarEdge.Top };
+        for (int trial = 0; trial < 150; trial++)
+        {
+            int windowCount = random.Next(0, 10);
+            var windows = new List<TaskWindowSnapshot>();
+            var windowIds = new List<object>();
+            for (int i = 0; i < windowCount; i++)
+            {
+                object id = $"w{trial}_{i}";
+                windowIds.Add(id);
+                windows.Add(new TaskWindowSnapshot
+                {
+                    Window = id,
+                    Key = $"window:v2:{trial}:{i}",
+                    LegacyKey = random.Next(5) == 0 ? $"class:L{random.Next(3)}|title:T{trial}" : null,
+                    FallbackKey = "hwnd:" + i,
+                    AppIdentifier = random.Next(4) == 0 ? null : $"app{random.Next(3)}",
+                });
+            }
+
+            int pinCount = random.Next(0, 4);
+            var pins = new List<PinSnapshot>();
+            for (int i = 0; i < pinCount; i++)
+            {
+                string identifier = $"app{random.Next(3)}";
+                pins.Add(new PinSnapshot
+                {
+                    Pin = $"pin{trial}_{i}",
+                    Edge = edges[random.Next(edges.Length)],
+                    Identifier = identifier,
+                    PrimaryWindowKey = random.Next(2) == 0 && windowIds.Count > 0 ? windows[random.Next(windows.Count)].Key : $"window:v2:phantom{trial}_{i}",
+                    OrderKey = "pin:" + identifier,
+                    OnCurrentDesktop = random.Next(5) != 0
+                });
+            }
+
+            var taskOrder = new List<TaskOrderEntry>();
+            var orderPool = windows.Select(w => w.Key).Concat(pins.Select(p => p.OrderKey)).Append((string)null).ToList();
+            for (int i = 0; i < random.Next(0, 8); i++)
+                taskOrder.Add(new TaskOrderEntry { Edge = edges[random.Next(edges.Length)], Identifier = orderPool[random.Next(orderPool.Count)] });
+
+            // 2-3 panels per edge, each assigned a random subset of that edge's windows (so panels
+            // on the same edge frequently overlap or diverge, the scenario #128 targets).
+            var panels = new List<TaskPanelRequest>();
+            foreach (var e in edges)
+            {
+                int panelCount = 1 + random.Next(3);
+                for (int p = 0; p < panelCount; p++)
+                {
+                    var visible = new HashSet<object>(windowIds.Where(_ => random.Next(2) == 0));
+                    IReadOnlyDictionary<object, string> previous = null;
+                    if (random.Next(2) == 0)
+                    {
+                        var map = new Dictionary<object, string>();
+                        foreach (var id in windowIds.Where(_ => random.Next(3) == 0))
+                            map[id] = random.Next(2) == 0 ? windows.First(w => Equals(w.Window, id)).Key
+                                : pins.Count > 0 ? pins[random.Next(pins.Count)].OrderKey : null;
+                        previous = map;
+                    }
+                    panels.Add(new TaskPanelRequest { PanelId = $"{e}_{p}", Edge = e, Filter = visible.Contains, PreviousDisplayKeys = previous });
+                }
+            }
+
+            var input = new TaskModelInput
+            {
+                Windows = windows,
+                Pins = pins,
+                TaskOrder = taskOrder,
+                Panels = panels,
+            };
+            Compare(input, $"Multi-panel same-edge randomized trial {trial}");
+        }
+        Console.WriteLine("PASS: TaskModel.Compute matches the reference implementation across 150 randomized multi-panel-per-edge scenarios (2-3 panels/edge), covering order and pin-reconciliation chaining between panels sharing an edge.");
     }
 }

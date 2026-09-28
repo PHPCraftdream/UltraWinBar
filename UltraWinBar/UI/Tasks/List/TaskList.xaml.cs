@@ -131,6 +131,7 @@ namespace UltraWinBar.Controls
 
                 isLoaded = true;
                 WeakSubscriptions.SubscribeDesktopChanged(DesktopChanged);
+                TaskModelHost.Instance.Register(this);
                 QueueTaskRebuild();
             }
         }
@@ -411,6 +412,7 @@ namespace UltraWinBar.Controls
 
         private void TaskList_OnUnloaded(object sender, RoutedEventArgs e)
         {
+            TaskModelHost.Instance.Unregister(this);
             WeakSubscriptions.UnsubscribeDesktopChanged(DesktopChanged);
             if (sourceWindows != null) sourceWindows.CollectionChanged -= SourceWindows_CollectionChanged;
             foreach (var window in observedWindows.ToArray()) UnwatchWindow(window);

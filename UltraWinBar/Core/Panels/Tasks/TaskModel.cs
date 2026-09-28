@@ -7,11 +7,12 @@ namespace UltraWinBar.Utilities
 {
     /// <summary>
     /// Pure replacement for TaskList.Pins.cs's RebuildDisplayedTasks: from one snapshot, computes
-    /// what every edge's panel needs (order, pins-vs-windows grouping, TaskOrder/TaskbarAssignments
+    /// what every registered panel needs (order, pins-vs-windows grouping, TaskOrder/TaskbarAssignments
     /// pruning, pin PrimaryWindowKey reconciliation) in a single pass instead of once per panel.
-    /// Reproduces RebuildDisplayedTasks exactly, edge by edge; see #128 for wiring this into TaskList.
-    /// No Settings.Instance, WPF, VirtualDesktopContext or native calls — everything comes from
-    /// TaskModelInput, so this is testable without a Dispatcher or a real window.
+    /// Several panels may share one Edge (multi-monitor: one taskbar per screen) — see
+    /// TaskPanelRequest for how same-edge panels are chained. No Settings.Instance, WPF,
+    /// VirtualDesktopContext or native calls — everything comes from TaskModelInput, so this is
+    /// testable without a Dispatcher or a real window. See TaskModelHost (#128) for the wiring.
     /// </summary>
     public static class TaskModel
     {
@@ -42,20 +43,28 @@ namespace UltraWinBar.Utilities
             List<TaskbarAssignment> prunedAssignments = TaskOrderIdentifier.PruneDeadWindowAssignments(new List<TaskbarAssignment>(assignmentsIn), liveKeys);
             List<TaskOrderEntry> effectiveTaskOrder = prunedTaskOrder ?? new List<TaskOrderEntry>(taskOrderIn);
 
-            var edgeResults = new Dictionary<AppBarEdge, TaskModelEdgeResult>();
-            var pinChanges = new List<PinPrimaryWindowKeyChange>();
-            var seenEdges = new HashSet<AppBarEdge>();
-            foreach (var edge in input.EnabledEdges ?? Array.Empty<AppBarEdge>())
+            var panelResults = new Dictionary<object, TaskModelEdgeResult>();
+            var edgeOrders = new Dictionary<AppBarEdge, List<string>>();
+            // A pin reconciled by one panel must be seen already-reconciled by the next panel on the
+            // same edge (see TaskPanelRequest doc) — mirrors the old code mutating the shared
+            // PinnedApplication instance directly between sequential per-panel rebuilds.
+            var pinPrimaryOverride = new Dictionary<object, string>();
+
+            foreach (var panel in input.Panels ?? Array.Empty<TaskPanelRequest>())
             {
-                if (!seenEdges.Add(edge)) continue;
+                if (!edgeOrders.TryGetValue(panel.Edge, out List<string> orderIn))
+                    orderIn = GetOrderForEdge(effectiveTaskOrder, panel.Edge, input.CurrentDesktopId);
 
-                IReadOnlyDictionary<object, string> previousDisplayKeys =
-                    input.PreviousDisplayKeys != null && input.PreviousDisplayKeys.TryGetValue(edge, out var previous)
-                        ? previous : null;
+                TaskModelEdgeResult result = ComputePanel(panel, orderIn, windows, pins, liveKeys, pinPrimaryOverride);
+                edgeOrders[panel.Edge] = result.SavedOrder;
+                panelResults[panel.PanelId] = result;
+            }
 
-                var (result, changes) = ComputeEdge(edge, windows, pins, effectiveTaskOrder, input.CurrentDesktopId, liveKeys, previousDisplayKeys);
-                edgeResults[edge] = result;
-                pinChanges.AddRange(changes);
+            var pinChanges = new List<PinPrimaryWindowKeyChange>();
+            foreach (var pin in pins)
+            {
+                if (pinPrimaryOverride.TryGetValue(pin.Pin, out string finalKey) && finalKey != pin.PrimaryWindowKey)
+                    pinChanges.Add(new PinPrimaryWindowKeyChange { Pin = pin.Pin, NewPrimaryWindowKey = finalKey });
             }
 
             return new TaskModelResult
@@ -64,7 +73,8 @@ namespace UltraWinBar.Utilities
                 PrunedTaskOrder = prunedTaskOrder,
                 PrunedTaskbarAssignments = prunedAssignments,
                 PinPrimaryWindowKeyChanges = pinChanges,
-                Edges = edgeResults
+                Panels = panelResults,
+                SavedOrders = edgeOrders
             };
         }
 
@@ -76,24 +86,26 @@ namespace UltraWinBar.Utilities
             foreach (var pin in pins) yield return pin.PrimaryWindowKey;
         }
 
-        /// <summary>One edge's body of the original RebuildDisplayedTasks, translated line for line.</summary>
-        private static (TaskModelEdgeResult Result, List<PinPrimaryWindowKeyChange> PinChanges) ComputeEdge(
-            AppBarEdge edge, IReadOnlyList<TaskWindowSnapshot> allWindows, IReadOnlyList<PinSnapshot> allPins,
-            List<TaskOrderEntry> effectiveTaskOrder, Guid desktopId, HashSet<string> liveKeys,
-            IReadOnlyDictionary<object, string> previousDisplayKeys)
+        /// <summary>One panel's body of the original RebuildDisplayedTasks, translated line for line,
+        /// generalized from "this edge's one filter" to "this panel's own Filter/PreviousDisplayKeys",
+        /// and starting from orderIn (the previous same-edge panel's SavedOrder, or the saved
+        /// TaskOrder for the first panel on an edge) instead of always re-reading Settings.</summary>
+        private static TaskModelEdgeResult ComputePanel(TaskPanelRequest panel, List<string> orderIn,
+            IReadOnlyList<TaskWindowSnapshot> allWindows, IReadOnlyList<PinSnapshot> allPins,
+            HashSet<string> liveKeys, Dictionary<object, string> pinPrimaryOverride)
         {
-            previousDisplayKeys ??= EmptyDisplayKeys;
+            IReadOnlyDictionary<object, string> previousDisplayKeys = panel.PreviousDisplayKeys ?? EmptyDisplayKeys;
 
             var windows = new List<TaskWindowSnapshot>();
             foreach (var window in allWindows)
-                if (window.PassesFilter?.Invoke(edge) == true) windows.Add(window);
+                if (panel.Filter?.Invoke(window.Window) == true) windows.Add(window);
 
             var pins = new List<PinSnapshot>();
             var seenPinIds = new HashSet<string>();
             foreach (var pin in allPins)
-                if (pin.Edge == edge && pin.OnCurrentDesktop && seenPinIds.Add(pin.Identifier)) pins.Add(pin);
+                if (pin.Edge == panel.Edge && pin.OnCurrentDesktop && seenPinIds.Add(pin.Identifier)) pins.Add(pin);
 
-            List<string> order = GetOrderForEdge(effectiveTaskOrder, edge, desktopId);
+            List<string> order = new List<string>(orderIn);
             var orderSet = new HashSet<string>(order);
             var legacyIndex = new Dictionary<string, int>();
             for (int i = 0; i < order.Count; i++)
@@ -114,7 +126,6 @@ namespace UltraWinBar.Utilities
                 }
             }
 
-            var pinChanges = new List<PinPrimaryWindowKeyChange>();
             var keys = new Dictionary<object, string>();
             var claimed = new HashSet<TaskWindowSnapshot>();
             var items = new List<object>();
@@ -124,15 +135,16 @@ namespace UltraWinBar.Utilities
             {
                 var group = (windowsByAppId.TryGetValue(pin.Identifier, out var candidates) ? candidates : EmptyWindows)
                     .Where(w => !claimed.Contains(w)).ToList();
-                var window = group.FirstOrDefault(w => w.Key == pin.PrimaryWindowKey)
+                string effectivePrimary = pinPrimaryOverride.TryGetValue(pin.Pin, out string overridden) ? overridden : pin.PrimaryWindowKey;
+                var window = group.FirstOrDefault(w => w.Key == effectivePrimary)
                     ?? group.FirstOrDefault(w => previousDisplayKeys.TryGetValue(w.Window, out string key) && key == pin.OrderKey)
                     ?? group.FirstOrDefault(w => !orderSet.Contains(w.Key))
                     ?? group.FirstOrDefault();
                 if (window != null)
                 {
-                    string reconciled = TaskOrderIdentifier.ReconcilePrimaryWindowKey(pin.PrimaryWindowKey, window.Key, liveKeys);
-                    if (reconciled != pin.PrimaryWindowKey)
-                        pinChanges.Add(new PinPrimaryWindowKeyChange { Pin = pin.Pin, NewPrimaryWindowKey = reconciled });
+                    string reconciled = TaskOrderIdentifier.ReconcilePrimaryWindowKey(effectivePrimary, window.Key, liveKeys);
+                    if (reconciled != effectivePrimary)
+                        pinPrimaryOverride[pin.Pin] = reconciled;
                 }
                 object item = window != null ? window.Window : pin.Pin;
                 foreach (var member in group) claimed.Add(member);
@@ -176,8 +188,7 @@ namespace UltraWinBar.Utilities
             foreach (var item in items)
                 if (orderSet.Add(keys[item])) order.Add(keys[item]);
 
-            var result = new TaskModelEdgeResult { Items = items, DisplayKeys = keys, SavedOrder = order };
-            return (result, pinChanges);
+            return new TaskModelEdgeResult { Items = items, DisplayKeys = keys, SavedOrder = order };
         }
 
         // Mirrors TaskAssignmentManager.GroupByExecutableIdentifier, but over TaskWindowSnapshot's

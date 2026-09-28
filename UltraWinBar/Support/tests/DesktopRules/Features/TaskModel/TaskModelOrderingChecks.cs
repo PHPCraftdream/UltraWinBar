@@ -4,25 +4,26 @@ using System.Linq;
 using ManagedShell.AppBar;
 using UltraWinBar.Utilities;
 
-// Task #127: TaskModel.Compute is a pure, WPF-free replacement for TaskList.Pins.cs's
-// RebuildDisplayedTasks. These checks cover the per-edge ordering rules on their own: saved
+// Task #127/#128: TaskModel.Compute is a pure, WPF-free replacement for TaskList.Pins.cs's
+// RebuildDisplayedTasks. These checks cover the per-panel ordering rules on their own: saved
 // order wins over discovery order, brand-new windows get appended, legacy order keys migrate to
 // window:v2 keys in place, GetTaskOrderForEdge's desktop-scoping semantics, the null-key edge
-// case, and idempotence (re-running on the model's own output changes nothing further).
+// case, and idempotence (re-running on the model's own output changes nothing further). Each
+// scenario here uses a single panel per edge, keyed by the edge itself (multi-panel-same-edge
+// chaining is covered separately in TaskModelEquivalenceChecks).
 internal static class TaskModelOrderingChecks
 {
-    private static TaskWindowSnapshot Window(object id, string key, string legacyKey = null, string fallback = null, string appId = null, Func<AppBarEdge, bool> filter = null) =>
-        new() { Window = id, Key = key, LegacyKey = legacyKey, FallbackKey = fallback, AppIdentifier = appId, PassesFilter = filter ?? (_ => true) };
+    private static TaskWindowSnapshot Window(object id, string key, string legacyKey = null, string fallback = null, string appId = null) =>
+        new() { Window = id, Key = key, LegacyKey = legacyKey, FallbackKey = fallback, AppIdentifier = appId };
 
     private static TaskModelInput MakeInput(IReadOnlyList<TaskWindowSnapshot> windows, IReadOnlyList<TaskOrderEntry> taskOrder,
         AppBarEdge edge = AppBarEdge.Bottom, Guid desktopId = default,
-        IReadOnlyDictionary<AppBarEdge, IReadOnlyDictionary<object, string>> previousDisplayKeys = null) => new()
+        IReadOnlyDictionary<object, string> previousDisplayKeys = null) => new()
     {
         Windows = windows,
         TaskOrder = taskOrder,
-        EnabledEdges = new[] { edge },
+        Panels = new[] { new TaskPanelRequest { PanelId = edge, Edge = edge, Filter = _ => true, PreviousDisplayKeys = previousDisplayKeys } },
         CurrentDesktopId = desktopId,
-        PreviousDisplayKeys = previousDisplayKeys
     };
 
     internal static void Run(string[] args, System.IO.DirectoryInfo repositoryRoot)
@@ -42,10 +43,10 @@ internal static class TaskModelOrderingChecks
         foreach (var discovery in new[] { new[] { w1, w2, w3 }, new[] { w3, w2, w1 }, new[] { w2, w1, w3 } })
         {
             var result = TaskModel.Compute(MakeInput(discovery, savedOrder, edge));
-            var items = result.Edges[edge].Items;
+            var items = result.Panels[edge].Items;
             if (!items.SequenceEqual(new object[] { "w3", "w1", "w2" }))
                 throw new Exception("Discovery order must not affect the saved display order.");
-            if (!result.Edges[edge].SavedOrder.SequenceEqual(new[] { "k3", "k1", "k2" }))
+            if (!result.Panels[edge].SavedOrder.SequenceEqual(new[] { "k3", "k1", "k2" }))
                 throw new Exception("An already-complete saved order must round-trip unchanged.");
         }
         Console.WriteLine("PASS: TaskModel.Compute orders items by the saved TaskOrder regardless of window discovery order.");
@@ -54,10 +55,10 @@ internal static class TaskModelOrderingChecks
         // original source order, and their keys get appended to SavedOrder in that same order.
         var existing = new List<TaskOrderEntry> { new() { Edge = edge, DesktopId = default, Identifier = "k1" } };
         var withNew = TaskModel.Compute(MakeInput(new[] { w1, w2, w3 }, existing, edge));
-        var newItems = withNew.Edges[edge].Items;
+        var newItems = withNew.Panels[edge].Items;
         if (!newItems.SequenceEqual(new object[] { "w1", "w2", "w3" }))
             throw new Exception("New windows must be appended after saved-order windows, in source order.");
-        if (!withNew.Edges[edge].SavedOrder.SequenceEqual(new[] { "k1", "k2", "k3" }))
+        if (!withNew.Panels[edge].SavedOrder.SequenceEqual(new[] { "k1", "k2", "k3" }))
             throw new Exception("New windows' keys must be appended to SavedOrder in the order they were displayed.");
         Console.WriteLine("PASS: TaskModel.Compute appends brand-new windows after the saved order, in source order.");
 
@@ -70,9 +71,9 @@ internal static class TaskModelOrderingChecks
             new() { Edge = edge, DesktopId = default, Identifier = "class:Notepad|title:Untitled" },
         };
         var migrated = TaskModel.Compute(MakeInput(new[] { legacyWindow }, legacyOrder, edge));
-        if (!migrated.Edges[edge].SavedOrder.SequenceEqual(new[] { "window:v2:new" }))
+        if (!migrated.Panels[edge].SavedOrder.SequenceEqual(new[] { "window:v2:new" }))
             throw new Exception("Legacy order key must migrate to the window's new key in place, not append a second entry.");
-        if (!migrated.Edges[edge].Items.SequenceEqual(new object[] { "legacyWin" }))
+        if (!migrated.Panels[edge].Items.SequenceEqual(new object[] { "legacyWin" }))
             throw new Exception("The migrated window must still appear in the rebuilt list.");
 
         // Two windows sharing one legacy key: only the first consumes the migration slot
@@ -81,7 +82,7 @@ internal static class TaskModelOrderingChecks
         var legacyB = Window("legacyB", "window:v2:b", legacyKey: "class:X|title:Y");
         var sharedLegacyOrder = new List<TaskOrderEntry> { new() { Edge = edge, DesktopId = default, Identifier = "class:X|title:Y" } };
         var sharedMigrated = TaskModel.Compute(MakeInput(new[] { legacyA, legacyB }, sharedLegacyOrder, edge));
-        if (!sharedMigrated.Edges[edge].SavedOrder.SequenceEqual(new[] { "window:v2:a", "window:v2:b" }))
+        if (!sharedMigrated.Panels[edge].SavedOrder.SequenceEqual(new[] { "window:v2:a", "window:v2:b" }))
             throw new Exception("Only the first window with a shared legacy key may migrate into its slot; the second must append as new.");
         Console.WriteLine("PASS: TaskModel.Compute migrates a legacy order key to the discovered window's key in place, and only the first of several windows sharing one legacy key claims it.");
 
@@ -103,7 +104,7 @@ internal static class TaskModelOrderingChecks
             throw new Exception("An edge with no entries at all must return an empty order.");
         var perDesktopWindow = Window("w", "scopedA1");
         var perDesktopResult = TaskModel.Compute(MakeInput(new[] { perDesktopWindow }, scopedOrder, edge, desktopA));
-        if (!perDesktopResult.Edges[edge].SavedOrder.SequenceEqual(new[] { "scopedA1" }))
+        if (!perDesktopResult.Panels[edge].SavedOrder.SequenceEqual(new[] { "scopedA1" }))
             throw new Exception("Compute must read the desktop-scoped order for the current desktop, not the default one.");
         Console.WriteLine("PASS: TaskModel.GetOrderForEdge/Compute use a desktop's own scoped TaskOrder entries when present, else the edge's Guid.Empty entries.");
 
@@ -117,13 +118,13 @@ internal static class TaskModelOrderingChecks
             new() { Edge = edge, DesktopId = default, Identifier = "k1" },
         };
         var nullSlotResult = TaskModel.Compute(MakeInput(new[] { keyless, w1 }, withNullSlot, edge));
-        if (!nullSlotResult.Edges[edge].Items.SequenceEqual(new object[] { "keyless", "w1" }))
+        if (!nullSlotResult.Panels[edge].Items.SequenceEqual(new object[] { "keyless", "w1" }))
             throw new Exception("A keyless item must sort into the saved order's null slot.");
         var noNullSlot = new List<TaskOrderEntry> { new() { Edge = edge, DesktopId = default, Identifier = "k1" } };
         var noNullSlotResult = TaskModel.Compute(MakeInput(new[] { w1, keyless }, noNullSlot, edge));
-        if (!noNullSlotResult.Edges[edge].Items.SequenceEqual(new object[] { "w1", "keyless" }))
+        if (!noNullSlotResult.Panels[edge].Items.SequenceEqual(new object[] { "w1", "keyless" }))
             throw new Exception("A keyless item must append after the saved order when the saved order has no null slot.");
-        if (noNullSlotResult.Edges[edge].SavedOrder.Count != 2 || noNullSlotResult.Edges[edge].SavedOrder[1] != null)
+        if (noNullSlotResult.Panels[edge].SavedOrder.Count != 2 || noNullSlotResult.Panels[edge].SavedOrder[1] != null)
             throw new Exception("Appending a keyless item must record a null SavedOrder entry, matching orderSet.Add(null).");
         Console.WriteLine("PASS: TaskModel.Compute sorts a keyless item into a saved null slot when present, else appends it and records a null SavedOrder entry.");
 
@@ -132,11 +133,10 @@ internal static class TaskModelOrderingChecks
         // pruning or pin changes — the model must not oscillate on its own output.
         var idempotentInput = MakeInput(new[] { w3, w1, w2 }, savedOrder, edge);
         var first = TaskModel.Compute(idempotentInput);
-        var edgeFirst = first.Edges[edge];
+        var edgeFirst = first.Panels[edge];
         var rewritten = TaskModel.ApplyOrderForEdge(savedOrder, edge, default, edgeFirst.SavedOrder);
-        var previous = new Dictionary<AppBarEdge, IReadOnlyDictionary<object, string>> { [edge] = edgeFirst.DisplayKeys };
-        var second = TaskModel.Compute(MakeInput(new[] { w3, w1, w2 }, rewritten, edge, previousDisplayKeys: previous));
-        var edgeSecond = second.Edges[edge];
+        var second = TaskModel.Compute(MakeInput(new[] { w3, w1, w2 }, rewritten, edge, previousDisplayKeys: edgeFirst.DisplayKeys));
+        var edgeSecond = second.Panels[edge];
         if (!edgeSecond.SavedOrder.SequenceEqual(edgeFirst.SavedOrder))
             throw new Exception("Re-running Compute on its own SavedOrder must reproduce the same order.");
         if (!edgeSecond.Items.SequenceEqual(edgeFirst.Items))
