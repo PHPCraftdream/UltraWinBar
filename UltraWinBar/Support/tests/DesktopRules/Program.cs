@@ -32,6 +32,9 @@ InteropChecks.Run(repositoryRoot);
 CrossProcessMessageChecks.Run();
 NativeCallbackChecks.Run(repositoryRoot);
 HealthDiagnosticsChecks.Run();
+WindowDictionaryChecks.Run();
+GhostSweepChecks.Run();
+TrayHotkeyChecks.Run();
 TaskOrderChecks.Run(args, repositoryRoot);
 const System.Reflection.BindingFlags hidden = System.Reflection.BindingFlags.NonPublic |
     System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Instance;
