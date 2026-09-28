@@ -12,10 +12,13 @@ namespace ManagedShell.AppBar
     public class AppBarManager : IDisposable
     {
         private static object appBarLock = new object();
-        
+
         private readonly ExplorerHelper _explorerHelper;
         private AppBarMessageDelegate _appBarMessageDelegate;
         private int uCallBack;
+
+        // UltraWinBar: cross-process forward to Explorer's tray must not block on a hung Explorer.
+        private const uint ForwardTimeoutMs = 500;
 
         public List<AppBarWindow> AppBars { get; } = new List<AppBarWindow>();
         public List<AppBarWindow> AutoHideBars { get; } = new List<AppBarWindow>();
@@ -63,18 +66,32 @@ namespace ManagedShell.AppBar
         #region AppBar message handlers
         private IntPtr appBarMessage_GetTaskbarPos(APPBARMSGDATAV3 amd, ref bool handled)
         {
+            // UltraWinBar: SHLockShared maps memory from the sender's process, which requires
+            // duplicating its handles; a sender running elevated or already gone makes it fail.
             IntPtr hShared = SHLockShared((IntPtr)amd.hSharedMemory, (uint)amd.dwSourceProcessId);
-            APPBARDATAV2 abd = (APPBARDATAV2)Marshal.PtrToStructure(hShared, typeof(APPBARDATAV2));
-
-            if (_explorerHelper._notificationArea != null)
+            if (hShared == IntPtr.Zero)
             {
-                _explorerHelper._notificationArea.FillTrayHostSizeData(ref abd);
+                ShellLogger.Debug("AppBarManager: SHLockShared failed for ABM_GETTASKBARPOS");
+                return IntPtr.Zero;
             }
 
-            Marshal.StructureToPtr(abd, hShared, false);
-            SHUnlockShared(hShared);
-            handled = true;
-            return (IntPtr)1;
+            try
+            {
+                APPBARDATAV2 abd = (APPBARDATAV2)Marshal.PtrToStructure(hShared, typeof(APPBARDATAV2));
+
+                if (_explorerHelper._notificationArea != null)
+                {
+                    _explorerHelper._notificationArea.FillTrayHostSizeData(ref abd);
+                }
+
+                Marshal.StructureToPtr(abd, hShared, false);
+                handled = true;
+                return (IntPtr)1;
+            }
+            finally
+            {
+                SHUnlockShared(hShared);
+            }
         }
 
         private IntPtr appBarMessage_QuerySetPos(APPBARMSGDATAV3 amd, ref bool handled)
@@ -104,55 +121,89 @@ namespace ManagedShell.AppBar
 
             // recreate shared memory so that Explorer gets access to it
             IntPtr hSharedOld = SHLockShared((IntPtr)amd.hSharedMemory, (uint)amd.dwSourceProcessId);
-            IntPtr hSharedNew = SHAllocShared(IntPtr.Zero, (uint)Marshal.SizeOf(typeof(APPBARDATAV2)), explorerPid);
-
-            // Copy the data from the old shared memory into the new
-            IntPtr hSharedData = SHLockShared(hSharedNew, explorerPid);
-            if (hSharedData == IntPtr.Zero)
+            if (hSharedOld == IntPtr.Zero)
             {
-                // Failed, bail out bail out!
-                SHFreeShared(hSharedNew, explorerPid);
+                ShellLogger.Debug("AppBarManager: SHLockShared failed for ABM_QUERYPOS/SETPOS source data");
                 return IntPtr.Zero;
             }
 
-            APPBARDATAV2 abdOld = (APPBARDATAV2)Marshal.PtrToStructure(hSharedOld, typeof(APPBARDATAV2));
-            Marshal.StructureToPtr(abdOld, hSharedData, false);
-            SHUnlockShared(hSharedData);
+            // UltraWinBar: hSharedNew/hAmd/hCopyData used to leak on every call (and hSharedOld
+            // stayed locked if the read-back lock below failed); free/unlock them all here.
+            IntPtr hSharedNew = IntPtr.Zero;
+            IntPtr hAmd = IntPtr.Zero;
+            IntPtr hCopyData = IntPtr.Zero;
 
-            // Update AppBarMessageData with the new shared memory handle and PID
-            amd.hSharedMemory = (long)hSharedNew;
-            amd.dwSourceProcessId = (int)explorerPid;
-
-            // Prepare structs to send onward
-            IntPtr hAmd = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(APPBARMSGDATAV3)));
-            Marshal.StructureToPtr(amd, hAmd, false);
-
-            COPYDATASTRUCT copyData = new COPYDATASTRUCT
+            try
             {
-                cbData = Marshal.SizeOf(typeof(APPBARMSGDATAV3)),
-                dwData = (IntPtr)0,
-                lpData = hAmd
-            };
-            IntPtr hCopyData = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(COPYDATASTRUCT)));
-            Marshal.StructureToPtr(copyData, hCopyData, false);
+                hSharedNew = SHAllocShared(IntPtr.Zero, (uint)Marshal.SizeOf(typeof(APPBARDATAV2)), explorerPid);
+                if (hSharedNew == IntPtr.Zero)
+                {
+                    ShellLogger.Debug("AppBarManager: SHAllocShared failed for ABM_QUERYPOS/SETPOS");
+                    return IntPtr.Zero;
+                }
 
-            IntPtr result = SendMessage(explorerTray, (int)WM.COPYDATA, (IntPtr)amd.abd.hWnd, hCopyData);
-            handled = true;
+                // Copy the data from the old shared memory into the new
+                IntPtr hSharedData = SHLockShared(hSharedNew, explorerPid);
+                if (hSharedData == IntPtr.Zero)
+                {
+                    // Failed, bail out bail out!
+                    ShellLogger.Debug("AppBarManager: SHLockShared failed for new shared memory");
+                    return IntPtr.Zero;
+                }
 
-            // It's possible that Explorer modified the data we sent, so read the data back out.
-            IntPtr hSharedFromExplorer = SHLockShared(hSharedNew, explorerPid);
-            if (hSharedFromExplorer != IntPtr.Zero)
-            {
-                APPBARDATAV2 abdNew = (APPBARDATAV2)Marshal.PtrToStructure(hSharedFromExplorer, typeof(APPBARDATAV2));
-                SHUnlockShared(hSharedFromExplorer);
+                APPBARDATAV2 abdOld = (APPBARDATAV2)Marshal.PtrToStructure(hSharedOld, typeof(APPBARDATAV2));
+                Marshal.StructureToPtr(abdOld, hSharedData, false);
+                SHUnlockShared(hSharedData);
 
-                Marshal.StructureToPtr(abdNew, hSharedOld, false);
-                SHUnlockShared(hSharedOld);
+                // Update AppBarMessageData with the new shared memory handle and PID
+                amd.hSharedMemory = (long)hSharedNew;
+                amd.dwSourceProcessId = (int)explorerPid;
+
+                // Prepare structs to send onward
+                hAmd = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(APPBARMSGDATAV3)));
+                Marshal.StructureToPtr(amd, hAmd, false);
+
+                COPYDATASTRUCT copyData = new COPYDATASTRUCT
+                {
+                    cbData = Marshal.SizeOf(typeof(APPBARMSGDATAV3)),
+                    dwData = (IntPtr)0,
+                    lpData = hAmd
+                };
+                hCopyData = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(COPYDATASTRUCT)));
+                Marshal.StructureToPtr(copyData, hCopyData, false);
+
+                // UltraWinBar: don't let a hung Explorer hang our AppBar message handling.
+                if (!TrySendMessageTimeout(explorerTray, (uint)WM.COPYDATA, (IntPtr)amd.abd.hWnd, hCopyData, ForwardTimeoutMs, out IntPtr result))
+                {
+                    ShellLogger.Debug("AppBarManager: Forward to Explorer tray timed out or failed for ABM_QUERYPOS/SETPOS");
+                    result = IntPtr.Zero;
+                }
+                handled = true;
+
+                // It's possible that Explorer modified the data we sent, so read the data back out.
+                IntPtr hSharedFromExplorer = SHLockShared(hSharedNew, explorerPid);
+                if (hSharedFromExplorer != IntPtr.Zero)
+                {
+                    try
+                    {
+                        APPBARDATAV2 abdNew = (APPBARDATAV2)Marshal.PtrToStructure(hSharedFromExplorer, typeof(APPBARDATAV2));
+                        Marshal.StructureToPtr(abdNew, hSharedOld, false);
+                    }
+                    finally
+                    {
+                        SHUnlockShared(hSharedFromExplorer);
+                    }
+                }
+
+                return result;
             }
-
-            SHFreeShared(hSharedNew, explorerPid);
-
-            return result;
+            finally
+            {
+                SHUnlockShared(hSharedOld);
+                if (hSharedNew != IntPtr.Zero) SHFreeShared(hSharedNew, explorerPid);
+                Marshal.FreeHGlobal(hAmd);
+                Marshal.FreeHGlobal(hCopyData);
+            }
         }
 
         private IntPtr appBarMessage_GetState(APPBARMSGDATAV3 amd, ref bool handled)

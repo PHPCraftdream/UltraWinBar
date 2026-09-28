@@ -76,37 +76,58 @@ namespace ManagedShell.WindowsTray
 
             GetWindowThreadProcessId(toolbarHwnd, out var processId);
             IntPtr hProcess = OpenProcess(ProcessAccessFlags.All, false, (int)processId);
-            IntPtr hBuffer = VirtualAllocEx(hProcess, IntPtr.Zero, (uint)Marshal.SizeOf(new TBBUTTON()), AllocationType.Commit,
-                MemoryProtection.ReadWrite);
-
-            for (int i = 0; i < count; i++)
+            if (hProcess == IntPtr.Zero)
             {
-                TrayItem trayItem = GetTrayItem(i, hBuffer, hProcess, toolbarHwnd);
-
-                if (trayItem.hWnd == IntPtr.Zero || !IsWindow(trayItem.hWnd))
-                {
-                    ShellLogger.Debug($"ExplorerTrayService: Ignored notify icon {trayItem.szIconText} due to invalid handle");
-                    continue;
-                }
-
-                SafeNotifyIconData nid = GetTrayItemIconData(trayItem);
-
-                if (trayDelegate != null)
-                {
-                    if (!trayDelegate((uint)NIM.NIM_ADD, nid))
-                    {
-                        ShellLogger.Debug("ExplorerTrayService: Ignored notify icon message");
-                    }
-                }
-                else
-                {
-                    ShellLogger.Debug("ExplorerTrayService: trayDelegate is null");
-                }
+                ShellLogger.Debug("ExplorerTrayService: OpenProcess failed; skipping tray item import");
+                return;
             }
 
-            VirtualFreeEx(hProcess, hBuffer, 0, AllocationType.Release);
+            try
+            {
+                IntPtr hBuffer = VirtualAllocEx(hProcess, IntPtr.Zero, (uint)Marshal.SizeOf(new TBBUTTON()), AllocationType.Commit,
+                    MemoryProtection.ReadWrite);
+                if (hBuffer == IntPtr.Zero)
+                {
+                    ShellLogger.Debug("ExplorerTrayService: VirtualAllocEx failed; skipping tray item import");
+                    return;
+                }
 
-            CloseHandle(hProcess);
+                try
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        TrayItem trayItem = GetTrayItem(i, hBuffer, hProcess, toolbarHwnd);
+
+                        if (trayItem.hWnd == IntPtr.Zero || !IsWindow(trayItem.hWnd))
+                        {
+                            ShellLogger.Debug($"ExplorerTrayService: Ignored notify icon {trayItem.szIconText} due to invalid handle");
+                            continue;
+                        }
+
+                        SafeNotifyIconData nid = GetTrayItemIconData(trayItem);
+
+                        if (trayDelegate != null)
+                        {
+                            if (!trayDelegate((uint)NIM.NIM_ADD, nid))
+                            {
+                                ShellLogger.Debug("ExplorerTrayService: Ignored notify icon message");
+                            }
+                        }
+                        else
+                        {
+                            ShellLogger.Debug("ExplorerTrayService: trayDelegate is null");
+                        }
+                    }
+                }
+                finally
+                {
+                    VirtualFreeEx(hProcess, hBuffer, 0, AllocationType.Release);
+                }
+            }
+            finally
+            {
+                CloseHandle(hProcess);
+            }
         }
 
         private IntPtr FindExplorerTrayToolbarHwnd()
@@ -145,33 +166,41 @@ namespace ManagedShell.WindowsTray
             IntPtr hTBButton = Marshal.AllocHGlobal(Marshal.SizeOf(tbButton));
             IntPtr hTrayItem = Marshal.AllocHGlobal(Marshal.SizeOf(trayItem));
 
-            IntPtr msgSuccess = SendMessage(toolbarHwnd, (int)TB.GETBUTTON, (IntPtr)i, hBuffer);
-            if (ReadProcessMemory(hProcess, hBuffer, hTBButton, Marshal.SizeOf(tbButton), out _))
+            try
             {
-                tbButton = (TBBUTTON)Marshal.PtrToStructure(hTBButton, typeof(TBBUTTON));
-
-                if (tbButton.dwData != UIntPtr.Zero)
+                IntPtr msgSuccess = SendMessage(toolbarHwnd, (int)TB.GETBUTTON, (IntPtr)i, hBuffer);
+                if (ReadProcessMemory(hProcess, hBuffer, hTBButton, Marshal.SizeOf(tbButton), out _))
                 {
-                    if (ReadProcessMemory(hProcess, tbButton.dwData, hTrayItem, Marshal.SizeOf(trayItem), out _))
+                    tbButton = (TBBUTTON)Marshal.PtrToStructure(hTBButton, typeof(TBBUTTON));
+
+                    if (tbButton.dwData != UIntPtr.Zero)
                     {
-                        trayItem = (TrayItem)Marshal.PtrToStructure(hTrayItem, typeof(TrayItem));
-
-                        if ((tbButton.fsState & TBSTATE_HIDDEN) != 0)
+                        if (ReadProcessMemory(hProcess, tbButton.dwData, hTrayItem, Marshal.SizeOf(trayItem), out _))
                         {
-                            trayItem.dwState = 1;
-                        }
-                        else
-                        {
-                            trayItem.dwState = 0;
-                        }
+                            trayItem = (TrayItem)Marshal.PtrToStructure(hTrayItem, typeof(TrayItem));
 
-                        ShellLogger.Debug(
-                            $"ExplorerTrayService: Got tray item: {trayItem.szIconText}");
+                            if ((tbButton.fsState & TBSTATE_HIDDEN) != 0)
+                            {
+                                trayItem.dwState = 1;
+                            }
+                            else
+                            {
+                                trayItem.dwState = 0;
+                            }
+
+                            ShellLogger.Debug(
+                                $"ExplorerTrayService: Got tray item: {trayItem.szIconText}");
+                        }
                     }
                 }
-            }
 
-            return trayItem;
+                return trayItem;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(hTBButton);
+                Marshal.FreeHGlobal(hTrayItem);
+            }
         }
 
         private SafeNotifyIconData GetTrayItemIconData(TrayItem trayItem)
