@@ -4,6 +4,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using ManagedShell.AppBar;
+using ManagedShell.WindowsTray;
+using UltraWinBar.Extensions;
 using UltraWinBar.Utilities;
 
 internal static class PersistenceChecks
@@ -145,5 +147,78 @@ internal static class PersistenceChecks
         if (actualDefaults["MoveActivatedWindowsToCurrentDesktop"].GetValue<bool>())
             throw new Exception("Experimental desktop activation must be disabled by default.");
         Console.WriteLine("PASS: current general settings are defaults; no personal pins, desktop IDs or assignments embedded.");
+
+        CheckNotifyIconBehaviorStableKey(settingsType);
+    }
+
+    // Tray icon behavior is keyed by GetInvertIdentifier() (GUID, or "path:UID"), not by the
+    // tooltip-carrying Identifier, so it must survive tooltip changes and migrate legacy records.
+    private static void CheckNotifyIconBehaviorStableKey(Type settingsType)
+    {
+        object settingsInstance = settingsType.GetProperty("Instance", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static).GetValue(null);
+        var behaviorsProperty = settingsType.GetProperty("NotifyIconBehaviors", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+        List<NotifyIconBehaviorSetting> GetBehaviors() => (List<NotifyIconBehaviorSetting>)behaviorsProperty.GetValue(settingsInstance);
+        void SetBehaviors(List<NotifyIconBehaviorSetting> value) => behaviorsProperty.SetValue(settingsInstance, value);
+
+        var original = GetBehaviors();
+        try
+        {
+            var icon = new NotifyIcon(null) { Path = @"C:\Program Files\App\app.exe", UID = 7, Title = "42 unread" };
+            string stableKey = icon.GetInvertIdentifier();
+
+            SetBehaviors(new List<NotifyIconBehaviorSetting>
+            {
+                new NotifyIconBehaviorSetting { Identifier = stableKey, Behavior = NotifyIconBehavior.AlwaysShow }
+            });
+            if (icon.GetBehavior() != NotifyIconBehavior.AlwaysShow)
+                throw new Exception("A behavior keyed by the stable identifier must be found.");
+            icon.Title = "99 unread";
+            if (icon.GetBehavior() != NotifyIconBehavior.AlwaysShow)
+                throw new Exception("Tray icon behavior must survive a tooltip change (unread counters, battery %, ...).");
+
+            // Legacy "path:UID:tooltip" duplicates (one per tooltip change) must collapse to the
+            // stable key, keeping the most recently written record, in a single settings write.
+            SetBehaviors(new List<NotifyIconBehaviorSetting>
+            {
+                new NotifyIconBehaviorSetting { Identifier = stableKey + ":1 unread", Behavior = NotifyIconBehavior.HideWhenInactive },
+                new NotifyIconBehaviorSetting { Identifier = stableKey + ":99 unread", Behavior = NotifyIconBehavior.AlwaysShow },
+            });
+            if (icon.GetBehavior() != NotifyIconBehavior.AlwaysShow)
+                throw new Exception("Migration must prefer the most recently written legacy record.");
+            var migrated = GetBehaviors();
+            if (migrated.Count != 1 || migrated[0].Identifier != stableKey || migrated[0].Behavior != NotifyIconBehavior.AlwaysShow)
+                throw new Exception("Legacy tooltip-keyed duplicates must be rewritten to the stable key and collapsed to one record.");
+
+            var afterFirstMigration = GetBehaviors();
+            icon.GetBehavior();
+            if (!ReferenceEquals(afterFirstMigration, GetBehaviors()))
+                throw new Exception("An already-migrated stable key must not trigger another settings write.");
+
+            // List<T>.Find on a struct returns default(T) when nothing matches, and the old code's
+            // "is NotifyIconBehaviorSetting" check was always true, silently taking the default
+            // enum member's behavior. FindIndex-based lookup must not do that.
+            var unrelatedIcon = new NotifyIcon(null) { Path = @"C:\Other\other.exe", UID = 1, Title = "" };
+            if (unrelatedIcon.GetBehavior() != NotifyIconBehavior.HideWhenInactive)
+                throw new Exception("An icon with no stored behavior must default to HideWhenInactive.");
+
+            // SetBehavior must also key and remove by the stable identifier, collapsing legacy
+            // duplicates for the same icon instead of leaving them to accumulate.
+            SetBehaviors(new List<NotifyIconBehaviorSetting>
+            {
+                new NotifyIconBehaviorSetting { Identifier = stableKey + ":old tip", Behavior = NotifyIconBehavior.AlwaysShow },
+                new NotifyIconBehaviorSetting { Identifier = stableKey + ":older tip", Behavior = NotifyIconBehavior.AlwaysShow },
+            });
+            // AlwaysHide keeps IsPinned (false) unchanged, so this stays clear of Pin()/Unpin(),
+            // which need a live NotificationArea this test does not construct.
+            icon.SetBehavior(NotifyIconBehavior.AlwaysHide);
+            var afterSet = GetBehaviors();
+            if (afterSet.Count != 1 || afterSet[0].Identifier != stableKey || afterSet[0].Behavior != NotifyIconBehavior.AlwaysHide)
+                throw new Exception("SetBehavior must key by the stable identifier and drop legacy duplicates for the same icon.");
+        }
+        finally
+        {
+            SetBehaviors(original);
+        }
+        Console.WriteLine("PASS: tray icon behavior survives tooltip changes, migrates legacy path:UID:tooltip records to the stable key in one write, and defaults safely when absent.");
     }
 }

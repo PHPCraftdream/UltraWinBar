@@ -1,5 +1,6 @@
 ﻿using ManagedShell.WindowsTray;
 using UltraWinBar.Utilities;
+using System;
 using System.Collections.Generic;
 
 namespace UltraWinBar.Extensions
@@ -12,42 +13,87 @@ namespace UltraWinBar.Extensions
             else return icon.Path + ":" + icon.UID.ToString();
         }
 
+        // Icon.Identifier includes the tooltip for icons without a GUID, so it changes whenever
+        // the tooltip does (unread count, battery %, ...). Behavior is keyed by the stable
+        // GetInvertIdentifier() form instead: GUID, or "path:UID" without the tooltip.
+        // Legacy records (GUID or "path:UID:tooltip") are matched by exact/prefix comparison and
+        // migrated to the stable key the first time they're touched.
+        private static bool IsLegacyMatch(string identifier, string stableKey, bool hasGuid)
+        {
+            if (identifier == stableKey) return true;
+            if (hasGuid) return false; // GUID identifiers never carried a tooltip suffix
+            return identifier.StartsWith(stableKey + ":", StringComparison.Ordinal);
+        }
+
+        private static List<int> FindStableMatches(List<NotifyIconBehaviorSetting> settings, string stableKey, bool hasGuid)
+        {
+            var matches = new List<int>();
+            for (int i = 0; i < settings.Count; i++)
+            {
+                if (IsLegacyMatch(settings[i].Identifier, stableKey, hasGuid))
+                {
+                    matches.Add(i);
+                }
+            }
+            return matches;
+        }
+
         public static NotifyIconBehavior GetBehavior(this NotifyIcon icon)
         {
-            if (Settings.Instance.NotifyIconBehaviors.Find(setting => setting.Identifier == icon.Identifier) is NotifyIconBehaviorSetting iconSetting)
+            string stableKey = icon.GetInvertIdentifier();
+            bool hasGuid = icon.GUID != default;
+            var current = Settings.Instance.NotifyIconBehaviors;
+            var matches = FindStableMatches(current, stableKey, hasGuid);
+
+            if (matches.Count == 0)
             {
-                return iconSetting.Behavior;
+                return NotifyIconBehavior.HideWhenInactive;
             }
 
-            return NotifyIconBehavior.HideWhenInactive;
+            // Prefer the most recently written record (legacy duplicates were appended on each
+            // tooltip change; the last match is the newest one).
+            var chosen = current[matches[matches.Count - 1]];
+
+            if (matches.Count > 1 || chosen.Identifier != stableKey)
+            {
+                var migrated = new List<NotifyIconBehaviorSetting>(current.Count - matches.Count + 1);
+                int chosenIndex = matches[matches.Count - 1];
+                for (int i = 0; i < current.Count; i++)
+                {
+                    if (i == chosenIndex)
+                    {
+                        migrated.Add(new NotifyIconBehaviorSetting { Identifier = stableKey, Behavior = chosen.Behavior });
+                    }
+                    else if (!matches.Contains(i))
+                    {
+                        migrated.Add(current[i]);
+                    }
+                }
+
+                // One save for the whole migration, even if several duplicates were dropped.
+                Settings.Instance.NotifyIconBehaviors = migrated;
+            }
+
+            return chosen.Behavior;
         }
 
         public static void SetBehavior(this NotifyIcon icon, NotifyIconBehavior behavior)
         {
+            string stableKey = icon.GetInvertIdentifier();
+            bool hasGuid = icon.GUID != default;
             var settings = new List<NotifyIconBehaviorSetting>(Settings.Instance.NotifyIconBehaviors);
-            var currentSettingIndex = settings.FindIndex(setting => setting.Identifier == icon.Identifier);
+            var matches = FindStableMatches(settings, stableKey, hasGuid);
 
-            if (currentSettingIndex >= 0)
+            for (int i = matches.Count - 1; i >= 0; i--)
             {
-                if (behavior == NotifyIconBehavior.HideWhenInactive)
-                {
-                    // Switching back to default value; remove from settings
-                    settings.RemoveAt(currentSettingIndex);
-                }
-                else
-                {
-                    settings[currentSettingIndex] = new NotifyIconBehaviorSetting
-                    {
-                        Identifier = icon.Identifier,
-                        Behavior = behavior
-                    };
-                }
+                settings.RemoveAt(matches[i]);
             }
-            else
+
+            if (behavior != NotifyIconBehavior.HideWhenInactive)
             {
                 settings.Add(new NotifyIconBehaviorSetting
                 {
-                    Identifier = icon.Identifier,
+                    Identifier = stableKey,
                     Behavior = behavior
                 });
             }
