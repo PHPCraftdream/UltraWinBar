@@ -29,9 +29,20 @@ PinChecks.Run(args, repositoryRoot);
 UptimeChecks.Run();
 InteropChecks.Run();
 TaskOrderChecks.Run(args, repositoryRoot);
-typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.Settings")
-    .GetMethod("Flush", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic).Invoke(null, null);
-if (userSettingsWrite != (System.IO.File.Exists(userSettingsPath) ? System.IO.File.GetLastWriteTimeUtc(userSettingsPath) : null))
+const System.Reflection.BindingFlags hidden = System.Reflection.BindingFlags.NonPublic |
+    System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Instance;
+var settingsType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.Settings");
+settingsType.GetMethod("Flush", hidden).Invoke(null, null);
+object settingsManager = settingsType.GetField("_settingsManager", hidden).GetValue(null);
+if (!string.Equals((string)settingsManager.GetType().GetField("_fileName", hidden).GetValue(settingsManager),
+        scratchSettingsPath, StringComparison.OrdinalIgnoreCase))
+    throw new Exception("Settings in the test run did not write to the scratch file.");
+// A running UltraWinBar saves its own state to the user's file at any time; only the test's state there is a failure.
+bool userSettingsChanged = userSettingsWrite != (System.IO.File.Exists(userSettingsPath) ? System.IO.File.GetLastWriteTimeUtc(userSettingsPath) : null);
+if (userSettingsChanged && (!System.IO.File.Exists(userSettingsPath) ||
+        System.IO.File.ReadAllText(userSettingsPath) == System.IO.File.ReadAllText(scratchSettingsPath)))
     throw new Exception("The test run modified the user's real settings file.");
 System.IO.File.Delete(scratchSettingsPath);
-Console.WriteLine("PASS: the test run kept Settings on a scratch file and never wrote the user's settings.");
+Console.WriteLine(userSettingsChanged
+    ? "PASS: the test run kept Settings on a scratch file; the user's settings changed only by the running UltraWinBar."
+    : "PASS: the test run kept Settings on a scratch file and never wrote the user's settings.");
