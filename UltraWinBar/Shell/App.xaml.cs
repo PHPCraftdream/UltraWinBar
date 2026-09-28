@@ -48,7 +48,7 @@ namespace UltraWinBar
             _dictionaryManager = new DictionaryManager();
             _updater = new Updater();
             _hotkeyManager = new HotkeyManager();
-            _health = new HealthReporter(_shellManager.Tasks);
+            _health = new HealthReporter(_shellManager.Tasks, _logger);
 
             Settings.Instance.PropertyChanged += Settings_PropertyChanged;
         }
