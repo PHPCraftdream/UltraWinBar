@@ -13,6 +13,7 @@ namespace UltraWinBar.Utilities
         private static bool notificationPending;
         private static bool notificationWorkerRunning;
         private static uint notificationProcessId;
+        private static Task pendingNotificationTask = Task.CompletedTask;
 
         [DllImport("user32.dll")]
         private static extern bool EnumWindows(EnumWindowsProc callback, IntPtr lParam);
@@ -62,9 +63,52 @@ namespace UltraWinBar.Utilities
                 }
 
                 notificationWorkerRunning = true;
+                pendingNotificationTask = Task.Run(DispatchPendingNotifications);
             }
+        }
 
-            Task.Run(DispatchPendingNotifications);
+        /// Blocks the caller (watchdog exit / app shutdown) until the settings-change
+        /// broadcast started by the most recent Apply finishes, bounded by timeout.
+        /// Normal runtime callers never call this; the broadcast itself stays async there.
+        /// Loops because the worker may chain into a fresh Task if Apply raced it; the
+        /// overall wait still never exceeds timeout.
+        public static bool WaitForPendingNotifications(TimeSpan timeout)
+        {
+            var deadline = DateTime.UtcNow + timeout;
+            while (true)
+            {
+                Task task;
+                lock (NotificationLock)
+                {
+                    task = pendingNotificationTask;
+                }
+
+                var remaining = deadline - DateTime.UtcNow;
+                if (remaining <= TimeSpan.Zero)
+                {
+                    return task.IsCompleted;
+                }
+
+                try
+                {
+                    if (!task.Wait(remaining))
+                    {
+                        return false;
+                    }
+                }
+                catch (AggregateException)
+                {
+                    // DispatchPendingNotifications already logs its own failures.
+                }
+
+                lock (NotificationLock)
+                {
+                    if (!notificationWorkerRunning || pendingNotificationTask == task)
+                    {
+                        return true;
+                    }
+                }
+            }
         }
 
         private static void DispatchPendingNotifications()
@@ -95,16 +139,13 @@ namespace UltraWinBar.Utilities
             }
             finally
             {
-                bool restartWorker;
                 lock (NotificationLock)
                 {
                     notificationWorkerRunning = notificationPending;
-                    restartWorker = notificationWorkerRunning;
-                }
-
-                if (restartWorker)
-                {
-                    Task.Run(DispatchPendingNotifications);
+                    if (notificationWorkerRunning)
+                    {
+                        pendingNotificationTask = Task.Run(DispatchPendingNotifications);
+                    }
                 }
             }
         }

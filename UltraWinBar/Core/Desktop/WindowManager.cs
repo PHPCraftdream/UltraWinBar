@@ -14,6 +14,7 @@ namespace UltraWinBar.Utilities
     {
         private static object reopenLock = new object();
         private static readonly TimeSpan WorkAreaRecoveryDelay = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan WorkAreaBroadcastTimeout = TimeSpan.FromSeconds(3);
 
         private bool _isSettingDisplays;
         private bool _isOpeningTaskbars;
@@ -532,6 +533,8 @@ namespace UltraWinBar.Utilities
             if (_manualWorkArea)
             {
                 WorkAreaManager.Apply(_originalWorkArea, (uint)Process.GetCurrentProcess().Id);
+                // Shutting down: wait for the broadcast so other apps see the restored work area before we exit.
+                WorkAreaManager.WaitForPendingNotifications(WorkAreaBroadcastTimeout);
             }
             _shellManager.ExplorerHelper.HideExplorerTaskbar = false;
             Settings.Instance.PropertyChanged -= Settings_PropertyChanged;

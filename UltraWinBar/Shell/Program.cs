@@ -12,6 +12,7 @@ namespace UltraWinBar
         private const string MutexName = "UltraWinBar";
         private const int MutexAttempts = 10;
         private const int MutexWaitMs = 1000;
+        private static readonly TimeSpan WorkAreaBroadcastTimeout = TimeSpan.FromSeconds(3);
 
         private static System.Threading.Mutex _UltraWinBarMutex;
 
@@ -110,6 +111,8 @@ namespace UltraWinBar
                 Bottom = int.Parse(args[5], CultureInfo.InvariantCulture)
             };
             WorkAreaManager.Apply(workArea, (uint)Process.GetCurrentProcess().Id);
+            // Wait for the broadcast so the process doesn't exit before other apps see the restored work area.
+            WorkAreaManager.WaitForPendingNotifications(WorkAreaBroadcastTimeout);
             return 0;
         }
 
