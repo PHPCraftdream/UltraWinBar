@@ -14,6 +14,16 @@ directories are outside this limit.
 - `Assets/Themes` groups built-in themes; `Assets/Resources` groups images,
   calendar data, and compiled effects.
 - `Support` contains developer scripts, release packaging, tests, and docs.
+- `Support/vendor/ManagedShell` is the vendored ManagedShell source (upstream commit
+  `b4521b2`, release 0.0.358) built as project references; its `README.md` lists every
+  local fix. Vendored code keeps the upstream layout and is exempt from the
+  seven-entry and 1000-line limits so it stays diffable against upstream.
+- `Core/Infrastructure/Native` holds the only ways to touch native callbacks:
+  `WinEventHook` (rooted, exception-safe WinEvent hooks), `CallbackGuard`, and
+  `ShellComProxy` (Explorer-hosted COM objects recreated after Explorer restarts).
+- Tests in `Support/tests/DesktopRules` are split into `Features` and `Platform`
+  suites; `Program.cs` only orders them and runs Settings on a scratch file
+  (`ULTRAWINBAR_SETTINGS_PATH`) so a test run can never touch the user's settings.
 
 Build outputs live under `Support/BuildTools/artifacts`; test outputs use their
 own ignored `bin` and `obj` directories. NuGet package versions and the base

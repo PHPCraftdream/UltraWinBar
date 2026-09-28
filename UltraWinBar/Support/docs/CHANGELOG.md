@@ -2,8 +2,40 @@
 
 ## Unreleased
 
+### Changed
+
+- ManagedShell is vendored from its 0.0.358 source (`Support/vendor/ManagedShell`)
+  and built with the app, so its defects are fixed at the source; the upstream
+  version is unchanged.
+- Every WinEvent hook goes through one primitive that keeps its callback rooted,
+  removes it on the installing thread and never lets a handler exception reach
+  user32; every Explorer-hosted COM object goes through one proxy with a single
+  disconnect check, 2/5/15/60 s backoff and recreation on Explorer restart.
+- UI controls and windows subscribe to Settings and virtual desktop changes
+  weakly, so a missed unsubscribe can no longer keep a closed panel alive.
+- The log gets a resource snapshot 5 minutes after start and then every 30
+  minutes (handles, GDI/USER objects, threads, memory, hooks, subscribers), and
+  exceptions on background threads and unobserved tasks are logged.
+- Large files are split by responsibility (Start menu monitor, taskbar window,
+  desktop activation, Japanese IME, settings, tests) without behavior changes.
+
 ### Fixed
 
+- Fix memory-unsafe COM declarations: desktop pin and move queries returned a
+  4-byte `BOOL` into a 2-byte `VARIANT_BOOL`, and the immersive launcher
+  interfaces lacked `PreserveSig`. A test now rejects any COM method with a hidden
+  `[out, retval]`, unmarked `bool`/VARIANT, or a pointer-sized value declared as
+  a 32-bit integer, in the app and in ManagedShell.
+- ManagedShell: ignore tray `WM_COPYDATA` payloads shorter than their structure
+  instead of reading past the sender's buffer; destroy only icons the app owns;
+  retry a failed window path lookup at most every 30 s; use pointer-sized
+  handles and message parameters throughout.
+- Exceptions in the Start menu, window placement, task recovery and registry
+  watch callbacks are logged instead of terminating the process.
+- Task buttons sort by cached ranks instead of rebuilding and scanning the saved
+  order on every comparison; tray icons cache their order position.
+- Only the live settings object is saved; a stray `Settings` instance can no
+  longer overwrite the user's settings file.
 - Fix a crash (access violation) after hours of uptime: ManagedShell's Start
   launcher visibility sink declared its COM methods without `PreserveSig`, so
   each Start open/close notification wrote a phantom return value through a
