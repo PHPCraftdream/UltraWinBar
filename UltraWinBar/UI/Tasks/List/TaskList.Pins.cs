@@ -16,6 +16,7 @@ namespace UltraWinBar.Controls
         private Dictionary<object, string> displayKeys = new Dictionary<object, string>();
         private bool rebuildPending;
         private string lastOrderSnapshot;
+        private static readonly List<ApplicationWindow> EmptyWindows = new List<ApplicationWindow>();
 
         internal void QueueTaskRebuild()
         {
@@ -47,11 +48,12 @@ namespace UltraWinBar.Controls
             var legacyIndex = new Dictionary<string, int>();
             for (int i = 0; i < order.Count; i++)
                 if (order[i] != null && !legacyIndex.ContainsKey(order[i])) legacyIndex[order[i]] = i;
+            var legacyKeys = TaskOrderIdentifier.GetLegacyBatch(windows, Tasks);
             foreach (var window in windows)
             {
                 string key = TaskOrderIdentifier.Get(window, Tasks);
                 if (orderSet.Contains(key)) continue;
-                string legacyKey = TaskOrderIdentifier.GetLegacy(window, Tasks);
+                string legacyKey = legacyKeys[window];
                 if (legacyKey != null && legacyIndex.TryGetValue(legacyKey, out int index))
                 {
                     orderSet.Remove(order[index]);
@@ -65,10 +67,14 @@ namespace UltraWinBar.Controls
             var keys = new Dictionary<object, string>();
             var claimed = new HashSet<ApplicationWindow>();
             var items = new List<object>();
+            var windowsByAppId = TaskAssignmentManager.GroupByExecutableIdentifier(windows);
             foreach (var pin in pins)
             {
-                var group = windows.Where(w => !claimed.Contains(w) &&
-                    TaskAssignmentManager.GetIdentifier(w, TaskAssignmentMode.ExecutablePath) == pin.Identifier).ToList();
+                // Pins are deduplicated by Identifier above, so two pins never share an
+                // app-identifier group; the claimed filter only matters within this pin's own
+                // group (a member already placed as the primary window further down).
+                var group = (windowsByAppId.TryGetValue(pin.Identifier, out var candidates) ? candidates : EmptyWindows)
+                    .Where(w => !claimed.Contains(w)).ToList();
                 var window = group.FirstOrDefault(w => TaskOrderIdentifier.Get(w, Tasks) == pin.PrimaryWindowKey)
                     ?? group.FirstOrDefault(w => displayKeys.TryGetValue(w, out string key) && key == pin.OrderKey)
                     ?? group.FirstOrDefault(w => !orderSet.Contains(TaskOrderIdentifier.Get(w, Tasks)))
@@ -121,23 +127,19 @@ namespace UltraWinBar.Controls
                 return index < 0 ? int.MaxValue : index;
             }).ToList();
             displayKeys = keys;
-            for (int i = displayedTasks.Count - 1; i >= 0; i--)
-                if (!items.Contains(displayedTasks[i])) displayedTasks.RemoveAt(i);
-            for (int i = 0; i < items.Count; i++)
-            {
-                int oldIndex = displayedTasks.IndexOf(items[i]);
-                if (oldIndex < 0) displayedTasks.Insert(i, items[i]);
-                else if (oldIndex != i) displayedTasks.Move(oldIndex, i);
-            }
+            TaskListDiff.Reconcile(displayedTasks, items);
             foreach (var item in items)
                 if (orderSet.Add(keys[item])) order.Add(keys[item]);
             Settings.Instance.SetTaskOrderForEdge(HostEdge, order);
             if (pinsChanged) Settings.Instance.PinnedApplications = Settings.Instance.PinnedApplications.ToList();
-            string snapshot = string.Join("|", displayedTasks.Select(item => displayKeys[item]));
-            if (snapshot != lastOrderSnapshot)
+            if (Settings.Instance.DebugLogging)
             {
-                lastOrderSnapshot = snapshot;
-                ShellLogger.Debug($"Task order snapshot: desktop={VirtualDesktopContext.Instance?.CurrentId}; edge={HostEdge}; keys={snapshot}");
+                string snapshot = string.Join("|", displayedTasks.Select(item => displayKeys[item]));
+                if (snapshot != lastOrderSnapshot)
+                {
+                    lastOrderSnapshot = snapshot;
+                    ShellLogger.Debug($"Task order snapshot: desktop={VirtualDesktopContext.Instance?.CurrentId}; edge={HostEdge}; keys={snapshot}");
+                }
             }
             SetTaskButtonWidth();
         }

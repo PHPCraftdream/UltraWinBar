@@ -136,36 +136,77 @@ namespace UltraWinBar.Utilities
 
         public static string GetLegacy(ApplicationWindow window, Tasks tasks)
         {
-            string appId = TaskAssignmentManager.GetIdentifier(window, TaskAssignmentMode.ExecutablePath);
-            if (appId == null || tasks == null)
+            if (window == null) return null;
+            return GetLegacyBatch(new[] { window }, tasks)[window];
+        }
+
+        /// <summary>
+        /// GetLegacy for every window in 'windows' at once, via a single pass over
+        /// tasks.GroupedWindows.SourceCollection instead of one pass per window (O(W^2) when
+        /// many windows need it at once, e.g. startup or an Explorer restart). Reproduces
+        /// GetLegacy exactly, window by window, including its edge cases: a window not
+        /// ShowInTaskbar (or not found in the source collection at all) gets appId + "#" +
+        /// <total matching ShowInTaskbar siblings seen>, same as GetLegacy's loop running to
+        /// completion without ever reference-matching it. A transient enumeration failure (e.g.
+        /// a sibling window closing mid-scan) falls every pending window back to its bare appId,
+        /// same as GetLegacy's own try/catch would for that window individually.
+        /// </summary>
+        internal static Dictionary<ApplicationWindow, string> GetLegacyBatch(IEnumerable<ApplicationWindow> windows, Tasks tasks)
+        {
+            var result = new Dictionary<ApplicationWindow, string>();
+            var appIds = new Dictionary<ApplicationWindow, string>();
+            var pending = new List<ApplicationWindow>();
+            foreach (var window in windows)
             {
-                return TaskAssignmentManager.GetLegacyWindowIdentifier(window);
+                if (window == null || result.ContainsKey(window)) continue;
+
+                string appId = TaskAssignmentManager.GetIdentifier(window, TaskAssignmentMode.ExecutablePath);
+                if (appId == null || tasks == null)
+                {
+                    result[window] = TaskAssignmentManager.GetLegacyWindowIdentifier(window);
+                }
+                else
+                {
+                    appIds[window] = appId;
+                    pending.Add(window);
+                }
             }
+            if (pending.Count == 0) return result;
 
             // Best-effort only — never let a transient enumeration failure here (e.g. a
             // sibling window closing mid-loop) affect drag/assignment/sort callers.
             try
             {
-                int ordinal = 0;
+                var ordinalAtWindow = new Dictionary<ApplicationWindow, int>();
+                var totalByAppId = new Dictionary<string, int>();
                 foreach (object item in tasks.GroupedWindows.SourceCollection)
                 {
-                    if (item is ApplicationWindow sibling && sibling.ShowInTaskbar &&
-                        TaskAssignmentManager.GetIdentifier(sibling, TaskAssignmentMode.ExecutablePath) == appId)
+                    if (item is ApplicationWindow sibling && sibling.ShowInTaskbar)
                     {
-                        ordinal++;
-                        if (ReferenceEquals(sibling, window))
-                        {
-                            break;
-                        }
+                        string siblingAppId = TaskAssignmentManager.GetIdentifier(sibling, TaskAssignmentMode.ExecutablePath);
+                        if (siblingAppId == null) continue;
+
+                        int ordinal = totalByAppId.TryGetValue(siblingAppId, out int count) ? count + 1 : 1;
+                        totalByAppId[siblingAppId] = ordinal;
+                        // First occurrence wins, matching GetLegacy's break on the first reference match.
+                        if (!ordinalAtWindow.ContainsKey(sibling)) ordinalAtWindow[sibling] = ordinal;
                     }
                 }
 
-                return appId + "#" + ordinal;
+                foreach (var window in pending)
+                {
+                    string appId = appIds[window];
+                    int ordinal = ordinalAtWindow.TryGetValue(window, out int found) ? found
+                        : totalByAppId.TryGetValue(appId, out int total) ? total : 0;
+                    result[window] = appId + "#" + ordinal;
+                }
             }
             catch (Exception)
             {
-                return appId;
+                foreach (var window in pending) result[window] = appIds[window];
             }
+
+            return result;
         }
     }
 }

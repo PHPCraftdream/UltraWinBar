@@ -72,6 +72,30 @@ namespace UltraWinBar.Utilities
         }
 
         /// <summary>
+        /// Groups windows by their ExecutablePath identifier, preserving each window's relative
+        /// order within its group. Windows with no identifier are omitted (an unidentified
+        /// window can never match a pin's Identifier). Lets pin matching in RebuildDisplayedTasks
+        /// look each pin's windows up by identifier instead of scanning every window per pin.
+        /// </summary>
+        internal static Dictionary<string, List<ApplicationWindow>> GroupByExecutableIdentifier(IEnumerable<ApplicationWindow> windows)
+        {
+            var groups = new Dictionary<string, List<ApplicationWindow>>();
+            foreach (var window in windows)
+            {
+                string id = GetIdentifier(window, TaskAssignmentMode.ExecutablePath);
+                if (id == null) continue;
+
+                if (!groups.TryGetValue(id, out var group))
+                {
+                    group = new List<ApplicationWindow>();
+                    groups[id] = group;
+                }
+                group.Add(window);
+            }
+            return groups;
+        }
+
+        /// <summary>
         /// The edge this window is assigned to, or null if it has no assignment (in which
         /// case it belongs on the default taskbar). Checks the window-specific assignment
         /// first, then falls back to legacy title-specific and application-wide rules.

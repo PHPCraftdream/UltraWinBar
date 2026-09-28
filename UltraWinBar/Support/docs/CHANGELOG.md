@@ -11,6 +11,10 @@
   assignments are cached per window instead of rebuilt on every call; the cache
   refreshes when the source values change (for example a UWP window's
   AppUserModelID arriving late).
+- The taskbar list's per-panel rebuild no longer rescans every window per pin,
+  recomputes each window's legacy order key with its own full pass over the
+  task source, or diffs the displayed list with repeated `Contains`/`IndexOf`
+  scans; all three are now near-linear, with identical results.
 - ManagedShell is vendored from its 0.0.358 source (`Support/vendor/ManagedShell`)
   and built with the app, so its defects are fixed at the source; the upstream
   version is unchanged.
