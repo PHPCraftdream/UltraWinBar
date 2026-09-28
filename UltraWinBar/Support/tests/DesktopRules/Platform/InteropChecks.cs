@@ -18,7 +18,7 @@ internal static class InteropChecks
                                      BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
     private static readonly Regex HandleName = new Regex(@"^(h[A-Z]\w*|(?i:hwnd|hkl|wparam|lparam|lresult|hook|\w*handle))$");
 
-    internal static void Run()
+    internal static void Run(System.IO.DirectoryInfo repositoryRoot)
     {
         var problems = new List<string>();
         Check(typeof(TaskAssignmentManager).Assembly, problems, strictReturns: true);
@@ -121,6 +121,185 @@ internal static class InteropChecks
                 throw new Exception($"{typeName} must override OnThreadException; NativeWindow's default silently swallows WndProc exceptions.");
         }
         Console.WriteLine("PASS: native windows override OnThreadException instead of silently swallowing WndProc exceptions.");
+        // ManagedShell.WindowsTasks: pointer trust boundary (Н5), per-instance Windows collection
+        // (Н15), and the Dispose/Initialize hook lifecycle (Н3).
+        var windowsTasks = Assembly.Load("ManagedShell.WindowsTasks");
+        CheckMemorySafety(windowsTasks);
+        CheckBoundedStringRead(windowsTasks);
+        CheckPerInstanceWindowsCollection(windowsTasks);
+        CheckDisposeInitializeLifecycle(repositoryRoot);
+    }
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr VirtualAlloc(IntPtr lpAddress, UIntPtr dwSize, uint flAllocationType, uint flProtect);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool VirtualFree(IntPtr lpAddress, UIntPtr dwSize, uint dwFreeType);
+
+    private const uint MEM_COMMIT = 0x1000;
+    private const uint MEM_RESERVE = 0x2000;
+    private const uint MEM_RELEASE = 0x8000;
+    private const uint PAGE_READWRITE = 0x04;
+    private const uint PAGE_READONLY = 0x02;
+
+    private static void CheckMemorySafety(Assembly windowsTasks)
+    {
+        var memorySafety = windowsTasks.GetType("ManagedShell.WindowsTasks.MemorySafety")
+            ?? throw new Exception("Trust-boundary pointer validator (MemorySafety) is missing.");
+        var isReadWritable = memorySafety.GetMethod("IsReadWritable", BindingFlags.Static | BindingFlags.NonPublic)
+            ?? throw new Exception("MemorySafety.IsReadWritable is missing.");
+        var getReadableByteCount = memorySafety.GetMethod("GetReadableByteCount", BindingFlags.Static | BindingFlags.NonPublic)
+            ?? throw new Exception("MemorySafety.GetReadableByteCount is missing.");
+
+        bool IsReadWritable(IntPtr address, int size) => (bool)isReadWritable.Invoke(null, new object[] { address, size });
+        int GetReadableByteCount(IntPtr address, int maxBytes) => (int)getReadableByteCount.Invoke(null, new object[] { address, maxBytes });
+
+        // Garbage inputs must be rejected without ever dereferencing the pointer.
+        if (IsReadWritable(IntPtr.Zero, 16)) throw new Exception("Null pointer must be rejected.");
+        if (IsReadWritable((IntPtr)1, 16)) throw new Exception("Garbage pointer must be rejected.");
+        if (GetReadableByteCount(IntPtr.Zero, 16) != 0) throw new Exception("Null pointer must read as 0 bytes.");
+        if (GetReadableByteCount((IntPtr)1, 16) != 0) throw new Exception("Garbage pointer must read as 0 bytes.");
+
+        UIntPtr pageSize = (UIntPtr)4096;
+
+        // An unmapped address: VirtualQuery succeeds (it always describes the region a process
+        // *could* touch), but State is MEM_FREE, not MEM_COMMIT.
+        IntPtr unmapped = VirtualAlloc(IntPtr.Zero, pageSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+        if (unmapped == IntPtr.Zero) throw new Exception("Test setup: VirtualAlloc failed.");
+        if (!VirtualFree(unmapped, UIntPtr.Zero, MEM_RELEASE)) throw new Exception("Test setup: VirtualFree failed.");
+        if (IsReadWritable(unmapped, 16)) throw new Exception("Unmapped (freed) address must be rejected.");
+        if (GetReadableByteCount(unmapped, 16) != 0) throw new Exception("Unmapped (freed) address must read as 0 bytes.");
+
+        IntPtr rw = VirtualAlloc(IntPtr.Zero, pageSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+        if (rw == IntPtr.Zero) throw new Exception("Test setup: VirtualAlloc(PAGE_READWRITE) failed.");
+        try
+        {
+            if (!IsReadWritable(rw, 16)) throw new Exception("A committed read-write page must be accepted.");
+            if (!IsReadWritable(IntPtr.Add(rw, 4095), 1)) throw new Exception("The last byte of the region must still be accepted.");
+            if (IsReadWritable(IntPtr.Add(rw, 4095), 2)) throw new Exception("A struct crossing the region end must be rejected.");
+            if (GetReadableByteCount(rw, 8) != 8) throw new Exception("Readable byte count must not be truncated below what fits.");
+        }
+        finally
+        {
+            VirtualFree(rw, UIntPtr.Zero, MEM_RELEASE);
+        }
+
+        IntPtr ro = VirtualAlloc(IntPtr.Zero, pageSize, MEM_COMMIT | MEM_RESERVE, PAGE_READONLY);
+        if (ro == IntPtr.Zero) throw new Exception("Test setup: VirtualAlloc(PAGE_READONLY) failed.");
+        try
+        {
+            if (IsReadWritable(ro, 16)) throw new Exception("A read-only page must be rejected for a read+write access (GETMINRECT overwrites the struct in place).");
+            if (GetReadableByteCount(ro, 16) != 16) throw new Exception("A read-only page must still be reported as readable.");
+        }
+        finally
+        {
+            VirtualFree(ro, UIntPtr.Zero, MEM_RELEASE);
+        }
+
+        Console.WriteLine("PASS: MemorySafety rejects null/garbage/unmapped/read-only pointers and structs crossing the region end, before GETMINRECT would dereference them.");
+    }
+
+    private static void CheckBoundedStringRead(Assembly windowsTasks)
+    {
+        var applicationWindow = windowsTasks.GetType("ManagedShell.WindowsTasks.ApplicationWindow")
+            ?? throw new Exception("ApplicationWindow type is missing.");
+        var readBoundedString = applicationWindow.GetMethod("ReadBoundedString", BindingFlags.Static | BindingFlags.NonPublic)
+            ?? throw new Exception("ApplicationWindow.ReadBoundedString is missing.");
+
+        string ReadBoundedString(IntPtr ptr, int maxChars) => (string)readBoundedString.Invoke(null, new object[] { ptr, maxChars });
+
+        if (ReadBoundedString(IntPtr.Zero, 10) != string.Empty) throw new Exception("Null pointer must read as empty.");
+
+        IntPtr buffer = Marshal.AllocHGlobal(40); // 20 UTF-16 chars
+        try
+        {
+            // No null terminator anywhere in the buffer: the read must stop at maxChars, not run past it.
+            for (int i = 0; i < 20; i++) Marshal.WriteInt16(buffer, i * 2, (short)'A');
+            string noTerminator = ReadBoundedString(buffer, 10);
+            if (noTerminator.Length != 10 || noTerminator.Any(c => c != 'A'))
+                throw new Exception($"A buffer without a null terminator must be read up to maxChars, no further: got \"{noTerminator}\".");
+
+            // A terminator inside the requested length must stop the read there.
+            Marshal.WriteInt16(buffer, 0, (short)'A');
+            Marshal.WriteInt16(buffer, 2, (short)'B');
+            Marshal.WriteInt16(buffer, 4, 0);
+            Marshal.WriteInt16(buffer, 6, (short)'C');
+            string terminated = ReadBoundedString(buffer, 10);
+            if (terminated != "AB") throw new Exception($"A null terminator inside maxChars must stop the read there, got \"{terminated}\".");
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(buffer);
+        }
+
+        Console.WriteLine("PASS: ApplicationWindow.ReadBoundedString never reads past maxChars and stops at an embedded null terminator.");
+    }
+
+    private static void CheckPerInstanceWindowsCollection(Assembly windowsTasks)
+    {
+        var tasksServiceType = windowsTasks.GetType("ManagedShell.WindowsTasks.TasksService")
+            ?? throw new Exception("TasksService type is missing.");
+
+        // Constructing a second instance must not throw (a bug class here is an instance-field
+        // DependencyProperty.Register, which throws "already registered" on the second instance).
+        object first = Activator.CreateInstance(tasksServiceType);
+        object second = Activator.CreateInstance(tasksServiceType);
+
+        var windowsProperty = tasksServiceType.GetProperty("Windows", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
+            ?? throw new Exception("TasksService.Windows property is missing.");
+        object firstWindows = windowsProperty.GetValue(first);
+        object secondWindows = windowsProperty.GetValue(second);
+
+        if (firstWindows == null || secondWindows == null)
+            throw new Exception("TasksService.Windows must never be null; the DependencyProperty default must not leak through unset.");
+        if (ReferenceEquals(firstWindows, secondWindows))
+            throw new Exception("TasksService.Windows must be a per-instance collection, not a shared DependencyProperty default.");
+
+        Console.WriteLine("PASS: two TasksService instances construct without throwing, and each gets its own Windows collection.");
+    }
+
+    private static void CheckDisposeInitializeLifecycle(System.IO.DirectoryInfo repositoryRoot)
+    {
+        // Initialize/Dispose touch the live shell for real (SetTaskmanWindow, ITaskbarList
+        // delegation on the real Explorer taskbar via setTaskbarListHwnd) and must not run for real
+        // against a shared machine's desktop from an automated test. Verify the rollback/zeroing
+        // shape of the source instead, per the task's documented fallback for this case.
+        string source = System.IO.File.ReadAllText(System.IO.Path.Combine(repositoryRoot.FullName,
+            "UltraWinBar", "Support", "vendor", "ManagedShell", "src", "ManagedShell.WindowsTasks", "TasksService.cs"));
+
+        int disposeStart = source.IndexOf("public void Dispose()");
+        int disposeEnd = source.IndexOf("private void CategoriesChanged()", disposeStart);
+        if (disposeStart < 0 || disposeEnd < 0) throw new Exception("Could not locate TasksService.Dispose to check hook zeroing.");
+        string disposeBody = source.Substring(disposeStart, disposeEnd - disposeStart);
+
+        int cloakUnhook = disposeBody.IndexOf("UnhookWinEvent(cloakEventHook)");
+        int cloakZero = disposeBody.IndexOf("cloakEventHook = IntPtr.Zero;");
+        int moveUnhook = disposeBody.IndexOf("UnhookWinEvent(moveEventHook)");
+        int moveZero = disposeBody.IndexOf("moveEventHook = IntPtr.Zero;");
+        int hookWinNulled = disposeBody.IndexOf("_HookWin = null;");
+        if (cloakUnhook < 0 || cloakZero < 0 || cloakUnhook > cloakZero)
+            throw new Exception("Dispose must zero cloakEventHook after unhooking it, so a following Initialize reinstalls it.");
+        if (moveUnhook < 0 || moveZero < 0 || moveUnhook > moveZero)
+            throw new Exception("Dispose must zero moveEventHook after unhooking it, so a following Initialize reinstalls it.");
+        if (hookWinNulled < 0)
+            throw new Exception("Dispose must null _HookWin so a following Initialize does not reuse a destroyed window.");
+        Console.WriteLine("PASS: TasksService.Dispose zeroes cloakEventHook/moveEventHook after unhooking, and nulls _HookWin.");
+
+        int initStart = source.IndexOf("internal void Initialize(bool withMultiMonTracking)");
+        int initEnd = source.IndexOf("internal void SetTaskCategoryProvider", initStart);
+        if (initStart < 0 || initEnd < 0) throw new Exception("Could not locate TasksService.Initialize to check rollback.");
+        string initBody = source.Substring(initStart, initEnd - initStart);
+        int catchIndex = initBody.IndexOf("catch (Exception ex)");
+        if (catchIndex < 0) throw new Exception("Initialize must guard hook/window installation with a catch that rolls back.");
+        string catchBody = initBody.Substring(catchIndex);
+
+        if (!catchBody.Contains("cloakHookInstalledHere") || !catchBody.Contains("cloakEventHook = IntPtr.Zero;"))
+            throw new Exception("A failed Initialize must roll back a cloak hook it installed during this attempt.");
+        if (!catchBody.Contains("moveHookInstalledHere") || !catchBody.Contains("moveEventHook = IntPtr.Zero;"))
+            throw new Exception("A failed Initialize must roll back a move hook it installed during this attempt.");
+        if (!catchBody.Contains("_HookWin = null;"))
+            throw new Exception("A failed Initialize must null _HookWin so a retry does not leave a second hook window registered.");
+        Console.WriteLine("PASS: a failed TasksService.Initialize rolls back only what that attempt installed, instead of leaving a second half-registered hook window for the next retry.");
     }
 
     // Dispose from a thread other than the one that installed the hook must not touch the hook
