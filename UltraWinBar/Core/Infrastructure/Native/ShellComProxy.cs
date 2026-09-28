@@ -41,6 +41,9 @@ namespace UltraWinBar.Utilities
         private bool failureLogged;
         private string lastError;
         private bool disposed;
+        // Set while create() runs outside the lock (it may pump messages on an STA thread and
+        // re-enter Get() on the same thread, or race a concurrent caller on another thread).
+        private bool creating;
 
         // Raised (outside the lock) when an object is created after a period without one.
         internal event Action Recovered;
@@ -61,34 +64,54 @@ namespace UltraWinBar.Utilities
         // Current object, lazily recreated with backoff; null while unavailable.
         internal T Get()
         {
-            T created;
             lock (gate)
             {
                 if (disposed) return null;
                 if (value != null) return value;
+                // Someone else's create() is in flight (possibly this same thread, re-entered while
+                // create() pumps messages for STA activation). Do not start a second activation.
+                if (creating) return null;
                 DateTime now = DateTime.UtcNow;
                 if (now < nextRetryUtc) return null;
-                created = TryCreate();
-                if (created == null)
+                creating = true;
+            }
+
+            // Runs outside the lock: cross-process activation can pump messages and re-enter Get().
+            T created = TryCreate();
+            T extra = null;
+            T result = null;
+            lock (gate)
+            {
+                creating = false;
+                if (disposed || value != null)
+                {
+                    // Disposed while creating, or the slot got filled meanwhile: drop the extra object.
+                    extra = created;
+                }
+                else if (created == null)
                 {
                     if (!failureLogged)
                     {
                         ShellLogger.Warning($"{name}: unavailable ({lastError}); will keep retrying.");
                         failureLogged = true;
                     }
-                    nextRetryUtc = now + retryDelay;
+                    nextRetryUtc = DateTime.UtcNow + retryDelay;
                     retryDelay = ShellCom.NextRetryDelay(retryDelay);
-                    return null;
                 }
-                value = created;
-                if (failureLogged)
+                else
                 {
-                    ShellLogger.Info($"{name}: recreated.");
-                    failureLogged = false;
+                    value = created;
+                    result = created;
+                    if (failureLogged)
+                    {
+                        ShellLogger.Info($"{name}: recreated.");
+                        failureLogged = false;
+                    }
                 }
             }
-            Recovered?.Invoke();
-            return created;
+            if (extra != null) Release(extra);
+            if (result != null) Recovered?.Invoke();
+            return result;
         }
 
         internal int Check(int hr)

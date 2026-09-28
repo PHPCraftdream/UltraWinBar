@@ -104,6 +104,7 @@ internal static class UptimeChecks
             if (!owner.GetFields(BindingFlags.Instance | BindingFlags.NonPublic).Any(f => f.FieldType.Name.StartsWith("ShellComProxy")))
                 throw new Exception($"{owner.Name} must hold its Explorer COM object through ShellComProxy.");
         CheckShellComProxy(Get("UltraWinBar.Utilities.ShellComProxy`1").MakeGenericType(typeof(object)), Get("UltraWinBar.Utilities.ExplorerMonitor"));
+        CheckShellComProxyReentrancy(Get("UltraWinBar.Utilities.ShellComProxy`1").MakeGenericType(typeof(object)));
         var explorer = Get("UltraWinBar.Utilities.ExplorerMonitor");
         var restarted = explorer.GetEvent("ExplorerRestarted", BindingFlags.Static | BindingFlags.Public);
         bool laterHandlerRan = false;
@@ -292,6 +293,84 @@ internal static class UptimeChecks
         }
         finally { proxy.Dispose(); }
         if (released != 2) throw new Exception("Disposing the proxy must release its object.");
+    }
+
+    // create() running outside the lock must not let a re-entrant/concurrent caller (STA message
+    // pump re-entering Get() on the same thread) start a second activation, and must release
+    // whatever it built if the slot is no longer available (disposed) by the time it finishes.
+    private static void CheckShellComProxyReentrancy(Type proxyType)
+    {
+        var get = proxyType.GetMethod("Get", BindingFlags.Instance | BindingFlags.NonPublic);
+        var valueField = proxyType.GetField("value", BindingFlags.Instance | BindingFlags.NonPublic);
+        var nextRetryField = proxyType.GetField("nextRetryUtc", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        // Scenario 1: create() re-enters Get() on the same thread (STA activation pumping messages).
+        {
+            int attempts = 0, released = 0;
+            object proxyRef = null;
+            object innerResult = "not invoked";
+            bool armReentry = false;
+            Func<object> create = () =>
+            {
+                attempts++;
+                if (armReentry)
+                {
+                    armReentry = false; // recurse only once
+                    innerResult = get.Invoke(proxyRef, null);
+                }
+                return new object();
+            };
+            Action<object> release = _ => released++;
+            var proxy = Activator.CreateInstance(proxyType, BindingFlags.Instance | BindingFlags.NonPublic, null,
+                new object[] { "reentrancy test", create, release }, null);
+            proxyRef = proxy;
+            try
+            {
+                valueField.SetValue(proxy, null); // as if the object had died
+                nextRetryField.SetValue(proxy, DateTime.MinValue);
+                armReentry = true;
+                attempts = 0;
+                object outerResult = get.Invoke(proxy, null);
+                if (attempts != 1)
+                    throw new Exception($"A caller re-entering Get() while create() is in flight must not start a second activation (attempts={attempts}).");
+                if (innerResult != null)
+                    throw new Exception("A re-entrant/concurrent Get() during create() must return null, not a half-built object.");
+                if (outerResult == null)
+                    throw new Exception("The call whose create() is actually running must receive the created object.");
+                if (released != 0)
+                    throw new Exception("The one created object must not be released while it is still the live value.");
+            }
+            finally { ((IDisposable)proxy).Dispose(); }
+            if (released != 1) throw new Exception("Disposing the proxy must release the object it created.");
+        }
+
+        // Scenario 2: the proxy is disposed while create() is still running; the object it builds
+        // arrives too late and must be released instead of leaked or overwriting a disposed slot.
+        {
+            int released = 0;
+            object proxyRef = null;
+            bool disposeDuringCreate = false;
+            Func<object> create = () =>
+            {
+                if (disposeDuringCreate)
+                {
+                    disposeDuringCreate = false;
+                    ((IDisposable)proxyRef).Dispose();
+                }
+                return new object();
+            };
+            Action<object> release = _ => released++;
+            var proxy = Activator.CreateInstance(proxyType, BindingFlags.Instance | BindingFlags.NonPublic, null,
+                new object[] { "dispose-during-create test", create, release }, null);
+            proxyRef = proxy;
+            valueField.SetValue(proxy, null);
+            nextRetryField.SetValue(proxy, DateTime.MinValue);
+            disposeDuringCreate = true;
+            object result = get.Invoke(proxy, null);
+            if (result != null) throw new Exception("Get() must return null when the proxy is disposed while its create() is still running.");
+            if (released != 1) throw new Exception($"An object created after Dispose() started must be released, not leaked (released={released}).");
+        }
+        Console.WriteLine("PASS: ShellComProxy.Get() serializes create() against re-entrant/concurrent callers and releases objects that arrive after the slot is gone.");
     }
 
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
