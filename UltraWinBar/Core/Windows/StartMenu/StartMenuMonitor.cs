@@ -25,6 +25,9 @@ namespace UltraWinBar.Utilities
         private bool _correctingPlacement;
         private bool _isVisible;
         private IntPtr _taskbarHwndActivated;
+        // Panel whose Start button opened the menu; unlike _taskbarHwndActivated, kept until the menu closes.
+        private IntPtr _placementTaskbar;
+        private IntPtr _positionedTaskbar;
         private int _staleActivationTicks;
 
         // Fast (100ms) poll only while the menu is visible, being positioned, or a Start button
@@ -98,7 +101,7 @@ namespace UltraWinBar.Utilities
 
         private void UpdateMenuEventHook()
         {
-            bool shouldHook = ShouldHookMenuEvents(_correctPlacement != null, _taskbarHwndActivated != IntPtr.Zero);
+            bool shouldHook = ShouldHookMenuEvents(_correctPlacement != null, _placementTaskbar != IntPtr.Zero);
             if (shouldHook && _menuEventHook == null)
             {
                 _menuEventHook = new WinEventHook("Start menu event hook", 0x8001, 0x800B, HandleMenuEvent);
@@ -128,7 +131,7 @@ namespace UltraWinBar.Utilities
                 return;
             }
             if (eventType != 0x8002 && eventType != 0x800B) return;
-            if (_correctPlacement == null && _taskbarHwndActivated == IntPtr.Zero) return;
+            if (_correctPlacement == null && _placementTaskbar == IntPtr.Zero) return;
             var name = new StringBuilder(256);
             GetClassName(hwnd, name, name.Capacity);
             if (name.ToString() == "OpenShell.CMenuContainer" && _positionedMenu == IntPtr.Zero)
@@ -171,9 +174,9 @@ namespace UltraWinBar.Utilities
             {
                 // CoreWindow is shared by Search, Action Center, notification flyouts, the
                 // emoji/input panel, etc. Only treat it as Start opening if we caused this
-                // (Start button/ShowStartMenu already set _taskbarHwndActivated) or the
+                // (Start button/ShowStartMenu already set _placementTaskbar) or the
                 // immersive launcher itself reports visible (e.g. a bare Win-key press).
-                if (_taskbarHwndActivated == IntPtr.Zero && !isModernStartMenuOpen())
+                if (_placementTaskbar == IntPtr.Zero && !isModernStartMenuOpen())
                 {
                     return;
                 }
@@ -240,13 +243,14 @@ namespace UltraWinBar.Utilities
             }
 
             // Bounded fallback if ShowStartMenu activates a taskbar but no menu ever appears.
-            if (_taskbarHwndActivated == IntPtr.Zero)
+            if (_placementTaskbar == IntPtr.Zero || _isVisible)
             {
                 _staleActivationTicks = 0;
             }
             else if (++_staleActivationTicks > 100)
             {
                 _taskbarHwndActivated = IntPtr.Zero;
+                _placementTaskbar = IntPtr.Zero;
                 _staleActivationTicks = 0;
                 UpdateMenuEventHook();
             }
@@ -276,6 +280,8 @@ namespace UltraWinBar.Utilities
                 // if the menu is opened again not by the start button.
                 _taskbarHwndActivated = IntPtr.Zero;
             }
+            // Placement still needs the pressed panel after the event consumed it; drop it only on close.
+            if (!_isVisible) _placementTaskbar = IntPtr.Zero;
 
             UpdateMenuEventHook();
         }

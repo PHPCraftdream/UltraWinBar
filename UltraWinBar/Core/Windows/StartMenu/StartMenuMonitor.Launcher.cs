@@ -126,6 +126,7 @@ namespace UltraWinBar.Utilities
         internal void ShowStartMenu(IntPtr taskbarHwnd)
         {
             _taskbarHwndActivated = taskbarHwnd;
+            _placementTaskbar = taskbarHwnd;
             UpdateMenuEventHook();
             if (TryOpenShellDirectInvoke()) return;
 

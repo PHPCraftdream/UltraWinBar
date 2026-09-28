@@ -65,36 +65,48 @@ namespace UltraWinBar.Utilities
             relocateStartMenu(hStartMenu);
         }
 
+        // Menus we did not open (Win key, a lost activation race) are anchored too, never left where Windows put them.
+        private static IntPtr FindAnchorTaskbar(IntPtr hStartMenu)
+        {
+            var bars = Application.Current.Windows.OfType<UltraWinBar.Taskbar>()
+                .Where(bar => !bar.IsClosing && bar.Handle != IntPtr.Zero).ToList();
+            int index = StartMenuPlacement.ChooseAnchor(bars
+                .Select(bar => (bar.Screen.HMonitor, bar.HostsStartButton && bar.StartButton.Visibility == Visibility.Visible, bar.Screen.Primary))
+                .ToList(), MonitorFromWindow(hStartMenu, MONITOR_DEFAULTTONEAREST));
+            return index < 0 ? IntPtr.Zero : bars[index].Handle;
+        }
+
         private void relocateStartMenu(IntPtr hStartMenu)
         {
-            if (_positionedMenu == hStartMenu && _correctPlacement != null)
+            IntPtr anchor = _placementTaskbar != IntPtr.Zero ? _placementTaskbar : FindAnchorTaskbar(hStartMenu);
+            if (_positionedMenu == hStartMenu && _correctPlacement != null && _positionedTaskbar == anchor)
             {
                 CorrectPlacement();
                 return;
             }
-            if (_taskbarHwndActivated == IntPtr.Zero)
+            if (anchor == IntPtr.Zero)
             {
                 return;
             }
 
             FlowDirection flowDirection = Application.Current.FindResource("flow_direction") as FlowDirection? ?? FlowDirection.LeftToRight;
             GetWindowRect(hStartMenu, out ManagedShell.Interop.NativeMethods.Rect startMenuRect);
-            GetWindowRect(_taskbarHwndActivated, out ManagedShell.Interop.NativeMethods.Rect taskbarRect);
-            ShellLogger.Debug($"StartMenuMonitor: relocateStartMenu entered, hStartMenu={hStartMenu}, currentRect=({startMenuRect.Left},{startMenuRect.Top},{startMenuRect.Right},{startMenuRect.Bottom}), taskbarRect=({taskbarRect.Left},{taskbarRect.Top},{taskbarRect.Right},{taskbarRect.Bottom})");
+            GetWindowRect(anchor, out ManagedShell.Interop.NativeMethods.Rect taskbarRect);
+            ShellLogger.Debug($"StartMenuMonitor: relocateStartMenu entered, hStartMenu={hStartMenu}, anchor={anchor} (pressed={_placementTaskbar != IntPtr.Zero}), currentRect=({startMenuRect.Left},{startMenuRect.Top},{startMenuRect.Right},{startMenuRect.Bottom}), taskbarRect=({taskbarRect.Left},{taskbarRect.Top},{taskbarRect.Right},{taskbarRect.Bottom})");
 
             // Use the edge of whichever taskbar the button was actually pressed on, not
             // the primary one — with multiple taskbars they can differ.
             AppBarEdge edge = Settings.Instance.Edge;
             foreach (UltraWinBar.Taskbar taskbar in Application.Current.Windows.OfType<UltraWinBar.Taskbar>())
             {
-                if (taskbar.Handle == _taskbarHwndActivated)
+                if (taskbar.Handle == anchor)
                 {
                     edge = taskbar.AppBarEdge;
                     break;
                 }
             }
 
-            var screen = System.Windows.Forms.Screen.FromHandle(_taskbarHwndActivated);
+            var screen = System.Windows.Forms.Screen.FromHandle(anchor);
             var area = WindowPlacementGuard.AvailableArea(screen.Bounds);
             Point initialTarget = StartMenuPlacement.GetTarget(startMenuRect, taskbarRect, area, edge, flowDirection == FlowDirection.RightToLeft);
             int x = (int)initialTarget.X, y = (int)initialTarget.Y;
@@ -115,6 +127,7 @@ namespace UltraWinBar.Utilities
             int userPictureOffsetX = 0;
             int userPictureOffsetY = 0;
             _positionedMenu = hStartMenu;
+            _positionedTaskbar = anchor;
             _correctPlacement = () =>
             {
                 if (!IsWindow(hStartMenu))

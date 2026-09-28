@@ -133,6 +133,9 @@
   unread counters.
 - Shutdown on sign-out runs once and signals the work-area watchdog; settings
   are saved before an automatic restart after a crash.
+- The Start menu opens beside the panels, not over them, also when opened with
+  the Windows key or when its visibility notification arrives before it takes
+  focus.
 
 ## 2.2.0 (2026-09-28)
 

@@ -190,6 +190,24 @@ internal static class TaskOrderChecks
         if (rightTarget.X != bar.Left - menu.Width) throw new Exception("Right menu width ignored");
         Console.WriteLine("PASS: Start menu bounds for every edge and text direction; full menu size used.");
 
+        // Two stacked bottom panels, pressed on the lower one: the menu sits above both, not over the upper one.
+        var stackArea = new System.Windows.Rect(0, 0, 1920, 1080 - 80);
+        var lowerBar = new ManagedShell.Interop.NativeMethods.Rect { Left = 0, Top = 1040, Right = 1920, Bottom = 1080 };
+        var stackTarget = StartMenuPlacement.GetTarget(menu, lowerBar, stackArea, AppBarEdge.Bottom, false);
+        if (stackTarget.Y + menu.Height > stackArea.Bottom || stackTarget.X != 0)
+            throw new Exception($"Start menu overlaps a stacked panel: {stackTarget}");
+        IntPtr monitorA = (IntPtr)1, monitorB = (IntPtr)2;
+        var anchorBars = new List<(IntPtr Monitor, bool HostsStart, bool Primary)>
+        {
+            (monitorA, false, true), (monitorA, true, true), (monitorB, false, false), (monitorB, true, false)
+        };
+        if (StartMenuPlacement.ChooseAnchor(anchorBars, monitorA) != 1 || StartMenuPlacement.ChooseAnchor(anchorBars, monitorB) != 3 ||
+            StartMenuPlacement.ChooseAnchor(anchorBars.Take(3).ToList(), monitorB) != 2 ||
+            StartMenuPlacement.ChooseAnchor(anchorBars.Take(2).ToList(), (IntPtr)3) != 1 ||
+            StartMenuPlacement.ChooseAnchor(new List<(IntPtr, bool, bool)>(), monitorA) != -1)
+            throw new Exception("Start menu anchor must prefer the Start-hosting panel on the menu's monitor, then any panel there, then the primary Start panel.");
+        Console.WriteLine("PASS: a Start menu not opened by our button still anchors to a panel: Start-hosting panel on its monitor first.");
+
         var startMenuMonitorType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.StartMenuMonitor");
         var shouldHookMenuEvents = startMenuMonitorType?.GetMethod("ShouldHookMenuEvents", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
         if (shouldHookMenuEvents == null) throw new Exception("Start menu event hook policy is missing.");
