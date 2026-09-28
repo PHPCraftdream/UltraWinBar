@@ -29,6 +29,7 @@ ActivationChecks.Run(args, repositoryRoot);
 PinChecks.Run(args, repositoryRoot);
 UptimeChecks.Run();
 InteropChecks.Run(repositoryRoot);
+CrossProcessMessageChecks.Run();
 TaskOrderChecks.Run(args, repositoryRoot);
 const System.Reflection.BindingFlags hidden = System.Reflection.BindingFlags.NonPublic |
     System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Instance;
