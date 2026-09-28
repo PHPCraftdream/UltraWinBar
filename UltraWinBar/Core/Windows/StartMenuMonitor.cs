@@ -15,7 +15,7 @@ namespace UltraWinBar.Utilities
 {
     public class StartMenuMonitor : IDisposable
     {
-        private AppVisibilityHelper _appVisibilityHelper;
+        private LauncherVisibility _appVisibilityHelper;
         private DispatcherTimer _poller;
         private Action _correctPlacement;
         private IntPtr _positionedMenu;
@@ -79,12 +79,12 @@ namespace UltraWinBar.Utilities
         }
 
         // Explorer may not have registered the class yet; the caller retries.
-        private AppVisibilityHelper CreateAppVisibilityHelper()
+        private LauncherVisibility CreateAppVisibilityHelper()
         {
             try
             {
-                var helper = new AppVisibilityHelper(true);
-                helper.LauncherVisibilityChanged += OnLauncherVisibilityChanged;
+                var helper = new LauncherVisibility();
+                helper.Changed += OnLauncherVisibilityChanged;
                 return helper;
             }
             catch (Exception error)
@@ -97,7 +97,7 @@ namespace UltraWinBar.Utilities
         private void DisposeAppVisibilityHelper()
         {
             if (_appVisibilityHelper == null) return;
-            _appVisibilityHelper.LauncherVisibilityChanged -= OnLauncherVisibilityChanged;
+            _appVisibilityHelper.Changed -= OnLauncherVisibilityChanged;
             try { _appVisibilityHelper.Dispose(); } catch (Exception) { }
             _appVisibilityHelper = null;
         }
@@ -137,7 +137,7 @@ namespace UltraWinBar.Utilities
         }
 
         // Lazy (re)creation with backoff 2/5/15/60 s; failures logged once per streak.
-        private AppVisibilityHelper EnsureAppVisibilityHelper()
+        private LauncherVisibility EnsureAppVisibilityHelper()
         {
             if (_appVisibilityHelper != null) return _appVisibilityHelper;
             DateTime now = DateTime.UtcNow;
@@ -163,7 +163,7 @@ namespace UltraWinBar.Utilities
             return null;
         }
 
-        // IsLauncherVisible ignores HRESULTs, so a dead proxy fails silently; recreate on shell restart.
+        // The old launcher sink and proxy belong to the dead Explorer; recreate on shell restart.
         private void ExplorerMonitor_ExplorerRestarted(object sender, EventArgs e)
         {
             ResetAppVisibilityHelper();
@@ -175,7 +175,7 @@ namespace UltraWinBar.Utilities
         }
 
         // COM sink callback, not necessarily on the UI thread; re-run the poll logic there without waiting for a tick.
-        private void OnLauncherVisibilityChanged(object sender, LauncherVisibilityEventArgs e)
+        private void OnLauncherVisibilityChanged(object sender, EventArgs e)
         {
             _poller?.Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -376,7 +376,7 @@ namespace UltraWinBar.Utilities
 
             try
             {
-                return helper.IsLauncherVisible();
+                return helper.IsVisible();
             }
             catch (Exception error) when (error is COMException || error is InvalidComObjectException)
             {

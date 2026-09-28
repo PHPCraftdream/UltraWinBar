@@ -141,6 +141,22 @@ internal static class UptimeChecks
         for (int i = 0; i < 3; i++) { GC.Collect(); GC.WaitForPendingFinalizers(); }
         if (hookRef.IsAlive) throw new Exception("A disposed mouse hook must be released.");
         Console.WriteLine("PASS: an installed mouse hook stays rooted until Dispose, so a dropped owner cannot free its callback.");
+
+        // Without PreserveSig the CCW writes a phantom [out, retval] through whatever the caller left in a register.
+        foreach (var name in new[] { "UltraWinBar.Utilities.IAppVisibility", "UltraWinBar.Utilities.IAppVisibilityEvents" })
+            foreach (var method in Get(name).GetMethods())
+                if (method.ReturnType != typeof(int) || (method.MethodImplementationFlags & MethodImplAttributes.PreserveSig) == 0)
+                    throw new Exception($"{name}.{method.Name} must be [PreserveSig] returning an HRESULT.");
+        if (monitor.GetField("_appVisibilityHelper", BindingFlags.Instance | BindingFlags.NonPublic)?.FieldType.Name != "LauncherVisibility")
+            throw new Exception("Start monitoring must not use ManagedShell's AppVisibilityHelper sink.");
+        var launcherType = Get("UltraWinBar.Utilities.LauncherVisibility");
+        using (var launcher = (IDisposable)Activator.CreateInstance(launcherType, true))
+        {
+            if ((uint)launcherType.GetField("_cookie", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(launcher) == 0)
+                throw new Exception("The launcher visibility sink must be accepted by Advise.");
+            launcherType.GetMethod("IsVisible").Invoke(launcher, null);
+        }
+        Console.WriteLine("PASS: launcher visibility COM interop preserves HRESULT signatures and its sink is accepted by Explorer.");
     }
 
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]

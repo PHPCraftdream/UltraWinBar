@@ -4,6 +4,10 @@
 
 ### Fixed
 
+- Fix a crash (access violation) after hours of uptime: ManagedShell's Start
+  launcher visibility sink declared its COM methods without `PreserveSig`, so
+  each Start open/close notification wrote a phantom return value through a
+  garbage pointer. Start monitoring now uses its own correctly declared sink.
 - Keep installed low-level mouse hooks rooted until they are removed, and remove
   drag hooks when a panel closes or a quick-launch button unloads. Moving a panel
   to another edge reopens the panels mid-drag; the old panel's hook callback
