@@ -176,23 +176,18 @@ internal static class PersistenceChecks
             if (icon.GetBehavior() != NotifyIconBehavior.AlwaysShow)
                 throw new Exception("Tray icon behavior must survive a tooltip change (unread counters, battery %, ...).");
 
-            // Legacy "path:UID:tooltip" duplicates (one per tooltip change) must collapse to the
-            // stable key, keeping the most recently written record, in a single settings write.
-            SetBehaviors(new List<NotifyIconBehaviorSetting>
+            // Legacy "path:UID:tooltip" duplicates (one per tooltip change) still match, newest first,
+            // and reading never writes Settings (it runs inside tray view filters).
+            var legacy = new List<NotifyIconBehaviorSetting>
             {
                 new NotifyIconBehaviorSetting { Identifier = stableKey + ":1 unread", Behavior = NotifyIconBehavior.HideWhenInactive },
                 new NotifyIconBehaviorSetting { Identifier = stableKey + ":99 unread", Behavior = NotifyIconBehavior.AlwaysShow },
-            });
+            };
+            SetBehaviors(legacy);
             if (icon.GetBehavior() != NotifyIconBehavior.AlwaysShow)
-                throw new Exception("Migration must prefer the most recently written legacy record.");
-            var migrated = GetBehaviors();
-            if (migrated.Count != 1 || migrated[0].Identifier != stableKey || migrated[0].Behavior != NotifyIconBehavior.AlwaysShow)
-                throw new Exception("Legacy tooltip-keyed duplicates must be rewritten to the stable key and collapsed to one record.");
-
-            var afterFirstMigration = GetBehaviors();
-            icon.GetBehavior();
-            if (!ReferenceEquals(afterFirstMigration, GetBehaviors()))
-                throw new Exception("An already-migrated stable key must not trigger another settings write.");
+                throw new Exception("A legacy lookup must prefer the most recently written record.");
+            if (!ReferenceEquals(legacy, GetBehaviors()))
+                throw new Exception("GetBehavior must not write Settings.");
 
             // List<T>.Find on a struct returns default(T) when nothing matches, and the old code's
             // "is NotifyIconBehaviorSetting" check was always true, silently taking the default
@@ -219,6 +214,6 @@ internal static class PersistenceChecks
         {
             SetBehaviors(original);
         }
-        Console.WriteLine("PASS: tray icon behavior survives tooltip changes, migrates legacy path:UID:tooltip records to the stable key in one write, and defaults safely when absent.");
+        Console.WriteLine("PASS: tray icon behavior survives tooltip changes, still reads legacy path:UID:tooltip records without writing, collapses them on SetBehavior, and defaults safely when absent.");
     }
 }

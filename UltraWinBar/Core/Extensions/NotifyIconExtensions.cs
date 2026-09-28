@@ -16,13 +16,12 @@ namespace UltraWinBar.Extensions
         // Icon.Identifier includes the tooltip for icons without a GUID, so it changes whenever
         // the tooltip does (unread count, battery %, ...). Behavior is keyed by the stable
         // GetInvertIdentifier() form instead: GUID, or "path:UID" without the tooltip.
-        // Legacy records (GUID or "path:UID:tooltip") are matched by exact/prefix comparison and
-        // migrated to the stable key the first time they're touched.
+        // Legacy "path:UID:tooltip" records still match; SetBehavior rewrites them to the stable key.
         private static bool IsLegacyMatch(string identifier, string stableKey, bool hasGuid)
         {
-            if (identifier == stableKey) return true;
+            if (string.Equals(identifier, stableKey, StringComparison.OrdinalIgnoreCase)) return true;
             if (hasGuid) return false; // GUID identifiers never carried a tooltip suffix
-            return identifier.StartsWith(stableKey + ":", StringComparison.Ordinal);
+            return identifier.StartsWith(stableKey + ":", StringComparison.OrdinalIgnoreCase);
         }
 
         private static List<int> FindStableMatches(List<NotifyIconBehaviorSetting> settings, string stableKey, bool hasGuid)
@@ -38,43 +37,24 @@ namespace UltraWinBar.Extensions
             return matches;
         }
 
+        // Read-only: called from tray view filters, where writing Settings would re-enter them.
         public static NotifyIconBehavior GetBehavior(this NotifyIcon icon)
         {
             string stableKey = icon.GetInvertIdentifier();
             bool hasGuid = icon.GUID != default;
             var current = Settings.Instance.NotifyIconBehaviors;
             var matches = FindStableMatches(current, stableKey, hasGuid);
-
             if (matches.Count == 0)
             {
                 return NotifyIconBehavior.HideWhenInactive;
             }
 
-            // Prefer the most recently written record (legacy duplicates were appended on each
-            // tooltip change; the last match is the newest one).
-            var chosen = current[matches[matches.Count - 1]];
-
-            if (matches.Count > 1 || chosen.Identifier != stableKey)
+            // A stable record wins; otherwise the last legacy one (appended on each tooltip change) is the newest.
+            foreach (int index in matches)
             {
-                var migrated = new List<NotifyIconBehaviorSetting>(current.Count - matches.Count + 1);
-                int chosenIndex = matches[matches.Count - 1];
-                for (int i = 0; i < current.Count; i++)
-                {
-                    if (i == chosenIndex)
-                    {
-                        migrated.Add(new NotifyIconBehaviorSetting { Identifier = stableKey, Behavior = chosen.Behavior });
-                    }
-                    else if (!matches.Contains(i))
-                    {
-                        migrated.Add(current[i]);
-                    }
-                }
-
-                // One save for the whole migration, even if several duplicates were dropped.
-                Settings.Instance.NotifyIconBehaviors = migrated;
+                if (string.Equals(current[index].Identifier, stableKey, StringComparison.OrdinalIgnoreCase)) return current[index].Behavior;
             }
-
-            return chosen.Behavior;
+            return current[matches[matches.Count - 1]].Behavior;
         }
 
         public static void SetBehavior(this NotifyIcon icon, NotifyIconBehavior behavior)

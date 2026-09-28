@@ -250,7 +250,7 @@ namespace UltraWinBar.Controls
             {
                 if (promotedIcons.Contains(notifyIcon))
                 {
-                    if (!(Settings.Instance.NotifyIconBehaviors.Find(setting => setting.Identifier == notifyIcon.Identifier) is NotifyIconBehaviorSetting iconSetting && iconSetting.Behavior == NotifyIconBehavior.AlwaysShow))
+                    if (notifyIcon.GetBehavior() != NotifyIconBehavior.AlwaysShow)
                     {
                         // Don't unpin if settings were changed to always show
                         notifyIcon.IsPinned = false;
