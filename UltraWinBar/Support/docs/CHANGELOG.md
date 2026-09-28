@@ -69,6 +69,31 @@
   import gives up on persistently failing windows after 5 attempts.
 - Remove per-event diagnostic logging from the foreground, Start poller and task
   drag paths, and attach the console log only when a console exists.
+- The tray window procedure no longer lets an exception reach user32, and AppBar
+  requests from a process whose shared memory cannot be mapped (elevated or
+  already exited) fail instead of crashing; AppBar forwarding and the Explorer
+  tray icon import no longer leak native memory.
+- Messages forwarded to Explorer (tray, AppBar, Win+number hotkeys, Show
+  desktop) and IME control messages to the foreground application wait at most
+  500 ms, so a hung Explorer or application can no longer freeze the taskbar.
+- Action Center, the clock calendar and other Explorer flyouts, and the Start
+  launcher, work again after an Explorer restart without restarting UltraWinBar;
+  their COM references are released instead of leaked.
+- Window tracking reinstalls its cloak and move hooks after an Explorer restart,
+  rolls back a partial start, validates the minimize-rectangle pointer and
+  bounds the overlay-icon description sent by other processes, and a failed
+  icon load no longer stops the window's icon from ever updating.
+- WinEvent hooks disposed from another thread are removed on their own thread;
+  an Explorer COM object can no longer be created twice when activation
+  re-enters; exceptions in hidden message windows are logged instead of
+  silently dropped.
+- The log never throws into its caller when a new log file cannot be created,
+  and keeps at most 500 messages while no log is attached.
+- Tray icon settings (Always show, Hide, Remove) are keyed by the icon's GUID or
+  executable and ID, not its tooltip, so they survive tooltip changes such as
+  unread counters.
+- Shutdown on sign-out runs once and signals the work-area watchdog; settings
+  are saved before an automatic restart after a crash.
 
 ## 2.2.0 (2026-09-28)
 
