@@ -24,11 +24,13 @@ internal static class HealthDiagnosticsChecks
         const string label = "Bottom@HealthDiagnosticsChecks-alive";
         PanelLeakTracker.Track(stillOpenElsewhere, label);
 
-        string report = PanelLeakTracker.CollectAndReport();
+        if (PanelLeakTracker.CollectAndReport().Contains(label))
+            throw new Exception("A panel closed moments ago must not be reported as a leak yet.");
+        string report = PanelLeakTracker.CollectAndReport(Environment.TickCount64 + 60_000);
         if (!report.Contains(label))
             throw new Exception($"A strongly-held tracked panel must still be reported alive: {report}");
         GC.KeepAlive(stillOpenElsewhere);
-        Console.WriteLine("PASS: PanelLeakTracker reports a strongly-held closed panel as still alive.");
+        Console.WriteLine("PASS: PanelLeakTracker reports a strongly-held closed panel as still alive after a minute, not right after closing.");
     }
 
     // A released closed panel must disappear once the tracker's GC pass collects it.
@@ -37,7 +39,7 @@ internal static class HealthDiagnosticsChecks
         const string label = "Right@HealthDiagnosticsChecks-collected";
         TrackAndDrop(label);
 
-        string report = PanelLeakTracker.CollectAndReport();
+        string report = PanelLeakTracker.CollectAndReport(Environment.TickCount64 + 60_000);
         if (report.Contains(label))
             throw new Exception($"A released tracked panel must be dropped once collected: {report}");
         Console.WriteLine("PASS: PanelLeakTracker drops a released closed panel once garbage-collected.");

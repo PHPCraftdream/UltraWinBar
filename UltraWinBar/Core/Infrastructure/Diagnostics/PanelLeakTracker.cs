@@ -12,9 +12,11 @@ namespace UltraWinBar.Utilities
         // Panels close rarely (settings/display changes, Explorer restart); this bounds memory
         // without ever needing to trim in practice.
         private const int MaxTracked = 32;
+        // A panel closed moments ago may still be referenced by queued dispatcher work; not a leak yet.
+        private const long MinAgeMs = 60_000;
 
         private static readonly object gate = new object();
-        private static readonly List<(WeakReference Reference, string Label)> tracked = new List<(WeakReference, string)>();
+        private static readonly List<(WeakReference Reference, string Label, long ClosedAt)> tracked = new List<(WeakReference, string, long)>();
 
         internal static void TrackClosed(Taskbar taskbar)
         {
@@ -29,7 +31,7 @@ namespace UltraWinBar.Utilities
             if (panel == null) return;
             lock (gate)
             {
-                tracked.Add((new WeakReference(panel), label));
+                tracked.Add((new WeakReference(panel), label, Environment.TickCount64));
                 if (tracked.Count > MaxTracked)
                 {
                     tracked.RemoveRange(0, tracked.Count - MaxTracked);
@@ -40,7 +42,9 @@ namespace UltraWinBar.Utilities
         // Rare call (health snapshot only): forces a full GC pass, then reports which tracked
         // closed panels are still alive and drops the ones that were collected. Never call this
         // from a hot path.
-        internal static string CollectAndReport()
+        internal static string CollectAndReport() => CollectAndReport(Environment.TickCount64);
+
+        internal static string CollectAndReport(long now)
         {
             GC.Collect();
             GC.WaitForPendingFinalizers();
@@ -53,7 +57,7 @@ namespace UltraWinBar.Utilities
                 {
                     if (tracked[i].Reference.IsAlive)
                     {
-                        alive.Add(tracked[i].Label);
+                        if (now - tracked[i].ClosedAt >= MinAgeMs) alive.Add(tracked[i].Label);
                     }
                     else
                     {
