@@ -168,6 +168,10 @@ namespace UltraWinBar.Utilities
         {
             ResetAppVisibilityHelper();
             EnsureAppVisibilityHelper();
+            // The cached IImmersiveLauncher/monitor RCWs point at the old explorer.exe process;
+            // drop them so the next Start press re-queries fresh ones instead of failing with
+            // RPC_E_DISCONNECTED/RPC_S_SERVER_UNAVAILABLE until our app itself restarts.
+            InvalidateCachedLaunchers();
         }
 
         // COM sink callback, not necessarily on the UI thread; re-run the poll logic there without waiting for a tick.
@@ -597,6 +601,13 @@ namespace UltraWinBar.Utilities
         private IImmersiveLauncher_Win81 _cachedLauncherWin81;
         private IntPtr _cachedLauncherMonitor = IntPtr.Zero;
 
+        private void InvalidateCachedLaunchers()
+        {
+            _cachedLauncherRS1 = null;
+            _cachedLauncherWin81 = null;
+            _cachedLauncherMonitor = IntPtr.Zero;
+        }
+
         private IImmersiveLauncher_Win10RS1 GetImmersiveLauncher_Win10RS1(IntPtr taskbarHwnd)
         {
             IntPtr targetMonitor = MonitorFromWindow(taskbarHwnd, MONITOR_DEFAULTTONEAREST);
@@ -729,9 +740,7 @@ namespace UltraWinBar.Utilities
 
                 // The cached launcher may be a stale RCW (e.g. explorer.exe restarted);
                 // drop it so the next press re-queries a fresh one instead of failing forever.
-                _cachedLauncherRS1 = null;
-                _cachedLauncherWin81 = null;
-                _cachedLauncherMonitor = IntPtr.Zero;
+                InvalidateCachedLaunchers();
             }
 
             ShellHelper.ShowStartMenu();
