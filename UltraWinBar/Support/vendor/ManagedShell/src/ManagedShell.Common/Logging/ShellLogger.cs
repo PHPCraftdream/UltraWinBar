@@ -1,10 +1,52 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace ManagedShell.Common.Logging
 {
     public static class ShellLogger
     {
+        // UltraWinBar: interpolated string handlers so `Debug($"...")` / `Info($"...")` don't
+        // build the string (or evaluate the holes) when that severity is disabled. Overload
+        // resolution prefers a handler-typed parameter over `string` for an interpolated string
+        // literal argument, so existing call sites pick these up without any source change.
+        [InterpolatedStringHandler]
+        public struct DebugInterpolatedStringHandler
+        {
+            private StringBuilder _builder;
+
+            public DebugInterpolatedStringHandler(int literalLength, int formattedCount, out bool shouldAppend)
+            {
+                shouldAppend = _isDebug;
+                _builder = shouldAppend ? new StringBuilder(literalLength + formattedCount * 11) : null;
+            }
+
+            public void AppendLiteral(string value) => _builder.Append(value);
+            public void AppendFormatted<T>(T value) => _builder.Append(value);
+            public void AppendFormatted<T>(T value, string format) where T : IFormattable => _builder.Append(value?.ToString(format, null));
+
+            internal string GetFormattedTextOrDefault() => _builder?.ToString() ?? string.Empty;
+        }
+
+        [InterpolatedStringHandler]
+        public struct InfoInterpolatedStringHandler
+        {
+            private StringBuilder _builder;
+
+            public InfoInterpolatedStringHandler(int literalLength, int formattedCount, out bool shouldAppend)
+            {
+                shouldAppend = _isInfo;
+                _builder = shouldAppend ? new StringBuilder(literalLength + formattedCount * 11) : null;
+            }
+
+            public void AppendLiteral(string value) => _builder.Append(value);
+            public void AppendFormatted<T>(T value) => _builder.Append(value);
+            public void AppendFormatted<T>(T value, string format) where T : IFormattable => _builder.Append(value?.ToString(format, null));
+
+            internal string GetFormattedTextOrDefault() => _builder?.ToString() ?? string.Empty;
+        }
+
         #region Delegates
 
         /// <summary>
@@ -118,7 +160,15 @@ namespace ManagedShell.Common.Logging
                 OnLog(new LogEventArgs(LogSeverity.Debug, message, exception, DateTime.Now));
         }
 
-
+        /// <summary>
+        /// Log a message when severity level is "Debug" or higher. The interpolated string is
+        /// only formatted when Debug is enabled.
+        /// </summary>
+        public static void Debug(ref DebugInterpolatedStringHandler message)
+        {
+            if (_isDebug)
+                OnLog(new LogEventArgs(LogSeverity.Debug, message.GetFormattedTextOrDefault(), null, DateTime.Now));
+        }
 
         /// <summary>
         /// Log a message when severity level is "Info" or higher.
@@ -128,6 +178,16 @@ namespace ManagedShell.Common.Logging
         {
             if (_isInfo)
                 Info(message, null);
+        }
+
+        /// <summary>
+        /// Log a message when severity level is "Info" or higher. The interpolated string is
+        /// only formatted when Info is enabled.
+        /// </summary>
+        public static void Info(ref InfoInterpolatedStringHandler message)
+        {
+            if (_isInfo)
+                OnLog(new LogEventArgs(LogSeverity.Info, message.GetFormattedTextOrDefault(), null, DateTime.Now));
         }
 
         /// <summary>

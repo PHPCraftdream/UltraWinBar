@@ -94,3 +94,8 @@ not changed; every local modification is listed below and marked in code with `U
   longer sticks the icon at "loading" forever; `PropertyChanged` is raised on the owner thread's
   `Dispatcher` (captured at construction) instead of the icon-loading STA thread, and fires
   synchronously when there is none (e.g. tests).
+- `FileLog`: no longer sets `AutoFlush`/flushes per line; added `Flush()` so the caller (now
+  `RollingFileLog`'s background writer) controls batching instead of flushing on every line.
+- `ShellLogger`: added `Debug`/`Info` overloads taking an `[InterpolatedStringHandler]`, so an
+  interpolated string literal argument is only formatted when that severity is enabled (existing
+  call sites are unaffected; a plain `string` argument still binds to the old overloads).
