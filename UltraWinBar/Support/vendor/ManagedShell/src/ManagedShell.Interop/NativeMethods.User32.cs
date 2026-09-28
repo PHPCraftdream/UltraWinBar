@@ -315,6 +315,17 @@ namespace ManagedShell.Interop
         public static uint SendMessageTimeout(IntPtr hWnd, uint messageId, uint wparam, uint lparam, uint timeoutFlags, uint timeout, ref IntPtr retval) =>
             SendMessageTimeout(hWnd, messageId, (IntPtr)wparam, (IntPtr)lparam, timeoutFlags, timeout, ref retval);
 
+        public const uint SMTO_NORMAL = 0x0000;
+        public const uint SMTO_ABORTIFHUNG = 0x0002;
+
+        // UltraWinBar: wraps SendMessageTimeout(SMTO_ABORTIFHUNG) for cross-process sends so a
+        // hung Explorer can't hang our UI thread; success/timeout is reported via the return value.
+        public static bool TrySendMessageTimeout(IntPtr hWnd, uint messageId, IntPtr wparam, IntPtr lparam, uint timeoutMs, out IntPtr result)
+        {
+            result = IntPtr.Zero;
+            return SendMessageTimeout(hWnd, messageId, wparam, lparam, SMTO_ABORTIFHUNG | SMTO_NORMAL, timeoutMs, ref result) != 0;
+        }
+
         [DllImport(User32_DllName)]
         public static extern IntPtr SendMessage(IntPtr hWnd, int messageId, IntPtr wparam, IntPtr lparam);
 

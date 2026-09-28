@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Windows.Threading;
 using static ManagedShell.Interop.NativeMethods;
 
@@ -34,6 +35,13 @@ namespace ManagedShell.WindowsTray
         private IntPtr trayObjectEventHook = IntPtr.Zero;
         private IntPtr trayForegroundEventHook = IntPtr.Zero;
         private bool trayCheckQueued;
+
+        // UltraWinBar: WndProc exception barrier rate limit.
+        private const int WndProcFailureLogLimit = 20;
+        private static int wndProcFailureCount;
+
+        // UltraWinBar: cross-process forward to Explorer's tray must not block on a hung Explorer.
+        private const uint ForwardTimeoutMs = 500;
 
         public TrayService()
         {
@@ -66,7 +74,13 @@ namespace ManagedShell.WindowsTray
 
             DestroyWindows();
 
-            wndProcDelegate = WndProc;
+            // UltraWinBar: reuse the rooted delegate across retries. If a previous CreateWindowEx
+            // failed after RegisterClass succeeded, that class may still be registered with the
+            // old delegate; swapping it here would leave a dangling thunk behind.
+            if (wndProcDelegate == null)
+            {
+                wndProcDelegate = WndProc;
+            }
 
             RegisterTrayWnd();
             RegisterNotifyWnd();
@@ -143,6 +157,7 @@ namespace ManagedShell.WindowsTray
                 DestroyWindow(HwndNotify);
                 UnregisterClass(NotifyWndClass, hInstance);
                 ShellLogger.Debug($"TrayService: Unregistered {NotifyWndClass}");
+                HwndNotify = IntPtr.Zero;
             }
 
             if (HwndTray != IntPtr.Zero)
@@ -150,11 +165,22 @@ namespace ManagedShell.WindowsTray
                 DestroyWindow(HwndTray);
                 UnregisterClass(TrayWndClass, hInstance);
                 ShellLogger.Debug($"TrayService: Unregistered {TrayWndClass}");
+                HwndTray = IntPtr.Zero;
             }
+
+            HwndFwd = IntPtr.Zero;
         }
 
         public void Dispose()
         {
+            // UltraWinBar: App.ExitApp runs twice on session end (SessionEnding then Exit); make
+            // a second Dispose a no-op instead of destroying stale handles and re-broadcasting
+            // TaskbarCreated.
+            if (HwndTray == IntPtr.Zero && HwndNotify == IntPtr.Zero)
+            {
+                return;
+            }
+
             trayMonitor.Stop();
             UnhookTrayEvents();
             DestroyWindows();
@@ -167,7 +193,36 @@ namespace ManagedShell.WindowsTray
         internal static bool HasPayload(COPYDATASTRUCT copyData, Type payload) =>
             copyData.lpData != IntPtr.Zero && copyData.cbData >= Marshal.SizeOf(payload);
 
+        // UltraWinBar: registered with user32 via RegisterClass; every Shell_NotifyIcon and
+        // SHAppBarMessage in the session arrives here. An exception escaping this delegate goes
+        // straight into user32 (process-fatal on net10, undefined on net6) - never let one out.
         private IntPtr WndProc(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam)
+        {
+            try
+            {
+                return WndProcCore(hWnd, msg, wParam, lParam);
+            }
+            catch (Exception ex)
+            {
+                ReportWndProcFailure(ex);
+                return DefWindowProc(hWnd, msg, wParam, lParam);
+            }
+        }
+
+        private static void ReportWndProcFailure(Exception ex)
+        {
+            int count = Interlocked.Increment(ref wndProcFailureCount);
+            if (count <= WndProcFailureLogLimit)
+            {
+                ShellLogger.Error($"TrayService: WndProc failed ({count})", ex);
+            }
+            else if (count == WndProcFailureLogLimit + 1)
+            {
+                ShellLogger.Error("TrayService: further WndProc failures are not logged.");
+            }
+        }
+
+        private IntPtr WndProcCore(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam)
         {
             switch ((WM)msg)
             {
@@ -310,7 +365,15 @@ namespace ManagedShell.WindowsTray
                     PostMessage(HwndFwd, (uint)msg, wParam, lParam);
                     return DefWindowProc(hWnd, msg, wParam, lParam);
                 }
-                return SendMessage(HwndFwd, msg, wParam, lParam);
+
+                // UltraWinBar: don't let a hung Explorer hang our tray's WndProc.
+                if (TrySendMessageTimeout(HwndFwd, (uint)msg, wParam, lParam, ForwardTimeoutMs, out IntPtr result))
+                {
+                    return result;
+                }
+
+                ShellLogger.Debug($"TrayService: Forward to Explorer tray timed out or failed: {msg}");
+                return IntPtr.Zero;
             }
 
             return DefWindowProc(hWnd, msg, wParam, lParam);
