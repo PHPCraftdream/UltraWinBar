@@ -121,6 +121,9 @@ namespace ManagedShell.WindowsTasks
                         if (_windowsByHandle.TryGetValue(win.Handle, out var current) && ReferenceEquals(current, win))
                         {
                             _windowsByHandle.Remove(win.Handle);
+                            // A remaining duplicate keeps the handle reachable.
+                            ApplicationWindow survivor = Windows.FirstOrDefault(w => w.Handle == win.Handle);
+                            if (survivor != null) _windowsByHandle[win.Handle] = survivor;
                         }
                     }
                     break;
