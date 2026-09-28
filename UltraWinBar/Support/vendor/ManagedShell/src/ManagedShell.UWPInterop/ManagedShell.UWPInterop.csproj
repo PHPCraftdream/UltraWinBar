@@ -1,0 +1,73 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <TargetFrameworks>net6.0-windows;net10.0-windows</TargetFrameworks>
+    <UseWPF>True</UseWPF>
+  </PropertyGroup>
+
+	<PropertyGroup>
+		<LangVersion>12</LangVersion>
+		<CsWinRTEmbedded>true</CsWinRTEmbedded>
+		<CsWinRTWindowsMetadata>10.0.26100.0</CsWinRTWindowsMetadata>
+	</PropertyGroup>
+	
+  <ItemGroup>
+	<PackageReference Condition="'$(TargetFramework)' != 'net480'" Include="Microsoft.Windows.CsWinRT" Version="2.2.0" />
+    <PackageReference Condition="'$(TargetFramework)' == 'net480'" Include="Microsoft.Windows.SDK.Contracts" Version="10.0.26100.1" />
+    <PackageReference Include="System.Security.Principal.Windows" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ManagedShell.Common\ManagedShell.Common.csproj" />
+	<ProjectReference Include="..\ManagedShell.Interop\ManagedShell.Interop.csproj" />
+    <ProjectReference Include="..\ManagedShell.ShellFolders\ManagedShell.ShellFolders.csproj" />
+  </ItemGroup>
+
+	<PropertyGroup>
+		<CsWinRTIncludes>
+			Windows.ApplicationModel.AppExecutionContext;
+			Windows.ApplicationModel.AddResourcePackageOptions;
+			Windows.ApplicationModel.AppDisplayInfo;
+			Windows.ApplicationModel.AppInfo;
+			Windows.ApplicationModel.AppInstallerInfo;
+			Windows.ApplicationModel.AppInstallerPolicySource;
+			Windows.ApplicationModel.Core.AppDisplayInfo;
+			Windows.ApplicationModel.Core.AppListEntry;
+			Windows.ApplicationModel.Core.IAppListEntry;
+			Windows.ApplicationModel.FindRelatedPackagesOptions;
+			Windows.ApplicationModel.IAppDisplayInfo;
+			Windows.ApplicationModel.IAppInfo;
+			Windows.ApplicationModel.IAppInfo2;
+			Windows.ApplicationModel.IAppInfo3;
+			Windows.ApplicationModel.IAppInfo4;
+			Windows.ApplicationModel.IAppInfoMethods;
+			Windows.ApplicationModel.IAppInfoStatics;
+			Windows.ApplicationModel.IAppInfoStaticsMethods;
+			Windows.ApplicationModel.IAppInstallerInfo;
+			Windows.ApplicationModel.IFindRelatedPackagesOptions;
+			Windows.ApplicationModel.IFindRelatedPackagesOptionsFactory;
+			Windows.ApplicationModel.IFindRelatedPackagesOptionsMethods;
+			Windows.ApplicationModel.IPackage;
+			Windows.ApplicationModel.IPackageCatalog;
+			Windows.ApplicationModel.Package;
+			Windows.Data.Text.TextSegment;
+			Windows.Devices.Geolocation;
+			Windows.Foundation;
+			Windows.Globalization.DayOfWeek;
+			Windows.Management.Deployment;
+			Windows.Storage;
+			Windows.Storage.Provider.FileUpdateStatus;
+			Windows.System.IUser;
+			Windows.System.ProcessorArchitecture;
+			Windows.System.User;
+		</CsWinRTIncludes>
+		<CsWinRTExcludes>
+			Windows.Foundation.Diagnostics;
+			Windows.Foundation.PropertyType;
+			Windows.Foundation.Rect;
+			Windows.Storage.BulkAccess;
+			Windows.Storage.Provider;
+		</CsWinRTExcludes>
+	</PropertyGroup>
+
+</Project>

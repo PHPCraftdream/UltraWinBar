@@ -1,0 +1,9 @@
+<Project>
+  <!-- Nearest props file for the vendored projects: stops inheriting UltraWinBar/Directory.Build.props
+       (git-height versioning, UltraWinBar output paths) and pins the upstream release version. -->
+  <PropertyGroup>
+    <Version>0.0.358</Version>
+    <!-- Third-party code: keep its warnings out of our build output. -->
+    <NoWarn>$(NoWarn);CS0108;CS0162;CS0168;CS0169;CS0219;CS0414;CS0618;CS0649;CS0659;CS0661;CS8632;CA1416;NU1701;NETSDK1138</NoWarn>
+  </PropertyGroup>
+</Project>

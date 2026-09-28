@@ -1,9 +1,13 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(MSBuildProjectName)' == 'UltraWinBar'">
     <BaseOutputPath>$(MSBuildProjectDirectory)\Support\BuildTools\artifacts\bin\</BaseOutputPath>
     <BaseIntermediateOutputPath>$(MSBuildProjectDirectory)\Support\BuildTools\artifacts\obj\</BaseIntermediateOutputPath>
     <DefaultItemExcludes>$(DefaultItemExcludes);$(MSBuildProjectDirectory)\Support\tests\**;$(MSBuildProjectDirectory)\Support\BuildTools\artifacts\**</DefaultItemExcludes>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Unconditional: WPF's temporary markup project has a different MSBuildProjectName. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);$(MSBuildThisFileDirectory)Support\vendor\**</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Nerdbank.GitVersioning">
