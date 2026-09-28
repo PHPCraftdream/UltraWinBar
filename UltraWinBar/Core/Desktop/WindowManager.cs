@@ -217,6 +217,8 @@ namespace UltraWinBar.Utilities
             foreach (var taskbar in _taskbars)
             {
                 taskbar.AllowClose = true;
+                // K19: remember it weakly so a missed unsubscribe anywhere shows up in the health log.
+                PanelLeakTracker.TrackClosed(taskbar);
                 taskbar.Close();
             }
 
