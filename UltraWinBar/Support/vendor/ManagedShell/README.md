@@ -125,3 +125,22 @@ not changed; every local modification is listed below and marked in code with `U
     hook), are unaffected.
   - `ShellContextMenu` (the only remaining `NativeWindow` subclass without an `OnThreadException`
     override) now reports through `CallbackGuard` too.
+- R9-I (explicit service lifecycle, review K14): new `ManagedShell.Common.Native.ServiceLifecycleState`
+  enum (`Created`/`Running`/`Stopped`/`Disposed`), `internal` with `InternalsVisibleTo("DesktopRules")`
+  added to `ManagedShell.Common` for the new restart test.
+  - `TasksService`: added a `LifecycleState` property alongside the existing `IsInitialized` field,
+    set on both the success and rollback paths of `Initialize`. `Initialize` called after `Dispose`
+    now logs and reinitializes instead of throwing `ObjectDisposedException` — `ExplorerMonitor.cs`
+    calls `Dispose()` then `Initialize()` on the same instance on every `TaskbarCreated`, so this
+    service's `Dispose()` is a restartable Stop, not a terminal disposal.
+  - `TrayService`: same `LifecycleState`/log-and-reinitialize policy as `TasksService`, for symmetry
+    and because the review lists it in the same restart test. `Initialize()` now rolls back a
+    partially-failed `RegisterTrayWnd`/`RegisterNotifyWnd` attempt (previously left `HwndTray`/
+    `HwndNotify` however they landed, with no cleanup). `DestroyWindows()` now calls `UnregisterClass`
+    unconditionally instead of only when a window of that class exists, closing a leak where a
+    registered-but-never-created window class outlived a failed `Initialize()`.
+  - `ExplorerHelper`: added a `LifecycleState` property (`Running` from construction — it has no
+    separate `Start`). Unlike the two services above, no shipped code restarts it in place (one
+    instance per `ShellManager`, disposed once at shutdown), so `Dispose()` is a true terminal
+    disposal: idempotent, and `HideExplorerTaskbar` set afterward is logged and ignored instead of
+    reinstalling the taskbar-show hook.

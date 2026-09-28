@@ -28,12 +28,23 @@ namespace ManagedShell.AppBar
 
         private bool _hideExplorerTaskbar;
 
+        // R9-I (K14): unlike TasksService/TrayService, ExplorerHelper has no shipped restart
+        // caller (ShellManager constructs one and disposes it once, at app shutdown), so Start
+        // after Dispose is treated as a real misuse: logged and ignored rather than reinitializing.
+        internal ServiceLifecycleState LifecycleState { get; private set; } = ServiceLifecycleState.Running;
+
         public bool HideExplorerTaskbar
         {
             get => _hideExplorerTaskbar;
 
             set
             {
+                if (LifecycleState == ServiceLifecycleState.Disposed)
+                {
+                    ShellLogger.Warning("ExplorerHelper: HideExplorerTaskbar set after Dispose; ignoring.");
+                    return;
+                }
+
                 if (value != _hideExplorerTaskbar && !EnvironmentHelper.IsAppRunningAsShell)
                 {
                     _hideExplorerTaskbar = value;
@@ -219,10 +230,17 @@ namespace ManagedShell.AppBar
         }
 
         // UltraWinBar: guarantee the hook is removed even if HideExplorerTaskbar was never toggled off
+        // R9-I (K14): idempotent - a second Dispose() call is a no-op past the state check.
         public void Dispose()
         {
+            if (LifecycleState == ServiceLifecycleState.Disposed)
+            {
+                return;
+            }
+
             taskbarMonitor.Stop();
             UninstallTaskbarShowHook();
+            LifecycleState = ServiceLifecycleState.Disposed;
         }
 
         private void TaskbarMonitor_Tick(object sender, EventArgs e)

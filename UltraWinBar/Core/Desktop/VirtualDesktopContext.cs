@@ -35,7 +35,11 @@ namespace UltraWinBar.Utilities
         private bool desktopForWindowCacheClearQueued;
         // Explorer-hosted: severed on Explorer restarts, recreated lazily with backoff.
         private readonly ShellComProxy<IDesktopManager> manager;
-        private bool disposed;
+        // R9-I (K14): explicit state instead of a bare bool. No restart caller exists for this
+        // type (constructed once in App.xaml.cs, disposed once at shutdown) - unlike TasksService,
+        // there is no Start method to guard against reuse after Dispose.
+        internal ServiceLifecycleState LifecycleState { get; private set; } = ServiceLifecycleState.Created;
+        private bool disposed => LifecycleState == ServiceLifecycleState.Disposed;
         public static VirtualDesktopContext Instance { get; private set; }
         public Guid CurrentId { get; private set; }
         public event EventHandler Changed;
@@ -67,6 +71,7 @@ namespace UltraWinBar.Utilities
             foreach (string path in new[] { GlobalPath, SessionPath })
                 watches.Add(new RegistryTreeWatch(path, dispatcher, () => dispatcher.BeginInvoke(new Action(Refresh))));
             ShellLogger.Info($"Virtual desktop: {CurrentId}");
+            LifecycleState = ServiceLifecycleState.Running;
         }
 
         private Guid ReadCurrent()
@@ -189,9 +194,11 @@ namespace UltraWinBar.Utilities
             }
         }
 
+        // R9-I (K14): idempotent - a second Dispose() call is a no-op.
         public void Dispose()
         {
-            disposed = true;
+            if (LifecycleState == ServiceLifecycleState.Disposed) return;
+            LifecycleState = ServiceLifecycleState.Disposed;
             foreach (var watch in watches) watch.Dispose();
             manager.Dispose();
             Instance = null;

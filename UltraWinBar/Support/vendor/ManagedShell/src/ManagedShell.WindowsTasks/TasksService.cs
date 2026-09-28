@@ -51,6 +51,11 @@ namespace ManagedShell.WindowsTasks
         private WinEventHook cloakHook;
         private WinEventHook moveHook;
 
+        // R9-I (K14): explicit state alongside IsInitialized (kept for its existing external
+        // reads/writes). Running <-> Stopped is the ordinary Explorer-restart cycle driven by
+        // ExplorerMonitor.cs (Dispose then Initialize on every TaskbarCreated).
+        internal ServiceLifecycleState LifecycleState { get; private set; } = ServiceLifecycleState.Created;
+
         internal ITaskCategoryProvider TaskCategoryProvider;
         private TaskCategoryChangeDelegate CategoryChangeDelegate;
 
@@ -161,6 +166,16 @@ namespace ManagedShell.WindowsTasks
                 return;
             }
 
+            // R9-I (K14): Start after Stop/Dispose is allowed and reinitializes, logged only - not
+            // ObjectDisposedException. ExplorerMonitor.cs calls Dispose() then Initialize() on this
+            // same instance on every TaskbarCreated; throwing here would permanently disable task
+            // tracking after the first Explorer restart. "Disposed" for this service means "stopped,
+            // can restart," not "unusable."
+            if (LifecycleState == ServiceLifecycleState.Disposed)
+            {
+                ShellLogger.Info("TasksService: Initialize called after Dispose; reinitializing (Explorer restart path).");
+            }
+
             // UltraWinBar (Н3): track what this attempt actually installed so a mid-init failure
             // can be rolled back instead of leaving a second, half-registered hook window behind.
             bool hookWinCreated = false;
@@ -217,6 +232,7 @@ namespace ManagedShell.WindowsTasks
                 getInitialWindows();
 
                 IsInitialized = true;
+                LifecycleState = ServiceLifecycleState.Running;
             }
             catch (Exception ex)
             {
@@ -245,6 +261,7 @@ namespace ManagedShell.WindowsTasks
                 _HookWin = null;
                 setTaskbarListHwnd(IntPtr.Zero);
                 Windows.Clear();
+                LifecycleState = ServiceLifecycleState.Stopped;
             }
         }
 
@@ -319,6 +336,9 @@ namespace ManagedShell.WindowsTasks
                 Windows.Clear();
             }
 
+            // R9-I (K14): idempotent regardless of prior state - double Dispose() and Dispose()
+            // from Created (never started) both just confirm Stopped.
+            LifecycleState = ServiceLifecycleState.Stopped;
             TaskCategoryProvider?.Dispose();
         }
 

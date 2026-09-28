@@ -9,3 +9,5 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("ManagedShell.UWPInterop")]
 [assembly: InternalsVisibleTo("ManagedShell.ShellFolders")]
 [assembly: InternalsVisibleTo("UltraWinBar")]
+// R9-I (K14/K20): typed access for the service-restart test instead of reflection.
+[assembly: InternalsVisibleTo("DesktopRules")]

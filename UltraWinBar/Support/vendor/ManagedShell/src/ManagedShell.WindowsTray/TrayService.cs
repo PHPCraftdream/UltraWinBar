@@ -41,6 +41,10 @@ namespace ManagedShell.WindowsTray
         // UltraWinBar: cross-process forward to Explorer's tray must not block on a hung Explorer.
         private const uint ForwardTimeoutMs = 500;
 
+        // R9-I (K14): explicit state alongside the HwndTray/HwndNotify handle checks already used
+        // as the idempotency guard.
+        internal ServiceLifecycleState LifecycleState { get; private set; } = ServiceLifecycleState.Created;
+
         public TrayService()
         {
             SetupTrayMonitor();
@@ -70,6 +74,15 @@ namespace ManagedShell.WindowsTray
                 return HwndTray;
             }
 
+            // R9-I (K14): same policy as TasksService - Start after Dispose reinitializes rather
+            // than throwing ObjectDisposedException, so a hypothetical future restart caller (the
+            // K14 review lists TrayService alongside TasksService for the restart test) is not
+            // permanently broken by one Dispose() call.
+            if (LifecycleState == ServiceLifecycleState.Disposed)
+            {
+                ShellLogger.Info("TrayService: Initialize called after Dispose; reinitializing.");
+            }
+
             DestroyWindows();
 
             // UltraWinBar: reuse the rooted delegate across retries. If a previous CreateWindowEx
@@ -85,6 +98,17 @@ namespace ManagedShell.WindowsTray
             RegisterTrayWnd();
             RegisterNotifyWnd();
 
+            if (HwndTray == IntPtr.Zero)
+            {
+                // R9-I (K14): roll back a partial Start - RegisterNotifyWnd may have registered a
+                // window class (or even a child window, parented to a null HwndTray) before we
+                // give up, and DestroyWindows() unregisters classes unconditionally.
+                DestroyWindows();
+                LifecycleState = ServiceLifecycleState.Stopped;
+                return IntPtr.Zero;
+            }
+
+            LifecycleState = ServiceLifecycleState.Running;
             return HwndTray;
         }
 
@@ -152,20 +176,27 @@ namespace ManagedShell.WindowsTray
 
         private void DestroyWindows()
         {
+            // R9-I (K14): UnregisterClass runs even if no window of that class ever got created -
+            // otherwise a partial Start (RegisterClass ok, CreateWindowEx failed) leaks the class
+            // registration for the process lifetime, invisible to the HwndNotify/HwndTray checks.
             if (HwndNotify != IntPtr.Zero)
             {
                 DestroyWindow(HwndNotify);
-                UnregisterClass(NotifyWndClass, hInstance);
-                ShellLogger.Debug($"TrayService: Unregistered {NotifyWndClass}");
                 HwndNotify = IntPtr.Zero;
+            }
+            if (UnregisterClass(NotifyWndClass, hInstance))
+            {
+                ShellLogger.Debug($"TrayService: Unregistered {NotifyWndClass}");
             }
 
             if (HwndTray != IntPtr.Zero)
             {
                 DestroyWindow(HwndTray);
-                UnregisterClass(TrayWndClass, hInstance);
-                ShellLogger.Debug($"TrayService: Unregistered {TrayWndClass}");
                 HwndTray = IntPtr.Zero;
+            }
+            if (UnregisterClass(TrayWndClass, hInstance))
+            {
+                ShellLogger.Debug($"TrayService: Unregistered {TrayWndClass}");
             }
 
             HwndFwd = IntPtr.Zero;
@@ -180,6 +211,7 @@ namespace ManagedShell.WindowsTray
             UnhookTrayEvents();
             if (HwndTray == IntPtr.Zero && HwndNotify == IntPtr.Zero)
             {
+                LifecycleState = ServiceLifecycleState.Stopped;
                 return;
             }
 
@@ -187,6 +219,8 @@ namespace ManagedShell.WindowsTray
 
             if (!EnvironmentHelper.IsAppRunningAsShell)
                 SendTaskbarCreated();
+
+            LifecycleState = ServiceLifecycleState.Stopped;
         }
 
         // UltraWinBar: registered with user32 via RegisterClass (wrapped by NativeCallback.Wrap
