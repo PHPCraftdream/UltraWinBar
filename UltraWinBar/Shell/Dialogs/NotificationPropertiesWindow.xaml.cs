@@ -22,7 +22,7 @@ namespace UltraWinBar
             InitializeComponent();
 
             DataContext = _notificationArea;
-            Settings.Instance.PropertyChanged += Settings_PropertyChanged;
+            WeakSubscriptions.SubscribeSettings(Settings_PropertyChanged);
         }
 
         private void Settings_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -57,7 +57,7 @@ namespace UltraWinBar
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
+            WeakSubscriptions.UnsubscribeSettings(Settings_PropertyChanged);
             _instance = null;
         }
 

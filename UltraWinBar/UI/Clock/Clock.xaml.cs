@@ -71,7 +71,7 @@ namespace UltraWinBar.Controls
                 Visibility = Visibility.Collapsed;
             }
 
-            Settings.Instance.PropertyChanged += Settings_PropertyChanged;
+            WeakSubscriptions.SubscribeSettings(Settings_PropertyChanged);
             SystemEvents.TimeChanged += TimeChanged;
             SystemEvents.UserPreferenceChanged += UserPreferenceChanged;
             SystemEvents.PowerModeChanged += PowerModeChanged;
@@ -433,7 +433,7 @@ namespace UltraWinBar.Controls
         {
             StopClock();
 
-            Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
+            WeakSubscriptions.UnsubscribeSettings(Settings_PropertyChanged);
             SystemEvents.TimeChanged -= TimeChanged;
             SystemEvents.UserPreferenceChanged -= UserPreferenceChanged;
             SystemEvents.PowerModeChanged -= PowerModeChanged;

@@ -141,9 +141,9 @@ namespace UltraWinBar.Controls
 
             Window = DataContext as ApplicationWindow;
             UpdatePinnedAppearance();
-            if (VirtualDesktopContext.Instance != null) VirtualDesktopContext.Instance.Changed += DesktopChanged;
+            WeakSubscriptions.SubscribeDesktopChanged(DesktopChanged);
 
-            Settings.Instance.PropertyChanged += Settings_PropertyChanged;
+            WeakSubscriptions.SubscribeSettings(Settings_PropertyChanged);
 
             dragHandler = new DelayedActivationHandler(() =>
             {
@@ -195,8 +195,8 @@ namespace UltraWinBar.Controls
                 return;
             }
 
-            Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
-            if (VirtualDesktopContext.Instance != null) VirtualDesktopContext.Instance.Changed -= DesktopChanged;
+            WeakSubscriptions.UnsubscribeSettings(Settings_PropertyChanged);
+            WeakSubscriptions.UnsubscribeDesktopChanged(DesktopChanged);
             dragHandler?.Dispose();
             CancelTaskDrag();
 

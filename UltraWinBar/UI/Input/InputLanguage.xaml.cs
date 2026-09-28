@@ -10,6 +10,7 @@ using ManagedShell.Common.Logging;
 using UltraWinBar.Converters;
 using UltraWinBar.Utilities;
 using WinForms = System.Windows.Forms;
+using static ManagedShell.Interop.NativeMethods;
 
 namespace UltraWinBar.Controls
 {
@@ -66,7 +67,7 @@ namespace UltraWinBar.Controls
         {
             UpdateVisibility();
 
-            Settings.Instance.PropertyChanged += Settings_PropertyChanged;
+            WeakSubscriptions.SubscribeSettings(Settings_PropertyChanged);
         }
 
         private void UpdateVisibility()
@@ -130,9 +131,6 @@ namespace UltraWinBar.Controls
 
         [DllImport("user32.dll")]
         private static extern bool GetGUIThreadInfo(uint idThread, ref GUITHREADINFO lpgui);
-
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetForegroundWindow();
 
         [DllImport("user32.dll")]
         private static extern uint GetWindowThreadProcessId(IntPtr hWnd, IntPtr lpdwProcessId);
@@ -256,7 +254,7 @@ namespace UltraWinBar.Controls
         {
             StopWatch();
             
-            Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
+            WeakSubscriptions.UnsubscribeSettings(Settings_PropertyChanged);
 
             _isLoaded = false;
         }

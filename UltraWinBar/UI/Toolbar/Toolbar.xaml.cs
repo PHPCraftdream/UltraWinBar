@@ -448,7 +448,7 @@ namespace UltraWinBar.Controls
         {
             if (!_isLoaded && Host != null)
             {
-                Settings.Instance.PropertyChanged += Settings_PropertyChanged;
+                WeakSubscriptions.SubscribeSettings(Settings_PropertyChanged);
                 Host.hotkeyManager.TaskbarHotkeyPressed += Toolbar_TaskbarHotkeyPressed;
 
                 _isLoaded = true;
@@ -462,7 +462,7 @@ namespace UltraWinBar.Controls
 
         private void UserControl_Unloaded(object sender, RoutedEventArgs e)
         {
-            Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
+            WeakSubscriptions.UnsubscribeSettings(Settings_PropertyChanged);
             if (Host != null)
             {
                 Host.hotkeyManager.TaskbarHotkeyPressed -= Toolbar_TaskbarHotkeyPressed;

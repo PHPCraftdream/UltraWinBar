@@ -85,7 +85,7 @@ namespace UltraWinBar.Controls
                 NotificationArea.UnpinnedIcons.CollectionChanged += UnpinnedIcons_CollectionChanged;
                 Predicate<object> unpinnedFilter = UnpinnedNotifyIcons_Filter;
                 if (!Equals(NotificationArea.UnpinnedIcons.Filter, unpinnedFilter)) NotificationArea.UnpinnedIcons.Filter = unpinnedFilter;
-                Settings.Instance.PropertyChanged += Settings_PropertyChanged;
+                WeakSubscriptions.SubscribeSettings(Settings_PropertyChanged);
 
                 if (Settings.Instance.CollapseNotifyIcons)
                 {
@@ -286,7 +286,7 @@ namespace UltraWinBar.Controls
             if (NotificationArea != null)
             {
                 NotificationArea.UnpinnedIcons.CollectionChanged -= UnpinnedIcons_CollectionChanged;
-                Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
+                WeakSubscriptions.UnsubscribeSettings(Settings_PropertyChanged);
             }
 
             _isLoaded = false;
@@ -431,11 +431,28 @@ namespace UltraWinBar.Controls
                             return 1;
                         }
                     }
-                    int xIndex = setting.FindIndex(s => xIcon.IsEqualByIdentifier(s));
-                    int yIndex = setting.FindIndex(s => yIcon.IsEqualByIdentifier(s));
-                    return xIndex.CompareTo(yIndex);
+                    return IndexOf(xIcon, setting).CompareTo(IndexOf(yIcon, setting));
                 }
                 return 0;
+            }
+
+            // Matching an identifier allocates; remember each icon's position until the order list is replaced.
+            private List<string> _indexedOrder;
+            private System.Runtime.CompilerServices.ConditionalWeakTable<Tray.NotifyIcon, System.Runtime.CompilerServices.StrongBox<int>> _indexes = new();
+
+            private int IndexOf(Tray.NotifyIcon icon, List<string> order)
+            {
+                if (!ReferenceEquals(order, _indexedOrder))
+                {
+                    _indexedOrder = order;
+                    _indexes = new System.Runtime.CompilerServices.ConditionalWeakTable<Tray.NotifyIcon, System.Runtime.CompilerServices.StrongBox<int>>();
+                }
+                if (!_indexes.TryGetValue(icon, out var index))
+                {
+                    index = new System.Runtime.CompilerServices.StrongBox<int>(order.FindIndex(s => icon.IsEqualByIdentifier(s)));
+                    _indexes.Add(icon, index);
+                }
+                return index.Value;
             }
         }
     }

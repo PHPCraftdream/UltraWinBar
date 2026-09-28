@@ -138,7 +138,7 @@ namespace UltraWinBar.Controls
 
             StartMenuMonitor.StartMenuVisibilityChanged += AppVisibilityHelper_StartMenuVisibilityChanged;
 
-            Settings.Instance.PropertyChanged += Settings_PropertyChanged;
+            WeakSubscriptions.SubscribeSettings(Settings_PropertyChanged);
 
             dragHandler = new DelayedActivationHandler(() =>
             {
@@ -175,7 +175,7 @@ namespace UltraWinBar.Controls
                 Host.PropertyChanged -= Taskbar_PropertyChanged;
             }
 
-            Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
+            WeakSubscriptions.UnsubscribeSettings(Settings_PropertyChanged);
             dragHandler?.Dispose();
 
             IsVisibleChanged -= StartButton_IsVisibleChanged;

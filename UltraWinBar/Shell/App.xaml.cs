@@ -27,6 +27,7 @@ namespace UltraWinBar
         private TaskWindowRecovery _taskRecovery;
         private PersistentDesktopPins _desktopPins;
         private DesktopActivationGuard _desktopActivationGuard;
+        private HealthReporter _health;
 
         private readonly DictionaryManager _dictionaryManager;
         private readonly ExplorerMonitor _explorerMonitor;
@@ -44,6 +45,7 @@ namespace UltraWinBar
             _dictionaryManager = new DictionaryManager();
             _updater = new Updater();
             _hotkeyManager = new HotkeyManager();
+            _health = new HealthReporter(_shellManager.Tasks);
 
             Settings.Instance.PropertyChanged += Settings_PropertyChanged;
         }
@@ -155,6 +157,7 @@ namespace UltraWinBar
             EnvironmentHelper.IsAppRunningAsShell = NativeMethods.GetShellWindow() == IntPtr.Zero;
 
             _logger = new ManagedShellLogger();
+            CallbackGuard.InstallGlobalHandlers();
 
             ShellConfig config = ShellManager.DefaultShellConfig;
             config.PinnedNotifyIcons = Settings.Instance.NotifyIconBehaviors.Where(setting => setting.Behavior == NotifyIconBehavior.AlwaysShow).Select(setting => setting.Identifier).ToArray();
@@ -193,6 +196,7 @@ namespace UltraWinBar
             Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
 
             _explorerMonitor.Dispose();
+            _health?.Dispose();
             _desktopActivationGuard?.Dispose();
             _taskRecovery?.Dispose();
             _desktopPins?.Dispose();

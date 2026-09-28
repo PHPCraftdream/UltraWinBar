@@ -88,7 +88,7 @@ namespace UltraWinBar
             LoadAppInfo();
             LoadClockActions();
 
-            Settings.Instance.PropertyChanged += Settings_PropertyChanged;
+            WeakSubscriptions.SubscribeSettings(Settings_PropertyChanged);
         }
 
         private void Settings_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -330,7 +330,7 @@ namespace UltraWinBar
                 _themesWatcher.Dispose();
                 _themesWatcher = null;
             }
-            Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
+            WeakSubscriptions.UnsubscribeSettings(Settings_PropertyChanged);
         }
 
         private void PropertiesWindow_OnLoaded(object sender, RoutedEventArgs e)

@@ -126,11 +126,11 @@ namespace UltraWinBar.Controls
 
                 TasksList.ItemsSource = displayedTasks;
 
-                Settings.Instance.PropertyChanged += Settings_PropertyChanged;
+                WeakSubscriptions.SubscribeSettings(Settings_PropertyChanged);
                 Host.hotkeyManager.TaskbarHotkeyPressed += TaskList_TaskbarHotkeyPressed;
 
                 isLoaded = true;
-                if (VirtualDesktopContext.Instance != null) VirtualDesktopContext.Instance.Changed += DesktopChanged;
+                WeakSubscriptions.SubscribeDesktopChanged(DesktopChanged);
                 QueueTaskRebuild();
             }
         }
@@ -411,7 +411,7 @@ namespace UltraWinBar.Controls
 
         private void TaskList_OnUnloaded(object sender, RoutedEventArgs e)
         {
-            if (VirtualDesktopContext.Instance != null) VirtualDesktopContext.Instance.Changed -= DesktopChanged;
+            WeakSubscriptions.UnsubscribeDesktopChanged(DesktopChanged);
             if (sourceWindows != null) sourceWindows.CollectionChanged -= SourceWindows_CollectionChanged;
             foreach (var window in observedWindows.ToArray()) UnwatchWindow(window);
             sourceWindows = null;
@@ -429,7 +429,7 @@ namespace UltraWinBar.Controls
                 Host.hotkeyManager.TaskbarHotkeyPressed -= TaskList_TaskbarHotkeyPressed;
             }
 
-            Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
+            WeakSubscriptions.UnsubscribeSettings(Settings_PropertyChanged);
 
             isLoaded = false;
         }

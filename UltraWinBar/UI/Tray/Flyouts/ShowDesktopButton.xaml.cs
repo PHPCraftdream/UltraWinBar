@@ -134,7 +134,7 @@ namespace UltraWinBar.Controls
                 SetIconSize();
                 TasksService.WindowActivated += HandleWindowActivated;
 
-                Settings.Instance.PropertyChanged += Settings_PropertyChanged;
+                WeakSubscriptions.SubscribeSettings(Settings_PropertyChanged);
 
                 dragHandler = new DelayedActivationHandler(() =>
                 {
@@ -159,7 +159,7 @@ namespace UltraWinBar.Controls
             if (isLoaded && TasksService != null)
             {
                 TasksService.WindowActivated -= HandleWindowActivated;
-                Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
+                WeakSubscriptions.UnsubscribeSettings(Settings_PropertyChanged);
                 dragHandler?.Dispose();
                 isLoaded = false;
             }
