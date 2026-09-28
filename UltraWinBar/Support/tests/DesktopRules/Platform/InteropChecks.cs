@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using ManagedShell.AppBar;
 using ManagedShell.Interop;
+using ManagedShell.WindowsTasks;
 using System.Threading;
 using System.Windows.Threading;
 using UltraWinBar.Utilities;
@@ -48,21 +49,12 @@ internal static class InteropChecks
                     throw new Exception($"{type.FullName} installs hooks directly; use WinEventHook or LowLevelMouseHook.");
         Console.WriteLine("PASS: hooks are installed only through the rooted, exception-safe hook primitives.");
 
-        var tray = Assembly.Load("ManagedShell.WindowsTray");
-        var hasPayload = tray.GetType("ManagedShell.WindowsTray.TrayService")?.GetMethod("HasPayload", BindingFlags.Static | BindingFlags.NonPublic)
-            ?? throw new Exception("Tray WM_COPYDATA payload validation is missing.");
-        var interop = Assembly.Load("ManagedShell.Interop");
-        Type copyDataType = interop.GetType("ManagedShell.Interop.NativeMethods+COPYDATASTRUCT");
-        Type trayDataType = interop.GetType("ManagedShell.Interop.NativeMethods+SHELLTRAYDATA");
-        if (Marshal.SizeOf(trayDataType) != 964)
+        // R9-M / К20: typed access to the trust-boundary parser (ManagedShell.Interop.
+        // CrossProcessMessages) instead of reflecting TrayService.HasPayload by name.
+        if (Marshal.SizeOf<NativeMethods.SHELLTRAYDATA>() != 964)
             throw new Exception("SHELLTRAYDATA must match the 964-byte TRAYNOTIFYDATAW shell32 sends.");
-        bool Accepts(IntPtr data, int size)
-        {
-            object copyData = Activator.CreateInstance(copyDataType);
-            copyDataType.GetField("lpData").SetValue(copyData, data);
-            copyDataType.GetField("cbData").SetValue(copyData, size);
-            return (bool)hasPayload.Invoke(null, new[] { copyData, trayDataType });
-        }
+        bool Accepts(IntPtr data, int size) => CrossProcessMessages.HasPayload(
+            new NativeMethods.COPYDATASTRUCT { lpData = data, cbData = size }, typeof(NativeMethods.SHELLTRAYDATA));
         if (!Accepts((IntPtr)1, 964) || Accepts((IntPtr)1, 963) || Accepts((IntPtr)1, 16) || Accepts(IntPtr.Zero, 964))
             throw new Exception("Tray WM_COPYDATA must reject short or missing payloads before reading them.");
         Console.WriteLine("PASS: tray WM_COPYDATA payloads shorter than their structure are rejected before marshalling.");
@@ -123,10 +115,9 @@ internal static class InteropChecks
         Console.WriteLine("PASS: native windows override OnThreadException instead of silently swallowing WndProc exceptions.");
         // ManagedShell.WindowsTasks: pointer trust boundary (Н5), per-instance Windows collection
         // (Н15), and the Dispose/Initialize hook lifecycle (Н3).
-        var windowsTasks = Assembly.Load("ManagedShell.WindowsTasks");
-        CheckMemorySafety(windowsTasks);
-        CheckBoundedStringRead(windowsTasks);
-        CheckPerInstanceWindowsCollection(windowsTasks);
+        CheckMemorySafety();
+        CheckBoundedStringRead();
+        CheckPerInstanceWindowsCollection();
         CheckDisposeInitializeLifecycle(repositoryRoot);
     }
 
@@ -136,23 +127,23 @@ internal static class InteropChecks
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern bool VirtualFree(IntPtr lpAddress, UIntPtr dwSize, uint dwFreeType);
 
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool VirtualProtect(IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect);
+
     private const uint MEM_COMMIT = 0x1000;
     private const uint MEM_RESERVE = 0x2000;
     private const uint MEM_RELEASE = 0x8000;
     private const uint PAGE_READWRITE = 0x04;
     private const uint PAGE_READONLY = 0x02;
+    private const uint PAGE_NOACCESS = 0x01;
 
-    private static void CheckMemorySafety(Assembly windowsTasks)
+    // R9-M / К20: typed access to ManagedShell.Interop.MemorySafety (moved there from
+    // ManagedShell.WindowsTasks so AppBarManager/TrayService can share it too) instead of
+    // reflecting it by its old namespace-qualified name.
+    private static void CheckMemorySafety()
     {
-        var memorySafety = windowsTasks.GetType("ManagedShell.WindowsTasks.MemorySafety")
-            ?? throw new Exception("Trust-boundary pointer validator (MemorySafety) is missing.");
-        var isReadWritable = memorySafety.GetMethod("IsReadWritable", BindingFlags.Static | BindingFlags.NonPublic)
-            ?? throw new Exception("MemorySafety.IsReadWritable is missing.");
-        var getReadableByteCount = memorySafety.GetMethod("GetReadableByteCount", BindingFlags.Static | BindingFlags.NonPublic)
-            ?? throw new Exception("MemorySafety.GetReadableByteCount is missing.");
-
-        bool IsReadWritable(IntPtr address, int size) => (bool)isReadWritable.Invoke(null, new object[] { address, size });
-        int GetReadableByteCount(IntPtr address, int maxBytes) => (int)getReadableByteCount.Invoke(null, new object[] { address, maxBytes });
+        bool IsReadWritable(IntPtr address, int size) => MemorySafety.IsReadWritable(address, size);
+        int GetReadableByteCount(IntPtr address, int maxBytes) => MemorySafety.GetReadableByteCount(address, maxBytes);
 
         // Garbage inputs must be rejected without ever dereferencing the pointer.
         if (IsReadWritable(IntPtr.Zero, 16)) throw new Exception("Null pointer must be rejected.");
@@ -199,14 +190,13 @@ internal static class InteropChecks
         Console.WriteLine("PASS: MemorySafety rejects null/garbage/unmapped/read-only pointers and structs crossing the region end, before GETMINRECT would dereference them.");
     }
 
-    private static void CheckBoundedStringRead(Assembly windowsTasks)
+    // R9-M / К20: typed access to ApplicationWindow.ReadBoundedString instead of reflecting it by
+    // name. Also verifies the trust-boundary composition end to end: GetReadableByteCount's
+    // computed bound, fed straight into ReadBoundedString, must never let the read cross into an
+    // adjacent inaccessible page.
+    private static void CheckBoundedStringRead()
     {
-        var applicationWindow = windowsTasks.GetType("ManagedShell.WindowsTasks.ApplicationWindow")
-            ?? throw new Exception("ApplicationWindow type is missing.");
-        var readBoundedString = applicationWindow.GetMethod("ReadBoundedString", BindingFlags.Static | BindingFlags.NonPublic)
-            ?? throw new Exception("ApplicationWindow.ReadBoundedString is missing.");
-
-        string ReadBoundedString(IntPtr ptr, int maxChars) => (string)readBoundedString.Invoke(null, new object[] { ptr, maxChars });
+        string ReadBoundedString(IntPtr ptr, int maxChars) => ApplicationWindow.ReadBoundedString(ptr, maxChars);
 
         if (ReadBoundedString(IntPtr.Zero, 10) != string.Empty) throw new Exception("Null pointer must read as empty.");
 
@@ -232,27 +222,44 @@ internal static class InteropChecks
             Marshal.FreeHGlobal(buffer);
         }
 
-        Console.WriteLine("PASS: ApplicationWindow.ReadBoundedString never reads past maxChars and stops at an embedded null terminator.");
+        // Two adjacent pages, the second PAGE_NOACCESS, the first filled to the very end with no
+        // terminator anywhere: GetReadableByteCount must stop exactly at the page boundary, and
+        // ReadBoundedString, given that bound, must read the whole first page without touching the second.
+        UIntPtr twoPages = (UIntPtr)8192;
+        IntPtr region = VirtualAlloc(IntPtr.Zero, twoPages, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+        if (region == IntPtr.Zero) throw new Exception("Test setup: VirtualAlloc(two pages) failed.");
+        try
+        {
+            if (!VirtualProtect(IntPtr.Add(region, 4096), (UIntPtr)4096, PAGE_NOACCESS, out _))
+                throw new Exception("Test setup: VirtualProtect(PAGE_NOACCESS) failed.");
+            for (int i = 0; i < 2048; i++) Marshal.WriteInt16(region, i * 2, (short)'A');
+
+            int readableBytes = MemorySafety.GetReadableByteCount(region, 4096 * 2);
+            if (readableBytes != 4096) throw new Exception($"Readable byte count must stop exactly at the page boundary, got {readableBytes}.");
+
+            string wholePage = ReadBoundedString(region, readableBytes / sizeof(char));
+            if (wholePage.Length != 2048 || wholePage.Any(c => c != 'A'))
+                throw new Exception($"Reading up to the page-accurate bound must not cross into the unmapped page, got length {wholePage.Length}.");
+        }
+        finally
+        {
+            VirtualFree(region, UIntPtr.Zero, MEM_RELEASE);
+        }
+
+        Console.WriteLine("PASS: ApplicationWindow.ReadBoundedString never reads past maxChars, stops at an embedded null terminator, and (combined with GetReadableByteCount) never crosses into an adjacent inaccessible page.");
     }
 
-    private static void CheckPerInstanceWindowsCollection(Assembly windowsTasks)
+    // R9-M / К20: typed access to TasksService.Windows instead of reflecting it by name.
+    private static void CheckPerInstanceWindowsCollection()
     {
-        var tasksServiceType = windowsTasks.GetType("ManagedShell.WindowsTasks.TasksService")
-            ?? throw new Exception("TasksService type is missing.");
-
         // Constructing a second instance must not throw (a bug class here is an instance-field
         // DependencyProperty.Register, which throws "already registered" on the second instance).
-        object first = Activator.CreateInstance(tasksServiceType);
-        object second = Activator.CreateInstance(tasksServiceType);
+        var first = new TasksService();
+        var second = new TasksService();
 
-        var windowsProperty = tasksServiceType.GetProperty("Windows", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
-            ?? throw new Exception("TasksService.Windows property is missing.");
-        object firstWindows = windowsProperty.GetValue(first);
-        object secondWindows = windowsProperty.GetValue(second);
-
-        if (firstWindows == null || secondWindows == null)
+        if (first.Windows == null || second.Windows == null)
             throw new Exception("TasksService.Windows must never be null; the DependencyProperty default must not leak through unset.");
-        if (ReferenceEquals(firstWindows, secondWindows))
+        if (ReferenceEquals(first.Windows, second.Windows))
             throw new Exception("TasksService.Windows must be a per-instance collection, not a shared DependencyProperty default.");
 
         Console.WriteLine("PASS: two TasksService instances construct without throwing, and each gets its own Windows collection.");

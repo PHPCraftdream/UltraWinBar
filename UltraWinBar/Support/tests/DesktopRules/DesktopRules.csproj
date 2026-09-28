@@ -19,5 +19,6 @@
     <Reference Include="ManagedShell.UWPInterop"><HintPath>../../../Support/BuildTools/artifacts/bin/Debug/net6.0-windows/ManagedShell.UWPInterop.dll</HintPath></Reference>
     <Reference Include="ManagedShell.Common"><HintPath>../../../Support/BuildTools/artifacts/bin/Debug/net6.0-windows/ManagedShell.Common.dll</HintPath></Reference>
     <Reference Include="ManagedShell.WindowsTray"><HintPath>../../../Support/BuildTools/artifacts/bin/Debug/net6.0-windows/ManagedShell.WindowsTray.dll</HintPath></Reference>
+    <Reference Include="ManagedShell.WindowsTasks"><HintPath>../../../Support/BuildTools/artifacts/bin/Debug/net6.0-windows/ManagedShell.WindowsTasks.dll</HintPath></Reference>
   </ItemGroup>
 </Project>

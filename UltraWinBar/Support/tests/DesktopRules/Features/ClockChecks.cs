@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using ManagedShell.AppBar;
+using UltraWinBar.Controls;
 using UltraWinBar.Utilities;
 
 internal static class ClockChecks
@@ -89,28 +90,38 @@ internal static class ClockChecks
             throw new Exception("TaskButton_OnLoaded should set _isLoaded exactly once, after the idempotency guard.");
         Console.WriteLine("PASS: a repeated TaskButton Loaded without an intervening Unloaded is a no-op and does not re-subscribe, replace dragHandler, or replay the slide-in animation.");
 
-        var inputLanguageType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Controls.InputLanguage")
-            ?? throw new Exception("Input language indicator is missing.");
-        const System.Reflection.BindingFlags staticNonPublic = System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic;
-        uint foregroundEvent = (uint)inputLanguageType.GetField("EventSystemForeground", staticNonPublic).GetValue(null);
-        int idlePollMs = (int)inputLanguageType.GetField("LayoutPollIdleMs", staticNonPublic).GetValue(null);
-        if (foregroundEvent != 3)
+        // R9-M / К20: typed access instead of a source-text scan between two method names
+        // (StartWatch/OnForeground) - a rename breaks this at compile time, and reordering the
+        // methods can no longer silently pick up the wrong body.
+        if (InputLanguage.EventSystemForeground != 3)
             throw new Exception("Input language foreground hook must watch EVENT_SYSTEM_FOREGROUND (3).");
-        if (idlePollMs < 500 || idlePollMs > 1000)
-            throw new Exception($"Input language idle poll must stay a cheap 500-1000ms fallback, was {idlePollMs}ms.");
-        string inputLanguageSource = System.IO.File.ReadAllText(System.IO.Path.Combine(
-            repositoryRoot.FullName, "UltraWinBar", "UI", "Input", "InputLanguage.xaml.cs"));
-        int startWatchStart = inputLanguageSource.IndexOf("private void StartWatch()");
-        int startWatchEnd = inputLanguageSource.IndexOf("private void OnForeground", startWatchStart);
-        int stopWatchStart = inputLanguageSource.IndexOf("private void StopWatch()");
-        int stopWatchEnd = inputLanguageSource.IndexOf("private void Settings_PropertyChanged", stopWatchStart);
-        if (startWatchStart < 0 || startWatchEnd < 0 || stopWatchStart < 0 || stopWatchEnd < 0)
-            throw new Exception("Could not locate StartWatch/StopWatch to check the foreground hook lifecycle.");
-        string startWatchBody = inputLanguageSource.Substring(startWatchStart, startWatchEnd - startWatchStart);
-        string stopWatchBody = inputLanguageSource.Substring(stopWatchStart, stopWatchEnd - stopWatchStart);
-        if (!startWatchBody.Contains("new WinEventHook") || !startWatchBody.Contains("layoutWatch.Start()") ||
-            !stopWatchBody.Contains("_foregroundHook?.Dispose()") || !stopWatchBody.Contains("layoutWatch.Stop()"))
-            throw new Exception("StartWatch/StopWatch must install and dispose the foreground WinEventHook together with the poll timer.");
+        if (InputLanguage.LayoutPollIdleMs < 500 || InputLanguage.LayoutPollIdleMs > 1000)
+            throw new Exception($"Input language idle poll must stay a cheap 500-1000ms fallback, was {InputLanguage.LayoutPollIdleMs}ms.");
+
+        // Constructing a Control requires an STA thread (FrameworkElement's InputManager asserts
+        // it); this harness's main thread is MTA, so run the construction and the check on one.
+        Exception inputLanguageFailure = null;
+        var inputLanguageThread = new System.Threading.Thread(() =>
+        {
+            try
+            {
+                var inputLanguage = new InputLanguage();
+                inputLanguage.StartWatch();
+                if (inputLanguage._foregroundHook == null || !inputLanguage.layoutWatch.IsEnabled)
+                    throw new Exception("StartWatch must install the foreground WinEventHook and start the poll timer.");
+                inputLanguage.StopWatch();
+                if (inputLanguage._foregroundHook != null || inputLanguage.layoutWatch.IsEnabled)
+                    throw new Exception("StopWatch must dispose the foreground WinEventHook and stop the poll timer.");
+            }
+            catch (Exception error)
+            {
+                inputLanguageFailure = error;
+            }
+        });
+        inputLanguageThread.SetApartmentState(System.Threading.ApartmentState.STA);
+        inputLanguageThread.Start();
+        inputLanguageThread.Join();
+        if (inputLanguageFailure != null) throw new Exception("Input language foreground hook lifecycle check failed.", inputLanguageFailure);
         Console.WriteLine("PASS: input language layout watch reacts to EVENT_SYSTEM_FOREGROUND, falls back to a 500-1000ms idle poll, and installs/disposes the hook alongside the poll timer.");
 
         var japaneseImeType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Controls.JapaneseIme")
