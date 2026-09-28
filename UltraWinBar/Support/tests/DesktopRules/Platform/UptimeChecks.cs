@@ -166,7 +166,7 @@ internal static class UptimeChecks
         Console.WriteLine("PASS: launcher visibility COM interop preserves HRESULT signatures and its sink is accepted by Explorer.");
 
         var healthType = Get("UltraWinBar.Utilities.HealthReporter");
-        using (var health = (IDisposable)Activator.CreateInstance(healthType, new object[] { null }))
+        using (var health = (IDisposable)Activator.CreateInstance(healthType, new object[] { null, null }))
         {
             string snapshot = (string)healthType.GetMethod("Snapshot", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(health, null);
             foreach (var field in new[] { "handles=", "gdi=", "user=", "threads=", "privateMB=", "gcHeapMB=", "winEventHooks=", "mouseHooks=", "settingsSubscribers=" })
