@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -48,6 +49,10 @@ namespace UltraWinBar.Utilities
 
         public event EventHandler<LowLevelMouseEventArgs> LowLevelMouseEvent;
 
+        // Installed hooks stay rooted: an owner dropped without Dispose must not let GC free the
+        // callback thunk while Windows still calls it (access violation in unknown code).
+        private static readonly HashSet<LowLevelMouseHook> _installed = new HashSet<LowLevelMouseHook>();
+
         private IntPtr _hook = IntPtr.Zero;
         private LowLevelMouseProcDelegate _hookDelegate;
 
@@ -67,6 +72,7 @@ namespace UltraWinBar.Utilities
                     return false;
                 }
 
+                lock (_installed) _installed.Add(this);
                 return true;
             }
         }
@@ -111,6 +117,7 @@ namespace UltraWinBar.Utilities
 
             UnhookWindowsHookEx(_hook);
             _hook = IntPtr.Zero;
+            lock (_installed) _installed.Remove(this);
         }
     }
 }

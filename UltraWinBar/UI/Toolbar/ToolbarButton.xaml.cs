@@ -24,6 +24,8 @@ namespace UltraWinBar.Controls
             InitializeComponent();
 
             setIconBinding();
+            // A panel reopen mid-drag unloads this button; don't leave its mouse hook installed.
+            Unloaded += (_, _) => StopDragHook();
         }
 
         private void setIconBinding()

@@ -226,6 +226,11 @@ namespace UltraWinBar
 
         private void StopMouseDragHook()
         {
+            if (_mouseDragHook == null)
+            {
+                return;
+            }
+
             _mouseDragHook.LowLevelMouseEvent -= MouseDragHook_LowLevelMouseEvent;
             _mouseDragHook.Dispose();
             _mouseDragHook = null;

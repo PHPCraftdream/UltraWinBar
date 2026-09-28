@@ -398,6 +398,8 @@ namespace UltraWinBar
                 _startMenuMonitor.StartMenuVisibilityChanged -= StartMenuMonitor_StartMenuVisibilityChanged;
                 _shellManager.TasksService.WindowActivated -= TasksService_WindowActivated;
                 StopElementDragHook();
+                // A drag to another edge reopens panels mid-gesture; never leave this panel's hook behind.
+                StopMouseDragHook();
             }
         }
 

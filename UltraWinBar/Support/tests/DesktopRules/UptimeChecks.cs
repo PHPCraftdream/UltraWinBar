@@ -133,6 +133,30 @@ internal static class UptimeChecks
         var unpinnedFilter = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Controls.NotifyIconList")?.GetMethod("UnpinnedNotifyIcons_Filter", Private);
         if (unpinnedFilter == null) throw new Exception("The shared unpinned-icons filter must be static so it retains no tray list.");
         Console.WriteLine("PASS: the System theme reloads only for color-relevant broadcasts and the shared tray filter retains no panel.");
+
+        // An installed mouse hook whose owner forgot Dispose must keep its callback thunk alive.
+        var hookRef = InstallAbandonedHook();
+        for (int i = 0; i < 3; i++) { GC.Collect(); GC.WaitForPendingFinalizers(); }
+        if (!DisposeHook(hookRef)) throw new Exception("An installed mouse hook must stay rooted until Dispose.");
+        for (int i = 0; i < 3; i++) { GC.Collect(); GC.WaitForPendingFinalizers(); }
+        if (hookRef.IsAlive) throw new Exception("A disposed mouse hook must be released.");
+        Console.WriteLine("PASS: an installed mouse hook stays rooted until Dispose, so a dropped owner cannot free its callback.");
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static WeakReference InstallAbandonedHook()
+    {
+        var hook = new LowLevelMouseHook();
+        if (!hook.Initialize()) throw new Exception("Test mouse hook could not be installed.");
+        return new WeakReference(hook);
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static bool DisposeHook(WeakReference hookRef)
+    {
+        if (!(hookRef.Target is LowLevelMouseHook hook)) return false;
+        hook.Dispose();
+        return true;
     }
 
     // Mirrors NotifyIconList/TaskList: a view over a long-lived collection whose sorter holds its panel.
