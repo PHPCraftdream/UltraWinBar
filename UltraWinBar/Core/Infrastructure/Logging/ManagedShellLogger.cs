@@ -29,6 +29,10 @@ namespace UltraWinBar.Utilities
             Settings.Instance.PropertyChanged += Settings_PropertyChanged;
         }
 
+        // K19 health line: lines lost outright, plus lines dropped because the write queue overflowed.
+        internal long LostLogLines => _fileLog?.LostLines ?? 0;
+        internal long DroppedQueuedLogLines => _fileLog?.DroppedQueuedLines ?? 0;
+
         private void Settings_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(Settings.DebugLogging))
@@ -145,6 +149,9 @@ namespace UltraWinBar.Utilities
         // Count of messages that could not be written to any file (current is unavailable).
         // A failed roll alone does not count here: the old file keeps being written to.
         internal long LostLines { get; private set; }
+
+        // Count of messages dropped because the write queue was full (K19 health line).
+        internal long DroppedQueuedLines => Interlocked.Read(ref _droppedQueuedLines);
 
         public RollingFileLog(string logPath, string logExt, TimeSpan retention, long maxSizeBytes = DefaultMaxSizeBytes, int maxQueueDepth = DefaultMaxQueueDepth)
         {
