@@ -16,6 +16,13 @@
 - The log gets a resource snapshot 5 minutes after start and then every 30
   minutes (handles, GDI/USER objects, threads, memory, hooks, subscribers), and
   exceptions on background threads and unobserved tasks are logged.
+- Closed taskbar panels (settings/display changes, Explorer restart) are tracked
+  with a bounded list of `WeakReference`s; the health snapshot forces a GC pass
+  and logs how many are still alive, with their edge and screen, so a missed
+  unsubscribe anywhere shows up without a profiler. The health line also reports
+  the worst UI-thread delay and how often it crossed 250 ms/1 s over the
+  interval, total `CallbackGuard` failures, how many `ShellComProxy` instances
+  are currently unavailable, and log lines lost or dropped by the file logger.
 - Large files are split by responsibility (Start menu monitor, taskbar window,
   desktop activation, Japanese IME, settings, tests) without behavior changes.
 - Fewer background wake-ups of the UI thread: keeping Explorer's taskbar hidden
