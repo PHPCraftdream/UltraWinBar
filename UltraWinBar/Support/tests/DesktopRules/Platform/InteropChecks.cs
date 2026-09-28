@@ -4,6 +4,8 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using ManagedShell.AppBar;
+using ManagedShell.Interop;
 using UltraWinBar.Utilities;
 
 // Mechanical guard for the interop bug class behind the 2026-09-28 crash: signatures the
@@ -62,6 +64,44 @@ internal static class InteropChecks
         if (!Accepts((IntPtr)1, 964) || Accepts((IntPtr)1, 963) || Accepts((IntPtr)1, 16) || Accepts(IntPtr.Zero, 964))
             throw new Exception("Tray WM_COPYDATA must reject short or missing payloads before reading them.");
         Console.WriteLine("PASS: tray WM_COPYDATA payloads shorter than their structure are rejected before marshalling.");
+
+        // R9-A / Н1: AppBar message handlers must bail out gracefully when SHLockShared can't map
+        // the sender's shared memory (elevated sender, or sender already gone), not dereference null.
+        var appBarManager = new AppBarManager(new ExplorerHelper());
+        var badAmd = new NativeMethods.APPBARMSGDATAV3 { hSharedMemory = 0, dwSourceProcessId = 0 };
+
+        var getTaskbarPos = typeof(AppBarManager).GetMethod("appBarMessage_GetTaskbarPos", BindingFlags.Instance | BindingFlags.NonPublic)
+            ?? throw new Exception("AppBarManager.appBarMessage_GetTaskbarPos is missing.");
+        object[] getTaskbarPosArgs = { badAmd, false };
+        IntPtr getTaskbarPosResult = (IntPtr)getTaskbarPos.Invoke(appBarManager, getTaskbarPosArgs);
+        if (getTaskbarPosResult != IntPtr.Zero || (bool)getTaskbarPosArgs[1])
+            throw new Exception("ABM_GETTASKBARPOS must fail gracefully when SHLockShared cannot map the sender's shared memory.");
+
+        var querySetPos = typeof(AppBarManager).GetMethod("appBarMessage_QuerySetPos", BindingFlags.Instance | BindingFlags.NonPublic)
+            ?? throw new Exception("AppBarManager.appBarMessage_QuerySetPos is missing.");
+        object[] querySetPosArgs = { badAmd, false };
+        IntPtr querySetPosResult = (IntPtr)querySetPos.Invoke(appBarManager, querySetPosArgs);
+        if (querySetPosResult != IntPtr.Zero || (bool)querySetPosArgs[1])
+            throw new Exception("ABM_QUERYPOS/SETPOS must fail gracefully when SHLockShared cannot map the sender's shared memory.");
+        Console.WriteLine("PASS: AppBar handlers bail out on a failed SHLockShared instead of dereferencing null.");
+
+        // R9-A / Н1: the tray window procedure is native-facing (RegisterClass callback) and must
+        // never let an exception escape into user32; it must report failures instead of crashing.
+        var trayServiceType = Assembly.Load("ManagedShell.WindowsTray").GetType("ManagedShell.WindowsTray.TrayService")
+            ?? throw new Exception("TrayService is missing.");
+        var trayService = Activator.CreateInstance(trayServiceType);
+        var wndProc = trayServiceType.GetMethod("WndProc", BindingFlags.Instance | BindingFlags.NonPublic)
+            ?? throw new Exception("TrayService.WndProc is missing.");
+        var wndProcFailureCount = trayServiceType.GetField("wndProcFailureCount", BindingFlags.Static | BindingFlags.NonPublic)
+            ?? throw new Exception("TrayService.WndProc exception barrier counter is missing.");
+        int before = (int)wndProcFailureCount.GetValue(null);
+        // WM_WINDOWPOSCHANGED with a null lParam: WINDOWPOS.FromMessage marshals null and throws
+        // NullReferenceException unboxing it; this must be caught, not thrown into user32.
+        wndProc.Invoke(trayService, new object[] { IntPtr.Zero, (int)NativeMethods.WM.WINDOWPOSCHANGED, IntPtr.Zero, IntPtr.Zero });
+        int after = (int)wndProcFailureCount.GetValue(null);
+        if (after != before + 1)
+            throw new Exception("TrayService.WndProc must catch exceptions from its body and report them via the rate-limited counter.");
+        Console.WriteLine("PASS: TrayService.WndProc catches a malformed message payload and reports it instead of crashing.");
     }
 
     internal static void Check(Assembly assembly, List<string> problems, bool strictReturns)

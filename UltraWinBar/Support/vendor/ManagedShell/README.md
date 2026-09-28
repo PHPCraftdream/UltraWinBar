@@ -39,3 +39,21 @@ not changed; every local modification is listed below and marked in code with `U
   `[PreserveSig]` on every method, matching their real native signatures (no phantom trailing
   `[out, retval]`). Callers already compared the return to `S_OK`/`0`, so a real failing HRESULT
   no longer throws past those checks; behavior at each call site is unchanged.
+- `TrayService.WndProc`: wrapped in a try/catch exception barrier (rate-limited `ShellLogger.Error`,
+  falls back to `DefWindowProc`) so a bad payload from any process can no longer escape into user32.
+- `TrayService.ForwardMsg` and `AppBarManager.appBarMessage_QuerySetPos`: forward to Explorer's tray
+  via `SendMessageTimeout(SMTO_ABORTIFHUNG)` (~500 ms) instead of `SendMessage`, so a hung Explorer
+  can no longer hang our UI thread; added `NativeMethods.TrySendMessageTimeout` helper and the
+  `SMTO_NORMAL`/`SMTO_ABORTIFHUNG` constants.
+- `TrayService.Dispose`/`Initialize`: `Dispose` zeroes window/class handles and is now a no-op on a
+  second call (`App.ExitApp` runs twice on session end) instead of double-destroying windows and
+  re-broadcasting `TaskbarCreated`; `Initialize` reuses the rooted `WndProc` delegate across retries
+  instead of creating a second one that a still-registered class could be left pointing at.
+- `AppBarManager.appBarMessage_GetTaskbarPos`/`appBarMessage_QuerySetPos`: every `SHLockShared`
+  result is checked for `IntPtr.Zero` and bails out with a failure result instead of
+  `PtrToStructure`-ing a null pointer; `SHUnlockShared`/`SHFreeShared`/the `hAmd` and `hCopyData`
+  `AllocHGlobal` blocks (previously leaked on every call) are now released in `finally`.
+- `ExplorerTrayService.GetTrayItems`/`GetTrayItem`: `OpenProcess`/`VirtualAllocEx` results are
+  checked before use (a failed `OpenProcess` no longer sends `TB_GETBUTTON` with a null remote
+  pointer); the per-item `AllocHGlobal` blocks and `VirtualFreeEx`/`CloseHandle` are released in
+  `finally` instead of leaking on early return or an exception.
