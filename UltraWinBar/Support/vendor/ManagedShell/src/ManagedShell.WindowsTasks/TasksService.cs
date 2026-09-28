@@ -30,6 +30,18 @@ namespace ManagedShell.WindowsTasks
         internal bool IsInitialized;
         private IconSize _taskIconSize;
 
+        // R9-N: kept in sync with Windows via CollectionChanged (UI thread, same as every
+        // Windows.Add/Remove/Clear call), so shell-message and WinEvent handlers get O(1)
+        // handle lookup instead of Windows.Any/First (O(n) each, two passes per lookup).
+        private readonly Dictionary<IntPtr, ApplicationWindow> _windowsByHandle = new Dictionary<IntPtr, ApplicationWindow>();
+
+        // K20: typed test access instead of reflection (DesktopRules only, via InternalsVisibleTo).
+        internal IReadOnlyDictionary<IntPtr, ApplicationWindow> WindowsByHandle => _windowsByHandle;
+
+        // Н12: cumulative count of dead/reused-handle entries removed by SweepGhosts, exposed for
+        // HealthReporter's health line.
+        internal static int GhostsRemoved;
+
         private static int WM_SHELLHOOKMESSAGE = -1;
         private static int WM_TASKBARCREATEDMESSAGE = -1;
         private static int TASKBARBUTTONCREATEDMESSAGE = -1;
@@ -80,7 +92,63 @@ namespace ManagedShell.WindowsTasks
             // UltraWinBar (Н15): per-instance collection; the DependencyProperty default must
             // never be a shared instance.
             Windows = new ObservableCollection<ApplicationWindow>();
+            Windows.CollectionChanged += Windows_CollectionChanged;
             TaskIconSize = iconSize;
+        }
+
+        // R9-N: mirrors every Add/Remove/Replace/Reset into _windowsByHandle. Runs synchronously
+        // on whatever thread mutated Windows (always the UI thread in practice: WinEvent/shell-hook
+        // callbacks and Dispose/Initialize all run there).
+        private void Windows_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            switch (e.Action)
+            {
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                    foreach (ApplicationWindow win in e.NewItems)
+                    {
+                        _windowsByHandle[win.Handle] = win;
+                        // Н12: freeze the owning PID at add time, if not already captured, so a
+                        // later liveness sweep can detect the handle being reused by another process.
+                        _ = win.ProcId;
+                    }
+                    break;
+
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
+                    foreach (ApplicationWindow win in e.OldItems)
+                    {
+                        // Guard against a duplicate-handle entry's removal clobbering the entry
+                        // still pointing at the surviving window with the same handle.
+                        if (_windowsByHandle.TryGetValue(win.Handle, out var current) && ReferenceEquals(current, win))
+                        {
+                            _windowsByHandle.Remove(win.Handle);
+                        }
+                    }
+                    break;
+
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Replace:
+                    foreach (ApplicationWindow win in e.OldItems)
+                    {
+                        if (_windowsByHandle.TryGetValue(win.Handle, out var current) && ReferenceEquals(current, win))
+                        {
+                            _windowsByHandle.Remove(win.Handle);
+                        }
+                    }
+                    foreach (ApplicationWindow win in e.NewItems)
+                    {
+                        _windowsByHandle[win.Handle] = win;
+                        _ = win.ProcId;
+                    }
+                    break;
+
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
+                    _windowsByHandle.Clear();
+                    foreach (ApplicationWindow win in Windows)
+                    {
+                        _windowsByHandle[win.Handle] = win;
+                        _ = win.ProcId;
+                    }
+                    break;
+            }
         }
 
         internal void Initialize(bool withMultiMonTracking)
@@ -340,11 +408,72 @@ namespace ManagedShell.WindowsTasks
             }
         }
 
+        // Н12: rare liveness sweep (called from HealthReporter's existing 30-min timer, not per
+        // event). A window is removed from Windows only via a shell-hook message; if that message
+        // is ever lost (posted-message queue overflow during a UI-thread stall), the dead entry
+        // stays forever, and if the HWND is later reused by a different process, TasksService would
+        // silently adopt it under the wrong PID. This finds and removes both cases and counts them.
+        internal void SweepGhosts()
+        {
+            if (_windowsByHandle.Count == 0)
+            {
+                return;
+            }
+
+            List<ApplicationWindow> ghosts = null;
+            foreach (KeyValuePair<IntPtr, ApplicationWindow> pair in _windowsByHandle)
+            {
+                IntPtr hwnd = pair.Key;
+                ApplicationWindow win = pair.Value;
+                bool isGhost;
+
+                if (!IsWindow(hwnd))
+                {
+                    isGhost = true;
+                }
+                else
+                {
+                    GetWindowThreadProcessId(hwnd, out uint currentPid);
+                    uint? recordedPid = win.ProcId;
+                    isGhost = recordedPid.HasValue && recordedPid.Value != 0 && currentPid != recordedPid.Value;
+                }
+
+                if (isGhost)
+                {
+                    (ghosts ??= new List<ApplicationWindow>()).Add(win);
+                }
+            }
+
+            if (ghosts == null)
+            {
+                return;
+            }
+
+            foreach (ApplicationWindow win in ghosts)
+            {
+                win.Dispose();
+                Windows.Remove(win); // CollectionChanged keeps _windowsByHandle in sync
+                ShellLogger.Debug($"TasksService: Swept ghost window {win.Handle} ({win.Title})");
+            }
+
+            GhostsRemoved += ghosts.Count;
+        }
+
+        // R9-N (review section 5): HSHELL_REDRAW (title/icon change) fires per window and, for
+        // Explorer, on every folder navigation; it no longer touches same-exe siblings (was O(n)
+        // extra UpdateProperties, each possibly doing 1-3 WM_GETICON round-trips, per redraw).
+        // HSHELL_FLASH keeps updating siblings via updateSameExeSiblings below.
         private void redrawWindow(ApplicationWindow win)
         {
             win.UpdateProperties();
             ShellLogger.Debug($"TasksService: Updated window {win.Handle} ({win.Title})");
+        }
 
+        // Only HSHELL_FLASH calls this: multiple windows of the same exe (e.g. several Explorer
+        // windows) are grouped under one taskbar entry, so flashing one should be reflected by the
+        // group's other windows too. Kept only for the flash path; REDRAW does not need it.
+        private void updateSameExeSiblings(ApplicationWindow win)
+        {
             foreach (ApplicationWindow wind in Windows)
             {
                 if (wind.WinFileName == win.WinFileName && wind.Handle != win.Handle)
@@ -367,14 +496,13 @@ namespace ManagedShell.WindowsTasks
                         switch ((HSHELL)msg.WParam.ToInt32())
                         {
                             case HSHELL.WINDOWCREATED:
-                                if (!Windows.Any(i => i.Handle == msgCopy.LParam))
+                                if (!_windowsByHandle.TryGetValue(msgCopy.LParam, out ApplicationWindow createdWin))
                                 {
                                     addWindow(msg.LParam);
                                 }
                                 else
                                 {
-                                    ApplicationWindow win = Windows.First(wnd => wnd.Handle == msgCopy.LParam);
-                                    win.UpdateProperties();
+                                    createdWin.UpdateProperties();
                                 }
                                 break;
 
@@ -383,11 +511,10 @@ namespace ManagedShell.WindowsTasks
                                 break;
 
                             case HSHELL.WINDOWREPLACING:
-                                if (Windows.Any(i => i.Handle == msgCopy.LParam))
+                                if (_windowsByHandle.TryGetValue(msgCopy.LParam, out ApplicationWindow replacingWin))
                                 {
-                                    ApplicationWindow win = Windows.First(wnd => wnd.Handle == msgCopy.LParam);
-                                    win.State = ApplicationWindow.WindowState.Inactive;
-                                    win.SetShowInTaskbar();
+                                    replacingWin.State = ApplicationWindow.WindowState.Inactive;
+                                    replacingWin.SetShowInTaskbar();
                                 }
                                 else
                                 {
@@ -410,9 +537,9 @@ namespace ManagedShell.WindowsTasks
                                 {
                                     ApplicationWindow win = null;
 
-                                    if (Windows.Any(i => i.Handle == msgCopy.LParam))
+                                    if (_windowsByHandle.TryGetValue(msgCopy.LParam, out ApplicationWindow activatedWin))
                                     {
-                                        win = Windows.First(wnd => wnd.Handle == msgCopy.LParam);
+                                        win = activatedWin;
                                         win.State = ApplicationWindow.WindowState.Active;
                                         win.SetShowInTaskbar();
                                         ShellLogger.Debug($"TasksService: Activated window {win.Handle} ({win.Title})");
@@ -445,16 +572,15 @@ namespace ManagedShell.WindowsTasks
                                 break;
 
                             case HSHELL.FLASH:
-                                if (Windows.Any(i => i.Handle == msgCopy.LParam))
+                                if (_windowsByHandle.TryGetValue(msgCopy.LParam, out ApplicationWindow flashWin))
                                 {
-                                    ApplicationWindow win = Windows.First(wnd => wnd.Handle == msgCopy.LParam);
-                                    
-                                    if (win.State != ApplicationWindow.WindowState.Active)
+                                    if (flashWin.State != ApplicationWindow.WindowState.Active)
                                     {
-                                        win.State = ApplicationWindow.WindowState.Flashing;
+                                        flashWin.State = ApplicationWindow.WindowState.Flashing;
                                     }
 
-                                    redrawWindow(win);
+                                    redrawWindow(flashWin);
+                                    updateSameExeSiblings(flashWin);
                                 }
                                 else
                                 {
@@ -471,16 +597,14 @@ namespace ManagedShell.WindowsTasks
                                 break;
 
                             case HSHELL.REDRAW:
-                                if (Windows.Any(i => i.Handle == msgCopy.LParam))
+                                if (_windowsByHandle.TryGetValue(msgCopy.LParam, out ApplicationWindow redrawWin))
                                 {
-                                    ApplicationWindow win = Windows.First(wnd => wnd.Handle == msgCopy.LParam);
-
-                                    if (win.State == ApplicationWindow.WindowState.Flashing)
+                                    if (redrawWin.State == ApplicationWindow.WindowState.Flashing)
                                     {
-                                        win.State = ApplicationWindow.WindowState.Inactive;
+                                        redrawWin.State = ApplicationWindow.WindowState.Inactive;
                                     }
 
-                                    redrawWindow(win);
+                                    redrawWindow(redrawWin);
                                 }
                                 else
                                 {
@@ -489,14 +613,13 @@ namespace ManagedShell.WindowsTasks
                                 break;
 
                             case HSHELL.MONITORCHANGED:
-                                if (Windows.Any(i => i.Handle == msgCopy.LParam))
+                                if (_windowsByHandle.TryGetValue(msgCopy.LParam, out ApplicationWindow monitorWin))
                                 {
-                                    ApplicationWindow win = Windows.First(wnd => wnd.Handle == msgCopy.LParam);
-                                    win.SetMonitor();
+                                    monitorWin.SetMonitor();
 
                                     WindowEventArgs args = new WindowEventArgs
                                     {
-                                        Window = win
+                                        Window = monitorWin
                                     };
 
                                     MonitorChanged?.Invoke(this, args);
@@ -539,10 +662,9 @@ namespace ManagedShell.WindowsTasks
                                     break;
                                 }
 
-                                if (Windows.Any(i => i.Handle == minRectInfo.hwnd))
+                                if (_windowsByHandle.TryGetValue(minRectInfo.hwnd, out ApplicationWindow minRectWin))
                                 {
-                                    ApplicationWindow win = Windows.First(wnd => wnd.Handle == minRectInfo.hwnd);
-                                    minRectInfo.rc = win.GetButtonRectFromShell();
+                                    minRectInfo.rc = minRectWin.GetButtonRectFromShell();
 
                                     if (minRectInfo.rc.Width <= 0 && minRectInfo.rc.Height <= 0)
                                     {
@@ -550,7 +672,7 @@ namespace ManagedShell.WindowsTasks
                                     }
                                     Marshal.StructureToPtr(minRectInfo, msg.LParam, false);
                                     msg.Result = (IntPtr)1;
-                                    ShellLogger.Debug($"TasksService: MinRect {minRectInfo.rc.Width}x{minRectInfo.rc.Height} provided for {win.Handle} ({win.Title})");
+                                    ShellLogger.Debug($"TasksService: MinRect {minRectInfo.rc.Width}x{minRectInfo.rc.Height} provided for {minRectWin.Handle} ({minRectWin.Title})");
                                     return; // return here so the result isnt reset to DefWindowProc
                                 }
                                 break;
@@ -606,10 +728,8 @@ namespace ManagedShell.WindowsTasks
                         // SetProgressValue
                         ShellLogger.Debug("TasksService: ITaskbarList: SetProgressValue HWND:" + msg.WParam + " Progress: " + msg.LParam);
 
-                        win = new ApplicationWindow(this, msg.WParam);
-                        if (Windows.Contains(win))
+                        if (_windowsByHandle.TryGetValue(msgCopy.WParam, out win))
                         {
-                            win = Windows.First(wnd => wnd.Handle == msgCopy.WParam);
                             win.ProgressValue = (int)msg.LParam;
                         }
 
@@ -619,10 +739,8 @@ namespace ManagedShell.WindowsTasks
                         // SetProgressState
                         ShellLogger.Debug("TasksService: ITaskbarList: SetProgressState HWND:" + msg.WParam + " Flags: " + msg.LParam);
 
-                        win = new ApplicationWindow(this, msg.WParam);
-                        if (Windows.Contains(win))
+                        if (_windowsByHandle.TryGetValue(msgCopy.WParam, out win))
                         {
-                            win = Windows.First(wnd => wnd.Handle == msgCopy.WParam);
                             win.ProgressState = (TBPFLAG)msg.LParam;
                         }
 
@@ -672,10 +790,8 @@ namespace ManagedShell.WindowsTasks
                         // SetOverlayIcon - Icon
                         ShellLogger.Debug("TasksService: ITaskbarList: SetOverlayIcon - Icon HWND:" + msg.WParam);
 
-                        win = new ApplicationWindow(this, msg.WParam);
-                        if (Windows.Contains(win))
+                        if (_windowsByHandle.TryGetValue(msgCopy.WParam, out win))
                         {
-                            win = Windows.First(wnd => wnd.Handle == msgCopy.WParam);
                             win.SetOverlayIcon(msg.LParam);
                         }
 
@@ -695,10 +811,8 @@ namespace ManagedShell.WindowsTasks
                         // SetOverlayIcon - Description
                         ShellLogger.Debug("TasksService: ITaskbarList: SetOverlayIcon - Description HWND:" + msg.WParam);
 
-                        win = new ApplicationWindow(this, msg.WParam);
-                        if (Windows.Contains(win))
+                        if (_windowsByHandle.TryGetValue(msgCopy.WParam, out win))
                         {
-                            win = Windows.First(wnd => wnd.Handle == msgCopy.WParam);
                             win.SetOverlayIconDescription(msg.LParam);
                         }
 
@@ -725,9 +839,8 @@ namespace ManagedShell.WindowsTasks
         {
             if (hWnd != IntPtr.Zero && idObject == 0 && idChild == 0)
             {
-                if (Windows.Any(i => i.Handle == hWnd))
+                if (_windowsByHandle.TryGetValue(hWnd, out ApplicationWindow win))
                 {
-                    ApplicationWindow win = Windows.First(wnd => wnd.Handle == hWnd);
                     win.SetMonitor();
                 }
             }
@@ -738,9 +851,8 @@ namespace ManagedShell.WindowsTasks
         {
             if (hWnd != IntPtr.Zero && idObject == 0 && idChild == 0)
             {
-                if (Windows.Any(i => i.Handle == hWnd))
+                if (_windowsByHandle.TryGetValue(hWnd, out ApplicationWindow win))
                 {
-                    ApplicationWindow win = Windows.First(wnd => wnd.Handle == hWnd);
                     ShellLogger.Debug($"TasksService: {(eventType == EVENT_OBJECT_CLOAKED ? "Cloak" : "Uncloak")} event received for {win.Title}");
                     win.SetShowInTaskbar();
                 }
