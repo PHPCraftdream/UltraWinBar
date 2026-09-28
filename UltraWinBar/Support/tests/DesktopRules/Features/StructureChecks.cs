@@ -48,6 +48,36 @@ internal static class StructureChecks
             (string)restartMenuResource.Attribute("Header") != "{DynamicResource restart_ultrawinbar}")
             throw new Exception("Clock context menu must offer restarting UltraWinBar.");
         Console.WriteLine("PASS: Exit and Restart menu items are available from the clock context menu; Exit only there.");
+
+        // WPF calls Shutdown() (-> App_OnExit -> ExitApp) after a non-cancelled SessionEnding,
+        // which already called ExitApp itself; ExitApp must not run its teardown twice, and
+        // Shutdown() only requests an async dispatcher shutdown, so each restart-then-FailFast
+        // path must flush settings explicitly rather than relying on ExitApp running in time.
+        string appSource = System.IO.File.ReadAllText(System.IO.Path.Combine(repositoryRoot.FullName, "UltraWinBar", "Shell", "App.xaml.cs"));
+        int exitAppStart = appSource.IndexOf("private void ExitApp()");
+        int exitAppEnd = appSource.IndexOf("private static void FlushSettingsBeforeFailFast", exitAppStart);
+        if (exitAppStart < 0 || exitAppEnd < 0)
+            throw new Exception("Could not locate ExitApp to check idempotency.");
+        if (!appSource.Substring(exitAppStart, exitAppEnd - exitAppStart).Contains("Interlocked.Exchange(ref _exitAppRan, 1)"))
+            throw new Exception("ExitApp must guard against running twice (SessionEnding, then WPF's own Shutdown->Exit).");
+        int sessionEndingStart = appSource.IndexOf("private void App_OnSessionEnding(");
+        int sessionEndingEnd = appSource.IndexOf("private void Settings_PropertyChanged", sessionEndingStart);
+        if (sessionEndingStart < 0 || sessionEndingEnd < 0)
+            throw new Exception("Could not locate App_OnSessionEnding.");
+        if (!appSource.Substring(sessionEndingStart, sessionEndingEnd - sessionEndingStart).Contains("SignalGracefulShutdown()"))
+            throw new Exception("App_OnSessionEnding must signal graceful shutdown for the restore-work-area watchdog.");
+        int dispatcherStart = appSource.IndexOf("private void App_DispatcherUnhandledException(");
+        if (dispatcherStart < 0) throw new Exception("Could not locate App_DispatcherUnhandledException.");
+        string dispatcherBody = appSource.Substring(dispatcherStart);
+        int firstFailFast = dispatcherBody.IndexOf("Environment.FailFast(");
+        int secondFailFast = firstFailFast < 0 ? -1 : dispatcherBody.IndexOf("Environment.FailFast(", firstFailFast + 1);
+        if (firstFailFast < 0 || secondFailFast < 0)
+            throw new Exception("Expected two restart-then-FailFast paths in App_DispatcherUnhandledException.");
+        if (dispatcherBody.LastIndexOf("FlushSettingsBeforeFailFast()", firstFailFast) < 0 ||
+            dispatcherBody.LastIndexOf("FlushSettingsBeforeFailFast()", secondFailFast) < 0)
+            throw new Exception("Each restart path must flush settings before FailFast, or the last debounced save is lost.");
+        Console.WriteLine("PASS: ExitApp is idempotent, SessionEnding signals graceful shutdown, and both FailFast restart paths flush settings first.");
+
         // "vendor": third-party sources keep upstream layout so they stay diffable against upstream.
         var generatedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".git", ".vs", ".claude", "bin", "obj", "artifacts", "worktrees", "checkpoints", "vendor" };
         var sourceExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)

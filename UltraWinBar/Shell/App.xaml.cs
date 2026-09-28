@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.Reflection;
 using ManagedShell.Common.Logging;
 using System.Linq;
+using System.Threading;
 
 namespace UltraWinBar
 {
@@ -22,6 +23,7 @@ namespace UltraWinBar
     {
         private bool _errorVisible;
         private ManagedShellLogger _logger;
+        private int _exitAppRan;
         private WindowManager _windowManager;
         private VirtualDesktopContext _virtualDesktops;
         private TaskWindowRecovery _taskRecovery;
@@ -92,6 +94,9 @@ namespace UltraWinBar
 
         private void App_OnSessionEnding(object sender, SessionEndingCancelEventArgs e)
         {
+            // WPF calls Shutdown() (-> App_OnExit -> ExitApp) after a non-cancelled SessionEnding,
+            // so the watchdog signal belongs here too, not only in ExitGracefully.
+            _shellManager.AppBarManager.SignalGracefulShutdown();
             ExitApp();
         }
 
@@ -193,6 +198,9 @@ namespace UltraWinBar
 
         private void ExitApp()
         {
+            // SessionEnding runs this, then WPF calls Shutdown() -> App_OnExit -> this again.
+            if (Interlocked.Exchange(ref _exitAppRan, 1) != 0) return;
+
             Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
 
             _explorerMonitor.Dispose();
@@ -209,6 +217,14 @@ namespace UltraWinBar
             _hotkeyManager.Dispose();
             Settings.Flush();
             _logger.Dispose();
+        }
+
+        // Shutdown() only requests an async dispatcher shutdown; ExitApp (and its Settings.Flush)
+        // may not run before FailFast kills the process, so flush the debounced save explicitly.
+        private static void FlushSettingsBeforeFailFast()
+        {
+            try { Settings.Flush(); }
+            catch (Exception error) { ShellLogger.Error($"App: Settings flush before FailFast failed: {error.Message}"); }
         }
 
         private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
@@ -242,6 +258,7 @@ namespace UltraWinBar
                     if (e.Exception.Message.StartsWith("UCEERR_RENDERTHREADFAILURE"))
                     {
                         RestartApp();
+                        FlushSettingsBeforeFailFast();
                         Environment.FailFast("Automatically restarted UltraWinBar due to a render thread failure.");
                     }
                     else
@@ -250,6 +267,7 @@ namespace UltraWinBar
                         {
                             // it's like getting a morning coffee.
                             RestartApp();
+                            FlushSettingsBeforeFailFast();
                             Environment.FailFast("User restarted UltraWinBar due to an exception.");
                         }
                     }
