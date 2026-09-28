@@ -26,11 +26,13 @@ namespace UltraWinBar.Controls
             if ((hImeWnd = ImmOpenGetWindow()) == (IntPtr)0)
                 return;
 
-            ImmNewConversion = (uint)SendMessage(hImeWnd, WM_IME_CONTROL, (IntPtr)IMC_GETCONVERSIONMODE, (IntPtr)0);
+            if (!TrySendImeControl(hImeWnd, IMC_GETCONVERSIONMODE, (IntPtr)0, out IntPtr conversionMode))
+                return;     // IME window not responding
+            ImmNewConversion = (uint)conversionMode;
             ImmNewConversion |= IME_CMODE_FULLSHAPE;
             ImmNewConversion |= IME_CMODE_NATIVE;
             ImmNewConversion &= ~IME_CMODE_KATAKANA;
-            SendMessage(hImeWnd, WM_IME_CONTROL, (IntPtr)IMC_SETCONVERSIONMODE, (IntPtr)ImmNewConversion);
+            TrySendImeControl(hImeWnd, IMC_SETCONVERSIONMODE, (IntPtr)ImmNewConversion, out _);
         }
 
         private void JapaneseIme_full_shape_katakana_OnClick(object sender, RoutedEventArgs e)
@@ -41,11 +43,13 @@ namespace UltraWinBar.Controls
             if ((hImeWnd = ImmOpenGetWindow()) == (IntPtr)0)
                 return;
 
-            ImmNewConversion = (uint)SendMessage(hImeWnd, WM_IME_CONTROL, (IntPtr)IMC_GETCONVERSIONMODE, (IntPtr)0);
+            if (!TrySendImeControl(hImeWnd, IMC_GETCONVERSIONMODE, (IntPtr)0, out IntPtr conversionMode))
+                return;     // IME window not responding
+            ImmNewConversion = (uint)conversionMode;
             ImmNewConversion |= IME_CMODE_FULLSHAPE;
             ImmNewConversion |= IME_CMODE_NATIVE;
             ImmNewConversion |= IME_CMODE_KATAKANA;
-            SendMessage(hImeWnd, WM_IME_CONTROL, (IntPtr)IMC_SETCONVERSIONMODE, (IntPtr)ImmNewConversion);
+            TrySendImeControl(hImeWnd, IMC_SETCONVERSIONMODE, (IntPtr)ImmNewConversion, out _);
         }
 
         private void JapaneseIme_full_shape_alphanumeric_OnClick(object sender, RoutedEventArgs e)
@@ -56,11 +60,13 @@ namespace UltraWinBar.Controls
             if ((hImeWnd = ImmOpenGetWindow()) == (IntPtr)0)
                 return;
 
-            ImmNewConversion = (uint)SendMessage(hImeWnd, WM_IME_CONTROL, (IntPtr)IMC_GETCONVERSIONMODE, (IntPtr)0);
+            if (!TrySendImeControl(hImeWnd, IMC_GETCONVERSIONMODE, (IntPtr)0, out IntPtr conversionMode))
+                return;     // IME window not responding
+            ImmNewConversion = (uint)conversionMode;
             ImmNewConversion |= IME_CMODE_FULLSHAPE;
             ImmNewConversion &= ~IME_CMODE_NATIVE;
             ImmNewConversion &= ~IME_CMODE_KATAKANA;
-            SendMessage(hImeWnd, WM_IME_CONTROL, (IntPtr)IMC_SETCONVERSIONMODE, (IntPtr)ImmNewConversion);
+            TrySendImeControl(hImeWnd, IMC_SETCONVERSIONMODE, (IntPtr)ImmNewConversion, out _);
         }
 
         private void JapaneseIme_kana_OnClick(object sender, RoutedEventArgs e)
@@ -71,11 +77,13 @@ namespace UltraWinBar.Controls
             if ((hImeWnd = ImmOpenGetWindow()) == (IntPtr)0)
                 return;
 
-            ImmNewConversion = (uint)SendMessage(hImeWnd, WM_IME_CONTROL, (IntPtr)IMC_GETCONVERSIONMODE, (IntPtr)0);
+            if (!TrySendImeControl(hImeWnd, IMC_GETCONVERSIONMODE, (IntPtr)0, out IntPtr conversionMode))
+                return;     // IME window not responding
+            ImmNewConversion = (uint)conversionMode;
             ImmNewConversion &= ~IME_CMODE_FULLSHAPE;
             ImmNewConversion |= IME_CMODE_NATIVE;
             ImmNewConversion |= IME_CMODE_KATAKANA;
-            SendMessage(hImeWnd, WM_IME_CONTROL, (IntPtr)IMC_SETCONVERSIONMODE, (IntPtr)ImmNewConversion);
+            TrySendImeControl(hImeWnd, IMC_SETCONVERSIONMODE, (IntPtr)ImmNewConversion, out _);
         }
 
         private void JapaneseIme_alphanumeric_OnClick(object sender, RoutedEventArgs e)
@@ -86,11 +94,13 @@ namespace UltraWinBar.Controls
             if ((hImeWnd = ImmOpenGetWindow()) == (IntPtr)0)
                 return;
 
-            ImmNewConversion = (uint)SendMessage(hImeWnd, WM_IME_CONTROL, (IntPtr)IMC_GETCONVERSIONMODE, (IntPtr)0);
+            if (!TrySendImeControl(hImeWnd, IMC_GETCONVERSIONMODE, (IntPtr)0, out IntPtr conversionMode))
+                return;     // IME window not responding
+            ImmNewConversion = (uint)conversionMode;
             ImmNewConversion &= ~IME_CMODE_FULLSHAPE;
             ImmNewConversion &= ~IME_CMODE_NATIVE;
             ImmNewConversion &= ~IME_CMODE_KATAKANA;
-            SendMessage(hImeWnd, WM_IME_CONTROL, (IntPtr)IMC_SETCONVERSIONMODE, (IntPtr)ImmNewConversion);
+            TrySendImeControl(hImeWnd, IMC_SETCONVERSIONMODE, (IntPtr)ImmNewConversion, out _);
         }
 
         private void JapaneseIme_direct_OnClick(object sender, RoutedEventArgs e)
@@ -150,7 +160,7 @@ namespace UltraWinBar.Controls
             if ((hImeWnd = ImmOpenGetWindow()) == (IntPtr)0)
                 return;
 
-            SendMessage(hImeWnd, WM_IME_CONTROL, (IntPtr)IMC_SETSENTENCEMODE, (IntPtr)0x08);
+            TrySendImeControl(hImeWnd, IMC_SETSENTENCEMODE, (IntPtr)0x08, out _);
         }
 
         private void JapaneseIme_conversion_none_OnClick(object sender, RoutedEventArgs e)
@@ -160,7 +170,7 @@ namespace UltraWinBar.Controls
             if ((hImeWnd = ImmOpenGetWindow()) == (IntPtr)0)
                 return;
 
-            SendMessage(hImeWnd, WM_IME_CONTROL, (IntPtr)IMC_SETSENTENCEMODE, (IntPtr)0x00);
+            TrySendImeControl(hImeWnd, IMC_SETSENTENCEMODE, (IntPtr)0x00, out _);
         }
     }
 }

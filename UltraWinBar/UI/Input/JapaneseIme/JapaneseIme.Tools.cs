@@ -13,16 +13,25 @@ namespace UltraWinBar.Controls
 {
     public partial class JapaneseIme
     {
+        // WM_IME_CONTROL is sent to the foreground app's IME window (another process); use a
+        // bounded timeout so a hung app/IME cannot block the taskbar UI thread.
+        private const uint IME_CONTROL_TIMEOUT_MS = 500;
+
+        private static bool TrySendImeControl(IntPtr hImeWnd, uint wParam, IntPtr lParam, out IntPtr result)
+        {
+            result = IntPtr.Zero;
+            return SendMessageTimeout(hImeWnd, WM_IME_CONTROL, (IntPtr)wParam, lParam,
+                SMTO_ABORTIFHUNG, IME_CONTROL_TIMEOUT_MS, ref result) != 0;
+        }
+
         private IntPtr ImmOpenGetWindow()
         {
-            IntPtr hImeWnd;
-            int OpenSts;
+            IntPtr hImeWnd = ImmSetOpen(ImmOpenStatus.ImmOpen);
 
-            hImeWnd = ImmSetOpen(ImmOpenStatus.ImmOpen);
+            if (!TrySendImeControl(hImeWnd, IMC_GETOPENSTATUS, (IntPtr)0, out IntPtr openStatus))
+                return (IntPtr)0;  // IME window not responding
 
-            OpenSts = (int)SendMessage(hImeWnd, WM_IME_CONTROL, (IntPtr)IMC_GETOPENSTATUS, (IntPtr)0);
-
-            if (OpenSts == 0)
+            if (openStatus == (IntPtr)0)
                 return (IntPtr)0;
 
             return hImeWnd;
@@ -46,7 +55,10 @@ namespace UltraWinBar.Controls
             if ((hImeWnd = ImmGetDefaultIMEWnd(hWndCurFg)) == (IntPtr)0)
                 return (IntPtr)0;
 
-            OpenCurSts = (int)SendMessage(hImeWnd, WM_IME_CONTROL, (IntPtr)IMC_GETOPENSTATUS, (IntPtr)0);
+            if (!TrySendImeControl(hImeWnd, IMC_GETOPENSTATUS, (IntPtr)0, out IntPtr openStatusResult))
+                return (IntPtr)0;  // IME window not responding
+
+            OpenCurSts = (int)openStatusResult;
 
             switch (SetStatus)
             {
@@ -67,7 +79,7 @@ namespace UltraWinBar.Controls
                     break;
             }
 
-            SendMessage(hImeWnd, WM_IME_CONTROL, (IntPtr)IMC_SETOPENSTATUS, (IntPtr)OpenNewSts);
+            TrySendImeControl(hImeWnd, IMC_SETOPENSTATUS, (IntPtr)OpenNewSts, out _);
 
             return hImeWnd;
         }

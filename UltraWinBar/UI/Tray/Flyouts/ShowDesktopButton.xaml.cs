@@ -1,4 +1,5 @@
 ﻿using ManagedShell.Common.Helpers;
+using ManagedShell.Common.Logging;
 using ManagedShell.Interop;
 using ManagedShell.WindowsTasks;
 using UltraWinBar.Utilities;
@@ -15,6 +16,8 @@ namespace UltraWinBar.Controls
     public partial class ShowDesktopButton : UserControl
     {
         private const int TOGGLE_DESKTOP = 407;
+        private const uint SMTO_ABORTIFHUNG = 0x0002;
+        private const uint TOGGLE_DESKTOP_TIMEOUT_MS = 500;
         private IntPtr taskbarHandle = Process.GetCurrentProcess().MainWindowHandle;
         private bool isWindows81OrBetter = EnvironmentHelper.IsWindows81OrBetter;
         private bool isLoaded;
@@ -64,8 +67,16 @@ namespace UltraWinBar.Controls
 
         private void ToggleDesktop()
         {
-            NativeMethods.SendMessage(WindowHelper.FindWindowsTray(IntPtr.Zero),
-                (int)NativeMethods.WM.COMMAND, (IntPtr)TOGGLE_DESKTOP, IntPtr.Zero);
+            IntPtr trayHandle = WindowHelper.FindWindowsTray(IntPtr.Zero);
+            IntPtr result = IntPtr.Zero;
+
+            // Cross-process WM_COMMAND to our top Shell_TrayWnd; bounded so a hung tray cannot
+            // block this UI thread.
+            if (NativeMethods.SendMessageTimeout(trayHandle, (uint)NativeMethods.WM.COMMAND,
+                (IntPtr)TOGGLE_DESKTOP, IntPtr.Zero, SMTO_ABORTIFHUNG, TOGGLE_DESKTOP_TIMEOUT_MS, ref result) == 0)
+            {
+                ShellLogger.Warning($"ShowDesktopButton: tray did not respond to WM_COMMAND within {TOGGLE_DESKTOP_TIMEOUT_MS}ms.");
+            }
         }
 
         private void PeekAtDesktop(uint shouldPeek)
