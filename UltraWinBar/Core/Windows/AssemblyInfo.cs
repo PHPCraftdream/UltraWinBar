@@ -1,4 +1,8 @@
+using System.Runtime.CompilerServices;
 using System.Windows;
+
+// R9-M / К20: lets the test harness call internal members by type instead of by reflected name.
+[assembly: InternalsVisibleTo("DesktopRules")]
 
 [assembly: ThemeInfo(
     ResourceDictionaryLocation.None, //where theme specific resource dictionaries are located

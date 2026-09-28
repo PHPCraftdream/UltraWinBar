@@ -34,15 +34,16 @@ namespace UltraWinBar.Controls
 
         // A layout switch raises no system-wide event, so a poll stays as the fallback; EVENT_SYSTEM_FOREGROUND
         // (installed in StartWatch) catches the common case immediately, letting the idle poll run rarely.
-        private const uint EventSystemForeground = 3;
-        private const int LayoutPollIdleMs = 750;
+        // Internal (R9-M / К20): read directly by DesktopRules instead of by reflected field name.
+        internal const uint EventSystemForeground = 3;
+        internal const int LayoutPollIdleMs = 750;
 
-        private readonly DispatcherTimer layoutWatch = new DispatcherTimer(DispatcherPriority.Background);
+        internal readonly DispatcherTimer layoutWatch = new DispatcherTimer(DispatcherPriority.Background);
         private readonly CultureInfoToLocaleNameConverter _localeConverter = new CultureInfoToLocaleNameConverter();
 
         private bool _isLoaded;
         private IntPtr _lastHkl = IntPtr.Zero;
-        private WinEventHook _foregroundHook;
+        internal WinEventHook _foregroundHook;
 
         public InputLanguage()
         {
@@ -144,7 +145,8 @@ namespace UltraWinBar.Controls
         [DllImport("user32.dll")]
         private static extern IntPtr GetKeyboardLayout(uint idThread);
 
-        private void StartWatch()
+        // Internal (R9-M / К20): called directly by DesktopRules instead of via a source-text scan.
+        internal void StartWatch()
         {
             TrySetLocaleIdentifier(GetActiveKeyboardLayout());
 
@@ -237,7 +239,7 @@ namespace UltraWinBar.Controls
             }
         }
 
-        private void StopWatch()
+        internal void StopWatch()
         {
             layoutWatch.Stop();
             _foregroundHook?.Dispose();
