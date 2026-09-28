@@ -3,6 +3,7 @@ using ManagedShell.WindowsTasks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace UltraWinBar.Utilities
 {
@@ -31,17 +32,43 @@ namespace UltraWinBar.Utilities
             }
 
             // ExecutablePath mode: group all windows of the same application together.
-            if (window.IsUWP && !string.IsNullOrEmpty(window.AppUserModelID))
+            return GetExecutableIdentifier(window);
+        }
+
+        // Cached per window: called in nested loops (pin matching, legacy ordinal scan, per-panel
+        // edge assignment). Validated against the source values rather than window identity alone,
+        // since a UWP window's AppUserModelID can arrive empty and be filled in later. Reads
+        // AppUserModelID/WinFileName as lazily as the original formula did (both properties do
+        // real work on a miss), not unconditionally.
+        private sealed class ExecutableIdentity
+        {
+            internal bool IsUWP;
+            internal string AppUserModelID;
+            internal string WinFileName;
+            internal string Key;
+            internal bool Computed;
+        }
+
+        private static readonly ConditionalWeakTable<ApplicationWindow, ExecutableIdentity> executableIdentities = new();
+
+        private static string GetExecutableIdentifier(ApplicationWindow window)
+        {
+            bool isUwp = window.IsUWP;
+            string aumid = isUwp ? window.AppUserModelID : null;
+            bool hasUwpId = isUwp && !string.IsNullOrEmpty(aumid);
+            string winFileName = hasUwpId ? null : window.WinFileName;
+
+            ExecutableIdentity identity = executableIdentities.GetValue(window, _ => new ExecutableIdentity());
+            if (!identity.Computed || identity.IsUWP != isUwp || identity.AppUserModelID != aumid || identity.WinFileName != winFileName)
             {
-                return $"uwp:{window.AppUserModelID}";
+                identity.IsUWP = isUwp;
+                identity.AppUserModelID = aumid;
+                identity.WinFileName = winFileName;
+                identity.Key = hasUwpId ? $"uwp:{aumid}" : (!string.IsNullOrEmpty(winFileName) ? $"exe:{winFileName}" : null);
+                identity.Computed = true;
             }
 
-            if (!string.IsNullOrEmpty(window.WinFileName))
-            {
-                return $"exe:{window.WinFileName}";
-            }
-
-            return null;
+            return identity.Key;
         }
 
         /// <summary>
@@ -142,15 +169,36 @@ namespace UltraWinBar.Utilities
             Settings.Instance.TaskbarAssignments = assignments;
         }
 
+        // Cached per window, validated by reference equality: ApplicationWindow only replaces its
+        // ClassName/Title backing fields when the value actually changes, so a reference compare is
+        // cheaper than rebuilding the string and correctly detects a real change (titles change often).
+        private sealed class LegacyIdentity
+        {
+            internal string ClassName;
+            internal string Title;
+            internal string Key;
+            internal bool Computed;
+        }
+
+        private static readonly ConditionalWeakTable<ApplicationWindow, LegacyIdentity> legacyIdentities = new();
+
         internal static string GetLegacyWindowIdentifier(ApplicationWindow window)
         {
             if (window == null) return null;
 
             string className = window.ClassName;
             string title = window.Title;
-            if (string.IsNullOrEmpty(className) && string.IsNullOrEmpty(title)) return null;
 
-            return $"class:{className}|title:{title}";
+            LegacyIdentity identity = legacyIdentities.GetValue(window, _ => new LegacyIdentity());
+            if (!identity.Computed || !ReferenceEquals(identity.ClassName, className) || !ReferenceEquals(identity.Title, title))
+            {
+                identity.ClassName = className;
+                identity.Title = title;
+                identity.Key = string.IsNullOrEmpty(className) && string.IsNullOrEmpty(title) ? null : $"class:{className}|title:{title}";
+                identity.Computed = true;
+            }
+
+            return identity.Key;
         }
     }
 }

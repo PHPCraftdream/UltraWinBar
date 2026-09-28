@@ -21,7 +21,8 @@ directories are outside this limit.
 - `Core/Infrastructure/Native` holds the only ways to touch native callbacks:
   `WinEventHook` (rooted, exception-safe WinEvent hooks), `CallbackGuard`, and
   `ShellComProxy` (Explorer-hosted COM objects recreated after Explorer restarts).
-- Tests in `Support/tests/DesktopRules` are split into `Features` and `Platform`
+- Tests in `Support/tests/DesktopRules` are split into `Features` (task order,
+  pins and assignments under `Features/Tasks`), `Platform`, `Native` and `Logging`
   suites; `Program.cs` only orders them and runs Settings on a scratch file
   (`ULTRAWINBAR_SETTINGS_PATH`) so a test run can never touch the user's settings.
 

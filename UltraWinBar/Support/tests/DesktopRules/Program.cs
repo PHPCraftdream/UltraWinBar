@@ -38,6 +38,7 @@ StartMenuFadeChecks.Run();
 TrayHotkeyChecks.Run();
 ServiceLifecycleChecks.Run(args, repositoryRoot);
 TaskOrderChecks.Run(args, repositoryRoot);
+IdentifierCacheChecks.Run(args, repositoryRoot);
 const System.Reflection.BindingFlags hidden = System.Reflection.BindingFlags.NonPublic |
     System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Instance;
 var settingsType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.Settings");

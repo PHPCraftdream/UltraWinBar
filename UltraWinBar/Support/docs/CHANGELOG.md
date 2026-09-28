@@ -4,6 +4,10 @@
 
 ### Changed
 
+- Application and legacy window identifiers used for task pins, order and panel
+  assignments are cached per window instead of rebuilt on every call; the cache
+  refreshes when the source values change (for example a UWP window's
+  AppUserModelID arriving late).
 - ManagedShell is vendored from its 0.0.358 source (`Support/vendor/ManagedShell`)
   and built with the app, so its defects are fixed at the source; the upstream
   version is unchanged.
