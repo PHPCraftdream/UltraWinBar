@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using ManagedShell.Common.Native;
 using ManagedShell.ShellFolders.Interfaces;
 using ManagedShell.ShellFolders.Enums;
 using ManagedShell.ShellFolders.Structs;
@@ -13,6 +14,10 @@ namespace ManagedShell.ShellFolders
 {
     public abstract class ShellContextMenu : NativeWindow
     {
+        // R9-H (K12): NativeWindow.OnThreadException is empty by default; without this override a
+        // WndProc exception here vanished silently instead of reaching the log.
+        protected override void OnThreadException(Exception e) => CallbackGuard.Report("ShellContextMenu", e);
+
         // Properties
         protected List<ShellNewMenuCommand> ShellNewMenus = new List<ShellNewMenuCommand>();
         

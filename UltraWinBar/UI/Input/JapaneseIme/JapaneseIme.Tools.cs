@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
 using ManagedShell.AppBar;
+using ManagedShell.Common.Native;
 using static ManagedShell.Interop.NativeMethods;
 using Microsoft.Win32;
 using UltraWinBar.Utilities;

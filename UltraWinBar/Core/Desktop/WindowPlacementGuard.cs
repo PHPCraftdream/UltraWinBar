@@ -1,5 +1,6 @@
 using ManagedShell.AppBar;
 using ManagedShell.Common.Logging;
+using ManagedShell.Common.Native;
 using ManagedShell.Interop;
 using System;
 using System.Collections.Generic;
@@ -19,15 +20,19 @@ namespace UltraWinBar.Utilities
         private readonly HashSet<IntPtr> pending = new HashSet<IntPtr>();
         private readonly Dictionary<IntPtr, (NativeMethods.Rect Outer, Rect Area, long At)> lastAttempt = new Dictionary<IntPtr, (NativeMethods.Rect, Rect, long)>();
         private readonly Action requestWorkAreaRecovery;
-        private readonly WinEventHook showHook, foregroundHook, moveHook;
+        // R9-H: show/foreground are single-event, UI-thread registrations shared via the hub with
+        // the other subscribers of the same event+flags (review section 5); move is a range hook
+        // (MOVESIZESTART..MOVESIZEEND) and stays a direct WinEventHook.
+        private readonly IDisposable showSubscription, foregroundSubscription;
+        private readonly WinEventHook moveHook;
         private IntPtr movingWindow;
         private bool disposed;
 
         public WindowPlacementGuard(Action requestWorkAreaRecovery)
         {
             this.requestWorkAreaRecovery = requestWorkAreaRecovery;
-            showHook = new WinEventHook("Window placement show hook", 0x8002, 0x8002, HandleWindowEvent);
-            foregroundHook = new WinEventHook("Window placement foreground hook", 3, 3, HandleWindowEvent);
+            showSubscription = WinEventHub.Subscribe("Window placement show hook", 0x8002, HandleWindowEvent);
+            foregroundSubscription = WinEventHub.Subscribe("Window placement foreground hook", 3, HandleWindowEvent);
             moveHook = new WinEventHook("Window placement move hook", 0x000A, 0x000B, HandleWindowEvent);
         }
 
@@ -117,8 +122,8 @@ namespace UltraWinBar.Utilities
         public void Dispose()
         {
             disposed = true;
-            showHook.Dispose();
-            foregroundHook.Dispose();
+            showSubscription.Dispose();
+            foregroundSubscription.Dispose();
             moveHook.Dispose();
         }
     }

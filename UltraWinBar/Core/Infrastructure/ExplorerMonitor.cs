@@ -1,6 +1,7 @@
 using ManagedShell;
 using ManagedShell.Common.Helpers;
 using ManagedShell.Common.Logging;
+using ManagedShell.Common.Native;
 using ManagedShell.Interop;
 using System;
 using System.Windows.Forms;
@@ -15,9 +16,13 @@ namespace UltraWinBar.Utilities
         // Raised on the UI thread after TaskbarCreated; COM proxies into the old explorer.exe are dead.
         public static event EventHandler ExplorerRestarted;
 
-        // One failing subscriber must not skip the rest.
+        // One failing subscriber must not skip the rest. Also pings ManagedShell.Common's own
+        // restart signal (K12): ShellComProxy lives in the vendor and must not reference this app
+        // type directly, so it subscribes to ExplorerLifecycle.Restarted instead.
         private static void RaiseExplorerRestarted()
         {
+            ExplorerLifecycle.RaiseRestarted();
+
             var handlers = ExplorerRestarted;
             if (handlers == null) return;
             foreach (var handler in handlers.GetInvocationList())

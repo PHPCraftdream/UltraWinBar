@@ -63,8 +63,8 @@ not changed; every local modification is listed below and marked in code with `U
   retry once. Raw `GetExperienceManager`/`QueryInterface` pointers are released in `finally`, and
   `WindowsDeleteString` now runs in `finally` even if `GetExperienceManager` throws.
 - `NativeWindowEx.OnThreadException` now logs via `ShellLogger.Error` instead of the WinForms
-  default (silently swallowing the exception). ManagedShell has no visibility into the app's
-  `CallbackGuard`, so this only logs.
+  default (silently swallowing the exception). Since R9-H it reports through `CallbackGuard`
+  instead (see below), now that `CallbackGuard` lives in `ManagedShell.Common`.
 - `ShellLogger._orphanedEvents`: bounded ring buffer (500, oldest dropped) instead of an
   unbounded, unsynchronized `List`, so a never-attached observer no longer leaks memory for the
   whole uptime and concurrent `Debug`/`Info`/... calls can't corrupt it. `OnLog` invokes each
@@ -99,3 +99,29 @@ not changed; every local modification is listed below and marked in code with `U
 - `ShellLogger`: added `Debug`/`Info` overloads taking an `[InterpolatedStringHandler]`, so an
   interpolated string literal argument is only formatted when that severity is enabled (existing
   call sites are unaffected; a plain `string` argument still binds to the old overloads).
+- R9-H (one native-callback layer, review K12): `CallbackGuard`, `WinEventHook` and
+  `ShellComProxy`/`ShellCom` moved here from the app (`ManagedShell.Common.Native`, `internal` with
+  `InternalsVisibleTo` for the app and every ManagedShell project that needs them), so ManagedShell's
+  own native callbacks share the same exception barrier instead of the app owning it alone.
+  `ShellComProxy` no longer references the app's `ExplorerMonitor` directly; it subscribes to the
+  new `ExplorerLifecycle.Restarted` signal here, which `ExplorerMonitor` raises alongside its own
+  app-level event.
+  - New `NativeCallback.Wrap(name, handler)` factory for delegates user32 calls back into directly
+    (`WNDPROC`, `EnumWindows`): roots the wrapper, reports an escaping exception via `CallbackGuard`
+    (falling back to `DefWindowProc`/`false` respectively), and counts calls per name.
+    `TrayService.WndProc` now goes through it (replacing a local rate-limited counter);
+    `TasksService.getInitialWindows`'s `EnumWindows` callback now goes through it too.
+  - `TasksService`'s cloak/move `SetWinEventHook`/`UnhookWinEvent` pairs (raw static `IntPtr`
+    handles) are now instance-owned `WinEventHook` fields, closing the class of bug behind Н3
+    structurally (a stale non-zero static handle skipping re-installation after `Dispose`).
+  - New `WinEventHub`: one underlying `WinEventHook` per `(event, flags)` pair on the UI thread,
+    reference-counted across managed subscribers, instead of each owner installing its own hook for
+    the same OS event (review section 5 counted 5 `EVENT_SYSTEM_FOREGROUND` and 3
+    `EVENT_OBJECT_SHOW` registrations delivering the same event to the UI thread once per
+    registration). `TrayService` and `ExplorerHelper`'s `EVENT_OBJECT_SHOW`/`EVENT_SYSTEM_FOREGROUND`
+    hooks, and the app's `StartMenuMonitor`/`WindowPlacementGuard`/`InputLanguage`/
+    `DesktopActivationGuard` foreground/show subscriptions, now go through it. Cloak/move/menu-event
+    range hooks, and hooks installed on a dedicated thread (`DesktopActivationHookThread`'s mouse
+    hook), are unaffected.
+  - `ShellContextMenu` (the only remaining `NativeWindow` subclass without an `OnThreadException`
+    override) now reports through `CallbackGuard` too.

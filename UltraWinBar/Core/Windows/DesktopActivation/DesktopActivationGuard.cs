@@ -1,4 +1,5 @@
 using ManagedShell.Common.Logging;
+using ManagedShell.Common.Native;
 using ManagedShell.Interop;
 using ManagedShell.WindowsTasks;
 using System;
@@ -42,7 +43,9 @@ namespace UltraWinBar.Utilities
         private readonly Dispatcher dispatcher;
         private readonly LowLevelMouseHook mouseHook;
         private readonly DesktopActivationHookThread hookThread;
-        private readonly WinEventHook foregroundHook;
+        // R9-H: shared with TrayService's EVENT_SYSTEM_FOREGROUND/SkipOwnProcess subscription via
+        // the hub instead of a private WinEventHook (review section 5).
+        private readonly WinEventHub.Subscription foregroundSubscription;
         private readonly uint ownProcessId = (uint)Process.GetCurrentProcess().Id;
         private LowLevelMouseHook.POINT previousDownPoint;
         private long previousDownAt;
@@ -94,10 +97,11 @@ namespace UltraWinBar.Utilities
                 throw new InvalidOperationException("Desktop activation mouse hook is unavailable.", error);
             }
 
-            foregroundHook = new WinEventHook("DesktopActivation foreground hook", ForegroundEvent, ForegroundEvent,
+            foregroundSubscription = WinEventHub.Subscribe("DesktopActivation foreground hook", ForegroundEvent,
                 OnForeground, WinEventHook.SkipOwnProcess);
-            if (!foregroundHook.IsInstalled)
+            if (!foregroundSubscription.IsInstalled)
             {
+                foregroundSubscription.Dispose();
                 hookThread.Dispose();
                 throw new InvalidOperationException("Desktop activation foreground hook failed.");
             }
@@ -598,7 +602,7 @@ namespace UltraWinBar.Utilities
             disposed = true;
             desktops.Changed -= OnDesktopChanged;
             hookThread.Dispose();
-            foregroundHook.Dispose();
+            foregroundSubscription.Dispose();
             ShellLogger.Info("DesktopActivation: experimental guard disabled.");
         }
     }

@@ -107,10 +107,10 @@ internal static class ClockChecks
             {
                 var inputLanguage = new InputLanguage();
                 inputLanguage.StartWatch();
-                if (inputLanguage._foregroundHook == null || !inputLanguage.layoutWatch.IsEnabled)
+                if (inputLanguage._foregroundSubscription == null || !inputLanguage.layoutWatch.IsEnabled)
                     throw new Exception("StartWatch must install the foreground WinEventHook and start the poll timer.");
                 inputLanguage.StopWatch();
-                if (inputLanguage._foregroundHook != null || inputLanguage.layoutWatch.IsEnabled)
+                if (inputLanguage._foregroundSubscription != null || inputLanguage.layoutWatch.IsEnabled)
                     throw new Exception("StopWatch must dispose the foreground WinEventHook and stop the poll timer.");
             }
             catch (Exception error)

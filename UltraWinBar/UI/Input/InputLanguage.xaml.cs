@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using ManagedShell.Common.Logging;
+using ManagedShell.Common.Native;
 using UltraWinBar.Converters;
 using UltraWinBar.Utilities;
 using WinForms = System.Windows.Forms;
@@ -43,7 +44,9 @@ namespace UltraWinBar.Controls
 
         private bool _isLoaded;
         private IntPtr _lastHkl = IntPtr.Zero;
-        internal WinEventHook _foregroundHook;
+        // R9-H: one taskbar instance per monitor each used to install its own WinEventHook for the
+        // same EVENT_SYSTEM_FOREGROUND; shared via the hub instead (review section 5).
+        internal IDisposable _foregroundSubscription;
 
         public InputLanguage()
         {
@@ -150,7 +153,7 @@ namespace UltraWinBar.Controls
         {
             TrySetLocaleIdentifier(GetActiveKeyboardLayout());
 
-            _foregroundHook ??= new WinEventHook("InputLanguage foreground hook", EventSystemForeground, EventSystemForeground, OnForeground);
+            _foregroundSubscription ??= WinEventHub.Subscribe("InputLanguage foreground hook", EventSystemForeground, OnForeground);
             layoutWatch.Start();
 
             Visibility = Visibility.Visible;
@@ -242,8 +245,8 @@ namespace UltraWinBar.Controls
         internal void StopWatch()
         {
             layoutWatch.Stop();
-            _foregroundHook?.Dispose();
-            _foregroundHook = null;
+            _foregroundSubscription?.Dispose();
+            _foregroundSubscription = null;
 
             Visibility = Visibility.Collapsed;
         }

@@ -1,6 +1,7 @@
 ﻿using ManagedShell.AppBar;
 using ManagedShell.Common.Helpers;
 using ManagedShell.Common.Logging;
+using ManagedShell.Common.Native;
 using ManagedShell.Common.SupportingClasses;
 using ManagedShell.UWPInterop;
 using System;
@@ -42,7 +43,7 @@ namespace UltraWinBar.Utilities
         private static extern int DwmGetWindowAttribute(IntPtr hwnd, uint attribute, out int value, int size);
         private static bool IsCloaked(IntPtr hwnd) =>
             DwmGetWindowAttribute(hwnd, 14, out int cloaked, sizeof(int)) == 0 && cloaked != 0;
-        private WinEventHook _foregroundEventHook;
+        private IDisposable _foregroundSubscription;
 
         public event EventHandler<StartMenuMonitorEventArgs> StartMenuVisibilityChanged;
 
@@ -146,7 +147,9 @@ namespace UltraWinBar.Utilities
 
         private void setupForegroundHook()
         {
-            _foregroundEventHook = new WinEventHook("Start menu foreground hook", EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND,
+            // R9-H: shared with the other UI-thread EVENT_SYSTEM_FOREGROUND subscribers via the hub
+            // instead of each installing its own WinEventHook (review section 5).
+            _foregroundSubscription = WinEventHub.Subscribe("Start menu foreground hook", EVENT_SYSTEM_FOREGROUND,
                 (type, hwnd, obj, child) => HandleForeground(hwnd));
         }
 
@@ -324,8 +327,8 @@ namespace UltraWinBar.Utilities
             _launcherVisibility.Dispose();
             _menuEventHook?.Dispose();
             _menuEventHook = null;
-            _foregroundEventHook?.Dispose();
-            _foregroundEventHook = null;
+            _foregroundSubscription?.Dispose();
+            _foregroundSubscription = null;
         }
 
         public class StartMenuMonitorEventArgs : LauncherVisibilityEventArgs

@@ -1,11 +1,11 @@
 using ManagedShell.Common.Helpers;
 using ManagedShell.Common.Logging;
 using ManagedShell.Interop;
+using ManagedShell.Common.Native;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
 using System.Windows.Threading;
 using static ManagedShell.Interop.NativeMethods;
 
@@ -31,15 +31,12 @@ namespace ManagedShell.WindowsTray
         private readonly DispatcherTimer trayMonitor = new DispatcherTimer(DispatcherPriority.Background);
 
         // UltraWinBar: event-driven replacement for the old 100 ms poll. Hooked/unhooked together
-        // with the safety timer so both always match Suspend/Resume state.
-        private WinEventProc trayEventProc;
-        private IntPtr trayObjectEventHook = IntPtr.Zero;
-        private IntPtr trayForegroundEventHook = IntPtr.Zero;
+        // with the safety timer so both always match Suspend/Resume state. R9-H: shared via the
+        // WinEvent hub with ExplorerHelper (show) and DesktopActivationGuard (foreground), both of
+        // which use the same OUTOFCONTEXT|SKIPOWNPROCESS flags (review section 5).
+        private IDisposable trayObjectEventSubscription;
+        private IDisposable trayForegroundEventSubscription;
         private bool trayCheckQueued;
-
-        // UltraWinBar: WndProc exception barrier rate limit.
-        private const int WndProcFailureLogLimit = 20;
-        private static int wndProcFailureCount;
 
         // UltraWinBar: cross-process forward to Explorer's tray must not block on a hung Explorer.
         private const uint ForwardTimeoutMs = 500;
@@ -78,9 +75,11 @@ namespace ManagedShell.WindowsTray
             // UltraWinBar: reuse the rooted delegate across retries. If a previous CreateWindowEx
             // failed after RegisterClass succeeded, that class may still be registered with the
             // old delegate; swapping it here would leave a dangling thunk behind.
+            // R9-H: NativeCallback.Wrap replaces the old local rate-limited barrier with the
+            // shared CallbackGuard (review K12).
             if (wndProcDelegate == null)
             {
-                wndProcDelegate = WndProc;
+                wndProcDelegate = NativeCallback.Wrap("TrayService: WndProc", WndProcCore);
             }
 
             RegisterTrayWnd();
@@ -190,35 +189,10 @@ namespace ManagedShell.WindowsTray
                 SendTaskbarCreated();
         }
 
-        // UltraWinBar: registered with user32 via RegisterClass; every Shell_NotifyIcon and
-        // SHAppBarMessage in the session arrives here. An exception escaping this delegate goes
-        // straight into user32 (process-fatal on net10, undefined on net6) - never let one out.
-        private IntPtr WndProc(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam)
-        {
-            try
-            {
-                return WndProcCore(hWnd, msg, wParam, lParam);
-            }
-            catch (Exception ex)
-            {
-                ReportWndProcFailure(ex);
-                return DefWindowProc(hWnd, msg, wParam, lParam);
-            }
-        }
-
-        private static void ReportWndProcFailure(Exception ex)
-        {
-            int count = Interlocked.Increment(ref wndProcFailureCount);
-            if (count <= WndProcFailureLogLimit)
-            {
-                ShellLogger.Error($"TrayService: WndProc failed ({count})", ex);
-            }
-            else if (count == WndProcFailureLogLimit + 1)
-            {
-                ShellLogger.Error("TrayService: further WndProc failures are not logged.");
-            }
-        }
-
+        // UltraWinBar: registered with user32 via RegisterClass (wrapped by NativeCallback.Wrap
+        // above); every Shell_NotifyIcon and SHAppBarMessage in the session arrives here. An
+        // exception escaping this method would otherwise go straight into user32 (process-fatal on
+        // net10, undefined on net6) - the wrapper catches it and reports via CallbackGuard.
         private IntPtr WndProcCore(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam)
         {
             switch ((WM)msg)
@@ -449,82 +423,48 @@ namespace ManagedShell.WindowsTray
             MakeTrayTopmost();
         }
 
-        // UltraWinBar: install a WinEvent hook so we react to another Shell_TrayWnd appearing
-        // instead of polling for it. Must run on the dispatcher thread (message-pump bound hook).
+        // UltraWinBar: react to another Shell_TrayWnd appearing instead of polling for it. Must run
+        // on the dispatcher thread (message-pump bound hook). R9-H: shared via the WinEvent hub
+        // (review section 5) - ExplorerHelper also subscribes to EVENT_OBJECT_SHOW with the same
+        // flags, and DesktopActivationGuard to EVENT_SYSTEM_FOREGROUND, so this no longer installs
+        // its own hooks.
         private void HookTrayEvents()
         {
-            if (trayObjectEventHook != IntPtr.Zero || trayForegroundEventHook != IntPtr.Zero) return;
-
-            trayEventProc = TrayWinEventCallback;
+            if (trayObjectEventSubscription != null || trayForegroundEventSubscription != null) return;
 
             // SHOW only: CREATE..REORDER would marshal every object event in the session onto the UI thread
-            trayObjectEventHook = SetWinEventHook(
-                EVENT_OBJECT_SHOW,
-                EVENT_OBJECT_SHOW,
-                IntPtr.Zero,
-                trayEventProc,
-                0,
-                0,
-                WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
+            trayObjectEventSubscription = WinEventHub.Subscribe("TrayService: object show hook", (uint)EVENT_OBJECT_SHOW,
+                TrayWinEventCallback, (uint)(WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS));
 
-            trayForegroundEventHook = SetWinEventHook(
-                EVENT_SYSTEM_FOREGROUND,
-                EVENT_SYSTEM_FOREGROUND,
-                IntPtr.Zero,
-                trayEventProc,
-                0,
-                0,
-                WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
+            trayForegroundEventSubscription = WinEventHub.Subscribe("TrayService: foreground hook", (uint)EVENT_SYSTEM_FOREGROUND,
+                TrayWinEventCallback, (uint)(WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS));
         }
 
         private void UnhookTrayEvents()
         {
-            if (trayObjectEventHook != IntPtr.Zero)
-            {
-                UnhookWinEvent(trayObjectEventHook);
-                trayObjectEventHook = IntPtr.Zero;
-            }
+            trayObjectEventSubscription?.Dispose();
+            trayObjectEventSubscription = null;
 
-            if (trayForegroundEventHook != IntPtr.Zero)
-            {
-                UnhookWinEvent(trayForegroundEventHook);
-                trayForegroundEventHook = IntPtr.Zero;
-            }
-
-            trayEventProc = null;
+            trayForegroundEventSubscription?.Dispose();
+            trayForegroundEventSubscription = null;
         }
 
-        private void TrayWinEventCallback(IntPtr hWinEventHook, uint eventType, IntPtr hWnd, int idObject,
-            int idChild, uint dwEventThread, uint dwmsEventTime)
+        private void TrayWinEventCallback(uint eventType, IntPtr hWnd, int idObject, int idChild)
         {
-            try
+            if (HwndTray == IntPtr.Zero) return;
+
+            // cheap filter before GetClassName: whole top-level windows only, never our own
+            if (hWnd == IntPtr.Zero || hWnd == HwndTray || idObject != 0 || idChild != 0 ||
+                GetParent(hWnd) != IntPtr.Zero)
             {
-                if (HwndTray == IntPtr.Zero) return;
-
-                if (eventType != EVENT_SYSTEM_FOREGROUND &&
-                    eventType != EVENT_OBJECT_SHOW)
-                {
-                    return;
-                }
-
-                // cheap filter before GetClassName: whole top-level windows only, never our own
-                if (hWnd == IntPtr.Zero || hWnd == HwndTray || idObject != 0 || idChild != 0 ||
-                    GetParent(hWnd) != IntPtr.Zero)
-                {
-                    return;
-                }
-
-                StringBuilder className = new StringBuilder(32);
-                GetClassName(hWnd, className, className.Capacity);
-                if (className.ToString() == TrayWndClass)
-                {
-                    ScheduleTrayCheck();
-                }
+                return;
             }
-            catch (Exception ex)
+
+            StringBuilder className = new StringBuilder(32);
+            GetClassName(hWnd, className, className.Capacity);
+            if (className.ToString() == TrayWndClass)
             {
-                // UltraWinBar: this runs on a native call frame; nothing may throw back into it.
-                ShellLogger.Error("TrayService: Error handling tray WinEvent", ex);
+                ScheduleTrayCheck();
             }
         }
 

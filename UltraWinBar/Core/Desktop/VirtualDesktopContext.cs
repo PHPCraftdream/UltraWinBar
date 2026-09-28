@@ -1,4 +1,5 @@
 using ManagedShell.Common.Logging;
+using ManagedShell.Common.Native;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;

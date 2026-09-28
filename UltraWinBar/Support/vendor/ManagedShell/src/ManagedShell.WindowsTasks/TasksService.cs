@@ -1,6 +1,7 @@
 ﻿using ManagedShell.Common.Helpers;
 using ManagedShell.Common.Logging;
 using ManagedShell.Interop;
+using ManagedShell.Common.Native;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -32,10 +33,11 @@ namespace ManagedShell.WindowsTasks
         private static int WM_SHELLHOOKMESSAGE = -1;
         private static int WM_TASKBARCREATEDMESSAGE = -1;
         private static int TASKBARBUTTONCREATEDMESSAGE = -1;
-        private static IntPtr cloakEventHook = IntPtr.Zero;
-        private WinEventProc cloakEventProc;
-        private static IntPtr moveEventHook = IntPtr.Zero;
-        private WinEventProc moveEventProc;
+        // R9-H: instance-owned WinEventHook (review K12) instead of a raw static SetWinEventHook
+        // handle; Dispose always clears its own field, so a following Initialize cannot find a
+        // stale non-zero handle and skip re-installing it (was Н3).
+        private WinEventHook cloakHook;
+        private WinEventHook moveHook;
 
         internal ITaskCategoryProvider TaskCategoryProvider;
         private TaskCategoryChangeDelegate CategoryChangeDelegate;
@@ -120,40 +122,18 @@ namespace ManagedShell.WindowsTasks
                 if (EnvironmentHelper.IsWindows8OrBetter)
                 {
                     // set event hook for cloak/uncloak events
-                    cloakEventProc = CloakEventCallback;
-
-                    if (cloakEventHook == IntPtr.Zero)
-                    {
-                        cloakEventHook = SetWinEventHook(
-                            EVENT_OBJECT_CLOAKED,
-                            EVENT_OBJECT_UNCLOAKED,
-                            IntPtr.Zero,
-                            cloakEventProc,
-                            0,
-                            0,
-                            WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
-                        cloakHookInstalledHere = cloakEventHook != IntPtr.Zero;
-                    }
+                    cloakHook = new WinEventHook("TasksService: cloak hook", (uint)EVENT_OBJECT_CLOAKED, (uint)EVENT_OBJECT_UNCLOAKED,
+                        CloakEventCallback, WinEventHook.SkipOwnProcess);
+                    cloakHookInstalledHere = cloakHook.IsInstalled;
                 }
 
                 if (withMultiMonTracking && !EnvironmentHelper.IsWindows8OrBetter)
                 {
                     // set event hook for move events
                     // In Windows 8 and newer, use HSHELL_MONITORCHANGED instead
-                    moveEventProc = MoveEventCallback;
-
-                    if (moveEventHook == IntPtr.Zero)
-                    {
-                        moveEventHook = SetWinEventHook(
-                            EVENT_OBJECT_LOCATIONCHANGE,
-                            EVENT_OBJECT_LOCATIONCHANGE,
-                            IntPtr.Zero,
-                            moveEventProc,
-                            0,
-                            0,
-                            WINEVENT_OUTOFCONTEXT);
-                        moveHookInstalledHere = moveEventHook != IntPtr.Zero;
-                    }
+                    moveHook = new WinEventHook("TasksService: move hook", (uint)EVENT_OBJECT_LOCATIONCHANGE, (uint)EVENT_OBJECT_LOCATIONCHANGE,
+                        MoveEventCallback, WinEventHook.OutOfContext);
+                    moveHookInstalledHere = moveHook.IsInstalled;
                 }
 
                 // set window for ITaskbarList
@@ -172,16 +152,16 @@ namespace ManagedShell.WindowsTasks
                 ShellLogger.Info("TasksService: Unable to start: " + ex.Message);
 
                 // Roll back only what this attempt installed, so a retry does not double-register.
-                if (cloakHookInstalledHere && cloakEventHook != IntPtr.Zero)
+                if (cloakHookInstalledHere)
                 {
-                    UnhookWinEvent(cloakEventHook);
-                    cloakEventHook = IntPtr.Zero;
+                    cloakHook?.Dispose();
+                    cloakHook = null;
                 }
 
-                if (moveHookInstalledHere && moveEventHook != IntPtr.Zero)
+                if (moveHookInstalledHere)
                 {
-                    UnhookWinEvent(moveEventHook);
-                    moveEventHook = IntPtr.Zero;
+                    moveHook?.Dispose();
+                    moveHook = null;
                 }
 
                 if (_HookWin != null)
@@ -216,19 +196,13 @@ namespace ManagedShell.WindowsTasks
             // filters, COM calls) runs afterward, off the enumeration callback.
             List<IntPtr> handles = new List<IntPtr>();
 
-            EnumWindows((hwnd, lParam) =>
+            // R9-H: NativeCallback.Wrap reports an escaping exception via CallbackGuard and stops
+            // enumeration instead of a local try/catch (review K12).
+            EnumWindows(NativeCallback.Wrap("TasksService: getInitialWindows", (hwnd, lParam) =>
             {
-                try
-                {
-                    handles.Add(hwnd);
-                }
-                catch (Exception ex)
-                {
-                    ShellLogger.Error("TasksService: Error in getInitialWindows EnumWindows callback.", ex);
-                }
-
+                handles.Add(hwnd);
                 return true;
-            }, IntPtr.Zero);
+            }), IntPtr.Zero);
 
             foreach (IntPtr hwnd in handles)
             {
@@ -260,20 +234,11 @@ namespace ManagedShell.WindowsTasks
 
                 // UltraWinBar (Н3): zero the static handles so a following Initialize reinstalls
                 // them instead of finding a stale non-zero handle and skipping the hook.
-                if (cloakEventHook != IntPtr.Zero)
-                {
-                    UnhookWinEvent(cloakEventHook);
-                    cloakEventHook = IntPtr.Zero;
-                }
+                cloakHook?.Dispose();
+                cloakHook = null;
 
-                if (moveEventHook != IntPtr.Zero)
-                {
-                    UnhookWinEvent(moveEventHook);
-                    moveEventHook = IntPtr.Zero;
-                }
-
-                cloakEventProc = null;
-                moveEventProc = null;
+                moveHook?.Dispose();
+                moveHook = null;
 
                 _HookWin.MessageReceived -= ShellWinProc;
                 _HookWin.DestroyHandle();
@@ -753,45 +718,32 @@ namespace ManagedShell.WindowsTasks
             handled = false;
         }
 
-        private void MoveEventCallback(IntPtr hWinEventHook, uint eventType, IntPtr hWnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
+        // R9-H: runs inside WinEventHook's own barrier (CallbackGuard), so no local try/catch is
+        // needed (was Н6) - an unhandled exception here would otherwise escape into user32 via
+        // PropertyChanged -> our filters -> a possible COM call.
+        private void MoveEventCallback(uint eventType, IntPtr hWnd, int idObject, int idChild)
         {
-            // UltraWinBar (Н6): WinEvent callback into user code (PropertyChanged -> our
-            // filters -> possible COM call); an unhandled exception here escapes into user32.
-            try
+            if (hWnd != IntPtr.Zero && idObject == 0 && idChild == 0)
             {
-                if (hWnd != IntPtr.Zero && idObject == 0 && idChild == 0)
+                if (Windows.Any(i => i.Handle == hWnd))
                 {
-                    if (Windows.Any(i => i.Handle == hWnd))
-                    {
-                        ApplicationWindow win = Windows.First(wnd => wnd.Handle == hWnd);
-                        win.SetMonitor();
-                    }
+                    ApplicationWindow win = Windows.First(wnd => wnd.Handle == hWnd);
+                    win.SetMonitor();
                 }
-            }
-            catch (Exception ex)
-            {
-                ShellLogger.Error("TasksService: Error in MoveEventCallback.", ex);
             }
         }
 
-        private void CloakEventCallback(IntPtr hWinEventHook, uint eventType, IntPtr hWnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
+        // R9-H: same trust boundary as MoveEventCallback above.
+        private void CloakEventCallback(uint eventType, IntPtr hWnd, int idObject, int idChild)
         {
-            // UltraWinBar (Н6): same trust boundary as MoveEventCallback above.
-            try
+            if (hWnd != IntPtr.Zero && idObject == 0 && idChild == 0)
             {
-                if (hWnd != IntPtr.Zero && idObject == 0 && idChild == 0)
+                if (Windows.Any(i => i.Handle == hWnd))
                 {
-                    if (Windows.Any(i => i.Handle == hWnd))
-                    {
-                        ApplicationWindow win = Windows.First(wnd => wnd.Handle == hWnd);
-                        ShellLogger.Debug($"TasksService: {(eventType == EVENT_OBJECT_CLOAKED ? "Cloak" : "Uncloak")} event received for {win.Title}");
-                        win.SetShowInTaskbar();
-                    }
+                    ApplicationWindow win = Windows.First(wnd => wnd.Handle == hWnd);
+                    ShellLogger.Debug($"TasksService: {(eventType == EVENT_OBJECT_CLOAKED ? "Cloak" : "Uncloak")} event received for {win.Title}");
+                    win.SetShowInTaskbar();
                 }
-            }
-            catch (Exception ex)
-            {
-                ShellLogger.Error("TasksService: Error in CloakEventCallback.", ex);
             }
         }
 

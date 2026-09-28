@@ -3,6 +3,7 @@ using ManagedShell;
 using UltraWinBar.Utilities;
 using System.Windows;
 using ManagedShell.Common.Helpers;
+using ManagedShell.Common.Native;
 using ManagedShell.Interop;
 using Application = System.Windows.Application;
 using System.Windows.Interop;

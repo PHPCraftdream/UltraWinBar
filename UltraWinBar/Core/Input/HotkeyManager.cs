@@ -1,5 +1,6 @@
 ﻿using ManagedShell.Common.Helpers;
 using ManagedShell.Common.Logging;
+using ManagedShell.Common.Native;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;

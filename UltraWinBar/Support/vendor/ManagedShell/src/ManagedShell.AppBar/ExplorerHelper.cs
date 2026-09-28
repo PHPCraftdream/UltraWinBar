@@ -1,4 +1,5 @@
 ﻿using ManagedShell.Common.Helpers;
+using ManagedShell.Common.Native;
 using ManagedShell.WindowsTray;
 using System;
 using System.Runtime.InteropServices;
@@ -19,9 +20,10 @@ namespace ManagedShell.AppBar
         // UltraWinBar: was a 100ms poll; now just a safety net behind the WinEvent hook
         private readonly DispatcherTimer taskbarMonitor = new DispatcherTimer(DispatcherPriority.Background);
 
-        // UltraWinBar: WinEvent hook fields for event-driven taskbar-show detection
-        private IntPtr taskbarShowHook = IntPtr.Zero;
-        private WinEventProc taskbarShowEventProc;
+        // UltraWinBar: WinEvent hook fields for event-driven taskbar-show detection. R9-H: shared
+        // via the WinEvent hub with TrayService's own EVENT_OBJECT_SHOW subscription (review
+        // section 5) instead of a private SetWinEventHook.
+        private IDisposable taskbarShowSubscription;
         private bool _hideCheckPending;
 
         private bool _hideExplorerTaskbar;
@@ -166,65 +168,45 @@ namespace ManagedShell.AppBar
             taskbarMonitor.Tick += TaskbarMonitor_Tick;
         }
 
-        // UltraWinBar: install a WinEvent hook for EVENT_OBJECT_SHOW instead of polling every 100ms
+        // UltraWinBar: react to EVENT_OBJECT_SHOW instead of polling every 100ms. R9-H: shared via
+        // the WinEvent hub (review section 5) instead of a private SetWinEventHook.
         private void InstallTaskbarShowHook()
         {
-            if (taskbarShowHook != IntPtr.Zero)
+            if (taskbarShowSubscription != null)
             {
                 return;
             }
 
-            taskbarShowEventProc = TaskbarShowEventCallback;
-            taskbarShowHook = SetWinEventHook(
-                EVENT_OBJECT_SHOW,
-                EVENT_OBJECT_SHOW,
-                IntPtr.Zero,
-                taskbarShowEventProc,
-                0,
-                0,
-                WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
+            taskbarShowSubscription = WinEventHub.Subscribe("ExplorerHelper: taskbar show hook", (uint)EVENT_OBJECT_SHOW,
+                TaskbarShowEventCallback, (uint)(WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS));
         }
 
-        // UltraWinBar: unhook on the installing (UI) thread; keep the delegate rooted until then
         private void UninstallTaskbarShowHook()
         {
-            if (taskbarShowHook == IntPtr.Zero)
+            taskbarShowSubscription?.Dispose();
+            taskbarShowSubscription = null;
+        }
+
+        // UltraWinBar: runs inside the hub's own barrier (CallbackGuard); no need for a local try/catch.
+        private void TaskbarShowEventCallback(uint eventType, IntPtr hwnd, int idObject, int idChild)
+        {
+            if (hwnd == IntPtr.Zero || idObject != 0 || idChild != 0 || !HideExplorerTaskbar || _hideCheckPending)
             {
                 return;
             }
 
-            UnhookWinEvent(taskbarShowHook);
-            taskbarShowHook = IntPtr.Zero;
-            taskbarShowEventProc = null;
-        }
-
-        // UltraWinBar: WinEvent callback runs on the hooking thread's queue; never let an exception escape into native code
-        private void TaskbarShowEventCallback(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
-        {
-            try
+            // class-name filter also excludes UltraWinBar's own (WPF-classed) windows
+            if (!IsExplorerTaskbarWindow(hwnd))
             {
-                if (hwnd == IntPtr.Zero || idObject != 0 || idChild != 0 || !HideExplorerTaskbar || _hideCheckPending)
-                {
-                    return;
-                }
-
-                // class-name filter also excludes UltraWinBar's own (WPF-classed) windows
-                if (!IsExplorerTaskbarWindow(hwnd))
-                {
-                    return;
-                }
-
-                _hideCheckPending = true;
-                taskbarMonitor.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
-                {
-                    _hideCheckPending = false;
-                    TaskbarMonitor_Tick(this, EventArgs.Empty);
-                }));
+                return;
             }
-            catch (Exception ex)
+
+            _hideCheckPending = true;
+            taskbarMonitor.Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
             {
-                ShellLogger.Error("ExplorerHelper: Error handling taskbar show event", ex);
-            }
+                _hideCheckPending = false;
+                TaskbarMonitor_Tick(this, EventArgs.Empty);
+            }));
         }
 
         // UltraWinBar: identify Explorer's primary/secondary taskbar windows by class
