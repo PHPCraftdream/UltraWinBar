@@ -218,11 +218,17 @@ namespace UltraWinBar.Controls
         private bool GetRegKanaMd()
         {
             if (_kanaMdCached) return _kanaMdValue;
-            if (!ReadRegKanaMd(out bool isKana)) return false;   // key missing; nothing to cache/watch yet
 
-            _kanaMdCached = true;
-            _kanaMdValue = isKana;
+            // Arm and mark cached before reading, so a change during the read clears the flag again.
             EnsureKanaMdWatch();
+            _kanaMdCached = _kanaMdWatch != null;
+            if (!ReadRegKanaMd(out bool isKana))
+            {
+                _kanaMdCached = false;
+                return false;   // key missing; nothing to cache/watch yet
+            }
+
+            _kanaMdValue = isKana;
             return isKana;
         }
 

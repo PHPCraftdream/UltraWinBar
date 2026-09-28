@@ -18,6 +18,12 @@
   exceptions on background threads and unobserved tasks are logged.
 - Large files are split by responsibility (Start menu monitor, taskbar window,
   desktop activation, Japanese IME, settings, tests) without behavior changes.
+- Fewer background wake-ups of the UI thread: keeping Explorer's taskbar hidden
+  and keeping the app's tray window ahead of Explorer's now react to window
+  events instead of 100 ms polls (a 2 s check remains as a safety net); the
+  keyboard layout indicator reacts to foreground changes and polls every 750 ms
+  instead of 200 ms; the Japanese IME kana/romaji mode is cached and re-read
+  only when its registry value changes.
 
 ### Fixed
 
@@ -25,7 +31,8 @@
   4-byte `BOOL` into a 2-byte `VARIANT_BOOL`, and the immersive launcher
   interfaces lacked `PreserveSig`. A test now rejects any COM method with a hidden
   `[out, retval]`, unmarked `bool`/VARIANT, or a pointer-sized value declared as
-  a 32-bit integer, in the app and in ManagedShell.
+  a 32-bit integer, in the app and in ManagedShell (shell item, image factory and
+  service provider interfaces now return their real HRESULT).
 - ManagedShell: ignore tray `WM_COPYDATA` payloads shorter than their structure
   instead of reading past the sender's buffer; destroy only icons the app owns;
   retry a failed window path lookup at most every 30 s; use pointer-sized

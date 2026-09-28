@@ -136,6 +136,7 @@ internal static class ClockChecks
         bool liveResult = (bool)getRegKanaMd.Invoke(imeInstance, null);
         bool cachedAfterLiveRead = (bool)kanaMdCachedField.GetValue(imeInstance);
         bool watchArmedAfterLiveRead = kanaMdWatchField.GetValue(imeInstance) != null;
+        (kanaMdWatchField.GetValue(imeInstance) as IDisposable)?.Dispose();
         if (cachedAfterLiveRead != watchArmedAfterLiveRead)
             throw new Exception("A live kanaMd read must cache the value and arm the registry watch together, or do neither.");
         Console.WriteLine($"PASS: a cached kanaMd is reused without a registry read; an uncached read (found={cachedAfterLiveRead}, value={liveResult}) arms its registry watch exactly when it caches.");

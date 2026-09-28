@@ -490,7 +490,7 @@ statements. `Program.cs` занимает 966 строк при лимите 100
 | 8. ManagedShell | Вендорен (`Support/vendor/ManagedShell`), исправления перечислены в его `README.md` |
 | 9. Тесты | Разделены на `Features/` и `Platform/`, без смены фреймворка |
 | 10. Крупные классы | `StartMenuMonitor`, `Taskbar`, `DesktopActivationGuard`, `JapaneseIme`, `Settings` разделены |
-| 11. События вместо поллинга | Не сделано (задача #63) |
+| 11. События вместо поллинга | Сделано: `ExplorerHelper` и `TrayService` — WinEvent + страховка 2 с; раскладка — `EVENT_SYSTEM_FOREGROUND` + опрос 750 мс; `kanaMd` кэшируется под наблюдением реестра. Таймер `JapaneseIme` 200 мс остаётся (живёт только при японской раскладке). RCW-интерфейсы ManagedShell — `PreserveSig`, сторож строгий |
 | 12. `net6.0-windows` | Остаётся |
 | 13. STA-поток для COM | Не делалось: свидетельств нет |
 
