@@ -1,6 +1,7 @@
 using ManagedShell.Common.Logging;
 using ManagedShell.Common.Logging.Observers;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -103,6 +104,9 @@ namespace UltraWinBar.Utilities
     internal sealed class RollingFileLog : ILog, IDisposable
     {
         internal const long DefaultMaxSizeBytes = 20 * 1024 * 1024;
+        // Once rotation fails (disk full, access denied), don't retry the filesystem on every
+        // single log line; back off and try again no more often than this.
+        private const int RotationRetryBackoffMs = 30_000;
 
         private readonly string _logPath;
         private readonly string _logExt;
@@ -112,6 +116,12 @@ namespace UltraWinBar.Utilities
         private FileLog _current;
         private long _currentSize;
         private int _rollSequence;
+        private long _nextRotationAttemptTicks;
+        private bool _rotationFailureReported;
+
+        // Count of messages that could not be written to any file (current is unavailable).
+        // A failed roll alone does not count here: the old file keeps being written to.
+        internal long LostLines { get; private set; }
 
         public RollingFileLog(string logPath, string logExt, TimeSpan retention, long maxSizeBytes = DefaultMaxSizeBytes)
         {
@@ -140,16 +150,72 @@ namespace UltraWinBar.Utilities
         {
             lock (_lock)
             {
-                _currentSize += (e.Message?.Length ?? 0) + 32;
-                if (ShouldRoll(_currentSize, _maxSizeBytes))
+                try
                 {
-                    FileLog old = _current;
-                    _current = OpenNewFile();
-                    old.Dispose();
-                    DeleteOldLogFiles(_logPath, _logExt, _retention);
-                }
+                    _currentSize += (e.Message?.Length ?? 0) + 32;
 
-                _current.Log(sender, e);
+                    if (ShouldRoll(_currentSize, _maxSizeBytes) && Environment.TickCount64 >= _nextRotationAttemptTicks)
+                    {
+                        TryRoll();
+                    }
+
+                    if (_current != null)
+                    {
+                        _current.Log(sender, e);
+                    }
+                    else
+                    {
+                        LostLines++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // The logger must never throw into its caller, which can be a native callback.
+                    LostLines++;
+                    ReportFailureOnce(ex);
+                }
+            }
+        }
+
+        // Opens the next file and swaps to it only on success, so a failed roll keeps writing
+        // to the still-open old file instead of losing lines outright.
+        private void TryRoll()
+        {
+            try
+            {
+                FileLog next = OpenNewFile();
+                FileLog old = _current;
+                _current = next;
+                old.Dispose();
+                DeleteOldLogFiles(_logPath, _logExt, _retention);
+                _rotationFailureReported = false;
+            }
+            catch (Exception ex)
+            {
+                _nextRotationAttemptTicks = Environment.TickCount64 + RotationRetryBackoffMs;
+                ReportFailureOnce(ex);
+            }
+        }
+
+        // Reported once per failure episode (cleared on the next successful roll) so a stuck
+        // disk doesn't spam Debug output or the still-open log file on every line.
+        private void ReportFailureOnce(Exception ex)
+        {
+            if (_rotationFailureReported)
+            {
+                return;
+            }
+
+            _rotationFailureReported = true;
+            Debug.WriteLine($"[UltraWinBar] Log rotation/write failure, entries may be lost: {ex.Message}");
+
+            try
+            {
+                _current?.Log(this, new LogEventArgs(LogSeverity.Error, $"Logging error: {ex.Message}", null, DateTime.Now));
+            }
+            catch
+            {
+                // Best effort only; the logger must never throw.
             }
         }
 
@@ -157,7 +223,14 @@ namespace UltraWinBar.Utilities
         {
             lock (_lock)
             {
-                _current?.Dispose();
+                try
+                {
+                    _current?.Dispose();
+                }
+                catch
+                {
+                    // Disposal must not throw either.
+                }
             }
         }
 
