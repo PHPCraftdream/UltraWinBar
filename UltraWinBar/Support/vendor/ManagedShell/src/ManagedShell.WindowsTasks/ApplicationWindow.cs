@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media;
+using System.Windows.Threading;
 using ManagedShell.Common.Enums;
 
 namespace ManagedShell.WindowsTasks
@@ -20,6 +21,12 @@ namespace ManagedShell.WindowsTasks
         private readonly TasksService _tasksService;
         StringBuilder titleBuilder = new StringBuilder(TITLE_LENGTH);
 
+        // UltraWinBar (Н18): the creating thread's dispatcher, if it has one. Icon loading runs on
+        // a separate STA thread; PropertyChanged is marshaled back here instead of firing there.
+        // Null when the creating thread never pumped a Dispatcher (e.g. tests), in which case
+        // notifications fire synchronously.
+        private readonly Dispatcher _ownerDispatcher;
+
         public delegate void GetButtonRectEventHandler(ref NativeMethods.ShortRect rect);
 
         public event GetButtonRectEventHandler GetButtonRect;
@@ -28,6 +35,7 @@ namespace ManagedShell.WindowsTasks
         {
             _tasksService = tasksService;
             Handle = handle;
+            _ownerDispatcher = Dispatcher.FromThread(Thread.CurrentThread);
             State = WindowState.Inactive;
         }
 
@@ -479,105 +487,116 @@ namespace ManagedShell.WindowsTasks
 
                 Task.Factory.StartNew(() =>
                 {
-                    if (IsUWP && !string.IsNullOrEmpty(AppUserModelID))
+                    // UltraWinBar (Н18): _iconLoading must clear even if a lookup below throws,
+                    // or this window's icon would never be retried again.
+                    try
                     {
-                        // UWP apps
-                        try
+                        if (IsUWP && !string.IsNullOrEmpty(AppUserModelID))
                         {
-                            var storeApp = UWPInterop.StoreAppHelper.AppList.GetAppByAumid(AppUserModelID);
-
-                            if (storeApp != null)
+                            // UWP apps
+                            try
                             {
-                                Icon = storeApp.GetIconImageSource(_tasksService.TaskIconSize);
-                            }
-                            else
-                            {
-                                Icon = IconImageConverter.GetDefaultIcon();
-                            }
-                        }
-                        catch
-                        {
-                            if (_icon == null) Icon = IconImageConverter.GetDefaultIcon();
-                        }
-                    }
-                    else
-                    {
-                        // non-UWP apps
-                        IntPtr hIco = default;
-                        bool ownsIcon = false; // UltraWinBar: only the file-icon fallback is ours to destroy
-                        uint WM_GETICON = (uint)NativeMethods.WM.GETICON;
-                        uint WM_QUERYDRAGICON = (uint)NativeMethods.WM.QUERYDRAGICON;
-                        int GCL_HICON = -14;
-                        int GCL_HICONSM = -34;
-                        IconSize sizeSetting = _tasksService.TaskIconSize;
+                                var storeApp = UWPInterop.StoreAppHelper.AppList.GetAppByAumid(AppUserModelID);
 
-                        if (sizeSetting == IconSize.Small)
-                        {
-                            NativeMethods.SendMessageTimeout(Handle, WM_GETICON, 2, 0, 2, 1000, ref hIco);
-                            if (hIco == IntPtr.Zero)
-                                NativeMethods.SendMessageTimeout(Handle, WM_GETICON, 0, 0, 2, 1000, ref hIco);
+                                if (storeApp != null)
+                                {
+                                    Icon = storeApp.GetIconImageSource(_tasksService.TaskIconSize);
+                                }
+                                else
+                                {
+                                    Icon = IconImageConverter.GetDefaultIcon();
+                                }
+                            }
+                            catch
+                            {
+                                if (_icon == null) Icon = IconImageConverter.GetDefaultIcon();
+                            }
                         }
                         else
                         {
-                            NativeMethods.SendMessageTimeout(Handle, WM_GETICON, 1, 0, 2, 1000, ref hIco);
-                        }
+                            // non-UWP apps
+                            IntPtr hIco = default;
+                            bool ownsIcon = false; // UltraWinBar: only the file-icon fallback is ours to destroy
+                            uint WM_GETICON = (uint)NativeMethods.WM.GETICON;
+                            uint WM_QUERYDRAGICON = (uint)NativeMethods.WM.QUERYDRAGICON;
+                            int GCL_HICON = -14;
+                            int GCL_HICONSM = -34;
+                            IconSize sizeSetting = _tasksService.TaskIconSize;
 
-                        if (hIco == IntPtr.Zero && sizeSetting == IconSize.Small)
-                        {
-                            if (!Environment.Is64BitProcess)
-                                hIco = NativeMethods.GetClassLong(Handle, GCL_HICONSM);
-                            else
-                                hIco = NativeMethods.GetClassLongPtr(Handle, GCL_HICONSM);
-                        }
-
-                        if (hIco == IntPtr.Zero)
-                        {
-                            if (!Environment.Is64BitProcess)
-                                hIco = NativeMethods.GetClassLong(Handle, GCL_HICON);
-                            else
-                                hIco = NativeMethods.GetClassLongPtr(Handle, GCL_HICON);
-                        }
-
-                        if (hIco == IntPtr.Zero)
-                        {
-                            NativeMethods.SendMessageTimeout(Handle, WM_QUERYDRAGICON, 0, 0, 0, 1000, ref hIco);
-                        }
-
-                        if (hIco == IntPtr.Zero && _icon == null)
-                        {
-                            // last resort: find icon by executable. if we already have an icon from a previous fetch, then just skip this
-                            if (ShellHelper.Exists(WinFileName))
+                            if (sizeSetting == IconSize.Small)
                             {
-                                IconSize size = IconSize.Small;
-                                if (sizeSetting != size)
-                                    size = IconSize.Large;
-
-                                hIco = IconHelper.GetIconByFilename(WinFileName, size);
-                                ownsIcon = hIco != IntPtr.Zero;
+                                NativeMethods.SendMessageTimeout(Handle, WM_GETICON, 2, 0, 2, 1000, ref hIco);
+                                if (hIco == IntPtr.Zero)
+                                    NativeMethods.SendMessageTimeout(Handle, WM_GETICON, 0, 0, 2, 1000, ref hIco);
                             }
-                        }
-
-                        if (hIco != IntPtr.Zero)
-                        {
-                            if (_hIcon != hIco)
+                            else
                             {
-                                _hIcon = hIco;
-                                bool returnDefault = (_icon == null); // only return a default icon if we don't already have one. otherwise let's use what we have.
-                                ImageSource icon = IconImageConverter.GetImageFromHIcon(hIco, returnDefault, ownsIcon);
-                                if (icon != null)
+                                NativeMethods.SendMessageTimeout(Handle, WM_GETICON, 1, 0, 2, 1000, ref hIco);
+                            }
+
+                            if (hIco == IntPtr.Zero && sizeSetting == IconSize.Small)
+                            {
+                                if (!Environment.Is64BitProcess)
+                                    hIco = NativeMethods.GetClassLong(Handle, GCL_HICONSM);
+                                else
+                                    hIco = NativeMethods.GetClassLongPtr(Handle, GCL_HICONSM);
+                            }
+
+                            if (hIco == IntPtr.Zero)
+                            {
+                                if (!Environment.Is64BitProcess)
+                                    hIco = NativeMethods.GetClassLong(Handle, GCL_HICON);
+                                else
+                                    hIco = NativeMethods.GetClassLongPtr(Handle, GCL_HICON);
+                            }
+
+                            if (hIco == IntPtr.Zero)
+                            {
+                                NativeMethods.SendMessageTimeout(Handle, WM_QUERYDRAGICON, 0, 0, 0, 1000, ref hIco);
+                            }
+
+                            if (hIco == IntPtr.Zero && _icon == null)
+                            {
+                                // last resort: find icon by executable. if we already have an icon from a previous fetch, then just skip this
+                                if (ShellHelper.Exists(WinFileName))
                                 {
-                                    icon.Freeze();
-                                    Icon = icon;
+                                    IconSize size = IconSize.Small;
+                                    if (sizeSetting != size)
+                                        size = IconSize.Large;
+
+                                    hIco = IconHelper.GetIconByFilename(WinFileName, size);
+                                    ownsIcon = hIco != IntPtr.Zero;
                                 }
                             }
-                            else if (ownsIcon)
+
+                            if (hIco != IntPtr.Zero)
                             {
-                                NativeMethods.DestroyIcon(hIco);
+                                if (_hIcon != hIco)
+                                {
+                                    _hIcon = hIco;
+                                    bool returnDefault = (_icon == null); // only return a default icon if we don't already have one. otherwise let's use what we have.
+                                    ImageSource icon = IconImageConverter.GetImageFromHIcon(hIco, returnDefault, ownsIcon);
+                                    if (icon != null)
+                                    {
+                                        icon.Freeze();
+                                        Icon = icon;
+                                    }
+                                }
+                                else if (ownsIcon)
+                                {
+                                    NativeMethods.DestroyIcon(hIco);
+                                }
                             }
                         }
                     }
-
-                    _iconLoading = false;
+                    catch (Exception ex)
+                    {
+                        ShellLogger.Error($"ApplicationWindow: Unhandled error loading icon for {Title}.", ex);
+                    }
+                    finally
+                    {
+                        _iconLoading = false;
+                    }
                 }, CancellationToken.None, TaskCreationOptions.None, IconHelper.IconScheduler);
             }
         }
@@ -610,6 +629,10 @@ namespace ManagedShell.WindowsTasks
             }
         }
 
+        // UltraWinBar (Н5): sane upper bound for a taskbar overlay description; also the fallback
+        // read length when the mapped view's actual size cannot be determined.
+        private const int MaxOverlayDescriptionChars = 260;
+
         public void SetOverlayIconDescription(IntPtr lParam)
         {
             try
@@ -628,16 +651,52 @@ namespace ManagedShell.WindowsTasks
                         return;
                     }
 
-                    string str = Marshal.PtrToStringAuto(hShared);
-                    NativeMethods.SHUnlockShared(hShared);
-
-                    OverlayIconDescription = str;
+                    try
+                    {
+                        // lParam names shared memory from an arbitrary process; read only what
+                        // VirtualQuery reports as mapped, capped at a sane maximum, instead of an
+                        // unbounded PtrToStringAuto that can run past the mapped view.
+                        int readableBytes = MemorySafety.GetReadableByteCount(hShared, MaxOverlayDescriptionChars * sizeof(char));
+                        int maxChars = readableBytes / sizeof(char);
+                        if (maxChars > 0)
+                        {
+                            OverlayIconDescription = ReadBoundedString(hShared, maxChars);
+                        }
+                    }
+                    finally
+                    {
+                        NativeMethods.SHUnlockShared(hShared);
+                    }
                 }
             }
             catch (Exception e)
             {
                 ShellLogger.Error($"ApplicationWindow: Unable to get overlay icon description from process {Title}: {e.Message}");
             }
+        }
+
+        // Reads at most maxChars UTF-16 code units starting at ptr, stopping at a null terminator
+        // if found first. Pure and static so it is testable with arbitrary buffers.
+        internal static string ReadBoundedString(IntPtr ptr, int maxChars)
+        {
+            if (ptr == IntPtr.Zero || maxChars <= 0)
+            {
+                return string.Empty;
+            }
+
+            char[] chars = new char[maxChars];
+            int length = 0;
+            for (int i = 0; i < maxChars; i++)
+            {
+                char c = (char)Marshal.ReadInt16(ptr, i * sizeof(char));
+                if (c == '\0')
+                {
+                    break;
+                }
+                chars[length++] = c;
+            }
+
+            return new string(chars, 0, length);
         }
 
         internal void UpdateProperties()
@@ -761,7 +820,19 @@ namespace ManagedShell.WindowsTasks
 
         public void OnPropertyChanged(string PropertyName)
         {
-            if (this.PropertyChanged != null)
+            if (this.PropertyChanged == null)
+            {
+                return;
+            }
+
+            // UltraWinBar (Н18): raise on the owner thread (icon loading runs on a separate STA
+            // thread). No-op marshaling when there is no dispatcher (e.g. tests).
+            if (_ownerDispatcher != null && !_ownerDispatcher.CheckAccess())
+            {
+                _ownerDispatcher.BeginInvoke(new Action(() =>
+                    this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropertyName))));
+            }
+            else
             {
                 this.PropertyChanged(this, new PropertyChangedEventArgs(PropertyName));
             }
