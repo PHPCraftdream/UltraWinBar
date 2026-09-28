@@ -62,3 +62,6 @@ not changed; every local modification is listed below and marked in code with `U
   Explorer restart; calls on a cached manager that fail with a severed-proxy HRESULT now reset and
   retry once. Raw `GetExperienceManager`/`QueryInterface` pointers are released in `finally`, and
   `WindowsDeleteString` now runs in `finally` even if `GetExperienceManager` throws.
+- `NativeWindowEx.OnThreadException` now logs via `ShellLogger.Error` instead of the WinForms
+  default (silently swallowing the exception). ManagedShell has no visibility into the app's
+  `CallbackGuard`, so this only logs.

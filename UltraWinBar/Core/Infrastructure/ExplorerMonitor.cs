@@ -92,6 +92,10 @@ namespace UltraWinBar.Utilities
                 base.WndProc(ref m); // Call the base class to process other messages so we dont accidentally cause crashes or bugs.
             }
 
+            // NativeWindow.OnThreadException is empty by default: a WndProc exception here would
+            // otherwise vanish silently instead of reaching the log.
+            protected override void OnThreadException(Exception e) => CallbackGuard.Report("ExplorerMonitorWindow", e);
+
             public void Dispose()
             {
                 DestroyHandle();

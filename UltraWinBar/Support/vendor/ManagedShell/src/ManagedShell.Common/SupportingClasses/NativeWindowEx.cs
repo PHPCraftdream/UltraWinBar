@@ -1,4 +1,6 @@
-﻿using System.Windows.Forms;
+﻿using ManagedShell.Common.Logging;
+using System;
+using System.Windows.Forms;
 
 namespace ManagedShell.Common.SupportingClasses
 {
@@ -23,5 +25,10 @@ namespace ManagedShell.Common.SupportingClasses
         {
             base.CreateHandle(cp);
         }
+
+        // NativeWindow.OnThreadException is empty by default: a WndProc exception here would
+        // otherwise vanish silently instead of reaching the log. ManagedShell cannot see the
+        // app's CallbackGuard, so this only logs.
+        protected override void OnThreadException(Exception e) => ShellLogger.Error($"NativeWindowEx: unhandled WndProc exception: {e}");
     }
 }

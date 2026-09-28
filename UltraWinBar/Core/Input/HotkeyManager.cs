@@ -2,6 +2,7 @@
 using ManagedShell.Common.Logging;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using static ManagedShell.Interop.NativeMethods;
 
@@ -28,6 +29,9 @@ namespace UltraWinBar.Utilities
 
         public void Dispose()
         {
+            // Otherwise a setting change after Dispose registers hotkeys on a destroyed window.
+            Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
+
             if (_listenerWindow.IsRegistered)
             {
                 _listenerWindow.UnregisterHotkeys();
@@ -67,6 +71,8 @@ namespace UltraWinBar.Utilities
             private readonly HotkeyManager _manager;
             private readonly HashSet<int> _registeredHotkeys = [];
             private const int WMTRAY_UNREGISTERHOTKEY = (int)WM.USER + 231;
+            private const uint SMTO_ABORTIFHUNG = 0x0002;
+            private const uint TrayMessageTimeoutMs = 500;
             private List<TrayHotkey.Entry> _trayHotkeyTable;
             private bool _unregisterFromExplorer = true;
             private IntPtr _trayWindow;
@@ -98,6 +104,10 @@ namespace UltraWinBar.Utilities
 
                 base.WndProc(ref m);
             }
+
+            // NativeWindow.OnThreadException is empty by default: a WndProc exception here would
+            // otherwise vanish silently instead of reaching the log.
+            protected override void OnThreadException(Exception e) => CallbackGuard.Report("HotkeyListenerWindow", e);
 
             public void RegisterHotkeys()
             {
@@ -236,10 +246,20 @@ namespace UltraWinBar.Utilities
                     // Exit if no matching hotkey found
                     if (trayHotkeyIndex < 0) return;
 
-                    // Found a match - send unregister message to Explorer
+                    // Found a match - send unregister message to Explorer. Timeout bounds a hung Explorer
+                    // so registering our own hotkeys never blocks the UI thread indefinitely.
                     int trayHotkeyId = _trayHotkeyTable[trayHotkeyIndex].Id;
-                    SendMessage(_trayWindow, WMTRAY_UNREGISTERHOTKEY, new IntPtr(trayHotkeyId), IntPtr.Zero);
-                    ShellLogger.Debug($"HotkeyManager: Sent WMTRAY_UNREGISTERHOTKEY for hotkey ID={trayHotkeyId}");
+                    IntPtr reply = IntPtr.Zero;
+                    uint sent = SendMessageTimeout(_trayWindow, (uint)WMTRAY_UNREGISTERHOTKEY, new IntPtr(trayHotkeyId), IntPtr.Zero,
+                        SMTO_ABORTIFHUNG, TrayMessageTimeoutMs, ref reply);
+                    if (sent == 0)
+                    {
+                        ShellLogger.Warning($"HotkeyManager: SendMessageTimeout to Explorer tray failed or timed out unregistering hotkey ID={trayHotkeyId} (error {Marshal.GetLastWin32Error()}).");
+                    }
+                    else
+                    {
+                        ShellLogger.Debug($"HotkeyManager: Sent WMTRAY_UNREGISTERHOTKEY for hotkey ID={trayHotkeyId}");
+                    }
                 }
                 catch (Exception ex)
                 {
