@@ -7,8 +7,8 @@ using System.Threading;
 
 // Spike for hiding the Start menu until it is placed: logs when its window shows, gets focus and moves,
 // and with --fade tests whether an out-of-process alpha fade applies to it.
-// Usage: dotnet run -c Release [-- --fade]; open Start a few times yourself; exits after 60 s or Ctrl+C.
-// Never opens Start itself; with --fade restores the window's original extended style afterwards.
+// Usage: dotnet run -c Release [-- --fade] [-- --open N [--click X,Y]]; exits after 60 s or Ctrl+C.
+// Opens Start only with --open N (Win key, or a click at X,Y on our Start button; then Esc; N times); with --fade restores the window's original extended style.
 internal static class Program
 {
     private delegate void WinEventProc(IntPtr hook, uint type, IntPtr hwnd, int obj, int child, uint thread, uint time);
@@ -32,6 +32,12 @@ internal static class Program
     [DllImport("user32.dll", SetLastError = true)] private static extern bool GetLayeredWindowAttributes(IntPtr hwnd, out uint key, out byte alpha, out uint flags);
     [DllImport("dwmapi.dll")] private static extern int DwmGetWindowAttribute(IntPtr hwnd, uint attribute, out int value, int size);
     [DllImport("dwmapi.dll")] private static extern int DwmSetWindowAttribute(IntPtr hwnd, uint attribute, ref int value, int size);
+    [DllImport("user32.dll")] private static extern void keybd_event(byte vk, byte scan, uint flags, UIntPtr extra);
+    [DllImport("user32.dll")] private static extern bool IsWindowVisible(IntPtr hwnd);
+    [DllImport("user32.dll")] private static extern bool SetCursorPos(int x, int y);
+    [DllImport("user32.dll")] private static extern void mouse_event(uint flags, int dx, int dy, int data, UIntPtr extra);
+    private delegate bool EnumProc(IntPtr hwnd, IntPtr lParam);
+    [DllImport("user32.dll")] private static extern bool EnumWindows(EnumProc proc, IntPtr lParam);
 
     private const int GWL_EXSTYLE = -20, WS_EX_LAYERED = 0x80000;
     private const uint LWA_ALPHA = 2, WM_QUIT = 0x12;
@@ -52,6 +58,33 @@ internal static class Program
             SetWinEventHook(0x8017, 0x8018, IntPtr.Zero, proc, 0, 0, 0),
         };
         Console.WriteLine($"Probe running ({(fade ? "fade test" : "observe only")}). Open Start a few times; exits in 60 s.");
+        EnumWindows((hwnd, _) =>
+        {
+            GetWindowThreadProcessId(hwnd, out uint pid);
+            if (IsWindowVisible(hwnd) && ProcessName(pid) == "UltraWinBar" && GetWindowRect(hwnd, out Rect r))
+                Console.WriteLine($"  panel {hwnd} rect=({r.Left},{r.Top},{r.Right},{r.Bottom})");
+            return true;
+        }, IntPtr.Zero);
+        int open = Array.IndexOf(args, "--open") is int i && i >= 0 && i + 1 < args.Length ? int.Parse(args[i + 1]) : 0;
+        int c = Array.IndexOf(args, "--click");
+        int[] click = c >= 0 && c + 1 < args.Length ? Array.ConvertAll(args[c + 1].Split(','), int.Parse) : null;
+        if (open > 0)
+        {
+            new Thread(() =>
+            {
+                for (int n = 0; n < open; n++)
+                {
+                    Thread.Sleep(1500);
+                    Console.WriteLine($"{clock.ElapsedMilliseconds,7} ms  -- {(click == null ? "Win key" : "click")} #{n + 1}");
+                    if (click == null) { keybd_event(0x5B, 0, 0, UIntPtr.Zero); keybd_event(0x5B, 0, 2, UIntPtr.Zero); }
+                    else { SetCursorPos(click[0], click[1]); mouse_event(2, 0, 0, 0, UIntPtr.Zero); mouse_event(4, 0, 0, 0, UIntPtr.Zero); }
+                    Thread.Sleep(1500);
+                    keybd_event(0x1B, 0, 0, UIntPtr.Zero); keybd_event(0x1B, 0, 2, UIntPtr.Zero);
+                }
+                Thread.Sleep(1000);
+                PostThreadMessage(thread, WM_QUIT, IntPtr.Zero, IntPtr.Zero);
+            }) { IsBackground = true }.Start();
+        }
         using var stop = new Timer(_ => PostThreadMessage(thread, WM_QUIT, IntPtr.Zero, IntPtr.Zero), null, 60000, Timeout.Infinite);
         Console.CancelKeyPress += (_, e) => { e.Cancel = true; PostThreadMessage(thread, WM_QUIT, IntPtr.Zero, IntPtr.Zero); };
         while (GetMessage(out Msg msg, IntPtr.Zero, 0, 0) > 0) { TranslateMessage(ref msg); DispatchMessage(ref msg); }
