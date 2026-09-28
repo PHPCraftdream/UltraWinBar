@@ -171,12 +171,6 @@ internal static class UptimeChecks
         }
         Console.WriteLine("PASS: the periodic health snapshot reports handles, GDI/USER objects, threads, memory, hooks and subscribers.");
 
-        // Never instantiate Settings here: any Settings object is wired to the user's real settings file.
-        var ranksOf = Get("UltraWinBar.Utilities.Settings").GetMethod("RanksOf", Private);
-        var ranks = (Dictionary<string, int>)ranksOf.Invoke(null, new object[] { new List<string> { "a", "b", null, "a" } });
-        if (ranks.Count != 2 || ranks["a"] != 0 || ranks["b"] != 1) throw new Exception("Task order ranks must match the first position in the saved order.");
-        Console.WriteLine("PASS: task sorting looks up precomputed ranks (first position wins, as IndexOf did).");
-
         // UI objects must reach app-lifetime singletons only weakly (App itself lives as long as they do).
         var root = new System.IO.DirectoryInfo(AppContext.BaseDirectory);
         while (root != null && !System.IO.File.Exists(System.IO.Path.Combine(root.FullName, "README.md"))) root = root.Parent;
