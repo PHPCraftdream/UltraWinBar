@@ -278,6 +278,7 @@ namespace UltraWinBar.Controls
             [DllImport("advapi32.dll")]
             private static extern int RegNotifyChangeKeyValue(IntPtr key, bool watchSubtree, uint filter, IntPtr signal, bool asynchronous);
             private const uint ValueChangeFilter = 0x00000004; // REG_NOTIFY_CHANGE_LAST_SET
+            private const uint ThreadAgnosticFilter = 0x10000000; // REG_NOTIFY_THREAD_AGNOSTIC, Windows 8+ only
 
             private readonly RegistryKey key;
             private readonly AutoResetEvent signal = new AutoResetEvent(false);
@@ -304,8 +305,15 @@ namespace UltraWinBar.Controls
                 Arm();
             }
 
-            private void Arm() => RegNotifyChangeKeyValue(key.Handle.DangerousGetHandle(), false, ValueChangeFilter,
-                signal.SafeWaitHandle.DangerousGetHandle(), true);
+            // Without REG_NOTIFY_THREAD_AGNOSTIC, the wait is bound to whichever pool thread
+            // re-arms it; that thread exiting fires the event spuriously. Windows 7 lacks the flag.
+            private void Arm()
+            {
+                uint filter = ValueChangeFilter;
+                if (ManagedShell.Common.Helpers.EnvironmentHelper.IsWindows8OrBetter) filter |= ThreadAgnosticFilter;
+                RegNotifyChangeKeyValue(key.Handle.DangerousGetHandle(), false, filter,
+                    signal.SafeWaitHandle.DangerousGetHandle(), true);
+            }
 
             public void Dispose()
             {
