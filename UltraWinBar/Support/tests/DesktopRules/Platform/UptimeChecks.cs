@@ -19,10 +19,13 @@ internal static class UptimeChecks
     {
         var assembly = typeof(TaskAssignmentManager).Assembly;
         Type Get(string name) => assembly.GetType(name) ?? throw new Exception($"{name} is missing.");
+        // R9-H (K12): CallbackGuard/WinEventHook/ShellComProxy moved to ManagedShell.Common.
+        var commonAssembly = Assembly.Load("ManagedShell.Common");
+        Type GetCommon(string name) => commonAssembly.GetType(name) ?? throw new Exception($"{name} is missing.");
 
         int[] disconnected = { unchecked((int)0x80010108), unchecked((int)0x800706BA), unchecked((int)0x800401FD) };
         int[] other = { 0, 1, unchecked((int)0x80070057), unchecked((int)0x80004005) };
-        var shellCom = Get("UltraWinBar.Utilities.ShellCom");
+        var shellCom = GetCommon("ManagedShell.Common.Native.ShellCom");
         var desktopHr = shellCom.GetMethod("IsDisconnected", Private, null, new[] { typeof(int) }, null)
             ?? throw new Exception("Explorer COM HRESULT disconnect check is missing.");
         var startError = shellCom.GetMethod("IsDisconnected", Private, null, new[] { typeof(Exception) }, null)
@@ -103,8 +106,8 @@ internal static class UptimeChecks
         foreach (var owner in new[] { Get("UltraWinBar.Utilities.VirtualDesktopContext"), monitor })
             if (!owner.GetFields(BindingFlags.Instance | BindingFlags.NonPublic).Any(f => f.FieldType.Name.StartsWith("ShellComProxy")))
                 throw new Exception($"{owner.Name} must hold its Explorer COM object through ShellComProxy.");
-        CheckShellComProxy(Get("UltraWinBar.Utilities.ShellComProxy`1").MakeGenericType(typeof(object)), Get("UltraWinBar.Utilities.ExplorerMonitor"));
-        CheckShellComProxyReentrancy(Get("UltraWinBar.Utilities.ShellComProxy`1").MakeGenericType(typeof(object)));
+        CheckShellComProxy(GetCommon("ManagedShell.Common.Native.ShellComProxy`1").MakeGenericType(typeof(object)), Get("UltraWinBar.Utilities.ExplorerMonitor"));
+        CheckShellComProxyReentrancy(GetCommon("ManagedShell.Common.Native.ShellComProxy`1").MakeGenericType(typeof(object)));
         var explorer = Get("UltraWinBar.Utilities.ExplorerMonitor");
         var restarted = explorer.GetEvent("ExplorerRestarted", BindingFlags.Static | BindingFlags.Public);
         bool laterHandlerRan = false;

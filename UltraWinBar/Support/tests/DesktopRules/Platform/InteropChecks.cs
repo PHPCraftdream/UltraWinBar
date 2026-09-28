@@ -32,7 +32,10 @@ internal static class InteropChecks
             throw new Exception("Unsafe interop signatures:\n  " + string.Join("\n  ", problems));
         Console.WriteLine("PASS: COM methods are PreserveSig with explicit BOOL/IUnknown marshalling; P/Invoke handles are pointer-sized.");
 
-        var guard = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.CallbackGuard")
+        // R9-H (K12): CallbackGuard/WinEventHook/ShellComProxy moved to ManagedShell.Common so
+        // ManagedShell's own native callbacks share the app's barrier.
+        var managedShellCommon = Assembly.Load("ManagedShell.Common");
+        var guard = managedShellCommon.GetType("ManagedShell.Common.Native.CallbackGuard")
             ?? throw new Exception("Native callback exception barrier is missing.");
         var report = guard.GetMethod("Report", BindingFlags.Static | BindingFlags.NonPublic);
         var failureCount = guard.GetMethod("FailureCount", BindingFlags.Static | BindingFlags.NonPublic);
@@ -41,13 +44,10 @@ internal static class InteropChecks
             throw new Exception("Callback failures must be counted per source without throwing.");
         Console.WriteLine("PASS: native callback failures are reported per source without escaping.");
 
-        // Hooks only through the rooted, exception-safe primitives.
-        var hookOwners = new HashSet<string> { "UltraWinBar.Utilities.WinEventHook", "UltraWinBar.Utilities.LowLevelMouseHook" };
-        foreach (var type in typeof(TaskAssignmentManager).Assembly.GetTypes())
-            foreach (var method in type.GetMethods(All).Where(m => (m.Attributes & MethodAttributes.PinvokeImpl) != 0))
-                if ((method.Name == "SetWinEventHook" || method.Name == "SetWindowsHookEx") && !hookOwners.Contains(type.FullName))
-                    throw new Exception($"{type.FullName} installs hooks directly; use WinEventHook or LowLevelMouseHook.");
-        Console.WriteLine("PASS: hooks are installed only through the rooted, exception-safe hook primitives.");
+        // Hook/window-class call sites (K12) are checked by source scan in NativeCallbackChecks,
+        // which covers every project including this app assembly (a reflection scan of P/Invoke
+        // *declarations* can't tell a primitive's own extern from the shared NativeMethods one that
+        // legitimately declares them for everyone to call through a wrapper).
 
         // R9-M / К20: typed access to the trust-boundary parser (ManagedShell.Interop.
         // CrossProcessMessages) instead of reflecting TrayService.HasPayload by name.
@@ -79,23 +79,31 @@ internal static class InteropChecks
             throw new Exception("ABM_QUERYPOS/SETPOS must fail gracefully when SHLockShared cannot map the sender's shared memory.");
         Console.WriteLine("PASS: AppBar handlers bail out on a failed SHLockShared instead of dereferencing null.");
 
-        // R9-A / Н1: the tray window procedure is native-facing (RegisterClass callback) and must
-        // never let an exception escape into user32; it must report failures instead of crashing.
+        // R9-A / Н1, R9-H / K12: the tray window procedure is native-facing (RegisterClass callback)
+        // and must never let an exception escape into user32. It is wrapped by NativeCallback.Wrap
+        // (not a local rate-limited counter anymore), which reports through the shared CallbackGuard.
         var trayServiceType = Assembly.Load("ManagedShell.WindowsTray").GetType("ManagedShell.WindowsTray.TrayService")
             ?? throw new Exception("TrayService is missing.");
         var trayService = Activator.CreateInstance(trayServiceType);
-        var wndProc = trayServiceType.GetMethod("WndProc", BindingFlags.Instance | BindingFlags.NonPublic)
-            ?? throw new Exception("TrayService.WndProc is missing.");
-        var wndProcFailureCount = trayServiceType.GetField("wndProcFailureCount", BindingFlags.Static | BindingFlags.NonPublic)
-            ?? throw new Exception("TrayService.WndProc exception barrier counter is missing.");
-        int before = (int)wndProcFailureCount.GetValue(null);
+        var wndProcCore = trayServiceType.GetMethod("WndProcCore", BindingFlags.Instance | BindingFlags.NonPublic)
+            ?? throw new Exception("TrayService.WndProcCore is missing.");
+        var nativeCallbackType = managedShellCommon.GetType("ManagedShell.Common.Native.NativeCallback")
+            ?? throw new Exception("NativeCallback primitive is missing.");
+        var wndProcDelegateType = Assembly.Load("ManagedShell.Interop").GetType("ManagedShell.Interop.NativeMethods+WndProcDelegate")
+            ?? throw new Exception("NativeMethods.WndProcDelegate is missing.");
+        var wrapWndProc = nativeCallbackType.GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
+            .Single(m => m.Name == "Wrap" && m.GetParameters()[1].ParameterType == wndProcDelegateType);
+        Delegate boundWndProcCore = Delegate.CreateDelegate(wndProcDelegateType, trayService, wndProcCore);
+        const string wndProcSource = "TrayService: WndProc";
+        Delegate wrappedWndProc = (Delegate)wrapWndProc.Invoke(null, new object[] { wndProcSource, boundWndProcCore });
+        int before = (int)failureCount.Invoke(null, new object[] { wndProcSource });
         // WM_WINDOWPOSCHANGED with a null lParam: WINDOWPOS.FromMessage marshals null and throws
         // NullReferenceException unboxing it; this must be caught, not thrown into user32.
-        wndProc.Invoke(trayService, new object[] { IntPtr.Zero, (int)NativeMethods.WM.WINDOWPOSCHANGED, IntPtr.Zero, IntPtr.Zero });
-        int after = (int)wndProcFailureCount.GetValue(null);
+        wrappedWndProc.DynamicInvoke(IntPtr.Zero, (int)NativeMethods.WM.WINDOWPOSCHANGED, IntPtr.Zero, IntPtr.Zero);
+        int after = (int)failureCount.Invoke(null, new object[] { wndProcSource });
         if (after != before + 1)
-            throw new Exception("TrayService.WndProc must catch exceptions from its body and report them via the rate-limited counter.");
-        Console.WriteLine("PASS: TrayService.WndProc catches a malformed message payload and reports it instead of crashing.");
+            throw new Exception("TrayService's NativeCallback-wrapped WndProc must report exceptions via CallbackGuard.");
+        Console.WriteLine("PASS: TrayService's WndProc, wrapped by NativeCallback, catches a malformed message payload and reports it via CallbackGuard instead of crashing.");
         CheckWinEventHookForeignThreadDispose();
         Console.WriteLine("PASS: WinEventHook.Dispose from a foreign thread keeps the hook and its delegate rooted until the owning thread's Dispatcher actually unhooks it.");
 
@@ -279,18 +287,21 @@ internal static class InteropChecks
         if (disposeStart < 0 || disposeEnd < 0) throw new Exception("Could not locate TasksService.Dispose to check hook zeroing.");
         string disposeBody = source.Substring(disposeStart, disposeEnd - disposeStart);
 
-        int cloakUnhook = disposeBody.IndexOf("UnhookWinEvent(cloakEventHook)");
-        int cloakZero = disposeBody.IndexOf("cloakEventHook = IntPtr.Zero;");
-        int moveUnhook = disposeBody.IndexOf("UnhookWinEvent(moveEventHook)");
-        int moveZero = disposeBody.IndexOf("moveEventHook = IntPtr.Zero;");
+        // R9-H: cloakEventHook/moveEventHook (raw static IntPtr handles) became instance-owned
+        // WinEventHook fields (cloakHook/moveHook); Dispose() must still null its own field after
+        // disposing so a following Initialize reinstalls instead of finding a stale reference.
+        int cloakDispose = disposeBody.IndexOf("cloakHook?.Dispose();");
+        int cloakZero = disposeBody.IndexOf("cloakHook = null;");
+        int moveDispose = disposeBody.IndexOf("moveHook?.Dispose();");
+        int moveZero = disposeBody.IndexOf("moveHook = null;");
         int hookWinNulled = disposeBody.IndexOf("_HookWin = null;");
-        if (cloakUnhook < 0 || cloakZero < 0 || cloakUnhook > cloakZero)
-            throw new Exception("Dispose must zero cloakEventHook after unhooking it, so a following Initialize reinstalls it.");
-        if (moveUnhook < 0 || moveZero < 0 || moveUnhook > moveZero)
-            throw new Exception("Dispose must zero moveEventHook after unhooking it, so a following Initialize reinstalls it.");
+        if (cloakDispose < 0 || cloakZero < 0 || cloakDispose > cloakZero)
+            throw new Exception("Dispose must null cloakHook after disposing it, so a following Initialize reinstalls it.");
+        if (moveDispose < 0 || moveZero < 0 || moveDispose > moveZero)
+            throw new Exception("Dispose must null moveHook after disposing it, so a following Initialize reinstalls it.");
         if (hookWinNulled < 0)
             throw new Exception("Dispose must null _HookWin so a following Initialize does not reuse a destroyed window.");
-        Console.WriteLine("PASS: TasksService.Dispose zeroes cloakEventHook/moveEventHook after unhooking, and nulls _HookWin.");
+        Console.WriteLine("PASS: TasksService.Dispose disposes and nulls cloakHook/moveHook, and nulls _HookWin.");
 
         int initStart = source.IndexOf("internal void Initialize(bool withMultiMonTracking)");
         int initEnd = source.IndexOf("internal void SetTaskCategoryProvider", initStart);
@@ -300,9 +311,9 @@ internal static class InteropChecks
         if (catchIndex < 0) throw new Exception("Initialize must guard hook/window installation with a catch that rolls back.");
         string catchBody = initBody.Substring(catchIndex);
 
-        if (!catchBody.Contains("cloakHookInstalledHere") || !catchBody.Contains("cloakEventHook = IntPtr.Zero;"))
+        if (!catchBody.Contains("cloakHookInstalledHere") || !catchBody.Contains("cloakHook = null;"))
             throw new Exception("A failed Initialize must roll back a cloak hook it installed during this attempt.");
-        if (!catchBody.Contains("moveHookInstalledHere") || !catchBody.Contains("moveEventHook = IntPtr.Zero;"))
+        if (!catchBody.Contains("moveHookInstalledHere") || !catchBody.Contains("moveHook = null;"))
             throw new Exception("A failed Initialize must roll back a move hook it installed during this attempt.");
         if (!catchBody.Contains("_HookWin = null;"))
             throw new Exception("A failed Initialize must null _HookWin so a retry does not leave a second hook window registered.");
@@ -314,7 +325,7 @@ internal static class InteropChecks
     // keep the hook - and its delegate - rooted (still in `installed`) until that runs.
     private static void CheckWinEventHookForeignThreadDispose()
     {
-        Type hookType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.WinEventHook")
+        Type hookType = Assembly.Load("ManagedShell.Common").GetType("ManagedShell.Common.Native.WinEventHook")
             ?? throw new Exception("WinEventHook primitive is missing.");
         Type handlerType = hookType.GetNestedType("Handler", BindingFlags.NonPublic)
             ?? throw new Exception("WinEventHook.Handler delegate is missing.");
