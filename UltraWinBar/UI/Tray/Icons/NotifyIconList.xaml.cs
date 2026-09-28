@@ -87,15 +87,6 @@ namespace UltraWinBar.Controls
                 if (!Equals(NotificationArea.UnpinnedIcons.Filter, unpinnedFilter)) NotificationArea.UnpinnedIcons.Filter = unpinnedFilter;
                 Settings.Instance.PropertyChanged += Settings_PropertyChanged;
 
-                collectionView = new ListCollectionView(NotificationArea.TrayIcons);
-                collectionView.CustomSort = new NotifyIconComparer(this);
-                collectionView.Filter = NotifyIcons_Filter;
-                var collectionViewShaping = collectionView as ICollectionViewLiveShaping;
-                collectionViewShaping.IsLiveFiltering = true;
-                collectionViewShaping.LiveFilteringProperties.Add("IsHidden");
-                collectionViewShaping.LiveFilteringProperties.Add("IsPinned");
-                NotifyIcons.ItemsSource = collectionView;
-
                 if (Settings.Instance.CollapseNotifyIcons)
                 {
                     SetToggleVisibility();
@@ -151,6 +142,18 @@ namespace UltraWinBar.Controls
             }
 
             NotificationArea.NotificationBalloonShown += NotificationArea_NotificationBalloonShown;
+
+            // Only build the view while this list actually hosts the tray and is visible;
+            // otherwise its generated NotifyIcon controls would stay alive and subscribed.
+            collectionView = new ListCollectionView(NotificationArea.TrayIcons);
+            collectionView.CustomSort = new NotifyIconComparer(this);
+            collectionView.Filter = NotifyIcons_Filter;
+            var collectionViewShaping = collectionView as ICollectionViewLiveShaping;
+            collectionViewShaping.IsLiveFiltering = true;
+            collectionViewShaping.LiveFilteringProperties.Add("IsHidden");
+            collectionViewShaping.LiveFilteringProperties.Add("IsPinned");
+            NotifyIcons.ItemsSource = collectionView;
+
             _isActive = true;
         }
 
@@ -162,6 +165,22 @@ namespace UltraWinBar.Controls
             }
 
             NotificationArea.NotificationBalloonShown -= NotificationArea_NotificationBalloonShown;
+
+            // TrayIcons is app-lifetime: an attached view would keep this whole panel alive.
+            NotifyIcons.ItemsSource = null;
+            if (collectionView != null)
+            {
+                if (collectionView is ICollectionViewLiveShaping shaping)
+                {
+                    shaping.IsLiveFiltering = false;
+                    shaping.LiveFilteringProperties.Clear();
+                }
+                collectionView.CustomSort = null;
+                collectionView.Filter = null;
+                collectionView.DetachFromSourceCollection();
+                collectionView = null;
+            }
+
             _isActive = false;
         }
 
@@ -268,21 +287,6 @@ namespace UltraWinBar.Controls
             {
                 NotificationArea.UnpinnedIcons.CollectionChanged -= UnpinnedIcons_CollectionChanged;
                 Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
-            }
-
-            // TrayIcons is app-lifetime: an attached view would keep this whole panel alive.
-            NotifyIcons.ItemsSource = null;
-            if (collectionView != null)
-            {
-                if (collectionView is ICollectionViewLiveShaping shaping)
-                {
-                    shaping.IsLiveFiltering = false;
-                    shaping.LiveFilteringProperties.Clear();
-                }
-                collectionView.CustomSort = null;
-                collectionView.Filter = null;
-                collectionView.DetachFromSourceCollection();
-                collectionView = null;
             }
 
             _isLoaded = false;
