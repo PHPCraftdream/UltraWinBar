@@ -5,6 +5,8 @@ using ManagedShell.Common.SupportingClasses;
 using ManagedShell.UWPInterop;
 using System;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
@@ -65,6 +67,64 @@ namespace UltraWinBar.Utilities
             relocateStartMenu(hStartMenu);
         }
 
+        // The first Start press after launch ran the placement path cold (JIT, P/Invoke stubs, a first hook thread)
+        // and hid the menu and avatar only after Open Shell had shown them; run it once, idle, on a hidden window of ours.
+        private void WarmUp()
+        {
+            if (_disposed) return;
+            const BindingFlags all = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
+            foreach (Type owner in new[] { typeof(StartMenuMonitor), typeof(StartMenuFade), typeof(StartMenuAvatarGuard), typeof(StartMenuPlacement), typeof(DesktopActivationHookThread) })
+            {
+                foreach (Type type in owner.GetNestedTypes(BindingFlags.NonPublic).Append(owner))
+                {
+                    if (type.ContainsGenericParameters) continue;
+                    foreach (MethodInfo method in type.GetMethods(all))
+                    {
+                        if (method.IsAbstract || method.ContainsGenericParameters || (method.Attributes & MethodAttributes.PinvokeImpl) != 0) continue;
+                        try { RuntimeHelpers.PrepareMethod(method.MethodHandle); }
+                        catch (Exception error) when (error is ArgumentException || error is NotSupportedException) { }
+                    }
+                }
+            }
+
+            var window = new System.Windows.Forms.NativeWindow();
+            window.CreateHandle(new System.Windows.Forms.CreateParams { X = -10000, Y = -10000, Width = 300, Height = 300, Style = unchecked((int)0x80000000), ExStyle = 0x80 });
+            IntPtr hwnd = window.Handle;
+            try
+            {
+                FindAnchorTaskbar(hwnd);
+                IsOpenShellMenu(hwnd);
+                IsCloaked(hwnd);
+                FindVisibleWindowByClass("OpenShell.CMenuContainer");
+                using (var fade = new StartMenuFade())
+                {
+                    fade.Hide(hwnd, 0, null);
+                    fade.Reveal(hwnd, 0, 0);
+                }
+                using (var guard = new StartMenuAvatarGuard())
+                {
+                    guard.Arm(hwnd);
+                    StartMenuAvatarGuard.SetAlpha(hwnd, 255);
+                    guard.Show(255);
+                }
+            }
+            catch (Exception error)
+            {
+                ShellLogger.Warning($"StartMenuMonitor: warm-up failed: {error.Message}");
+            }
+            finally
+            {
+                window.DestroyHandle();
+            }
+        }
+
+        private static bool IsOpenShellMenu(IntPtr hwnd)
+        {
+            var name = new StringBuilder(256);
+            GetClassName(hwnd, name, name.Capacity);
+            return name.ToString() == "OpenShell.CMenuContainer";
+        }
+
         // Menus we did not open (Win key, a lost activation race) are anchored too, never left where Windows put them.
         private static IntPtr FindAnchorTaskbar(IntPtr hStartMenu)
         {
@@ -112,6 +172,15 @@ namespace UltraWinBar.Utilities
             int x = (int)initialTarget.X, y = (int)initialTarget.Y;
 
             bool menuAlreadyAtTarget = y == startMenuRect.Top && x == startMenuRect.Left;
+            if (_positionedMenu != hStartMenu)
+            {
+                _fade.Restore(_positionedMenu);
+                _avatarGuard.Disarm();
+                // Menu and avatar hidden until placed, so neither flashes where Open Shell first puts them.
+                if (!(IsWindowVisible(hStartMenu) && menuAlreadyAtTarget) && IsOpenShellMenu(hStartMenu) &&
+                    _fade.Hide(hStartMenu, Environment.TickCount64, _avatarGuard.Show))
+                    _avatarGuard.Arm(hStartMenu);
+            }
             if (!menuAlreadyAtTarget && startMenuRect.Width > 200 && startMenuRect.Height > 200)
             {
                 bool moved = SetWindowPos(hStartMenu, IntPtr.Zero, x, y, 0, 0, (int)(SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOZORDER | SetWindowPosFlags.SWP_NOACTIVATE));
@@ -185,8 +254,12 @@ namespace UltraWinBar.Utilities
                     if (pictureRect.Left != x + userPictureOffsetX || pictureRect.Top != y + userPictureOffsetY)
                         SetWindowPos(hUserPicture, IntPtr.Zero, x + userPictureOffsetX, y + userPictureOffsetY, 0, 0,
                             (int)(SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOZORDER | SetWindowPosFlags.SWP_NOACTIVATE));
+                    // Only once shown: Open Shell positions it again when it shows it.
+                    if (IsWindowVisible(hUserPicture)) _avatarGuard.MarkPlaced(hUserPicture);
                 }
 
+                if (IsWindowVisible(hStartMenu) && _fade.IsHidden(hStartMenu))
+                    _fade.Reveal(hStartMenu, Environment.TickCount64, SystemParameters.ClientAreaAnimation ? StartMenuFade.FadeMs : 0);
             };
             UpdateMenuEventHook();
             CorrectPlacement();

@@ -33,6 +33,9 @@ namespace UltraWinBar.Utilities
         private int _openingTicks;
         private const int MaxOpeningTicks = 20;
         private int _staleActivationTicks;
+        private readonly StartMenuFade _fade = new StartMenuFade();
+        private bool _disposed;
+        private readonly StartMenuAvatarGuard _avatarGuard = new StartMenuAvatarGuard();
 
         // Fast (100ms) poll only while the menu is visible, being positioned, or a Start button
         // press is pending a response; otherwise a slow safety poll, since LauncherVisibilityChanged
@@ -62,6 +65,7 @@ namespace UltraWinBar.Utilities
             // principle fire synchronously from Advise() and reach UpdateMenuEventHook.
             setupPoller();
             setupForegroundHook();
+            Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(WarmUp));
             // Hooked lazily by UpdateMenuEventHook once positioning is relevant, not for the process lifetime.
             _launcherVisibility = new ShellComProxy<LauncherVisibility>("StartMenuMonitor: launcher visibility",
                 () =>
@@ -128,6 +132,8 @@ namespace UltraWinBar.Utilities
             {
                 if (hwnd == _positionedMenu && (eventType == 0x8001 || _positionedMenuShown))
                 {
+                    _fade.Restore(hwnd);
+                    _avatarGuard.Disarm();
                     _positionedMenu = IntPtr.Zero;
                     _correctPlacement = null;
                     UpdateMenuEventHook();
@@ -250,6 +256,8 @@ namespace UltraWinBar.Utilities
             // Safety net for a missed HIDE/DESTROY; the modern Start window is cloaked on close rather than hidden.
             if (_positionedMenu != IntPtr.Zero && !opening && (!IsWindow(_positionedMenu) || !IsWindowVisible(_positionedMenu) || IsCloaked(_positionedMenu)))
             {
+                _fade.Restore(_positionedMenu);
+                _avatarGuard.Disarm();
                 _positionedMenu = IntPtr.Zero;
                 _correctPlacement = null;
                 UpdateMenuEventHook();
@@ -341,8 +349,11 @@ namespace UltraWinBar.Utilities
 
         public void Dispose()
         {
+            _disposed = true;
             _poller?.Stop();
             _correctPlacement = null;
+            _fade.Dispose();
+            _avatarGuard.Dispose();
             ExplorerMonitor.ExplorerRestarted -= ExplorerMonitor_ExplorerRestarted;
             _launcherVisibility.Dispose();
             _menuEventHook?.Dispose();

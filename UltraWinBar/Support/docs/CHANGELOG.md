@@ -138,6 +138,21 @@
   focus. With Open Shell, about half of the Start button presses left the menu
   where Open Shell put it: the menu takes focus as a hidden placeholder and is
   shown ~50 ms later, and a poll in that gap dropped the placement as "closed".
+- The Open Shell menu no longer flashes at Open Shell's own position for
+  20–50 ms before moving beside the panels: it stays transparent (layered alpha;
+  cloaking another process's window is denied) until it is placed, then fades
+  in over 150 ms, or at once with client-area animations off. A menu not placed
+  within 2 s is shown where it is; its style is restored on close and on exit.
+- Open Shell's avatar no longer flashes beside the menu's first position before
+  jumping into place: moving it waits for Explorer's thread, so a hook thread
+  keeps it transparent (per-pixel layered alpha, which takes effect at once)
+  until it is placed, then it fades in with the menu. It is shown at the latest
+  when the menu is fully opaque, and made opaque again if the menu closes first.
+  An event for a moved or newly shown avatar is never taken for the echo of our
+  own alpha change, which let it show for a frame when Open Shell was slow.
+- The first Start press after launch no longer shows the menu and avatar where
+  Open Shell puts them: the placement path is warmed up (JIT, P/Invoke stubs,
+  hook thread) once when the app is idle after start.
 
 ## 2.2.0 (2026-09-28)
 

@@ -34,6 +34,7 @@ NativeCallbackChecks.Run(repositoryRoot);
 HealthDiagnosticsChecks.Run();
 WindowDictionaryChecks.Run();
 GhostSweepChecks.Run();
+StartMenuFadeChecks.Run();
 TrayHotkeyChecks.Run();
 ServiceLifecycleChecks.Run(args, repositoryRoot);
 TaskOrderChecks.Run(args, repositoryRoot);

@@ -91,11 +91,17 @@ namespace UltraWinBar.Utilities
 
         public void Dispose()
         {
-            if (disposed) return;
+            if (Stop() && Thread.CurrentThread != thread) thread.Join(JoinTimeoutMs);
+        }
+
+        // Without waiting: for a hook whose handler calls into another thread that may be busy (or be the caller).
+        internal bool Stop()
+        {
+            if (disposed) return false;
             disposed = true;
             uint id = hookThreadId;
             if (id != 0) PostThreadMessage(id, WM_QUIT, UIntPtr.Zero, IntPtr.Zero);
-            if (Thread.CurrentThread != thread) thread.Join(JoinTimeoutMs);
+            return true;
         }
     }
 }

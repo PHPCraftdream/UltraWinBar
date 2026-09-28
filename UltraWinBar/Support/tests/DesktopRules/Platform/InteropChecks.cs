@@ -333,7 +333,7 @@ internal static class InteropChecks
         MethodInfo handlerMethod = typeof(InteropChecks).GetMethod(nameof(NoOpWinEventHandler), BindingFlags.Static | BindingFlags.NonPublic);
         Delegate handler = Delegate.CreateDelegate(handlerType, handlerMethod);
         var ctor = hookType.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, null,
-            new[] { typeof(string), typeof(uint), typeof(uint), handlerType, typeof(uint) }, null)
+            new[] { typeof(string), typeof(uint), typeof(uint), handlerType, typeof(uint), typeof(uint), typeof(uint) }, null)
             ?? throw new Exception("WinEventHook constructor signature changed.");
         var isInstalled = hookType.GetProperty("IsInstalled", BindingFlags.Instance | BindingFlags.NonPublic)
             ?? throw new Exception("WinEventHook.IsInstalled is missing.");
@@ -350,7 +350,7 @@ internal static class InteropChecks
             try
             {
                 dispatcherA = Dispatcher.CurrentDispatcher;
-                hookRef = ctor.Invoke(new object[] { "foreign-thread dispose test", (uint)0x7FFF, (uint)0x7FFF, handler, outOfContext });
+                hookRef = ctor.Invoke(new object[] { "foreign-thread dispose test", (uint)0x7FFF, (uint)0x7FFF, handler, outOfContext, (uint)0, (uint)0 });
             }
             catch (Exception error) { installError = error; }
             finally { ready.Set(); }

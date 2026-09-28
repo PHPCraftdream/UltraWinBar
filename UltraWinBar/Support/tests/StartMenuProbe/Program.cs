@@ -7,7 +7,9 @@ using System.Threading;
 
 // Spike for hiding the Start menu until it is placed: logs when its window shows, gets focus and moves,
 // and with --fade tests whether an out-of-process alpha fade applies to it.
-// Usage: dotnet run -c Release [-- --fade] [-- --open N [--click X,Y]]; exits after 60 s or Ctrl+C.
+// Usage: dotnet run -c Release [-- --fade] [-- --open N [--click X,Y]] [-- --list]; exits after 60 s or Ctrl+C.
+// --list: print the panels, the taskbars Open Shell anchors to and ABM_GETTASKBARPOS, then exit.
+// --trim PID: empty that process's working set before opening, to reproduce a cold first open.
 // Opens Start only with --open N (Win key, or a click at X,Y on our Start button; then Esc; N times); with --fade restores the window's original extended style.
 internal static class Program
 {
@@ -45,6 +47,10 @@ internal static class Program
     private static readonly Dictionary<uint, string> processNames = new();
     private static readonly HashSet<IntPtr> faded = new();
     private static bool fade;
+    [DllImport("psapi.dll")] private static extern bool EmptyWorkingSet(IntPtr process);
+    [StructLayout(LayoutKind.Sequential)] private struct AppBarData { public int Size; public IntPtr Hwnd; public uint Message, Edge; public Rect Rc; public IntPtr Param; }
+    [DllImport("shell32.dll")] private static extern UIntPtr SHAppBarMessage(uint message, ref AppBarData data);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern IntPtr FindWindowEx(IntPtr parent, IntPtr after, string cls, string title);
 
     private static int Main(string[] args)
     {
@@ -65,6 +71,36 @@ internal static class Program
                 Console.WriteLine($"  panel {hwnd} rect=({r.Left},{r.Top},{r.Right},{r.Bottom})");
             return true;
         }, IntPtr.Zero);
+        // Taskbars Open Shell may anchor to, with their Start buttons: its menu position derives from them.
+        EnumWindows((hwnd, _) =>
+        {
+            var c = new StringBuilder(256);
+            GetClassName(hwnd, c, c.Capacity);
+            if (c.ToString() != "Shell_TrayWnd" && c.ToString() != "Shell_SecondaryTrayWnd") return true;
+            GetWindowThreadProcessId(hwnd, out uint pid);
+            GetWindowRect(hwnd, out Rect r);
+            Console.WriteLine($"  {c} {hwnd} [{ProcessName(pid)}] visible={IsWindowVisible(hwnd)} rect=({r.Left},{r.Top},{r.Right},{r.Bottom})");
+            IntPtr child = IntPtr.Zero;
+            while ((child = FindWindowEx(hwnd, child, null, null)) != IntPtr.Zero)
+            {
+                var cc = new StringBuilder(256);
+                GetClassName(child, cc, cc.Capacity);
+                GetWindowRect(child, out Rect cr);
+                Console.WriteLine($"    child {cc} visible={IsWindowVisible(child)} rect=({cr.Left},{cr.Top},{cr.Right},{cr.Bottom})");
+            }
+            return true;
+        }, IntPtr.Zero);
+        var appBar = new AppBarData { Size = Marshal.SizeOf<AppBarData>() };
+        SHAppBarMessage(5, ref appBar); // ABM_GETTASKBARPOS
+        Console.WriteLine($"  ABM_GETTASKBARPOS edge={appBar.Edge} rect=({appBar.Rc.Left},{appBar.Rc.Top},{appBar.Rc.Right},{appBar.Rc.Bottom}) hwnd={appBar.Hwnd}");
+        if (Array.IndexOf(args, "--list") >= 0) return 0;
+        // --trim PID: empty that process's working set first, as Windows does after a long idle (cold first open).
+        int t = Array.IndexOf(args, "--trim");
+        if (t >= 0 && t + 1 < args.Length)
+        {
+            using var target = Process.GetProcessById(int.Parse(args[t + 1]));
+            Console.WriteLine($"  trimmed {target.ProcessName} {target.Id}: {EmptyWorkingSet(target.Handle)} (working set was {target.WorkingSet64 / 1048576} MB)");
+        }
         int open = Array.IndexOf(args, "--open") is int i && i >= 0 && i + 1 < args.Length ? int.Parse(args[i + 1]) : 0;
         int c = Array.IndexOf(args, "--click");
         int[] click = c >= 0 && c + 1 < args.Length ? Array.ConvertAll(args[c + 1].Split(','), int.Parse) : null;
@@ -118,7 +154,10 @@ internal static class Program
         if (name.StartsWith("0x", StringComparison.Ordinal) || type == 0x8004) return;
         GetWindowRect(hwnd, out Rect r);
         DwmGetWindowAttribute(hwnd, 14, out int cloaked, sizeof(int));
-        Console.WriteLine($"{clock.ElapsedMilliseconds,7} ms  {name,-10} {hwnd} {cls} [{process}] rect=({r.Left},{r.Top},{r.Right},{r.Bottom}) cloaked={cloaked} lag={Environment.TickCount - (int)time} ms");
+        // Alpha only for LWA_ALPHA layering (UltraWinBar hides the menu this way until it is placed).
+        string alpha = (GetWindowLong(hwnd, GWL_EXSTYLE) & WS_EX_LAYERED) != 0 && GetLayeredWindowAttributes(hwnd, out _, out byte a, out uint f) && (f & LWA_ALPHA) != 0
+            ? $" alpha={a}" : "";
+        Console.WriteLine($"{clock.ElapsedMilliseconds,7} ms  {name,-10} {hwnd} {cls} [{process}] rect=({r.Left},{r.Top},{r.Right},{r.Bottom}) cloaked={cloaked}{alpha} lag={Environment.TickCount - (int)time} ms");
         if (fade && (type == 0x8002 || type == 0x8018) && faded.Add(hwnd)) TryFade(hwnd);
         if (type == 0x8003 || type == 0x8017) faded.Remove(hwnd);
     }

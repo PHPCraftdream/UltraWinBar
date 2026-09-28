@@ -38,14 +38,15 @@ namespace ManagedShell.Common.Native
 
         internal static int InstalledCount { get { lock (installed) return installed.Count; } }
 
-        internal WinEventHook(string name, uint eventMin, uint eventMax, Handler handler, uint flags = OutOfContext)
+        // process/thread 0 = all; a filter keeps noisy events (e.g. LOCATIONCHANGE) to one foreign window's thread.
+        internal WinEventHook(string name, uint eventMin, uint eventMax, Handler handler, uint flags = OutOfContext, uint process = 0, uint thread = 0)
         {
             this.name = name;
             this.handler = handler;
             callback = OnEvent;
             ownerThread = GetCurrentThreadId();
             ownerDispatcher = Dispatcher.FromThread(Thread.CurrentThread);
-            hook = SetWinEventHook(eventMin, eventMax, IntPtr.Zero, callback, 0, 0, flags);
+            hook = SetWinEventHook(eventMin, eventMax, IntPtr.Zero, callback, process, thread, flags);
             if (hook != IntPtr.Zero) { lock (installed) installed.Add(this); }
             else ManagedShell.Common.Logging.ShellLogger.Error($"{name}: SetWinEventHook failed ({Marshal.GetLastWin32Error()}).");
         }
