@@ -23,6 +23,38 @@
   the worst UI-thread delay and how often it crossed 250 ms/1 s over the
   interval, total `CallbackGuard` failures, how many `ShellComProxy` instances
   are currently unavailable, and log lines lost or dropped by the file logger.
+  A panel counts as leaked only a minute after it closed.
+- The native callback primitives (exception barrier, WinEvent hook, Explorer COM
+  proxy) live in ManagedShell and are shared by the app and ManagedShell; the
+  tray window procedure and window enumeration go through them too. Foreground
+  and window-show events are delivered once per event instead of once per
+  interested component (4 system hooks instead of 8 or more). A test rejects
+  hooks, window classes and registry watches created outside these primitives.
+- All low-level mouse hooks (panel and element drag, toolbar drag, desktop
+  activation) share one hook on a dedicated thread, so a busy UI thread no
+  longer delays every mouse event in the system or gets the hook removed by
+  Windows; moving a panel to another edge no longer runs inside the hook.
+- One registry watch implementation for virtual desktops and the Japanese IME
+  mode; the thread-agnostic flag is used only on Windows 8 and later.
+- The log is written on a background thread in batches; errors are written
+  immediately together with everything queued before them. Debug and info
+  messages are not formatted when their level is off. Debug logging is off by
+  default for new installations.
+- Window, tray and Explorer helper services have explicit start/stop/dispose
+  states; stopping releases every hook, window and class, a failed start rolls
+  back, and repeated stops are harmless.
+- Faster window tracking: lookups by window handle use a dictionary; a title
+  change redraws only that window (other windows of the same program only when
+  it flashes); taskbar progress and overlay messages no longer allocate a
+  temporary window object. The Win+number hotkey table is built in one pass
+  over explorer.exe instead of copying it; tray messages no longer re-parse
+  constant GUIDs or allocate an icon before checking that it is new.
+- Windows that vanished without a notification, or whose handle was reused by
+  another process, are removed from the task list by a sweep every 30 minutes
+  and counted in the health line.
+- Cross-process data (tray and AppBar messages, AppBar shared memory, shell
+  hook pointers, overlay descriptions) is parsed in one place with tests on
+  garbage input; tests use typed access to internals instead of reflection.
 - Large files are split by responsibility (Start menu monitor, taskbar window,
   desktop activation, Japanese IME, settings, tests) without behavior changes.
 - Fewer background wake-ups of the UI thread: keeping Explorer's taskbar hidden
