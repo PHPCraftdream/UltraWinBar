@@ -34,6 +34,7 @@ namespace ManagedShell.Common.Native
         }
 
         // EnumWindows/EnumChildWindows-shaped: on an escaping exception, report and stop enumeration.
+        // Not rooted: enumeration is synchronous, and the argument stays alive for the call.
         internal static NativeMethods.CallBackPtr Wrap(string name, NativeMethods.CallBackPtr handler)
         {
             NativeMethods.CallBackPtr wrapped = (hwnd, lParam) =>
@@ -46,7 +47,6 @@ namespace ManagedShell.Common.Native
                     return false;
                 }
             };
-            rooted.Add(wrapped);
             return wrapped;
         }
     }
