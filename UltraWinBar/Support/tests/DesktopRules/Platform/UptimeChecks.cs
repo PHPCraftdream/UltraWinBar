@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Data;
 using ManagedShell.Interop;
+using ManagedShell.UWPInterop;
 using UltraWinBar.Utilities;
 
 internal static class UptimeChecks
@@ -199,6 +200,69 @@ internal static class UptimeChecks
         weakThread.Join();
         if (weakError != null) throw weakError;
         Console.WriteLine("PASS: UI objects subscribe to Settings and virtual desktops weakly, so a missed unsubscribe cannot leak a panel.");
+
+        CheckImmersiveShellHelperReset();
+    }
+
+    // R9-B: ImmersiveShellHelper.Reset() must drop the static Explorer COM caches (dead forever
+    // after an Explorer restart otherwise) and be idempotent; its disconnect-HRESULT classifier
+    // must trigger a reset-and-retry only for a genuinely severed proxy.
+    private static void CheckImmersiveShellHelperReset()
+    {
+        var helper = typeof(ImmersiveShellHelper);
+
+        var isDisconnectedHr = helper.GetMethod("IsDisconnected", Private, null, new[] { typeof(int) }, null)
+            ?? throw new Exception("ImmersiveShellHelper disconnect-HRESULT classifier is missing.");
+        var isDisconnectedEx = helper.GetMethod("IsDisconnected", Private, null, new[] { typeof(Exception) }, null)
+            ?? throw new Exception("ImmersiveShellHelper disconnect-exception classifier is missing.");
+
+        // RPC_E_DISCONNECTED, RPC_S_SERVER_UNAVAILABLE, CO_E_OBJNOTCONNECTED, RPC_E_SERVER_DIED, RPC_E_SERVER_DIED_DNE.
+        int[] disconnected = { unchecked((int)0x80010108), unchecked((int)0x800706BA), unchecked((int)0x800401FD), unchecked((int)0x80010007), unchecked((int)0x80010012) };
+        int[] other = { 0, 1, unchecked((int)0x80070057), unchecked((int)0x80004005) };
+        foreach (int hr in disconnected)
+            if (!(bool)isDisconnectedHr.Invoke(null, new object[] { hr }) || !(bool)isDisconnectedEx.Invoke(null, new object[] { new COMException("x", hr) }))
+                throw new Exception($"0x{hr:X8} must be treated as a severed Explorer proxy.");
+        foreach (int hr in other)
+            if ((bool)isDisconnectedHr.Invoke(null, new object[] { hr }) || (bool)isDisconnectedEx.Invoke(null, new object[] { new COMException("x", hr) }))
+                throw new Exception($"0x{hr:X8} must not reset the ImmersiveShellHelper cache.");
+        if (!(bool)isDisconnectedEx.Invoke(null, new object[] { new InvalidComObjectException() }))
+            throw new Exception("A released ImmersiveShellHelper RCW must be treated as disconnected.");
+
+        // Reset() is written to cover exactly these static caches; catches a field renamed without
+        // updating Reset() (or vice versa) at the field-list level.
+        string[] cacheFields =
+        {
+            "_immersiveShell", "_shellExperienceManagerFactory", "_actionCenterExperienceManager",
+            "_controlCenterExperienceManager", "_networkFlyoutExperienceManager", "_networkFlyoutExperienceManager_20H1",
+            "_trayBatteryFlyoutExperienceManager", "_trayClockFlyoutExperienceManager", "_trayMtcUvcFlyoutExperienceManager",
+        };
+        foreach (var name in cacheFields)
+            if (helper.GetField(name, Private) == null) throw new Exception($"ImmersiveShellHelper.{name} is missing.");
+
+        // Behavioral proof, on the live desktop: GetImmersiveShell() caches the RCW until Reset()
+        // drops it, at which point the next call must create a fresh one (not reuse a dead proxy).
+        var immersiveShellField = helper.GetField("_immersiveShell", Private);
+        var shell = ImmersiveShellHelper.GetImmersiveShell();
+        if (shell == null) throw new Exception("GetImmersiveShell() must succeed on a live desktop for this check to be meaningful.");
+        if (!ReferenceEquals(shell, ImmersiveShellHelper.GetImmersiveShell()))
+            throw new Exception("GetImmersiveShell() must cache the ImmersiveShell RCW between calls.");
+
+        ImmersiveShellHelper.Reset();
+        if (immersiveShellField.GetValue(null) != null)
+            throw new Exception("Reset() must clear the cached ImmersiveShell.");
+
+        var shellAfterReset = ImmersiveShellHelper.GetImmersiveShell();
+        if (shellAfterReset == null) throw new Exception("GetImmersiveShell() must recover after Reset().");
+        if (ReferenceEquals(shell, shellAfterReset))
+            throw new Exception("Reset() must force a fresh ImmersiveShell RCW instead of reusing the pre-restart one.");
+
+        // Idempotent: a live cache, then an already-empty one, must both reset without throwing.
+        ImmersiveShellHelper.Reset();
+        ImmersiveShellHelper.Reset();
+        if (immersiveShellField.GetValue(null) != null)
+            throw new Exception("A second Reset() must not resurrect a cached field.");
+
+        Console.WriteLine("PASS: ImmersiveShellHelper's disconnect classifier recognises only severed-Explorer-proxy HRESULTs/exceptions, and Reset() clears the cached ImmersiveShell (forcing recreation) and is idempotent.");
     }
 
     // Unavailable at start -> backoff -> recreated (Recovered); severed HRESULT -> dropped with backoff;

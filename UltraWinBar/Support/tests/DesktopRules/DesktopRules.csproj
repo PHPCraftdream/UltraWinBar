@@ -16,5 +16,6 @@
     <Reference Include="UltraWinBar"><HintPath>../../../Support/BuildTools/artifacts/bin/Debug/net6.0-windows/UltraWinBar.dll</HintPath></Reference>
     <Reference Include="ManagedShell.AppBar"><HintPath>../../../Support/BuildTools/artifacts/bin/Debug/net6.0-windows/ManagedShell.AppBar.dll</HintPath></Reference>
     <Reference Include="ManagedShell.Interop"><HintPath>../../../Support/BuildTools/artifacts/bin/Debug/net6.0-windows/ManagedShell.Interop.dll</HintPath></Reference>
+    <Reference Include="ManagedShell.UWPInterop"><HintPath>../../../Support/BuildTools/artifacts/bin/Debug/net6.0-windows/ManagedShell.UWPInterop.dll</HintPath></Reference>
   </ItemGroup>
 </Project>
