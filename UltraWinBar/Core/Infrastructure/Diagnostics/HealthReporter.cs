@@ -41,7 +41,12 @@ namespace UltraWinBar.Utilities
         private void Timer_Tick(object sender, EventArgs e)
         {
             timer.Interval = Interval;
-            try { ShellLogger.Info(Snapshot()); }
+            try
+            {
+                // Н12: rare liveness sweep piggybacks on this existing low-frequency timer.
+                tasks?.SweepGhosts();
+                ShellLogger.Info(Snapshot());
+            }
             catch (Exception error) { ShellLogger.Warning($"Health: snapshot failed: {error.Message}"); }
         }
 
@@ -74,6 +79,7 @@ namespace UltraWinBar.Utilities
                 $"callbackFailures={CallbackGuard.TotalFailureCount}",
                 $"comProxiesDown={ShellComProxyRegistry.UnavailableCount()}/{ShellComProxyRegistry.Count}",
                 $"logLinesLost={lostLogLines}",
+                $"ghosts={Tasks.GhostsRemoved}",
                 $"closedPanelsAlive={PanelLeakTracker.CollectAndReport()}",
             };
 

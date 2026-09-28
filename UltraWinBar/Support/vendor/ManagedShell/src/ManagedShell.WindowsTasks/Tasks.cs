@@ -61,6 +61,14 @@ namespace ManagedShell.WindowsTasks
             _tasksService.Initialize(withMultiMonTracking);
         }
 
+        // Н12: exposes TasksService's internal ghost-sweep members to HealthReporter in UltraWinBar.
+        public void SweepGhosts()
+        {
+            _tasksService.SweepGhosts();
+        }
+
+        public static int GhostsRemoved => TasksService.GhostsRemoved;
+
         public void SetTaskCategoryProvider(ITaskCategoryProvider taskCategoryProvider)
         {
             if (_tasksService.TaskCategoryProvider != null)
