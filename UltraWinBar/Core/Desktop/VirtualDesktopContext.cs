@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -20,10 +19,6 @@ namespace UltraWinBar.Utilities
             [PreserveSig] int GetWindowDesktopId(IntPtr hwnd, out Guid desktop);
             [PreserveSig] int MoveWindowToDesktop(IntPtr hwnd, ref Guid desktop);
         }
-        [DllImport("advapi32.dll")]
-        private static extern int RegNotifyChangeKeyValue(IntPtr key, bool subtree, uint filter, IntPtr signal, bool asynchronous);
-        private const uint ValueChangeFilter = 0x10000004; // REG_NOTIFY_CHANGE_LAST_SET | REG_NOTIFY_THREAD_AGNOSTIC
-        private const uint NameChangeFilter = 0x10000001; // REG_NOTIFY_CHANGE_NAME | REG_NOTIFY_THREAD_AGNOSTIC
         private const string GlobalPath = @"Software\Microsoft\Windows\CurrentVersion\Explorer\VirtualDesktops";
         private static readonly int SessionId = ReadSessionId();
         private static readonly string SessionPath = BuildSessionPath(SessionId);
@@ -68,8 +63,9 @@ namespace UltraWinBar.Utilities
                 dispatcher.BeginInvoke(new Action(() => ManagerRecovered?.Invoke(this, EventArgs.Empty)));
             };
             CurrentId = ReadCurrent();
+            // RegistryTreeWatch/RegistryValueWatch marshal the callback to "dispatcher" themselves.
             foreach (string path in new[] { GlobalPath, SessionPath })
-                watches.Add(new RegistryTreeWatch(path, dispatcher, () => dispatcher.BeginInvoke(new Action(Refresh))));
+                watches.Add(new RegistryTreeWatch(path, dispatcher, Refresh));
             ShellLogger.Info($"Virtual desktop: {CurrentId}");
             LifecycleState = ServiceLifecycleState.Running;
         }
@@ -204,47 +200,6 @@ namespace UltraWinBar.Utilities
             Instance = null;
         }
 
-        private sealed class RegistryWatch : IDisposable
-        {
-            private readonly RegistryKey key;
-            private readonly uint filter;
-            private readonly AutoResetEvent signal = new AutoResetEvent(false);
-            private readonly RegisteredWaitHandle wait;
-            private readonly object gate = new object();
-            private bool disposed;
-            public RegistryWatch(RegistryKey key, uint filter, Action changed)
-            {
-                this.key = key;
-                this.filter = filter;
-                wait = ThreadPool.RegisterWaitForSingleObject(signal, (_, __) =>
-                {
-                    try
-                    {
-                        lock (gate)
-                        {
-                            if (disposed) return;
-                            Arm();
-                            changed();
-                        }
-                    }
-                    catch (Exception error) { CallbackGuard.Report("Virtual desktop registry watch", error); }
-                }, null, Timeout.Infinite, false);
-                Arm();
-            }
-            private void Arm() => RegNotifyChangeKeyValue(key.Handle.DangerousGetHandle(), false, filter,
-                signal.SafeWaitHandle.DangerousGetHandle(), true);
-            public void Dispose()
-            {
-                lock (gate)
-                {
-                    disposed = true;
-                    wait.Unregister(null);
-                    key.Dispose();
-                    signal.Dispose();
-                }
-            }
-        }
-
         // Watches a registry leaf Explorer creates lazily and can delete/recreate (e.g. on its
         // own restart). Besides the leaf's value, it watches the nearest existing ancestor for
         // name changes, so a missing-at-start or deleted-and-recreated leaf is picked back up
@@ -257,8 +212,8 @@ namespace UltraWinBar.Utilities
             private readonly Dispatcher dispatcher;
             private readonly Action changed;
             private readonly object gate = new object();
-            private RegistryWatch leafWatch;
-            private RegistryWatch ancestorWatch;
+            private RegistryValueWatch leafWatch;
+            private RegistryValueWatch ancestorWatch;
             private bool disposed;
 
             public RegistryTreeWatch(string leafPath, Dispatcher dispatcher, Action changed)
@@ -292,14 +247,16 @@ namespace UltraWinBar.Utilities
                     ancestorWatch = null;
 
                     var leafKey = Registry.CurrentUser.OpenSubKey(leafPath);
-                    if (leafKey != null) leafWatch = new RegistryWatch(leafKey, ValueChangeFilter, changed);
+                    if (leafKey != null)
+                        leafWatch = new RegistryValueWatch(leafKey, RegistryValueWatch.ValueChangeFilter, dispatcher,
+                            changed, "Virtual desktop registry watch");
 
                     foreach (string ancestorPath in AncestorChainFrom(leafPath))
                     {
                         var ancestorKey = Registry.CurrentUser.OpenSubKey(ancestorPath);
                         if (ancestorKey == null) continue;
-                        ancestorWatch = new RegistryWatch(ancestorKey, NameChangeFilter,
-                            () => dispatcher.BeginInvoke(new Action(OnAncestorChanged)));
+                        ancestorWatch = new RegistryValueWatch(ancestorKey, RegistryValueWatch.NameChangeFilter, dispatcher,
+                            OnAncestorChanged, "Virtual desktop registry watch");
                         break;
                     }
                 }
@@ -307,8 +264,9 @@ namespace UltraWinBar.Utilities
 
             private void OnAncestorChanged()
             {
-                // Runs on the dispatcher thread, never inside the ancestor watch's own callback,
-                // so disposing/replacing it here can't reenter its lock from the same wait.
+                // Runs on the dispatcher thread (RegistryValueWatch marshals it there), never inside
+                // the ancestor watch's own wait callback, so disposing/replacing it here can't reenter
+                // its lock from the same wait.
                 Rebuild();
                 changed();
             }

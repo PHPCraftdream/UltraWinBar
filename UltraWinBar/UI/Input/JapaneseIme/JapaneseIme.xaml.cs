@@ -74,7 +74,7 @@ namespace UltraWinBar.Controls
         private bool _isLoaded;
         private bool _kanaMdCached;
         private bool _kanaMdValue;
-        private KanaModeWatch _kanaMdWatch;
+        private RegistryValueWatch _kanaMdWatch;
 
         public static readonly DependencyProperty JapaneseImeEnabledProperty = DependencyProperty.Register(nameof(JapaneseImeEnabled), typeof(bool), typeof(JapaneseIme));
 

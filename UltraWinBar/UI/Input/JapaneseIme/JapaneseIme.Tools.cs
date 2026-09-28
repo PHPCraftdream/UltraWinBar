@@ -5,7 +5,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
 using ManagedShell.AppBar;
-using ManagedShell.Common.Native;
 using static ManagedShell.Interop.NativeMethods;
 using Microsoft.Win32;
 using UltraWinBar.Utilities;
@@ -264,69 +263,17 @@ namespace UltraWinBar.Controls
             }
         }
 
+        // R9-L (K18): uses the shared RegistryValueWatch (was a hand-copied duplicate, KanaModeWatch,
+        // that had drifted from VirtualDesktopContext's own copy - see review Н11/К18). The change
+        // callback is marshaled to this control's dispatcher instead of running on the wait's thread
+        // pool thread, so the cache flag is only ever touched from the UI thread.
         private void EnsureKanaMdWatch()
         {
             if (_kanaMdWatch != null) return;
             var key = Registry.CurrentUser.OpenSubKey(RegKeyStrKanaMd);
             if (key == null) return;
-            _kanaMdWatch = new KanaModeWatch(key, () => _kanaMdCached = false);
-        }
-
-        // Mirrors VirtualDesktopContext.RegistryWatch: RegNotifyChangeKeyValue arms once and
-        // re-arms itself from the callback thread, so a kana/romaji change is picked up without polling.
-        private sealed class KanaModeWatch : IDisposable
-        {
-            [DllImport("advapi32.dll")]
-            private static extern int RegNotifyChangeKeyValue(IntPtr key, bool watchSubtree, uint filter, IntPtr signal, bool asynchronous);
-            private const uint ValueChangeFilter = 0x00000004; // REG_NOTIFY_CHANGE_LAST_SET
-            private const uint ThreadAgnosticFilter = 0x10000000; // REG_NOTIFY_THREAD_AGNOSTIC, Windows 8+ only
-
-            private readonly RegistryKey key;
-            private readonly AutoResetEvent signal = new AutoResetEvent(false);
-            private readonly RegisteredWaitHandle wait;
-            private readonly object gate = new object();
-            private bool disposed;
-
-            public KanaModeWatch(RegistryKey key, Action changed)
-            {
-                this.key = key;
-                wait = ThreadPool.RegisterWaitForSingleObject(signal, (_, __) =>
-                {
-                    try
-                    {
-                        lock (gate)
-                        {
-                            if (disposed) return;
-                            Arm();
-                            changed();
-                        }
-                    }
-                    catch (Exception error) { CallbackGuard.Report("Japanese IME kanaMd watch", error); }
-                }, null, Timeout.Infinite, false);
-                Arm();
-            }
-
-            // Without REG_NOTIFY_THREAD_AGNOSTIC, the wait is bound to whichever pool thread
-            // re-arms it; that thread exiting fires the event spuriously. Windows 7 lacks the flag.
-            private void Arm()
-            {
-                uint filter = ValueChangeFilter;
-                if (ManagedShell.Common.Helpers.EnvironmentHelper.IsWindows8OrBetter) filter |= ThreadAgnosticFilter;
-                RegNotifyChangeKeyValue(key.Handle.DangerousGetHandle(), false, filter,
-                    signal.SafeWaitHandle.DangerousGetHandle(), true);
-            }
-
-            public void Dispose()
-            {
-                lock (gate)
-                {
-                    if (disposed) return;
-                    disposed = true;
-                    wait.Unregister(null);
-                    key.Dispose();
-                    signal.Dispose();
-                }
-            }
+            _kanaMdWatch = new RegistryValueWatch(key, RegistryValueWatch.ValueChangeFilter, Dispatcher,
+                () => _kanaMdCached = false, "Japanese IME kanaMd watch");
         }
 
         // Switching between Kana input and Romaji input
