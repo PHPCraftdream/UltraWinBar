@@ -35,3 +35,7 @@ not changed; every local modification is listed below and marked in code with `U
   `Shell_TrayWnd` is now event-driven — out-of-context hooks on `EVENT_OBJECT_SHOW` and
   `EVENT_SYSTEM_FOREGROUND` (other processes only), plus our own `WM_WINDOWPOSCHANGED`, schedule
   the same check via `Dispatcher.BeginInvoke`; the timer now only runs every 2 s as a safety net.
+- `IParentAndItem`, `IShellItem`, `IShellItemImageFactory`, `IServiceProvider` (UWPInterop):
+  `[PreserveSig]` on every method, matching their real native signatures (no phantom trailing
+  `[out, retval]`). Callers already compared the return to `S_OK`/`0`, so a real failing HRESULT
+  no longer throws past those checks; behavior at each call site is unchanged.

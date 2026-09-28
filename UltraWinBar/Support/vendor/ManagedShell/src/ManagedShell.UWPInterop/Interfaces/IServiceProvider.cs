@@ -8,6 +8,9 @@ namespace ManagedShell.UWPInterop.Interfaces
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     public interface IServiceProvider
     {
+        // UltraWinBar: PreserveSig so failing HRESULTs don't turn into exceptions on this RCW;
+        // callers already compare the return to S_OK/0.
+        [PreserveSig]
         int QueryService(ref Guid guidService, ref Guid riid,
                    [MarshalAs(UnmanagedType.Interface)] out object ppvObject);
     }

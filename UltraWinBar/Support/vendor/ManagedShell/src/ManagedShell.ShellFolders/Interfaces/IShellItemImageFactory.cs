@@ -9,6 +9,8 @@ namespace ManagedShell.ShellFolders.Interfaces
     [InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)]
     public interface IShellItemImageFactory
     {
+        // UltraWinBar: PreserveSig so failing HRESULTs don't turn into exceptions on this RCW.
+        [PreserveSig]
         int GetImage(
             [In, MarshalAs(UnmanagedType.Struct)] SIZE size,
             [In] SIIGBF flags,

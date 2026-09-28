@@ -8,8 +8,11 @@ namespace ManagedShell.ShellFolders.Interfaces
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     public interface IParentAndItem
     {
+        // UltraWinBar: PreserveSig so failing HRESULTs don't turn into exceptions on this RCW.
+        [PreserveSig]
         int SetParentAndItem(IntPtr pidlParent, IShellFolder psf, IntPtr pidlChild);
 
+        [PreserveSig]
         int GetParentAndItem(out IntPtr ppidlParent, out IShellFolder ppsf, out IntPtr ppidlChild);
     }
 }

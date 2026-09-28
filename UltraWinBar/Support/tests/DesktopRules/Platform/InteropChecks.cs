@@ -18,11 +18,11 @@ internal static class InteropChecks
     {
         var problems = new List<string>();
         Check(typeof(TaskAssignmentManager).Assembly, problems, strictReturns: true);
-        // Vendored ManagedShell: callers of its RCW-only interfaces tolerate hidden retvals, but every
-        // interface a managed class implements (CCW) and every BOOL/VARIANT/handle must be exact.
+        // Vendored ManagedShell: every ComImport interface method (RCW or CCW) must be [PreserveSig]
+        // so failing HRESULTs are real return values, not hidden [out, retval] exceptions.
         foreach (var name in new[] { "ManagedShell", "ManagedShell.AppBar", "ManagedShell.Common", "ManagedShell.Interop",
                                      "ManagedShell.ShellFolders", "ManagedShell.UWPInterop", "ManagedShell.WindowsTasks", "ManagedShell.WindowsTray" })
-            Check(Assembly.Load(name), problems, strictReturns: false);
+            Check(Assembly.Load(name), problems, strictReturns: true);
         if (problems.Count > 0)
             throw new Exception("Unsafe interop signatures:\n  " + string.Join("\n  ", problems));
         Console.WriteLine("PASS: COM methods are PreserveSig with explicit BOOL/IUnknown marshalling; P/Invoke handles are pointer-sized.");
