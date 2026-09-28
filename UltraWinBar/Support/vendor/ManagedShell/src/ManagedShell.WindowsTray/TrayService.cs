@@ -175,14 +175,14 @@ namespace ManagedShell.WindowsTray
         {
             // UltraWinBar: App.ExitApp runs twice on session end (SessionEnding then Exit); make
             // a second Dispose a no-op instead of destroying stale handles and re-broadcasting
-            // TaskbarCreated.
+            // TaskbarCreated. The monitor and hooks are stopped regardless: they run even if Initialize never did.
+            trayMonitor.Stop();
+            UnhookTrayEvents();
             if (HwndTray == IntPtr.Zero && HwndNotify == IntPtr.Zero)
             {
                 return;
             }
 
-            trayMonitor.Stop();
-            UnhookTrayEvents();
             DestroyWindows();
 
             if (!EnvironmentHelper.IsAppRunningAsShell)
