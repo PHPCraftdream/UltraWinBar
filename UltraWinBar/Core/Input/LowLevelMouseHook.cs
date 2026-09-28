@@ -79,6 +79,20 @@ namespace UltraWinBar.Utilities
             }
         }
 
+        // Test seam: exercises the exact marshaling/dispatch path a real hook call uses, without
+        // SetWindowsHookEx or SendInput. Builds a real native buffer so PtrToStructure<T> is exercised
+        // end-to-end, not just the managed copy. code=0 (HC_ACTION) so it flows like a genuine event.
+        internal IntPtr TestDispatch(WM message, MSLLHOOKSTRUCT hookStruct)
+        {
+            IntPtr buffer = Marshal.AllocHGlobal(Marshal.SizeOf<MSLLHOOKSTRUCT>());
+            try
+            {
+                Marshal.StructureToPtr(hookStruct, buffer, false);
+                return MouseHookProc(0, (IntPtr)(uint)message, buffer);
+            }
+            finally { Marshal.FreeHGlobal(buffer); }
+        }
+
         private IntPtr MouseHookProc(int code, IntPtr wParam, IntPtr lParam)
         {
             if (code < 0)
@@ -89,7 +103,7 @@ namespace UltraWinBar.Utilities
             LowLevelMouseEventArgs args = new LowLevelMouseEventArgs
             {
                 Message = (WM)(uint)wParam.ToInt64(),
-                HookStruct = (MSLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(MSLLHOOKSTRUCT))
+                HookStruct = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam)
             };
 
             try
