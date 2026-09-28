@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ManagedShell.Common.Helpers;
+using ManagedShell.Interop;
 using static ManagedShell.Interop.NativeMethods;
 using ManagedShell.WindowsTray;
 
@@ -77,14 +78,21 @@ namespace ManagedShell.AppBar
 
             try
             {
-                APPBARDATAV2 abd = (APPBARDATAV2)Marshal.PtrToStructure(hShared, typeof(APPBARDATAV2));
+                // R9-M / К16: SHLockShared maps the handle the sender gave us, but tells us
+                // nothing about the size of the region behind it - a sender that allocated less
+                // than sizeof(APPBARDATAV2) would otherwise get read and written out of bounds.
+                if (!CrossProcessMessages.TryReadSharedAppBarData(hShared, out APPBARDATAV2 abd))
+                {
+                    ShellLogger.Debug("AppBarManager: Shared memory too small for AppBarData in ABM_GETTASKBARPOS");
+                    return IntPtr.Zero;
+                }
 
                 if (_explorerHelper._notificationArea != null)
                 {
                     _explorerHelper._notificationArea.FillTrayHostSizeData(ref abd);
                 }
 
-                Marshal.StructureToPtr(abd, hShared, false);
+                CrossProcessMessages.TryWriteSharedAppBarData(hShared, abd);
                 handled = true;
                 return (IntPtr)1;
             }
@@ -151,8 +159,15 @@ namespace ManagedShell.AppBar
                     return IntPtr.Zero;
                 }
 
-                APPBARDATAV2 abdOld = (APPBARDATAV2)Marshal.PtrToStructure(hSharedOld, typeof(APPBARDATAV2));
-                Marshal.StructureToPtr(abdOld, hSharedData, false);
+                // R9-M / К16: hSharedOld's size is whatever the sender claims - validate before
+                // reading it (see the identical check in appBarMessage_GetTaskbarPos above).
+                if (!CrossProcessMessages.TryReadSharedAppBarData(hSharedOld, out APPBARDATAV2 abdOld))
+                {
+                    SHUnlockShared(hSharedData);
+                    ShellLogger.Debug("AppBarManager: Shared memory too small for AppBarData in ABM_QUERYPOS/SETPOS source data");
+                    return IntPtr.Zero;
+                }
+                CrossProcessMessages.TryWriteSharedAppBarData(hSharedData, abdOld);
                 SHUnlockShared(hSharedData);
 
                 // Update AppBarMessageData with the new shared memory handle and PID
@@ -186,8 +201,11 @@ namespace ManagedShell.AppBar
                 {
                     try
                     {
-                        APPBARDATAV2 abdNew = (APPBARDATAV2)Marshal.PtrToStructure(hSharedFromExplorer, typeof(APPBARDATAV2));
-                        Marshal.StructureToPtr(abdNew, hSharedOld, false);
+                        // hSharedOld is the sender's region again; same validation as the read above.
+                        if (CrossProcessMessages.TryReadSharedAppBarData(hSharedFromExplorer, out APPBARDATAV2 abdNew))
+                        {
+                            CrossProcessMessages.TryWriteSharedAppBarData(hSharedOld, abdNew);
+                        }
                     }
                     finally
                     {

@@ -1,5 +1,6 @@
 using ManagedShell.Common.Helpers;
 using ManagedShell.Common.Logging;
+using ManagedShell.Interop;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -189,10 +190,6 @@ namespace ManagedShell.WindowsTray
                 SendTaskbarCreated();
         }
 
-        // UltraWinBar: WM_COPYDATA payloads come from arbitrary processes.
-        internal static bool HasPayload(COPYDATASTRUCT copyData, Type payload) =>
-            copyData.lpData != IntPtr.Zero && copyData.cbData >= Marshal.SizeOf(payload);
-
         // UltraWinBar: registered with user32 via RegisterClass; every Shell_NotifyIcon and
         // SHAppBarMessage in the session arrives here. An exception escaping this delegate goes
         // straight into user32 (process-fatal on net10, undefined on net6) - never let one out.
@@ -240,17 +237,8 @@ namespace ManagedShell.WindowsTray
                     {
                         case 0:
                             // AppBar message
-                            if (Marshal.SizeOf(typeof(APPBARMSGDATAV3)) == copyData.cbData)
+                            if (CrossProcessMessages.TryReadAppBarMessage(copyData, out APPBARMSGDATAV3 amd))
                             {
-                                APPBARMSGDATAV3 amd = (APPBARMSGDATAV3)Marshal.PtrToStructure(copyData.lpData,
-                                    typeof(APPBARMSGDATAV3));
-
-                                if (Marshal.SizeOf(typeof(APPBARDATAV2)) != amd.abd.cbSize)
-                                {
-                                    ShellLogger.Debug("TrayService: Size incorrect for AppBarData");
-                                    break;
-                                }
-
                                 bool handled = false;
                                 IntPtr abmResult = IntPtr.Zero;
                                 if (appBarMessageDelegate != null)
@@ -273,14 +261,11 @@ namespace ManagedShell.WindowsTray
                             break;
                         case 1:
                             // UltraWinBar: any process can send this; never read past its buffer.
-                            if (!HasPayload(copyData, typeof(SHELLTRAYDATA)))
+                            if (!CrossProcessMessages.TryReadNotifyIconMessage(copyData, out SHELLTRAYDATA trayData))
                             {
                                 ShellLogger.Debug("TrayService: Notify icon message with short data ignored");
                                 break;
                             }
-                            SHELLTRAYDATA trayData =
-                                (SHELLTRAYDATA)Marshal.PtrToStructure(copyData.lpData,
-                                    typeof(SHELLTRAYDATA));
                             if (trayDelegate != null)
                             {
                                 if (trayDelegate(trayData.dwMessage, new SafeNotifyIconData(trayData.nid)))
@@ -296,14 +281,11 @@ namespace ManagedShell.WindowsTray
                             }
                             break;
                         case 3:
-                            if (!HasPayload(copyData, typeof(WINNOTIFYICONIDENTIFIER)))
+                            if (!CrossProcessMessages.TryReadIconIdentifier(copyData, out WINNOTIFYICONIDENTIFIER iconData))
                             {
                                 ShellLogger.Debug("TrayService: Icon identifier message with short data ignored");
                                 break;
                             }
-                            WINNOTIFYICONIDENTIFIER iconData =
-                                (WINNOTIFYICONIDENTIFIER)Marshal.PtrToStructure(copyData.lpData,
-                                    typeof(WINNOTIFYICONIDENTIFIER));
 
                             if (iconDataDelegate != null)
                             {
