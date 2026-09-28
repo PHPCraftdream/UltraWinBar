@@ -4,6 +4,10 @@
 
 ### Changed
 
+- Added `TaskModel`, a pure function that computes every taskbar edge's ordered
+  task list — including TaskOrder/TaskbarAssignments pruning and pin
+  PrimaryWindowKey reconciliation — from one snapshot instead of recomputing it
+  separately in each panel's rebuild; not wired into the taskbar list yet.
 - The taskbar list's per-window, per-panel edge filter no longer rebuilds the
   enabled-edges list or rescans every saved taskbar assignment on each refresh;
   both are cached and only invalidated when the settings they depend on change.

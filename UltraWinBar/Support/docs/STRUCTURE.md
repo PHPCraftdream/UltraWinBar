@@ -21,10 +21,15 @@ directories are outside this limit.
 - `Core/Infrastructure/Native` holds the only ways to touch native callbacks:
   `WinEventHook` (rooted, exception-safe WinEvent hooks), `CallbackGuard`, and
   `ShellComProxy` (Explorer-hosted COM objects recreated after Explorer restarts).
+- `Core/Panels/Tasks` holds task order/assignment/diff helpers plus `TaskModel`:
+  a pure, WPF-free function that computes every taskbar edge's ordered task list
+  (and TaskOrder/TaskbarAssignments pruning, pin reconciliation) from one snapshot,
+  in a single pass instead of once per panel.
 - Tests in `Support/tests/DesktopRules` are split into `Features` (task order,
-  pins and assignments under `Features/Tasks`), `Platform`, `Native` and `Logging`
-  suites; `Program.cs` only orders them and runs Settings on a scratch file
-  (`ULTRAWINBAR_SETTINGS_PATH`) so a test run can never touch the user's settings.
+  pins and assignments under `Features/Tasks`; `TaskModel` under `Features/TaskModel`),
+  `Platform`, `Native` and `Logging` suites; `Program.cs` only orders them and runs
+  Settings on a scratch file (`ULTRAWINBAR_SETTINGS_PATH`) so a test run can never
+  touch the user's settings.
 
 Build outputs live under `Support/BuildTools/artifacts`; test outputs use their
 own ignored `bin` and `obj` directories. NuGet package versions and the base
