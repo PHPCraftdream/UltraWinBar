@@ -21,10 +21,11 @@ internal static class UptimeChecks
 
         int[] disconnected = { unchecked((int)0x80010108), unchecked((int)0x800706BA), unchecked((int)0x800401FD) };
         int[] other = { 0, 1, unchecked((int)0x80070057), unchecked((int)0x80004005) };
-        var desktopHr = Get("UltraWinBar.Utilities.VirtualDesktopContext").GetMethod("IsDisconnected", Private, null, new[] { typeof(int) }, null)
-            ?? throw new Exception("Virtual desktop HRESULT disconnect check is missing.");
-        var startError = Get("UltraWinBar.Utilities.StartMenuMonitor").GetMethod("IsComDisconnected", Private)
-            ?? throw new Exception("Start menu COM disconnect check is missing.");
+        var shellCom = Get("UltraWinBar.Utilities.ShellCom");
+        var desktopHr = shellCom.GetMethod("IsDisconnected", Private, null, new[] { typeof(int) }, null)
+            ?? throw new Exception("Explorer COM HRESULT disconnect check is missing.");
+        var startError = shellCom.GetMethod("IsDisconnected", Private, null, new[] { typeof(Exception) }, null)
+            ?? throw new Exception("Explorer COM exception disconnect check is missing.");
         foreach (int hr in disconnected)
             if (!(bool)desktopHr.Invoke(null, new object[] { hr }) || !(bool)startError.Invoke(null, new object[] { new COMException("x", hr) }))
                 throw new Exception($"0x{hr:X8} must be treated as a severed Explorer proxy.");
@@ -92,15 +93,16 @@ internal static class UptimeChecks
         if (!degenerate.Equals(R(0, 0, 1024, 768))) throw new Exception("Insets that no longer fit must fall back to the full monitor.");
         Console.WriteLine("PASS: the saved original work area follows resolution and primary-monitor changes and never becomes degenerate.");
 
+        var next = shellCom.GetMethod("NextRetryDelay", Private);
+        var delay = TimeSpan.FromSeconds(2);
+        var sequence = new List<double>();
+        for (int i = 0; i < 5; i++) sequence.Add((delay = (TimeSpan)next.Invoke(null, new object[] { delay })).TotalSeconds);
+        if (!sequence.SequenceEqual(new double[] { 5, 15, 60, 60, 60 }))
+            throw new Exception($"Explorer COM recreation must back off 2/5/15/60 s: {string.Join(",", sequence)}");
         foreach (var owner in new[] { Get("UltraWinBar.Utilities.VirtualDesktopContext"), monitor })
-        {
-            var next = owner.GetMethods(Private).Single(m => m.Name.StartsWith("Next") && m.Name.EndsWith("RetryDelay"));
-            var delay = TimeSpan.FromSeconds(2);
-            var sequence = new List<double>();
-            for (int i = 0; i < 5; i++) sequence.Add((delay = (TimeSpan)next.Invoke(null, new object[] { delay })).TotalSeconds);
-            if (!sequence.SequenceEqual(new double[] { 5, 15, 60, 60, 60 }))
-                throw new Exception($"{owner.Name} COM recreation must back off 2/5/15/60 s: {string.Join(",", sequence)}");
-        }
+            if (!owner.GetFields(BindingFlags.Instance | BindingFlags.NonPublic).Any(f => f.FieldType.Name.StartsWith("ShellComProxy")))
+                throw new Exception($"{owner.Name} must hold its Explorer COM object through ShellComProxy.");
+        CheckShellComProxy(Get("UltraWinBar.Utilities.ShellComProxy`1").MakeGenericType(typeof(object)), Get("UltraWinBar.Utilities.ExplorerMonitor"));
         var explorer = Get("UltraWinBar.Utilities.ExplorerMonitor");
         var restarted = explorer.GetEvent("ExplorerRestarted", BindingFlags.Static | BindingFlags.Public);
         bool laterHandlerRan = false;
@@ -147,7 +149,7 @@ internal static class UptimeChecks
             foreach (var method in Get(name).GetMethods())
                 if (method.ReturnType != typeof(int) || (method.MethodImplementationFlags & MethodImplAttributes.PreserveSig) == 0)
                     throw new Exception($"{name}.{method.Name} must be [PreserveSig] returning an HRESULT.");
-        if (monitor.GetField("_appVisibilityHelper", BindingFlags.Instance | BindingFlags.NonPublic)?.FieldType.Name != "LauncherVisibility")
+        if (monitor.GetField("_launcherVisibility", BindingFlags.Instance | BindingFlags.NonPublic)?.FieldType.GetGenericArguments().FirstOrDefault()?.Name != "LauncherVisibility")
             throw new Exception("Start monitoring must not use ManagedShell's AppVisibilityHelper sink.");
         var launcherType = Get("UltraWinBar.Utilities.LauncherVisibility");
         using (var launcher = (IDisposable)Activator.CreateInstance(launcherType, true))
@@ -157,6 +159,89 @@ internal static class UptimeChecks
             launcherType.GetMethod("IsVisible").Invoke(launcher, null);
         }
         Console.WriteLine("PASS: launcher visibility COM interop preserves HRESULT signatures and its sink is accepted by Explorer.");
+
+        var healthType = Get("UltraWinBar.Utilities.HealthReporter");
+        using (var health = (IDisposable)Activator.CreateInstance(healthType, new object[] { null }))
+        {
+            string snapshot = (string)healthType.GetMethod("Snapshot", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(health, null);
+            foreach (var field in new[] { "handles=", "gdi=", "user=", "threads=", "privateMB=", "gcHeapMB=", "winEventHooks=", "mouseHooks=", "settingsSubscribers=" })
+                if (!snapshot.Contains(field)) throw new Exception($"Health snapshot is missing {field}: {snapshot}");
+        }
+        Console.WriteLine("PASS: the periodic health snapshot reports handles, GDI/USER objects, threads, memory, hooks and subscribers.");
+
+        // Never instantiate Settings here: any Settings object is wired to the user's real settings file.
+        var ranksOf = Get("UltraWinBar.Utilities.Settings").GetMethod("RanksOf", Private);
+        var ranks = (Dictionary<string, int>)ranksOf.Invoke(null, new object[] { new List<string> { "a", "b", null, "a" } });
+        if (ranks.Count != 2 || ranks["a"] != 0 || ranks["b"] != 1) throw new Exception("Task order ranks must match the first position in the saved order.");
+        Console.WriteLine("PASS: task sorting looks up precomputed ranks (first position wins, as IndexOf did).");
+
+        // UI objects must reach app-lifetime singletons only weakly (App itself lives as long as they do).
+        var root = new System.IO.DirectoryInfo(AppContext.BaseDirectory);
+        while (root != null && !System.IO.File.Exists(System.IO.Path.Combine(root.FullName, "README.md"))) root = root.Parent;
+        foreach (var folder in new[] { "UI", System.IO.Path.Combine("Shell", "Panels"), System.IO.Path.Combine("Shell", "Dialogs") })
+            foreach (var file in System.IO.Directory.EnumerateFiles(System.IO.Path.Combine(root.FullName, "UltraWinBar", folder), "*.cs", System.IO.SearchOption.AllDirectories))
+                if (System.Text.RegularExpressions.Regex.IsMatch(System.IO.File.ReadAllText(file), @"Settings\.Instance\.PropertyChanged\s*\+=|Instance\??\.Changed\s*\+="))
+                    throw new Exception($"{file} subscribes strongly to an app-lifetime singleton; use WeakSubscriptions.");
+        Exception weakError = null;
+        var weakThread = new Thread(() =>
+        {
+            try
+            {
+                var subscribe = Get("UltraWinBar.Utilities.WeakSubscriptions").GetMethod("SubscribeSettings", Private);
+                WeakReference listener = SubscribeListener(subscribe);
+                for (int i = 0; i < 3; i++) { GC.Collect(); GC.WaitForPendingFinalizers(); }
+                if (listener.IsAlive) throw new Exception("A settings listener that never unsubscribes must still be collectable.");
+            }
+            catch (Exception error) { weakError = error; }
+        });
+        weakThread.SetApartmentState(ApartmentState.STA);
+        weakThread.Start();
+        weakThread.Join();
+        if (weakError != null) throw weakError;
+        Console.WriteLine("PASS: UI objects subscribe to Settings and virtual desktops weakly, so a missed unsubscribe cannot leak a panel.");
+    }
+
+    // Unavailable at start -> backoff -> recreated (Recovered); severed HRESULT -> dropped with backoff;
+    // Explorer restart -> dropped and recreated at once.
+    private static void CheckShellComProxy(Type proxyType, Type explorerMonitor)
+    {
+        int attempts = 0, recovered = 0, dropped = 0, released = 0;
+        bool available = false;
+        Func<object> create = () => { attempts++; return available ? new object() : throw new COMException("class not registered", unchecked((int)0x80040154)); };
+        Action<object> release = _ => released++;
+        var proxy = (IDisposable)Activator.CreateInstance(proxyType, BindingFlags.Instance | BindingFlags.NonPublic, null, new object[] { "test proxy", create, release }, null);
+        try
+        {
+            proxyType.GetEvent("Recovered", BindingFlags.Instance | BindingFlags.NonPublic).GetAddMethod(true).Invoke(proxy, new object[] { new Action(() => recovered++) });
+            proxyType.GetEvent("Dropped", BindingFlags.Instance | BindingFlags.NonPublic).GetAddMethod(true).Invoke(proxy, new object[] { new Action(() => dropped++) });
+            var get = proxyType.GetMethod("Get", BindingFlags.Instance | BindingFlags.NonPublic);
+            var check = proxyType.GetMethod("Check", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (get.Invoke(proxy, null) != null || attempts != 2) throw new Exception("An unavailable Explorer COM object must be retried on first use.");
+            available = true;
+            if (get.Invoke(proxy, null) != null || attempts != 2) throw new Exception("Explorer COM recreation must honour its backoff.");
+            proxyType.GetField("nextRetryUtc", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(proxy, DateTime.MinValue);
+            if (get.Invoke(proxy, null) == null || recovered != 1) throw new Exception("A recreated Explorer COM object must raise Recovered.");
+            check.Invoke(proxy, new object[] { unchecked((int)0x80010108) });
+            if (dropped != 1 || released != 1 || get.Invoke(proxy, null) != null) throw new Exception("A severed proxy must be dropped, released and backed off.");
+            explorerMonitor.GetMethod("RaiseExplorerRestarted", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, null);
+            if (get.Invoke(proxy, null) == null || recovered != 2) throw new Exception("An Explorer restart must recreate the object immediately.");
+        }
+        finally { proxy.Dispose(); }
+        if (released != 2) throw new Exception("Disposing the proxy must release its object.");
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static WeakReference SubscribeListener(MethodInfo subscribe)
+    {
+        var listener = new SettingsListener();
+        subscribe.Invoke(null, new object[] { new EventHandler<PropertyChangedEventArgs>(listener.OnChanged) });
+        return new WeakReference(listener);
+    }
+
+    private sealed class SettingsListener
+    {
+        internal int Changes;
+        internal void OnChanged(object sender, PropertyChangedEventArgs e) => Changes++;
     }
 
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
