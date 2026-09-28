@@ -1,5 +1,32 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Keep installed low-level mouse hooks rooted until they are removed, and remove
+  drag hooks when a panel closes or a quick-launch button unloads. Moving a panel
+  to another edge reopens the panels mid-drag; the old panel's hook callback
+  could be freed and crash the next mouse event with an access violation.
+- Build the notification-area view and icon controls only on the visible panel
+  that hosts the tray; other panels no longer keep a live view or show balloons
+  a second time after the tray moves.
+- Query the foreground IME state with a bounded, hang-aware call so a hung
+  application can no longer block the taskbar.
+- Treat a foreground CoreWindow as the Start menu only when Start was opened
+  from a taskbar or the launcher reports itself visible; Search, Action Center
+  and the emoji panel no longer mark Start as open.
+- Remove the previous language dictionaries before merging the next language,
+  so switching languages no longer stacks resource dictionaries.
+- Wait (up to 3 s) for the work-area change broadcast when the watchdog
+  restores the work area and on shutdown, so other applications see it.
+- Drop cached Start launcher COM objects after an Explorer restart.
+- Stop restoring all-desktop pins through COM on every virtual desktop switch;
+  restore them when the virtual desktop service reconnects. The initial pin
+  import gives up on persistently failing windows after 5 attempts.
+- Remove per-event diagnostic logging from the foreground, Start poller and task
+  drag paths, and attach the console log only when a console exists.
+
 ## 2.2.0 (2026-09-28)
 
 First published release of the UltraWinBar fork. The Nerdbank.GitVersioning
