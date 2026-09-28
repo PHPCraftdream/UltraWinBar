@@ -794,6 +794,35 @@ foreach (var text in belarusianXml.Descendants().Where(e => e.Name.LocalName == 
 }
 Console.WriteLine("PASS: complete Belarusian UI translations and Cyrillic Hebrew month names.");
 
+// RemoveLanguageDictionaries only inspects each dictionary's Source path, so probe
+// dictionaries can carry a fabricated Source without loading real XAML content.
+var resourceDictionarySourceField = typeof(System.Windows.ResourceDictionary).GetField("_source",
+    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+if (resourceDictionarySourceField == null) throw new Exception("ResourceDictionary._source field is missing.");
+System.Windows.ResourceDictionary MakeProbeDictionary(string relativePath)
+{
+    var dictionary = new System.Windows.ResourceDictionary();
+    resourceDictionarySourceField.SetValue(dictionary, new Uri(System.IO.Path.Combine(@"C:\UltraWinBar", relativePath), UriKind.Absolute));
+    return dictionary;
+}
+var removeLanguageDictionariesMethod = typeof(DictionaryManager).GetMethod("RemoveLanguageDictionaries",
+    System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+if (removeLanguageDictionariesMethod == null) throw new Exception("DictionaryManager.RemoveLanguageDictionaries is missing.");
+var languageProbeDictionaries = new System.Collections.ObjectModel.Collection<System.Windows.ResourceDictionary>();
+var themeProbeDictionary = MakeProbeDictionary(@"Themes\Core\System.xaml");
+languageProbeDictionaries.Add(themeProbeDictionary);
+// Simulate repeated language switches: each one removes the previous language
+// dictionaries before adding the next, mirroring SetLanguageFromSettings.
+foreach (string languageProbeFile in new[] { @"Languages\English.xaml", @"Languages\Group02\Russian.xaml", @"Languages\Group01\German.xaml" })
+{
+    removeLanguageDictionariesMethod.Invoke(null, new object[] { languageProbeDictionaries });
+    languageProbeDictionaries.Add(MakeProbeDictionary(languageProbeFile));
+    if (languageProbeDictionaries.Count != 2 || languageProbeDictionaries[0] != themeProbeDictionary ||
+        languageProbeDictionaries[1].Source.LocalPath != System.IO.Path.Combine(@"C:\UltraWinBar", languageProbeFile))
+        throw new Exception("A language switch left stale language dictionaries merged, or disturbed unrelated dictionary order.");
+}
+Console.WriteLine("PASS: repeated language switches remove the previous language dictionaries before adding the next, so exactly one language set stays merged in the same order.");
+
 var area = new System.Windows.Rect(158, 41, 1604, 998);
 var bar = new ManagedShell.Interop.NativeMethods.Rect { Left = 1762, Top = 41, Right = 1920, Bottom = 1080 };
 var menu = new ManagedShell.Interop.NativeMethods.Rect { Left = 0, Top = 0, Right = 509, Bottom = 588 };

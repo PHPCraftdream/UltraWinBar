@@ -99,8 +99,21 @@ namespace UltraWinBar.Utilities
                 dictionaries.Remove(dictionary);
         }
 
+        private void ClearPreviousLanguages()
+        {
+            RemoveLanguageDictionaries(GetMergedDictionaries());
+        }
+
+        internal static void RemoveLanguageDictionaries(Collection<ResourceDictionary> dictionaries)
+        {
+            foreach (var dictionary in dictionaries.Where(item =>
+                item.Source?.ToString().Replace('\\', '/').IndexOf(LANG_FOLDER + "/", StringComparison.OrdinalIgnoreCase) >= 0).ToArray())
+                dictionaries.Remove(dictionary);
+        }
+
         public void SetLanguageFromSettings()
         {
+            ClearPreviousLanguages();
             SetLanguage(LANG_FALLBACK);
             if (Settings.Instance.Language == LANG_DEFAULT)
             {
