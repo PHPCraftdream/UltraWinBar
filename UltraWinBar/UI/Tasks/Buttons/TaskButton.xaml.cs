@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -224,6 +225,9 @@ namespace UltraWinBar.Controls
                 }
             PinMenuItem.SetResourceReference(MenuItem.HeaderProperty,
                 Pinned != null || Host?.IsPinned(Window) == true ? "unpin_from_taskbar" : "pin_to_taskbar");
+            string executablePath = GetExecutablePath();
+            CopyExecutablePathMenuItem.IsEnabled = !string.IsNullOrEmpty(executablePath);
+            CopyExecutableDirectoryMenuItem.IsEnabled = !string.IsNullOrEmpty(Path.GetDirectoryName(executablePath));
             foreach (var menu in new[] { RestoreMenuItem, MoveMenuItem, SizeMenuItem, MinimizeMenuItem,
                 MaximizeMenuItem, CloseMenuItem, EndTaskMenuItem, ResetTaskAssignmentMenuItem })
                 menu.IsEnabled = Window != null;
@@ -265,6 +269,49 @@ namespace UltraWinBar.Controls
         private void PinMenuItem_OnClick(object sender, RoutedEventArgs e)
         {
             Host?.TogglePin(DataContext);
+        }
+
+        private string GetExecutablePath()
+        {
+            if (Window != null) return Window.IsUWP ? null : Window.WinFileName;
+            string path = Pinned?.LaunchTarget;
+            if (string.IsNullOrEmpty(path) || !Path.IsPathRooted(path)) return null;
+            if (!string.Equals(Path.GetExtension(path), ".lnk", StringComparison.OrdinalIgnoreCase)) return path;
+            object shell = null, shortcut = null;
+            try
+            {
+                shell = Activator.CreateInstance(Type.GetTypeFromProgID("WScript.Shell"));
+                shortcut = ((dynamic)shell).CreateShortcut(path);
+                return (string)((dynamic)shortcut).TargetPath;
+            }
+            catch (Exception error)
+            {
+                ManagedShell.Common.Logging.ShellLogger.Warning($"Task shortcut path: {error.Message}");
+                return null;
+            }
+            finally
+            {
+                if (shortcut != null) Marshal.FinalReleaseComObject(shortcut);
+                if (shell != null) Marshal.FinalReleaseComObject(shell);
+            }
+        }
+
+        private void CopyExecutablePath_OnClick(object sender, RoutedEventArgs e) => CopyPath(false);
+        private void CopyExecutableDirectory_OnClick(object sender, RoutedEventArgs e) => CopyPath(true);
+
+        private void CopyPath(bool directory)
+        {
+            try
+            {
+                string path = GetExecutablePath();
+                if (directory) path = Path.GetDirectoryName(path);
+                if (!string.IsNullOrEmpty(path)) Clipboard.SetText(path);
+            }
+            catch (Exception error)
+            {
+                ManagedShell.Common.Logging.ShellLogger.Error($"Task path clipboard failed: {error.Message}");
+                MessageBox.Show(error.Message, Pinned?.Title ?? Window?.Title);
+            }
         }
 
         private void CloseMenuItem_OnClick(object sender, RoutedEventArgs e)

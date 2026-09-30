@@ -90,6 +90,8 @@
                 <MenuItem x:Name="MoveWindowDesktopMenuItem" Header="{DynamicResource move_window_desktop}" />
                 <MenuItem x:Name="MoveAppDesktopMenuItem" Header="{DynamicResource move_app_desktop}" />
                 <MenuItem x:Name="PinnedWindowsMenuItem" Header="{DynamicResource pinned_app_windows}" Visibility="Collapsed" />
+                <MenuItem x:Name="CopyExecutablePathMenuItem" Header="{DynamicResource copy_executable_path}" Click="CopyExecutablePath_OnClick" />
+                <MenuItem x:Name="CopyExecutableDirectoryMenuItem" Header="{DynamicResource copy_executable_directory}" Click="CopyExecutableDirectory_OnClick" />
                 <Separator />
                 <MenuItem Header="{DynamicResource restore}"
                           Click="RestoreMenuItem_OnClick"

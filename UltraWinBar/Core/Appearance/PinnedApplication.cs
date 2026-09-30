@@ -56,12 +56,18 @@ namespace UltraWinBar.Utilities
         {
             string identifier = TaskAssignmentManager.GetIdentifier(window, TaskAssignmentMode.ExecutablePath);
             if (string.IsNullOrEmpty(identifier)) return null;
+            string launchTarget = window.IsUWP ? "appx:" + window.AppUserModelID : window.WinFileName;
+            if (!window.IsUWP && IsTemporaryTarget(launchTarget))
+            {
+                launchTarget = SelectLaunchTarget(window.Title);
+                if (launchTarget == null) return null;
+            }
             var pin = new PinnedApplication
             {
                 Edge = edge,
                 DesktopId = VirtualDesktopContext.Instance?.CurrentId ?? Guid.Empty,
                 Identifier = identifier,
-                LaunchTarget = window.IsUWP ? "appx:" + window.AppUserModelID : window.WinFileName,
+                LaunchTarget = launchTarget,
                 Title = window.IsUWP ? window.Title : Path.GetFileNameWithoutExtension(window.WinFileName)
             };
             if (window.Icon is BitmapSource bitmap)
@@ -73,6 +79,27 @@ namespace UltraWinBar.Utilities
                 pin.IconPng = Convert.ToBase64String(stream.ToArray());
             }
             return pin;
+        }
+
+        internal static bool IsTemporaryTarget(string path) =>
+            !string.IsNullOrEmpty(path) && Path.GetFullPath(path).StartsWith(
+                Path.GetFullPath(Path.GetTempPath()).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar,
+                StringComparison.OrdinalIgnoreCase);
+
+        private static string SelectLaunchTarget(string title)
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = title + " — select a permanent launcher / выберите постоянный файл запуска",
+                Filter = "Applications and shortcuts|*.exe;*.lnk|All files|*.*",
+                CheckFileExists = true
+            };
+            while (dialog.ShowDialog() == true)
+            {
+                if (!IsTemporaryTarget(dialog.FileName)) return dialog.FileName;
+                System.Windows.MessageBox.Show("Select a launcher outside the temporary folder.\nВыберите файл запуска вне временной папки.", title);
+            }
+            return null;
         }
 
         public void Launch(Tasks tasks)
@@ -102,7 +129,20 @@ namespace UltraWinBar.Utilities
                     ShellLogger.Info($"DesktopActivation: moved pinned window {remote.Handle} to {desktop}.");
                     remote.BringToFront();
                 }
-                else ShellHelper.StartProcess(LaunchTarget);
+                else
+                {
+                    if (Path.IsPathRooted(LaunchTarget) && !File.Exists(LaunchTarget))
+                    {
+                        ShellLogger.Warning($"Pinned application target missing: {LaunchTarget}");
+                        string replacement = SelectLaunchTarget(Title);
+                        if (replacement == null) return;
+                        LaunchTarget = replacement;
+                        Settings.Instance.PinnedApplications = Settings.Instance.PinnedApplications.ToList();
+                    }
+                    ShellLogger.Info($"Pinned application launch: {Title}; target={LaunchTarget}");
+                    if (!ShellHelper.StartProcess(LaunchTarget))
+                        System.Windows.MessageBox.Show("Unable to launch:\n" + LaunchTarget + "\nSee %LOCALAPPDATA%\\UltraWinBar\\Logs.", Title);
+                }
             }
             catch (Exception ex)
             {

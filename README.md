@@ -122,6 +122,17 @@ each open window. Clicking a task activates that specific window.
 Launching a pinned icon assigns the application to that panel on the current
 Windows virtual desktop.
 
+Task and pinned-icon context menus can copy the executable path or its containing
+directory, including before a pinned application starts. Shortcut pins copy the
+shortcut's target, not the `.lnk` path. Items are disabled when no filesystem
+executable path is available.
+
+When pinning an application running from the current temporary directory,
+UltraWinBar asks for its permanent launcher (`.exe` or `.lnk`). If an existing
+pin's launch file has disappeared, clicking it opens the same selection dialog;
+cancelling leaves the pin unchanged, and a selection is saved for subsequent
+launches. The window-matching identifier and panel position are retained.
+
 Panel assignments, pinned applications, and task order are saved by virtual
 desktop ID. Restarting UltraWinBar preserves these settings for already-running
 windows. This does not relaunch applications or recreate windows after Windows
@@ -132,6 +143,17 @@ initially associated with the desktop active when this feature is first loaded.
 The desktop assignment checks run without creating any windows:
 `dotnet run --project UltraWinBar/Support/tests/DesktopRules/DesktopRules.csproj`
 (build `UltraWinBar/Support/BuildTools/UltraWinBar.sln` for `net6.0-windows` first).
+
+## Live diagnostic logging
+
+Logs are written to `%LOCALAPPDATA%\UltraWinBar\Logs`; ordinary information,
+warnings and errors remain enabled. For detailed logging without restarting,
+create `%LOCALAPPDATA%\UltraWinBar\debug-logging.enabled` (contents do not matter).
+Delete that file to return to ordinary logging. Changes take effect on the next
+background UI timer tick, normally within one second, and are recorded in the log.
+The `DebugLogging` setting independently enables detailed logging, so removing
+the flag does not override a setting explicitly enabled by the user. Existing
+`DebugLogMasks` still apply.
 
 ## Open-Shell Menu users
 

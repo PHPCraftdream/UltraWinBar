@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.4.0 (2026-09-30)
+
+### Fixed
+
+- Pinned applications no longer silently fail when their launch file has been
+  removed: clicking opens a permanent-launcher selection dialog and saves the
+  chosen target. Pinning a process from the current temporary directory also
+  requires a permanent launcher, rather than retaining a disposable executable.
+- A failed pinned launch is reported to the user as well as written to the log.
+
+### Added
+
+- Executable-path and executable-directory clipboard commands for running tasks
+  and closed pinned applications; shortcut pins resolve their target.
+- Live detailed-log switching via
+  `%LOCALAPPDATA%\UltraWinBar\debug-logging.enabled`, without restarting.
+  Creating/removing the flag toggles debug severity unless the `DebugLogging`
+  setting itself keeps debug enabled; normal logs and configured masks remain.
+
 ## 2.3.0 (2026-09-28)
 
 The Nerdbank.GitVersioning prefix moves from `2.2` to `2.3`; the version height

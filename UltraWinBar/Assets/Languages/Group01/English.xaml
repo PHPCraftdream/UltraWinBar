@@ -203,6 +203,8 @@
     <s:String x:Key="pin_to_taskbar">Pin to this taskbar</s:String>
     <s:String x:Key="pinned_app_windows">Open windows</s:String>
     <s:String x:Key="unpin_from_taskbar">Unpin from this taskbar</s:String>
+    <s:String x:Key="copy_executable_path">Copy executable path</s:String>
+    <s:String x:Key="copy_executable_directory">Copy executable directory</s:String>
 
     <!-- Items below are settings, and should always be in English -->
     <FlowDirection x:Key="flow_direction">LeftToRight</FlowDirection>

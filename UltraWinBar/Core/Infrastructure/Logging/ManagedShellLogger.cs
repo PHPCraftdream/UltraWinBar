@@ -22,11 +22,21 @@ namespace UltraWinBar.Utilities
         private RollingFileLog _fileLog;
         private FilteredLog _filteredFileLog;
         private FilteredLog _filteredConsoleLog;
+        private readonly System.Windows.Threading.DispatcherTimer _debugFlagTimer;
+        private readonly string _debugFlagPath = "debug-logging.enabled".InLocalAppData();
+        private bool _debugFlagEnabled;
 
         public ManagedShellLogger()
         {
             SetupLogging();
             Settings.Instance.PropertyChanged += Settings_PropertyChanged;
+            _debugFlagTimer = new System.Windows.Threading.DispatcherTimer(
+                System.Windows.Threading.DispatcherPriority.Background)
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            _debugFlagTimer.Tick += DebugFlagTimer_Tick;
+            _debugFlagTimer.Start();
         }
 
         // K19 health line: lines lost outright, plus lines dropped because the write queue overflowed.
@@ -45,10 +55,19 @@ namespace UltraWinBar.Utilities
             }
         }
 
+        private void DebugFlagTimer_Tick(object sender, EventArgs e)
+        {
+            bool enabled = File.Exists(_debugFlagPath);
+            if (enabled == _debugFlagEnabled) return;
+            SetSeverity();
+            ShellLogger.Info($"Debug logging flag: {(enabled ? "enabled" : "disabled")}; severity={ShellLogger.Severity}");
+        }
+
         private void SetSeverity()
         {
             // Handle null settings instance in case of an error while initializing settings
-            ShellLogger.Severity = Settings.Instance?.DebugLogging == true ? LogSeverity.Debug : LogSeverity.Info;
+            _debugFlagEnabled = File.Exists(_debugFlagPath);
+            ShellLogger.Severity = Settings.Instance?.DebugLogging == true || _debugFlagEnabled ? LogSeverity.Debug : LogSeverity.Info;
         }
 
         private void SetupLogging()
@@ -90,6 +109,8 @@ namespace UltraWinBar.Utilities
         public void Dispose()
         {
             Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
+            _debugFlagTimer.Stop();
+            _debugFlagTimer.Tick -= DebugFlagTimer_Tick;
             if (_filteredFileLog != null)
             {
                 ShellLogger.Detach(_filteredFileLog);

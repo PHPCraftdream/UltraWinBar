@@ -189,6 +189,8 @@
     <s:String x:Key="pin_to_taskbar">Закрепить на этой панели</s:String>
     <s:String x:Key="pinned_app_windows">Открытые окна</s:String>
     <s:String x:Key="unpin_from_taskbar">Открепить от этой панели</s:String>
+    <s:String x:Key="copy_executable_path">Копировать путь к исполняемому файлу</s:String>
+    <s:String x:Key="copy_executable_directory">Копировать каталог исполняемого файла</s:String>
     <sys:String x:Key="app_all_desktops">Показывать окна приложения на всех рабочих столах</sys:String>
     <sys:String x:Key="move_window_desktop">Переместить это окно на рабочий стол</sys:String>
     <sys:String x:Key="move_app_desktop">Переместить все окна приложения на рабочий стол</sys:String>

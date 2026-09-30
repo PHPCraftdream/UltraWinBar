@@ -200,6 +200,8 @@
     <s:String x:Key="pin_to_taskbar">Замацаваць на гэтай панэлі задач</s:String>
     <s:String x:Key="pinned_app_windows">Адкрытыя вокны</s:String>
     <s:String x:Key="unpin_from_taskbar">Адмацаваць ад гэтай панэлі задач</s:String>
+    <s:String x:Key="copy_executable_path">Капіяваць шлях да выканальнага файла</s:String>
+    <s:String x:Key="copy_executable_directory">Капіяваць каталог выканальнага файла</s:String>
     <s:String x:Key="app_all_desktops">Паказваць вокны праграмы на ўсіх працоўных сталах</s:String>
     <s:String x:Key="move_window_desktop">Перамясціць гэтае акно на працоўны стол</s:String>
     <s:String x:Key="move_app_desktop">Перамясціць усе вокны праграмы на працоўны стол</s:String>
