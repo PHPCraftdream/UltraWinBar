@@ -73,6 +73,25 @@ internal static class LayoutChecks
         if (!clipped.HasValue || clipped.Value != reservedArea)
             throw new Exception("An oversized restored window must fit the reserved work area.");
         Console.WriteLine("PASS: maximized placement is untouched; restored windows move without unnecessary resizing.");
+        var planRefit = placementGuard.GetMethod("PlanMaximizedRefit", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+        if (planRefit == null) throw new Exception("Maximized refit policy is missing.");
+        ManagedShell.Interop.NativeMethods.Rect? PlanRefit(ManagedShell.Interop.NativeMethods.Rect outer, ManagedShell.Interop.NativeMethods.Rect monitor, System.Windows.Rect area) =>
+            (ManagedShell.Interop.NativeMethods.Rect?)planRefit.Invoke(null, new object[] { outer, monitor, area });
+        ManagedShell.Interop.NativeMethods.Rect R(int l, int t, int r, int b) => new ManagedShell.Interop.NativeMethods.Rect { Left = l, Top = t, Right = r, Bottom = b };
+        var monitorRect = R(0, 0, 1920, 1080);
+        // Regression: after unlock Windows maximized into the cleared full-monitor work area (8px invisible border).
+        var refit = PlanRefit(R(-8, -8, 1928, 1088), monitorRect, reservedArea);
+        if (!refit.HasValue || !refit.Value.Equals(R(150, 33, 1770, 1047)))
+            throw new Exception($"A maximized window stretched over the panels must refit the panel work area keeping its border, got {refit}.");
+        if (PlanRefit(R(0, 0, 1920, 1080), monitorRect, reservedArea) is not { } borderless || !borderless.Equals(R(158, 41, 1762, 1039)))
+            throw new Exception("A borderless maximized window must refit exactly the panel work area.");
+        if (PlanRefit(R(150, 33, 1770, 1047), monitorRect, reservedArea).HasValue)
+            throw new Exception("A maximized window already inside the panel work area must not move.");
+        if (PlanRefit(R(-8, -8, 1928, 1088), monitorRect, new System.Windows.Rect(0, 0, 1920, 1080)).HasValue)
+            throw new Exception("Without reserved panel space (auto-hide) a full-monitor maximized window must stay.");
+        if (PlanRefit(R(-200, -8, 1928, 1088), monitorRect, reservedArea).HasValue)
+            throw new Exception("A window spanning beyond its monitor is not a maximized-into-monitor window.");
+        Console.WriteLine("PASS: maximized windows stretched over panels by a cleared work area refit the panel work area once.");
         var workAreaManager = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.WorkAreaManager");
         var isCurrentWorkArea = workAreaManager?.GetMethod("IsCurrent");
         var liveWorkArea = new ManagedShell.Interop.NativeMethods.Rect();

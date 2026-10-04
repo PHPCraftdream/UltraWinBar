@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Maximized windows no longer stay stretched over the panels after unlocking the
+  screen. Windows clears the reserved work area on unlock and re-maximizes
+  windows to the full monitor; after the work area is restored (and on every
+  unlock) those windows are refitted once to the panel work area, keeping
+  their maximized state and restore bounds.
+
 ## 2.4.0 (2026-09-30)
 
 ### Fixed

@@ -65,6 +65,20 @@ namespace UltraWinBar.Utilities
             _explorerMonitor.ExplorerMonitorStart(this, _shellManager);
 
             Settings.Instance.PropertyChanged += Settings_PropertyChanged;
+            Microsoft.Win32.SystemEvents.SessionSwitch += SystemEvents_SessionSwitch;
+        }
+
+        // Unlock can clear the work area and stretch maximized windows over the panels.
+        private void SystemEvents_SessionSwitch(object sender, Microsoft.Win32.SessionSwitchEventArgs e)
+        {
+            if (e.Reason != Microsoft.Win32.SessionSwitchReason.SessionUnlock) return;
+            System.Windows.Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (_disposed) return;
+                ShellLogger.Debug("WindowManager: Session unlocked");
+                QueueManualWorkAreaRecovery();
+                _placementGuard?.ScheduleMaximizedRefit();
+            }));
         }
 
         private void Settings_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -382,7 +396,10 @@ namespace UltraWinBar.Utilities
                 () => actual.Equals(expected),
                 () => WorkAreaManager.Apply(expected, (uint)Process.GetCurrentProcess().Id));
             if (result == WorkAreaRecoveryResult.Applied)
+            {
                 ShellLogger.Warning($"WindowManager: Restored work area from {FormatRect(actual)} to {FormatRect(expected)}");
+                _placementGuard?.ScheduleMaximizedRefit();
+            }
             else if (result == WorkAreaRecoveryResult.Suspended)
                 ShellLogger.Warning($"WindowManager: Repeated work-area conflict; recovery paused for {_workAreaRecovery.SuspendedFor / 1000}s.");
             if (result == WorkAreaRecoveryResult.Deferred || result == WorkAreaRecoveryResult.Suspended)
@@ -529,6 +546,7 @@ namespace UltraWinBar.Utilities
         public void Dispose()
         {
             _disposed = true;
+            Microsoft.Win32.SystemEvents.SessionSwitch -= SystemEvents_SessionSwitch;
             _workAreaRecoveryTimer.Stop();
             _workAreaRecoveryTimer.Tick -= RecoverWorkArea;
             _placementGuard?.Dispose();

@@ -15,6 +15,8 @@ namespace UltraWinBar.Utilities
     {
         [DllImport("user32.dll")] private static extern bool IsZoomed(IntPtr hwnd);
         [DllImport("user32.dll")] private static extern IntPtr GetAncestor(IntPtr hwnd, uint flags);
+        [DllImport("user32.dll")] private static extern bool EnumWindows(EnumWindowsProc callback, IntPtr lParam);
+        private delegate bool EnumWindowsProc(IntPtr hwnd, IntPtr lParam);
         [DllImport("dwmapi.dll")] private static extern int DwmGetWindowAttribute(IntPtr hwnd, uint attribute, out NativeMethods.Rect value, int size);
         private readonly Dispatcher dispatcher = Application.Current.Dispatcher;
         private readonly HashSet<IntPtr> pending = new HashSet<IntPtr>();
@@ -25,6 +27,7 @@ namespace UltraWinBar.Utilities
         // (MOVESIZESTART..MOVESIZEEND) and stays a direct WinEventHook.
         private readonly IDisposable showSubscription, foregroundSubscription;
         private readonly WinEventHook moveHook;
+        private readonly DispatcherTimer refitTimer;
         private IntPtr movingWindow;
         private bool disposed;
 
@@ -34,6 +37,8 @@ namespace UltraWinBar.Utilities
             showSubscription = WinEventHub.Subscribe("Window placement show hook", 0x8002, HandleWindowEvent);
             foregroundSubscription = WinEventHub.Subscribe("Window placement foreground hook", 3, HandleWindowEvent);
             moveHook = new WinEventHook("Window placement move hook", 0x000A, 0x000B, HandleWindowEvent);
+            refitTimer = new DispatcherTimer(DispatcherPriority.Background, dispatcher) { Interval = TimeSpan.FromMilliseconds(1500) };
+            refitTimer.Tick += (_, _) => { refitTimer.Stop(); RefitMaximizedWindows(); };
         }
 
         internal static Rect AvailableArea(System.Drawing.Rectangle bounds)
@@ -68,6 +73,58 @@ namespace UltraWinBar.Utilities
             if (visible.Left == x && visible.Top == y && visible.Width == width && visible.Height == height)
                 return null;
             return new Rect(x, y, width, height);
+        }
+
+        // Windows re-maximizes into a cleared (full-monitor) work area and never shrinks back once ours is restored.
+        internal static NativeMethods.Rect? PlanMaximizedRefit(NativeMethods.Rect outer, NativeMethods.Rect monitor, Rect area)
+        {
+            int left = monitor.Left - outer.Left, top = monitor.Top - outer.Top;
+            int right = outer.Right - monitor.Right, bottom = outer.Bottom - monitor.Bottom;
+            if (left < 0 || top < 0 || right < 0 || bottom < 0 || Math.Max(Math.Max(left, top), Math.Max(right, bottom)) > 64) return null;
+            if (area.Left == monitor.Left && area.Top == monitor.Top && area.Right == monitor.Right && area.Bottom == monitor.Bottom) return null;
+            return new NativeMethods.Rect
+            {
+                Left = (int)area.Left - left, Top = (int)area.Top - top,
+                Right = (int)area.Right + right, Bottom = (int)area.Bottom + bottom
+            };
+        }
+
+        // Now and once more after Windows' own late re-layout.
+        internal void ScheduleMaximizedRefit()
+        {
+            if (disposed) return;
+            dispatcher.BeginInvoke(new Action(RefitMaximizedWindows), DispatcherPriority.Background);
+            refitTimer.Stop();
+            refitTimer.Start();
+        }
+
+        private void RefitMaximizedWindows()
+        {
+            if (disposed) return;
+            var bars = new HashSet<IntPtr>(Application.Current.Windows.OfType<Taskbar>().Select(bar => bar.Handle));
+            var maximized = new List<IntPtr>();
+            EnumWindows((hwnd, _) =>
+            {
+                if (IsZoomed(hwnd) && NativeMethods.IsWindowVisible(hwnd) && !bars.Contains(hwnd) &&
+                    (NativeMethods.GetWindowLong(hwnd, NativeMethods.WindowLongFlags.GWL_STYLE) & 0x00C00000) == 0x00C00000)
+                    maximized.Add(hwnd);
+                return true;
+            }, IntPtr.Zero);
+            int refitted = 0;
+            foreach (var hwnd in maximized)
+            {
+                if (!NativeMethods.GetWindowRect(hwnd, out NativeMethods.Rect outer)) continue;
+                var bounds = System.Windows.Forms.Screen.FromHandle(hwnd).Bounds;
+                var monitor = new NativeMethods.Rect { Left = bounds.Left, Top = bounds.Top, Right = bounds.Right, Bottom = bounds.Bottom };
+                var target = PlanMaximizedRefit(outer, monitor, AvailableArea(bounds));
+                if (!target.HasValue) continue;
+                // Async: a hung application must not block the UI thread.
+                NativeMethods.SetWindowPos(hwnd, IntPtr.Zero, target.Value.Left, target.Value.Top, target.Value.Width, target.Value.Height,
+                    (int)(NativeMethods.SetWindowPosFlags.SWP_NOACTIVATE | NativeMethods.SetWindowPosFlags.SWP_NOZORDER |
+                          NativeMethods.SetWindowPosFlags.SWP_ASYNCWINDOWPOS));
+                refitted++;
+            }
+            if (refitted > 0) ShellLogger.Info($"WindowPlacementGuard: Refitted {refitted} maximized window(s) to the panel work area");
         }
 
         private void HandleWindowEvent(uint type, IntPtr hwnd, int obj, int child)
@@ -122,6 +179,7 @@ namespace UltraWinBar.Utilities
         public void Dispose()
         {
             disposed = true;
+            refitTimer.Stop();
             showSubscription.Dispose();
             foregroundSubscription.Dispose();
             moveHook.Dispose();
