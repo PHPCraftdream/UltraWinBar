@@ -71,12 +71,15 @@ namespace UltraWinBar.Utilities
         // Unlock can clear the work area and stretch maximized windows over the panels.
         private void SystemEvents_SessionSwitch(object sender, Microsoft.Win32.SessionSwitchEventArgs e)
         {
-            if (e.Reason != Microsoft.Win32.SessionSwitchReason.SessionUnlock) return;
+            if (e.Reason != Microsoft.Win32.SessionSwitchReason.SessionUnlock &&
+                e.Reason != Microsoft.Win32.SessionSwitchReason.SessionLock) return;
             System.Windows.Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
             {
                 if (_disposed) return;
-                ShellLogger.Debug("WindowManager: Session unlocked");
-                QueueManualWorkAreaRecovery();
+                ShellLogger.Info($"WindowManager: Session {(e.Reason == Microsoft.Win32.SessionSwitchReason.SessionLock ? "locked" : "unlocked")}");
+                if (e.Reason == Microsoft.Win32.SessionSwitchReason.SessionLock) return;
+                // Work area first, synchronously: refitting into a still-cleared area makes windows jump twice.
+                RecoverWorkArea(null, EventArgs.Empty);
                 _placementGuard?.ScheduleMaximizedRefit();
             }));
         }
@@ -171,6 +174,12 @@ namespace UltraWinBar.Utilities
         {
             ShellLogger.Debug($"WindowManager: Display change notification received ({reason})");
             handleDisplayChange();
+            // A monitor waking up (e.g. while locked) clears our work area with no SETTINGCHANGE.
+            if (_manualWorkArea)
+            {
+                ShellLogger.Info($"WindowManager: Display change ({reason}); checking work area");
+                QueueManualWorkAreaRecovery();
+            }
         }
 
         private void handleDisplayChange()

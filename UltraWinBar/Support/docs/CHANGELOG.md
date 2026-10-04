@@ -9,6 +9,9 @@
   windows to the full monitor; after the work area is restored (and on every
   unlock) those windows are refitted once to the panel work area, keeping
   their maximized state and restore bounds.
+- The reserved work area is restored as soon as a display change clears it
+  (a monitor waking while the screen is locked), and before refitting on
+  unlock, so windows are usually already in place when the desktop appears.
 
 ## 2.4.0 (2026-09-30)
 
