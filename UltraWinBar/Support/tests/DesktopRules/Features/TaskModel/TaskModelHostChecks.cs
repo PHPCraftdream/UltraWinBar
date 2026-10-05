@@ -114,10 +114,24 @@ internal static class TaskModelHostChecks
                     throw new Exception("A RequestPass after the previous pass completed must schedule a new pass.");
                 if (panels.Any(p => p.ApplyCount != 2))
                     throw new Exception("The second pass must apply to every panel again.");
+
+                // Desktop switch: an urgent (Send) request overtakes a pending Background one and still runs once.
+                bool ranBeforeNormalWork = false;
+                int urgentBefore = TaskModelHost.Instance.ComputeCount;
+                dispatcher.Invoke(() =>
+                {
+                    TaskModelHost.Instance.RequestPass(dispatcher);
+                    TaskModelHost.Instance.RequestPass(dispatcher, DispatcherPriority.Send);
+                    dispatcher.BeginInvoke(new Action(() =>
+                        ranBeforeNormalWork = TaskModelHost.Instance.ComputeCount == urgentBefore + 1), DispatcherPriority.Normal);
+                });
+                Pump(dispatcher);
+                if (!ranBeforeNormalWork || TaskModelHost.Instance.ComputeCount != urgentBefore + 1)
+                    throw new Exception("An urgent RequestPass must run before Normal work and coalesce with the pending Background pass.");
             }
             finally { foreach (var panel in panels) TaskModelHost.Instance.Unregister(panel); }
         });
-        Console.WriteLine("PASS: TaskModelHost coalesces any number of RequestPass calls across several panels into exactly one Compute pass, and schedules a fresh pass afterward.");
+        Console.WriteLine("PASS: TaskModelHost coalesces any number of RequestPass calls across several panels into exactly one Compute pass, and schedules a fresh pass afterward; an urgent request overtakes a pending one.");
     }
 
     private static void RunNoOpConvergenceChecks()

@@ -73,6 +73,7 @@ namespace UltraWinBar.Utilities
             {
                 queued = false;
                 if (disposed) return;
+                long batchStarted = System.Diagnostics.Stopwatch.GetTimestamp();
                 if (desktops.RefreshCurrent())
                 {
                     // Registry lagged the cloak events; Changed already queued a fresh batch that needs pending.
@@ -122,6 +123,8 @@ namespace UltraWinBar.Utilities
                     foreach (var panel in Application.Current.Windows.OfType<Taskbar>())
                         foreach (var window in moved) panel.TaskListControl.ReevaluateWindow(window);
                 }
+                double batchMs = (System.Diagnostics.Stopwatch.GetTimestamp() - batchStarted) * 1000.0 / System.Diagnostics.Stopwatch.Frequency;
+                if (batchMs > 100) ShellLogger.Info($"Task recovery: rescanned {handles.Length} window(s) in {batchMs:F0}ms");
             }), DispatcherPriority.Background);
         }
 

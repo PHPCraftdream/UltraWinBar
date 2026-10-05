@@ -34,12 +34,34 @@ internal static class TaskGroupingAndDiffChecks
 
     internal static void Run(string[] args, System.IO.DirectoryInfo repositoryRoot)
     {
-        try { RunChecks(); }
+        try { RunChecks(); RunDesktopMembershipChecks(); }
         finally
         {
             foreach (var window in created) window.DestroyHandle();
             created.Clear();
         }
+    }
+
+    [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
+
+    // Desktop switch regression: the filter reads the window's DWM cloak state instead of a
+    // cross-process IVirtualDesktopManager call that blocks while Explorer animates the switch.
+    // Only shell cloaking (bit 2: another virtual desktop) excludes; app self-cloaking does not.
+    private static void RunDesktopMembershipChecks()
+    {
+        var window = new NativeWindow();
+        window.CreateHandle(new CreateParams { Style = unchecked((int)0x80000000) });
+        created.Add(window);
+        if (!UltraWinBar.Controls.TaskList.IsOnCurrentDesktopLocal(window.Handle))
+            throw new Exception("An uncloaked window must count as on the current desktop.");
+        int cloak = 1;
+        if (DwmSetWindowAttribute(window.Handle, 13, ref cloak, sizeof(int)) == 0 &&
+            !UltraWinBar.Controls.TaskList.IsOnCurrentDesktopLocal(window.Handle))
+            throw new Exception("An app-cloaked window is not on another desktop.");
+        if (!UltraWinBar.Controls.TaskList.IsOnCurrentDesktopLocal(IntPtr.Zero))
+            throw new Exception("An unreadable cloak state must not hide a task.");
+        Console.WriteLine("PASS: desktop membership comes from shell cloaking, read locally without Explorer.");
     }
 
     // Old algorithm, exactly as RebuildDisplayedTasks used to filter each pin's windows.

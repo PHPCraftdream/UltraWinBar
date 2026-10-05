@@ -2,6 +2,7 @@
 using ManagedShell.WindowsTasks;
 using ManagedShell.Common.Helpers;
 using ManagedShell.Common.Logging;
+using ManagedShell.Interop;
 using UltraWinBar.Utilities;
 using System;
 using System.Collections;
@@ -147,9 +148,14 @@ namespace UltraWinBar.Controls
             }
         }
 
+        // Must look instant: filter now and run the shared pass at Send, i.e. before rendering and before
+        // the Background work other desktop-change handlers queue (task recovery rescans every window).
         private void DesktopChanged(object sender, EventArgs e)
         {
-            RefreshWindowVisibility();
+            TaskModelHost.Instance.MarkDesktopSwitch();
+            if (!isLoaded) return;
+            taskbarItems?.Refresh();
+            TaskModelHost.Instance.RequestPass(Dispatcher, System.Windows.Threading.DispatcherPriority.Send);
         }
 
         internal void RefreshWindowVisibility()
@@ -215,6 +221,9 @@ namespace UltraWinBar.Controls
             if (e.PropertyName == nameof(ApplicationWindow.ShowInTaskbar))
             {
                 ReevaluateFilterFor(sender);
+                // Cloak flips (desktop switch) arrive here first; rebuild before rendering, not at Background.
+                TaskModelHost.Instance.MarkDesktopSwitch();
+                TaskModelHost.Instance.RequestPass(Dispatcher, System.Windows.Threading.DispatcherPriority.Normal);
                 return;
             }
 
@@ -237,7 +246,6 @@ namespace UltraWinBar.Controls
         internal void ReevaluateWindow(ApplicationWindow window)
         {
             if (!isLoaded) return;
-            desktopMembershipCache?.Remove(window.Handle);
             ReevaluateFilterFor(window);
         }
 
@@ -323,42 +331,19 @@ namespace UltraWinBar.Controls
             }
         }
 
-        // Shared across every panel's TaskList: IsOnCurrentDesktop is a ~46us cross-process COM
-        // call, and all panels filter the same shared ApplicationWindow set, so without this
-        // cache one window add/remove event repeats the same call once per panel. Cleared after
-        // the current dispatcher pass, and dropped at once when the current desktop changes.
-        private static Dictionary<IntPtr, bool> desktopMembershipCache;
-        private static Guid desktopMembershipCacheDesktop;
-
-        private static bool IsOnCurrentDesktopCached(IntPtr handle)
-        {
-            var cache = desktopMembershipCache;
-            Guid desktop = VirtualDesktopContext.Instance?.CurrentId ?? Guid.Empty;
-            if (cache == null || desktop != desktopMembershipCacheDesktop)
-            {
-                cache = new Dictionary<IntPtr, bool>();
-                desktopMembershipCache = cache;
-                desktopMembershipCacheDesktop = desktop;
-                Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    if (ReferenceEquals(desktopMembershipCache, cache)) desktopMembershipCache = null;
-                }), System.Windows.Threading.DispatcherPriority.ContextIdle);
-            }
-
-            if (!cache.TryGetValue(handle, out bool onCurrentDesktop))
-            {
-                onCurrentDesktop = VirtualDesktopContext.Instance?.IsOnCurrentDesktop(handle) != false;
-                cache[handle] = onCurrentDesktop;
-            }
-
-            return onCurrentDesktop;
-        }
+        // Desktop membership from the window's own DWM cloak state, not IVirtualDesktopManager: windows on
+        // other virtual desktops are shell-cloaked, all-desktop windows are not, and the flag flips (with a
+        // cloak event) before Explorer even records the switch. The COM call is cross-process and waits on
+        // Explorer while it animates the switch, which delayed the panel by up to hundreds of ms.
+        internal static bool IsOnCurrentDesktopLocal(IntPtr handle) =>
+            NativeMethods.DwmGetWindowAttribute(handle, NativeMethods.DWMWINDOWATTRIBUTE.DWMWA_CLOAKED, out uint cloaked, sizeof(uint)) != 0 ||
+            (cloaked & 2) == 0;
 
         private bool Tasks_Filter(object obj)
         {
             if (obj is ApplicationWindow window)
             {
-                if (!IsOnCurrentDesktopCached(window.Handle)) return false;
+                if (!IsOnCurrentDesktopLocal(window.Handle)) return false;
                 if (!window.ShowInTaskbar)
                 {
                     return false;

@@ -1,7 +1,9 @@
 using ManagedShell.AppBar;
+using ManagedShell.Common.Logging;
 using ManagedShell.WindowsTasks;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows.Threading;
 
@@ -41,6 +43,7 @@ namespace UltraWinBar.Utilities
 
         private readonly List<WeakReference<ITaskModelPanel>> panels = new();
         private bool passPending;
+        private DispatcherPriority pendingPriority;
 
         /// <summary>Number of completed Compute passes. Test-only instrumentation for asserting
         /// that several triggers across several panels coalesce into one pass.</summary>
@@ -55,11 +58,22 @@ namespace UltraWinBar.Utilities
         /// number of calls (from any number of panels) made before the pass actually runs into a
         /// single Background-priority dispatch — the same coalescing QueueTaskRebuild used to do
         /// per panel, now shared across all of them.</summary>
-        internal void RequestPass(Dispatcher dispatcher)
+        // Desktop switch timing: one Info line with the wall-clock time of the first frame rendered after a
+        // pass that ran within 2 s of a desktop change or cloak flip (compare with cloak event times).
+        private long switchWindowUntil;
+        private bool renderLogPending;
+
+        internal void MarkDesktopSwitch() => switchWindowUntil = Environment.TickCount64 + 2000;
+
+        internal void RequestPass(Dispatcher dispatcher) => RequestPass(dispatcher, DispatcherPriority.Background);
+
+        // A higher priority than the pending pass queues another dispatch; whichever runs first does the pass.
+        internal void RequestPass(Dispatcher dispatcher, DispatcherPriority priority)
         {
-            if (passPending) return;
+            if (passPending && priority <= pendingPriority) return;
             passPending = true;
-            dispatcher.BeginInvoke(new Action(RunPass), DispatcherPriority.Background);
+            pendingPriority = priority;
+            dispatcher.BeginInvoke(new Action(() => { if (passPending) RunPass(); }), priority);
         }
 
         private void RunPass()
@@ -137,6 +151,20 @@ namespace UltraWinBar.Utilities
             foreach (var panel in live)
                 if (result.Panels.TryGetValue(panel, out TaskModelEdgeResult panelResult))
                     panel.Apply(panelResult);
+
+            if (Environment.TickCount64 < switchWindowUntil && !renderLogPending)
+            {
+                renderLogPending = true;
+                string appliedAt = DateTime.Now.ToString("HH:mm:ss.fff");
+                EventHandler rendered = null;
+                rendered = (_, _) =>
+                {
+                    System.Windows.Media.CompositionTarget.Rendering -= rendered;
+                    renderLogPending = false;
+                    ShellLogger.Info($"Desktop switch: pass applied {appliedAt}, rendered {DateTime.Now:HH:mm:ss.fff}");
+                };
+                System.Windows.Media.CompositionTarget.Rendering += rendered;
+            }
         }
     }
 }
