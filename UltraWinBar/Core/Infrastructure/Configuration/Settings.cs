@@ -396,6 +396,13 @@ namespace UltraWinBar.Utilities
             set => Set(ref _debugLogging, value);
         }
 
+        private bool _windowActivityLogging = false;
+        public bool WindowActivityLogging
+        {
+            get => _windowActivityLogging;
+            set => Set(ref _windowActivityLogging, value);
+        }
+
         private List<string> _debugLogMasks =
         [
             "*",

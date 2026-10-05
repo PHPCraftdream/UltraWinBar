@@ -35,6 +35,7 @@
   "TaskbarScale": 1.2,
   "TrayIconSize": 20,
   "DebugLogging": false,
+  "WindowActivityLogging": false,
   "DebugLogMasks": [
     "*",
     "!NotificationArea:*",

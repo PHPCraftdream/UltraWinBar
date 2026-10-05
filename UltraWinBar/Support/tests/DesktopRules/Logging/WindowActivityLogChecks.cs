@@ -24,6 +24,25 @@ internal static class WindowActivityLogChecks
             throw new Exception("Window activity file name changed.");
         Console.WriteLine("PASS: window activity lines are tab-separated, single-line, and dated per file.");
 
+        // The settings checkbox alone enables the journal, independently of debug logging.
+        bool previousSetting = Settings.Instance.WindowActivityLogging, previousDebug = Settings.Instance.DebugLogging;
+        try
+        {
+            Settings.Instance.DebugLogging = false;
+            Settings.Instance.WindowActivityLogging = true;
+            if (!WindowActivityLog.IsEnabled()) throw new Exception("The WindowActivityLogging setting must enable the window journal.");
+            Settings.Instance.DebugLogging = true;
+            Settings.Instance.WindowActivityLogging = false;
+            if (WindowActivityLog.IsEnabled() != File.Exists(WindowActivityLog.FlagFileName.InLocalAppData()))
+                throw new Exception("Debug logging must not enable the window journal.");
+        }
+        finally
+        {
+            Settings.Instance.WindowActivityLogging = previousSetting;
+            Settings.Instance.DebugLogging = previousDebug;
+        }
+        Console.WriteLine("PASS: the window journal has its own setting, separate from debug logging.");
+
         string directory = Path.Combine(Path.GetTempPath(), "UltraWinBar-window-log-" + Guid.NewGuid().ToString("N"));
         var nativeWindow = new NativeWindow();
         nativeWindow.CreateHandle(new CreateParams());

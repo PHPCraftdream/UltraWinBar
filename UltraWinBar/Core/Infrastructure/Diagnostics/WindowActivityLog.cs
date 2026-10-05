@@ -8,8 +8,8 @@ using System.Text;
 
 namespace UltraWinBar.Utilities
 {
-    // Opt-in journal of taskbar windows opening/closing: Logs\windows-yyyy-MM-dd.log while
-    // %LOCALAPPDATA%\UltraWinBar\window-log.enabled exists (checked per event, so toggling is live).
+    // Opt-in journal of taskbar windows opening/closing: Logs\windows-yyyy-MM-dd.log while the
+    // WindowActivityLogging setting is on or %LOCALAPPDATA%\UltraWinBar\window-log.enabled exists (checked per event).
     internal sealed class WindowActivityLog : IDisposable
     {
         internal const string FlagFileName = "window-log.enabled";
@@ -21,9 +21,12 @@ namespace UltraWinBar.Utilities
 
         internal WindowActivityLog(Tasks tasks)
             : this(tasks?.GroupedWindows?.SourceCollection as INotifyCollectionChanged, "Logs".InLocalAppData(),
-                () => File.Exists(FlagFileName.InLocalAppData()))
+                IsEnabled)
         {
         }
+
+        internal static bool IsEnabled() =>
+            Settings.Instance.WindowActivityLogging || File.Exists(FlagFileName.InLocalAppData());
 
         internal WindowActivityLog(INotifyCollectionChanged windows, string logDirectory, Func<bool> isEnabled)
         {

@@ -756,6 +756,12 @@
                                     <Label
                                         Content="{DynamicResource debug_logging}" />
                                 </CheckBox>
+                                <CheckBox
+                                    x:Name="cbWindowActivityLogging"
+                                    IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=WindowActivityLogging, UpdateSourceTrigger=PropertyChanged}">
+                                    <Label
+                                        Content="{DynamicResource window_activity_logging}" />
+                                </CheckBox>
                             </StackPanel>
                         </GroupBox>
                         <GroupBox

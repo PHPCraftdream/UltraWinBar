@@ -91,6 +91,7 @@
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">Текущее значение: {0}%</s:String>
     <s:String x:Key="debug_logging">Включить отла_дочное логирование</s:String>
+    <s:String x:Key="window_activity_logging">Журнал открытия и закрытия окон</s:String>
     <s:String x:Key="check_for_updates">Проверять наличие _обновлений</s:String>
     <s:String x:Key="show_exit_menu_item">Отображать опцию в_ыхода в контекстном меню</s:String>
     <s:String x:Key="show_end_task_button">Отображать опцию "З_авершить задачу" в контекстном меню</s:String>
