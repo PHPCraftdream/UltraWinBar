@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- Opt-in window journal: while `%LOCALAPPDATA%\UltraWinBar\window-log.enabled`
+  exists, every taskbar window opening and closing is appended to
+  `Logs\windows-YYYY-MM-DD.log` as `time, opened|closed, hwnd, executable, title`
+  (tab-separated; the closing line keeps the last known title). Toggling the
+  flag file takes effect immediately; files follow the 7-day log retention.
+
 ### Fixed
 
 - Maximized windows no longer stay stretched over the panels after unlocking the

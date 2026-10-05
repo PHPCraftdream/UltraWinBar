@@ -31,6 +31,7 @@ namespace UltraWinBar
         private PersistentDesktopPins _desktopPins;
         private DesktopActivationGuard _desktopActivationGuard;
         private HealthReporter _health;
+        private WindowActivityLog _windowActivity;
 
         private readonly DictionaryManager _dictionaryManager;
         private readonly ExplorerMonitor _explorerMonitor;
@@ -49,6 +50,7 @@ namespace UltraWinBar
             _updater = new Updater();
             _hotkeyManager = new HotkeyManager();
             _health = new HealthReporter(_shellManager.Tasks, _logger);
+            _windowActivity = new WindowActivityLog(_shellManager.Tasks);
 
             Settings.Instance.PropertyChanged += Settings_PropertyChanged;
         }
@@ -206,6 +208,7 @@ namespace UltraWinBar
 
             _explorerMonitor.Dispose();
             _health?.Dispose();
+            _windowActivity?.Dispose();
             _desktopActivationGuard?.Dispose();
             _taskRecovery?.Dispose();
             _desktopPins?.Dispose();

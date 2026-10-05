@@ -32,6 +32,7 @@ InteropChecks.Run(repositoryRoot);
 CrossProcessMessageChecks.Run();
 NativeCallbackChecks.Run(repositoryRoot);
 HealthDiagnosticsChecks.Run();
+WindowActivityLogChecks.Run();
 WindowDictionaryChecks.Run();
 GhostSweepChecks.Run();
 StartMenuFadeChecks.Run();
