@@ -110,7 +110,7 @@ namespace UltraWinBar.Utilities
                     maximized.Add(hwnd);
                 return true;
             }, IntPtr.Zero);
-            int refitted = 0;
+            int refitted = 0, denied = 0;
             foreach (var hwnd in maximized)
             {
                 if (!NativeMethods.GetWindowRect(hwnd, out NativeMethods.Rect outer)) continue;
@@ -119,12 +119,14 @@ namespace UltraWinBar.Utilities
                 var target = PlanMaximizedRefit(outer, monitor, AvailableArea(bounds));
                 if (!target.HasValue) continue;
                 // Async: a hung application must not block the UI thread.
-                NativeMethods.SetWindowPos(hwnd, IntPtr.Zero, target.Value.Left, target.Value.Top, target.Value.Width, target.Value.Height,
+                // Elevated windows refuse (UIPI) and stay stretched.
+                if (NativeMethods.SetWindowPos(hwnd, IntPtr.Zero, target.Value.Left, target.Value.Top, target.Value.Width, target.Value.Height,
                     (int)(NativeMethods.SetWindowPosFlags.SWP_NOACTIVATE | NativeMethods.SetWindowPosFlags.SWP_NOZORDER |
-                          NativeMethods.SetWindowPosFlags.SWP_ASYNCWINDOWPOS));
-                refitted++;
+                          NativeMethods.SetWindowPosFlags.SWP_ASYNCWINDOWPOS))) refitted++;
+                else denied++;
             }
-            if (refitted > 0) ShellLogger.Info($"WindowPlacementGuard: Refitted {refitted} maximized window(s) to the panel work area");
+            if (refitted > 0 || denied > 0)
+                ShellLogger.Info($"WindowPlacementGuard: Refitted {refitted} maximized window(s) to the panel work area; {denied} refused");
         }
 
         private void HandleWindowEvent(uint type, IntPtr hwnd, int obj, int child)

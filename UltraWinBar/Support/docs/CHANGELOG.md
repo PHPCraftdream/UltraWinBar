@@ -12,6 +12,10 @@
 - The reserved work area is restored as soon as a display change clears it
   (a monitor waking while the screen is locked), and before refitting on
   unlock, so windows are usually already in place when the desktop appears.
+- While the screen is locked the work area is checked every 250 ms and a
+  cleared one is restored (and maximized windows refitted) before the desktop
+  is shown. Windows of elevated processes cannot be moved by the panels and
+  are reported as refused in the log.
 
 ## 2.4.0 (2026-09-30)
 

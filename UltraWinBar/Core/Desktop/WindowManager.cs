@@ -31,6 +31,7 @@ namespace UltraWinBar.Utilities
         private WindowPlacementGuard _placementGuard;
         private readonly WorkAreaRecovery _workAreaRecovery = new WorkAreaRecovery();
         private readonly DispatcherTimer _workAreaRecoveryTimer;
+        private readonly DispatcherTimer _lockedWorkAreaTimer;
         private bool _disposed;
 
         private readonly DictionaryManager _dictionaryManager;
@@ -52,6 +53,8 @@ namespace UltraWinBar.Utilities
             _hotkeyManager = hotkeyManager;
             _workAreaRecoveryTimer = new DispatcherTimer(DispatcherPriority.Background);
             _workAreaRecoveryTimer.Tick += RecoverWorkArea;
+            _lockedWorkAreaTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(250) };
+            _lockedWorkAreaTimer.Tick += CheckLockedWorkArea;
 
             NativeMethods.SystemParametersInfo((int)NativeMethods.SPI.GETWORKAREA, 0, ref _originalWorkArea, 0);
             _originalMonitorBounds = ToRect(AppBarScreen.FromPrimaryScreen().Bounds);
@@ -68,6 +71,16 @@ namespace UltraWinBar.Utilities
             Microsoft.Win32.SystemEvents.SessionSwitch += SystemEvents_SessionSwitch;
         }
 
+        // While locked the desktop is hidden: fix a cleared work area and stretched windows before unlock reveals them.
+        private void CheckLockedWorkArea(object sender, EventArgs e)
+        {
+            if (_disposed || !_manualWorkArea || !_expectedWorkArea.HasValue || !WorkAreaManager.TryGetCurrent(out var actual) ||
+                actual.Equals(_expectedWorkArea.Value) || _workAreaRecoveryTimer.IsEnabled) return;
+            ShellLogger.Info($"WindowManager: Work area cleared to {FormatRect(actual)} while locked");
+            RecoverWorkArea(null, EventArgs.Empty);
+            _placementGuard?.ScheduleMaximizedRefit();
+        }
+
         // Unlock can clear the work area and stretch maximized windows over the panels.
         private void SystemEvents_SessionSwitch(object sender, Microsoft.Win32.SessionSwitchEventArgs e)
         {
@@ -77,7 +90,12 @@ namespace UltraWinBar.Utilities
             {
                 if (_disposed) return;
                 ShellLogger.Info($"WindowManager: Session {(e.Reason == Microsoft.Win32.SessionSwitchReason.SessionLock ? "locked" : "unlocked")}");
-                if (e.Reason == Microsoft.Win32.SessionSwitchReason.SessionLock) return;
+                if (e.Reason == Microsoft.Win32.SessionSwitchReason.SessionLock)
+                {
+                    if (_manualWorkArea) _lockedWorkAreaTimer.Start();
+                    return;
+                }
+                _lockedWorkAreaTimer.Stop();
                 // Work area first, synchronously: refitting into a still-cleared area makes windows jump twice.
                 RecoverWorkArea(null, EventArgs.Empty);
                 _placementGuard?.ScheduleMaximizedRefit();
@@ -156,6 +174,8 @@ namespace UltraWinBar.Utilities
 
             if (_manualWorkArea)
             {
+                if (WorkAreaManager.TryGetCurrent(out var current) && _expectedWorkArea.HasValue && !current.Equals(_expectedWorkArea.Value))
+                    ShellLogger.Info($"WindowManager: Work area changed to {FormatRect(current)} (SETTINGCHANGE)");
                 QueueManualWorkAreaRecovery();
                 return;
             }
@@ -558,6 +578,8 @@ namespace UltraWinBar.Utilities
             Microsoft.Win32.SystemEvents.SessionSwitch -= SystemEvents_SessionSwitch;
             _workAreaRecoveryTimer.Stop();
             _workAreaRecoveryTimer.Tick -= RecoverWorkArea;
+            _lockedWorkAreaTimer.Stop();
+            _lockedWorkAreaTimer.Tick -= CheckLockedWorkArea;
             _placementGuard?.Dispose();
             if (_manualWorkArea)
             {
