@@ -54,6 +54,7 @@ namespace UltraWinBar
         private readonly AppBarMode _startupAppBarMode;
         private bool _registrationDeferred;
         private NativeMethods.Rect? _standaloneBounds;
+        private bool _reserved;
         
         public WindowManager windowManager;
         public HotkeyManager hotkeyManager;
@@ -130,12 +131,14 @@ namespace UltraWinBar
             _registrationDeferred = false;
             _standaloneBounds = rect;
             SetWindowPosition(rect);
+            _reserved = PanelReservation.Reserve(Handle, AppBarEdge, rect, _reserved);
         }
 
         internal void SetStandaloneLayout(NativeMethods.Rect rect)
         {
             _standaloneBounds = rect;
             SetWindowPosition(rect);
+            _reserved = PanelReservation.Reserve(Handle, AppBarEdge, rect, _reserved);
         }
 
         public override bool UpdatePosition()

@@ -13,6 +13,10 @@
 
 ### Fixed
 
+- On a single monitor the panels are also registered with the shell as AppBars
+  carrying their exact rectangles (positioning stays manual), so Explorer's own
+  work-area recomputation on unlock reserves them instead of clearing the work
+  area and stretching maximized windows over the panels.
 - Maximized windows no longer stay stretched over the panels after unlocking the
   screen. Windows clears the reserved work area on unlock and re-maximizes
   windows to the full monitor; after the work area is restored (and on every

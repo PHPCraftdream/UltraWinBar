@@ -92,6 +92,17 @@ internal static class LayoutChecks
         if (PlanRefit(R(-200, -8, 1928, 1088), monitorRect, reservedArea).HasValue)
             throw new Exception("A window spanning beyond its monitor is not a maximized-into-monitor window.");
         Console.WriteLine("PASS: maximized windows stretched over panels by a cleared work area refit the panel work area once.");
+        // Regression: Explorer recomputes the work area on unlock from registered AppBars only; manual
+        // panels must publish their exact rect on their own callback, not ManagedShell's AppBar message.
+        var reservation = PanelReservation.Build((IntPtr)0x1234, AppBarEdge.Left, R(0, 41, 158, 1080));
+        if (reservation.hWnd != (IntPtr)0x1234 || reservation.uEdge != 0 || !reservation.rc.Equals(R(0, 41, 158, 1080)) ||
+            reservation.cbSize != System.Runtime.InteropServices.Marshal.SizeOf<ManagedShell.Interop.NativeMethods.APPBARDATA>() ||
+            reservation.uCallbackMessage != PanelReservation.CallbackMessage || PanelReservation.CallbackMessage == 0 ||
+            PanelReservation.CallbackMessage == ManagedShell.Interop.NativeMethods.RegisterWindowMessage("AppBarMessage"))
+            throw new Exception("Panel reservation must carry the panel's exact edge rect and a dedicated callback message.");
+        if (PanelReservation.Build(IntPtr.Zero, AppBarEdge.Bottom, R(0, 1039, 1920, 1080)).uEdge != 3)
+            throw new Exception("Panel reservation edge must match the shell ABE_* values.");
+        Console.WriteLine("PASS: manual panels reserve their exact rects with the shell under a dedicated callback message.");
         var workAreaManager = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.WorkAreaManager");
         var isCurrentWorkArea = workAreaManager?.GetMethod("IsCurrent");
         var liveWorkArea = new ManagedShell.Interop.NativeMethods.Rect();

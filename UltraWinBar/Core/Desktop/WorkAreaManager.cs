@@ -255,4 +255,40 @@ namespace UltraWinBar.Utilities
             attempts = suspensions = 0;
         }
     }
+
+    // Manual layout panels are also listed as shell AppBars with their exact rects, so Explorer's own
+    // work-area recomputation (on unlock, display or AppBar changes) reserves them instead of clearing it.
+    internal static class PanelReservation
+    {
+        internal const int AbnPosChanged = 1;
+        internal static readonly int CallbackMessage = RegisterWindowMessage("UltraWinBarPanelReservation");
+
+        internal static APPBARDATA Build(IntPtr hwnd, ManagedShell.AppBar.AppBarEdge edge, NativeMethods.Rect rect) => new APPBARDATA
+        {
+            cbSize = Marshal.SizeOf<APPBARDATA>(),
+            hWnd = hwnd,
+            uCallbackMessage = CallbackMessage,
+            uEdge = (int)edge,
+            rc = rect
+        };
+
+        /// Registers on first call (registered == false), then (re)publishes the rect. Returns the registration state.
+        internal static bool Reserve(IntPtr hwnd, ManagedShell.AppBar.AppBarEdge edge, NativeMethods.Rect rect, bool registered)
+        {
+            var data = Build(hwnd, edge, rect);
+            if (!registered && SHAppBarMessage((int)ABMsg.ABM_NEW, ref data) == 0)
+            {
+                ManagedShell.Common.Logging.ShellLogger.Warning($"PanelReservation: Could not register {edge} panel with the shell.");
+                return false;
+            }
+            SHAppBarMessage((int)ABMsg.ABM_SETPOS, ref data);
+            return true;
+        }
+
+        internal static void Release(IntPtr hwnd)
+        {
+            var data = Build(hwnd, default, default);
+            SHAppBarMessage((int)ABMsg.ABM_REMOVE, ref data);
+        }
+    }
 }

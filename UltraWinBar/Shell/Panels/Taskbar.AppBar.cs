@@ -31,6 +31,15 @@ namespace UltraWinBar
         
         protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
+            if (msg == PanelReservation.CallbackMessage)
+            {
+                // Another AppBar moved: republish our rect so the shell keeps reserving it.
+                if (_reserved && (int)wParam == PanelReservation.AbnPosChanged && _standaloneBounds.HasValue && !AllowClose)
+                    PanelReservation.Reserve(Handle, AppBarEdge, _standaloneBounds.Value, true);
+                handled = true;
+                return IntPtr.Zero;
+            }
+
             if (msg == (int)NativeMethods.WM.WINDOWPOSCHANGING &&
                 windowManager?.UsesManualWorkArea == true && _standaloneBounds.HasValue && !AllowClose)
             {
@@ -99,6 +108,11 @@ namespace UltraWinBar
         {
             if (AllowClose)
             {
+                if (_reserved)
+                {
+                    PanelReservation.Release(Handle);
+                    _reserved = false;
+                }
                 QuickLaunchToolbar.Visibility = Visibility.Collapsed;
 
                 WeakSubscriptions.UnsubscribeSettings(Settings_PropertyChanged);
