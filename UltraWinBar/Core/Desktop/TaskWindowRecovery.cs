@@ -84,6 +84,8 @@ namespace UltraWinBar.Utilities
                 var tracked = new Dictionary<IntPtr, ApplicationWindow>();
                 foreach (var window in windows) tracked[window.Handle] = window;
                 var moved = new List<ApplicationWindow>();
+                // Cloak flips caused by a desktop switch are not moves: keep the desktop-id cache warm.
+                if (desktops.SwitchedWithin(1500)) cloakChanged.Clear();
                 foreach (var hwnd in cloakChanged)
                 {
                     desktops.ForgetWindowDesktop(hwnd);

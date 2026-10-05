@@ -27,7 +27,6 @@ namespace UltraWinBar.Utilities
         private readonly List<RegistryTreeWatch> watches = new List<RegistryTreeWatch>();
         // Per-dispatcher-pass cache for GetAssignedEdge's DesktopForWindow lookups; UI thread only.
         private readonly Dictionary<IntPtr, Guid> desktopForWindowCache = new Dictionary<IntPtr, Guid>();
-        private bool desktopForWindowCacheClearQueued;
         // Explorer-hosted: severed on Explorer restarts, recreated lazily with backoff.
         private readonly ShellComProxy<IDesktopManager> manager;
         // R9-I (K14): explicit state instead of a bare bool. No restart caller exists for this
@@ -90,13 +89,35 @@ namespace UltraWinBar.Utilities
 
         public Guid CurrentIdSnapshot() => ReadCurrent();
 
+        // All known virtual desktop ids from Explorer's registry (session key first, then global).
+        internal static Guid[] ReadExistingDesktopIds()
+        {
+            foreach (string path in new[] { SessionPath, GlobalPath })
+            {
+                using var key = Registry.CurrentUser.OpenSubKey(path);
+                if (key?.GetValue("VirtualDesktopIDs") is byte[] ids && ids.Length >= 16)
+                {
+                    var buffer = new byte[16];
+                    var result = new Guid[ids.Length / 16];
+                    for (int i = 0; i < result.Length; i++)
+                    {
+                        Array.Copy(ids, i * 16, buffer, 0, 16);
+                        result[i] = new Guid(buffer);
+                    }
+                    return result;
+                }
+            }
+            return Array.Empty<Guid>();
+        }
+
         // Re-reads the current desktop and raises Changed if it moved; dispatcher thread only.
         internal bool RefreshCurrent()
         {
             Guid id = ReadCurrent();
             if (id == CurrentId) return false;
             CurrentId = id;
-            desktopForWindowCache.Clear();
+            // Windows keep their desktop across a switch: the per-window cache stays valid.
+            lastSwitchTick = Environment.TickCount64;
             ShellLogger.Debug($"Virtual desktop changed: {id}");
             Changed?.Invoke(this, EventArgs.Empty);
             return true;
@@ -123,28 +144,23 @@ namespace UltraWinBar.Utilities
             return CurrentId;
         }
 
-        // GetAssignedEdge only: one COM lookup per window per dispatcher pass instead of per panel.
+        private long lastSwitchTick;
+
+        // True right after a desktop switch: cloak flips then come from the switch, not from window moves.
+        internal bool SwitchedWithin(long milliseconds) => Environment.TickCount64 - lastSwitchTick < milliseconds;
+
+        // GetAssignedEdge only. Kept across passes and switches (a COM call into Explorer stalls while it
+        // animates a switch); invalidated per window on moves (ForgetWindowDesktop), closes and manager loss.
         internal Guid DesktopForWindowCached(IntPtr hwnd)
         {
             if (desktopForWindowCache.TryGetValue(hwnd, out Guid cached)) return cached;
-            Guid id = DesktopForWindow(hwnd);
+            if (!TryGetWindowDesktopId(hwnd, out Guid id)) return CurrentId;
+            if (desktopForWindowCache.Count >= 1024) desktopForWindowCache.Clear();
             desktopForWindowCache[hwnd] = id;
-            QueueDesktopForWindowCacheClear();
             return id;
         }
 
         internal void ForgetWindowDesktop(IntPtr hwnd) => desktopForWindowCache.Remove(hwnd);
-
-        private void QueueDesktopForWindowCacheClear()
-        {
-            if (desktopForWindowCacheClearQueued) return;
-            desktopForWindowCacheClearQueued = true;
-            dispatcher.BeginInvoke(new Action(() =>
-            {
-                desktopForWindowCacheClearQueued = false;
-                desktopForWindowCache.Clear();
-            }), DispatcherPriority.ContextIdle);
-        }
 
         public bool TryMoveWindowToDesktop(IntPtr hwnd, Guid destination)
         {

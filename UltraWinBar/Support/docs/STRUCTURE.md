@@ -31,6 +31,11 @@ directories are outside this limit.
   several panels sharing an edge under multi-monitor mode, chained in
   registration order — and applies the resulting Settings writes once, outside
   any panel's view update.
+- `Core/Panels/Tasks/DesktopTaskLists.cs` is the per-virtual-desktop payload
+  cache behind instant desktop switches: each desktop keeps its own live
+  payload (a `TaskList`'s `ItemsControl`, created on demand by
+  `UI/Tasks/List/TaskList.Desktops.cs`), so switching desktops only flips
+  visibility instead of clearing and refilling one shared list.
 - Tests in `Support/tests/DesktopRules` are split into `Features` (task order,
   pins and assignments under `Features/Tasks`; `TaskModel` under `Features/TaskModel`),
   `Platform`, `Native` and `Logging` suites; `Program.cs` only orders them and runs

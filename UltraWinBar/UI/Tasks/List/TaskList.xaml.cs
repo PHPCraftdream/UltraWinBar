@@ -125,7 +125,7 @@ namespace UltraWinBar.Controls
                 if (sourceWindows != null) sourceWindows.CollectionChanged += SourceWindows_CollectionChanged;
                 foreach (var window in source.OfType<ApplicationWindow>()) WatchWindow(window);
 
-                TasksList.ItemsSource = displayedTasks;
+                SwitchDesktop();
 
                 WeakSubscriptions.SubscribeSettings(Settings_PropertyChanged);
                 Host.hotkeyManager.TaskbarHotkeyPressed += TaskList_TaskbarHotkeyPressed;
@@ -154,6 +154,8 @@ namespace UltraWinBar.Controls
         {
             TaskModelHost.Instance.MarkDesktopSwitch();
             if (!isLoaded) return;
+            TaskModelHost.Instance.LogCachedListShown();
+            SwitchDesktop();
             taskbarItems?.Refresh();
             TaskModelHost.Instance.RequestPass(Dispatcher, System.Windows.Threading.DispatcherPriority.Send);
         }
@@ -183,13 +185,20 @@ namespace UltraWinBar.Controls
                 foreach (var window in observedWindows.ToArray()) UnwatchWindow(window);
                 foreach (var window in Tasks.GroupedWindows.SourceCollection.Cast<object>().OfType<ApplicationWindow>())
                     WatchWindow(window);
+                ClearNonCurrentLists();
                 // Reset carries no per-item info, so re-run the filter over everything.
                 QueueViewRefresh();
             }
             else
             {
                 if (e.OldItems != null)
-                    foreach (ApplicationWindow window in e.OldItems) UnwatchWindow(window);
+                {
+                    foreach (ApplicationWindow window in e.OldItems)
+                    {
+                        UnwatchWindow(window);
+                        RemoveWindowEverywhere(window);
+                    }
+                }
                 if (e.NewItems != null)
                     foreach (ApplicationWindow window in e.NewItems) WatchWindow(window);
                 // taskbarItems is a live ListCollectionView over this same source: it already
@@ -221,9 +230,10 @@ namespace UltraWinBar.Controls
             if (e.PropertyName == nameof(ApplicationWindow.ShowInTaskbar))
             {
                 ReevaluateFilterFor(sender);
-                // Cloak flips (desktop switch) arrive here first; rebuild before rendering, not at Background.
-                TaskModelHost.Instance.MarkDesktopSwitch();
-                TaskModelHost.Instance.RequestPass(Dispatcher, System.Windows.Threading.DispatcherPriority.Normal);
+                // Cloak flips precede Explorer's registry write by ~10-35 ms: re-read the desktop (a change
+                // raises DesktopChanged, which switches lists and runs the urgent pass). Never rebuild into
+                // the previous desktop's cached list early.
+                VirtualDesktopContext.Instance?.RefreshCurrent();
                 return;
             }
 
@@ -399,6 +409,7 @@ namespace UltraWinBar.Controls
         {
             TaskModelHost.Instance.Unregister(this);
             WeakSubscriptions.UnsubscribeDesktopChanged(DesktopChanged);
+            ResetDesktopLists();
             if (sourceWindows != null) sourceWindows.CollectionChanged -= SourceWindows_CollectionChanged;
             foreach (var window in observedWindows.ToArray()) UnwatchWindow(window);
             sourceWindows = null;

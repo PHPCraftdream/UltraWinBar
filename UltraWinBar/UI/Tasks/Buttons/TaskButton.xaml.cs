@@ -102,8 +102,9 @@ namespace UltraWinBar.Controls
 
         private void ScrollIntoView()
         {
-            if (Window == null)
+            if (Window == null || !IsVisible)
             {
+                // Hidden buttons belong to other desktops; BringIntoView would still scroll.
                 return;
             }
 
@@ -157,7 +158,7 @@ namespace UltraWinBar.Controls
                 Window.PropertyChanged += Window_PropertyChanged;
             }
 
-            if (Settings.Instance.SlideTaskbarButtons && Host?.Host?.Orientation == Orientation.Horizontal)
+            if (Settings.Instance.SlideTaskbarButtons && IsVisible && Host?.Host?.Orientation == Orientation.Horizontal)
             {
                 Animate();
             }
@@ -167,6 +168,7 @@ namespace UltraWinBar.Controls
 
         private void Window_GetButtonRect(ref NativeMethods.ShortRect rect)
         {
+            if (!IsVisible) return; // hidden on a non-current desktop's list: no live rect
             if (Host?.Host?.Screen.Primary != true && Settings.Instance.MultiMonMode != MultiMonOption.SameAsWindow)
             {
                 // If there are multiple instances of a button, use the button on the primary display only
@@ -602,7 +604,19 @@ namespace UltraWinBar.Controls
             }
         }
 
-        private void DesktopChanged(object sender, EventArgs e) => UpdatePinnedAppearance();
+        private bool pinnedAppearanceQueued;
+
+        // After the switch frame: buttons of every desktop's cached list subscribe here.
+        private void DesktopChanged(object sender, EventArgs e)
+        {
+            if (pinnedAppearanceQueued) return;
+            pinnedAppearanceQueued = true;
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                pinnedAppearanceQueued = false;
+                if (_isLoaded) UpdatePinnedAppearance();
+            }), System.Windows.Threading.DispatcherPriority.Background);
+        }
 
         private void Settings_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {

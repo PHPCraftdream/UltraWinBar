@@ -11,25 +11,10 @@
             <converters:DockOrientationConverter x:Key="dockOrientationConverter" />
             <converters:EdgeOrientationConverter x:Key="orientationConverter" />
             <converters:TaskButtonWidthConverter x:Key="taskButtonWidthConverter" />
-        </ResourceDictionary>
-    </UserControl.Resources>
-    <DockPanel>
-        <Thumb Style="{DynamicResource ToolbarThumb}" Visibility="Collapsed">
-            <DockPanel.Dock>
-                <Binding Converter="{StaticResource dockOrientationConverter}"
-                             ConverterParameter="leading"
-                             Path="Orientation"
-                             RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
-            </DockPanel.Dock>
-        </Thumb>
-        <Grid>
-            <ScrollViewer Style="{DynamicResource TaskListScrollViewer}"
-                          x:Name="TasksScrollViewer"
-                          Focusable="False"
-                          PreviewMouseWheel="TasksScrollViewer_PreviewMouseWheel"
-                          VerticalScrollBarVisibility="Disabled">
-                <ItemsControl x:Name="TasksList"
-                              Focusable="False"
+            <!-- Cloned per virtual desktop: one live ItemsControl each, so switching only
+                 flips Visibility instead of clearing/refilling one shared list. -->
+            <DataTemplate x:Key="TaskListItemsTemplate">
+                <ItemsControl Focusable="False"
                               HorizontalAlignment="Stretch">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -68,6 +53,25 @@
                         </ItemContainerTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+            </DataTemplate>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <DockPanel>
+        <Thumb Style="{DynamicResource ToolbarThumb}" Visibility="Collapsed">
+            <DockPanel.Dock>
+                <Binding Converter="{StaticResource dockOrientationConverter}"
+                             ConverterParameter="leading"
+                             Path="Orientation"
+                             RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
+            </DockPanel.Dock>
+        </Thumb>
+        <Grid>
+            <ScrollViewer Style="{DynamicResource TaskListScrollViewer}"
+                          x:Name="TasksScrollViewer"
+                          Focusable="False"
+                          PreviewMouseWheel="TasksScrollViewer_PreviewMouseWheel"
+                          VerticalScrollBarVisibility="Disabled">
+                <Grid x:Name="TasksListsHost" />
             </ScrollViewer>
             <Canvas x:Name="InsertionOverlay"
                     IsHitTestVisible="False">

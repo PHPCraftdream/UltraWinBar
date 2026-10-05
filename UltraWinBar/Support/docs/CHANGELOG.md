@@ -13,6 +13,13 @@
 
 ### Fixed
 
+- Task buttons appear instantly when switching virtual desktops: every desktop
+  keeps its own cached task list, so a switch only makes the new desktop's list
+  visible instead of clearing and rebuilding the shared list (which recreated
+  every button and cost 100-250 ms). Window desktop ids stay cached across
+  switches (only a move or close forgets one), and pinned-appearance updates
+  run after the switch frame, so the cached list shows ~60-90 ms after
+  Explorer records the switch instead of ~450 ms after the keypress.
 - On a single monitor the panels are also registered with the shell as AppBars
   carrying their exact rectangles (positioning stays manual), so Explorer's own
   work-area recomputation on unlock reserves them instead of clearing the work

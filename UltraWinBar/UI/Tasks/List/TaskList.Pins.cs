@@ -15,8 +15,6 @@ namespace UltraWinBar.Controls
     // each panel its own slice back through ITaskModelPanel.Apply.
     public partial class TaskList : ITaskModelPanel
     {
-        private readonly ObservableCollection<object> displayedTasks = new ObservableCollection<object>();
-        private IReadOnlyDictionary<object, string> displayKeys = new Dictionary<object, string>();
         private string lastOrderSnapshot;
 
         internal void QueueTaskRebuild() => TaskModelHost.Instance.RequestPass(Dispatcher);
@@ -29,7 +27,8 @@ namespace UltraWinBar.Controls
 
         void ITaskModelPanel.Apply(TaskModelEdgeResult result)
         {
-            displayKeys = result.DisplayKeys;
+            // Stored per desktop: switching lists must not leak the old desktop's ordering keys.
+            desktopKeys[desktopLists.CurrentId] = result.DisplayKeys;
             TaskListDiff.Reconcile(displayedTasks, result.Items);
             if (Settings.Instance.DebugLogging)
             {

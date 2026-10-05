@@ -58,12 +58,30 @@ namespace UltraWinBar.Utilities
         /// number of calls (from any number of panels) made before the pass actually runs into a
         /// single Background-priority dispatch — the same coalescing QueueTaskRebuild used to do
         /// per panel, now shared across all of them.</summary>
-        // Desktop switch timing: one Info line with the wall-clock time of the first frame rendered after a
+        // Desktop switch timing (Debug): wall-clock time of the first frame rendered after a
         // pass that ran within 2 s of a desktop change or cloak flip (compare with cloak event times).
         private long switchWindowUntil;
         private bool renderLogPending;
 
         internal void MarkDesktopSwitch() => switchWindowUntil = Environment.TickCount64 + 2000;
+
+        private bool shownLogPending;
+
+        // Logs when a panel learned of the switch and the first frame showing its cached list.
+        internal void LogCachedListShown()
+        {
+            if (shownLogPending) return;
+            shownLogPending = true;
+            string detectedAt = DateTime.Now.ToString("HH:mm:ss.fff");
+            EventHandler rendered = null;
+            rendered = (_, _) =>
+            {
+                System.Windows.Media.CompositionTarget.Rendering -= rendered;
+                shownLogPending = false;
+                ShellLogger.Info($"Desktop switch: detected {detectedAt}, cached list rendered {DateTime.Now:HH:mm:ss.fff}");
+            };
+            System.Windows.Media.CompositionTarget.Rendering += rendered;
+        }
 
         internal void RequestPass(Dispatcher dispatcher) => RequestPass(dispatcher, DispatcherPriority.Background);
 
@@ -79,6 +97,9 @@ namespace UltraWinBar.Utilities
         private void RunPass()
         {
             passPending = false;
+            string passStartedAt = DateTime.Now.ToString("HH:mm:ss.fff");
+            // Panels write into per-desktop lists: make sure the current desktop is not stale.
+            VirtualDesktopContext.Instance?.RefreshCurrent();
 
             var live = new List<ITaskModelPanel>();
             for (int i = panels.Count - 1; i >= 0; i--)
@@ -161,7 +182,7 @@ namespace UltraWinBar.Utilities
                 {
                     System.Windows.Media.CompositionTarget.Rendering -= rendered;
                     renderLogPending = false;
-                    ShellLogger.Info($"Desktop switch: pass applied {appliedAt}, rendered {DateTime.Now:HH:mm:ss.fff}");
+                    ShellLogger.Debug($"Desktop switch: pass started {passStartedAt}, applied {appliedAt}, rendered {DateTime.Now:HH:mm:ss.fff}");
                 };
                 System.Windows.Media.CompositionTarget.Rendering += rendered;
             }
