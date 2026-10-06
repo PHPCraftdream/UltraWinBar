@@ -11,7 +11,19 @@
   (tab-separated; the closing line keeps the last known title). Toggling the
   flag file takes effect immediately; files follow the 7-day log retention.
 
+- Current-desktop launch policy for pinned applications and desktop icons:
+  reuse windows available here (including applications shown on all desktops);
+  otherwise open new browser, Explorer-folder and Notepad++ windows without
+  moving their existing windows from other desktops. Other applications retain
+  the existing transfer behavior.
+- Desktop folder matching uses the requested folder path; shortcut launch
+  arguments, working directory and administrator flags are preserved.
+
 ### Fixed
+
+- Desktop icon activation no longer fails while the C# COM binder scans Shell
+  type libraries with duplicate GUIDs; desktop/folder/shortcut automation now
+  uses CLR COM dispatch instead.
 
 - The Connect (Win+K) and Project (Win+P) flyouts open flush against the panel
   instead of 64 px away: Windows docks them to Explorer's hidden taskbar, which

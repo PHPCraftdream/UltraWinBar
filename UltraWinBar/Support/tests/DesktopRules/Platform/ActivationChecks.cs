@@ -95,20 +95,5 @@ internal static class ActivationChecks
         if (uninstallThreadId != installThreadId) throw new Exception("Uninstall did not run on the same thread that installed the hook.");
         ((IDisposable)host).Dispose();
         Console.WriteLine("PASS: double-click completion is a pure per-click decision; the hook thread host waits for install, runs callbacks off the caller thread, and disposes idempotently without deadlock.");
-        if (args.Contains("--shortcut-probe"))
-        {
-            var resolver = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.DesktopShortcutResolver");
-            var selection = resolver?.GetMethod("ReadSelectedShortcut").Invoke(null, null);
-            if (selection == null) Console.WriteLine("SKIP: no executable desktop shortcut selected.");
-            else
-            {
-                var shortcutPath = (string)selection.GetType().GetProperty("ShortcutPath").GetValue(selection);
-                var targetPath = (string)selection.GetType().GetProperty("TargetPath").GetValue(selection);
-                if (!System.IO.File.Exists(shortcutPath) || !System.IO.File.Exists(targetPath) ||
-                    !string.Equals(System.IO.Path.GetExtension(targetPath), ".exe", StringComparison.OrdinalIgnoreCase))
-                    throw new Exception("Selected desktop shortcut did not resolve to an executable.");
-                Console.WriteLine("PASS: selected desktop shortcut resolves to an executable.");
-            }
-        }
     }
 }

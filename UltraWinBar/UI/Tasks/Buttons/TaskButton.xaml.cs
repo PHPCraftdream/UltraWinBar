@@ -278,23 +278,17 @@ namespace UltraWinBar.Controls
             if (Window != null) return Window.IsUWP ? null : Window.WinFileName;
             string path = Pinned?.LaunchTarget;
             if (string.IsNullOrEmpty(path) || !Path.IsPathRooted(path)) return null;
-            if (!string.Equals(Path.GetExtension(path), ".lnk", StringComparison.OrdinalIgnoreCase)) return path;
-            object shell = null, shortcut = null;
             try
             {
-                shell = Activator.CreateInstance(Type.GetTypeFromProgID("WScript.Shell"));
-                shortcut = ((dynamic)shell).CreateShortcut(path);
-                return (string)((dynamic)shortcut).TargetPath;
+                var target = DesktopShortcutResolver.ReadLaunchTarget(path);
+                return DesktopWindowLauncher.FolderPath(target) != null
+                    ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe")
+                    : target.TargetPath;
             }
             catch (Exception error)
             {
                 ManagedShell.Common.Logging.ShellLogger.Warning($"Task shortcut path: {error.Message}");
                 return null;
-            }
-            finally
-            {
-                if (shortcut != null) Marshal.FinalReleaseComObject(shortcut);
-                if (shell != null) Marshal.FinalReleaseComObject(shell);
             }
         }
 

@@ -133,6 +133,30 @@ pin's launch file has disappeared, clicking it opens the same selection dialog;
 cancelling leaves the pin unchanged, and a selection is saved for subsequent
 launches. The window-matching identifier and panel position are retained.
 
+### Opening on the current desktop
+
+With **Try to keep opened windows on this desktop (experimental)** enabled,
+pinned launchers and unmodified desktop-icon double-clicks follow this order:
+
+- Reuse a matching window already available on the current desktop. Windows
+  shown on **all desktops** count as available: activate them without moving
+  them or creating another instance.
+- If no matching local window exists, open a new browser window or Explorer
+  folder window here, leaving windows on other desktops unchanged. Folder
+  matching uses the actual folder path, not just `explorer.exe`.
+- Notepad++ uses `-multiInst -nosession`: a separate instance without restoring
+  the previous session.
+- Other applications retain the existing window-transfer behavior.
+
+Supported browser executables are Chrome/Chromium, Edge, Yandex Browser, Brave,
+Vivaldi, Opera, Firefox, Waterfox and LibreWolf. Shortcut arguments, working
+directory and the shortcut's administrator flag are retained.
+
+This does not intercept links/documents launched from other applications or
+change file/URL associations. Tray activation keeps its existing behavior.
+Keyboard-modified desktop clicks are left to Windows.
+
+
 Panel assignments, pinned applications, and task order are saved by virtual
 desktop ID. Restarting UltraWinBar preserves these settings for already-running
 windows. This does not relaunch applications or recreate windows after Windows

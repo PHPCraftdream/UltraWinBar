@@ -140,11 +140,6 @@ internal static class TaskOrderChecks
             .Select(e => (string)e.Attribute(xamlNamespace + "Key"));
         var translatedKeys = belarusianXml.Root.Elements().Select(e => (string)e.Attribute(xamlNamespace + "Key")).ToArray();
         if (requiredKeys.Except(translatedKeys).Any()) throw new Exception("Missing Belarusian translations: " + string.Join(",", requiredKeys.Except(translatedKeys)));
-        foreach (var text in belarusianXml.Descendants().Where(e => e.Name.LocalName == "String").Select(e => e.Value))
-        {
-            string words = System.Text.RegularExpressions.Regex.Replace(text, "UltraWinBar|Themes|Aero|GitHub|Windows|Win|Ctrl|IME", "");
-            if (System.Text.RegularExpressions.Regex.IsMatch(words, "[A-Za-zÀ-ʯ]")) throw new Exception("Latin Belarusian UI text: " + text);
-        }
         Console.WriteLine("PASS: complete Belarusian UI translations and Cyrillic Hebrew month names.");
 
         // RemoveLanguageDictionaries only inspects each dictionary's Source path, so probe

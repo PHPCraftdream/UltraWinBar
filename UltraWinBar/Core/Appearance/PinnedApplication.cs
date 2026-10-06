@@ -5,6 +5,7 @@ using ManagedShell.Interop;
 using ManagedShell.WindowsTasks;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -108,10 +109,19 @@ namespace UltraWinBar.Utilities
             {
                 Guid desktop = VirtualDesktopContext.Instance?.CurrentId ?? Guid.Empty;
                 if (DesktopId != desktop) return;
+                var target = Settings.Instance.MoveActivatedWindowsToCurrentDesktop
+                    ? DesktopShortcutResolver.ReadLaunchTarget(LaunchTarget) : null;
                 var matchingWindows = tasks.GroupedWindows.SourceCollection.Cast<object>().OfType<ApplicationWindow>()
                     .Where(w => TaskAssignmentManager.GetIdentifier(w, TaskAssignmentMode.ExecutablePath) == Identifier).ToList();
                 var windows = matchingWindows.Where(w => w.ShowInTaskbar &&
                     VirtualDesktopContext.Instance?.IsOnCurrentDesktop(w.Handle) != false).ToList();
+                string folderPath = DesktopWindowLauncher.FolderPath(target);
+                bool openLocally = folderPath != null || target != null && DesktopWindowLauncher.SupportsNewWindow(target.TargetPath);
+                if (folderPath != null)
+                {
+                    var folderWindows = DesktopShortcutResolver.ReadFolderWindows(folderPath);
+                    windows = windows.Where(w => Array.IndexOf(folderWindows, w.Handle) >= 0).ToList();
+                }
                 var windowIds = new HashSet<string>(windows.Select(w =>
                     TaskAssignmentManager.GetIdentifier(w, TaskAssignmentMode.WindowClassAndTitle)));
                 var assignments = Settings.Instance.TaskbarAssignments.Where(a => a.DesktopId != desktop ||
@@ -121,7 +131,7 @@ namespace UltraWinBar.Utilities
                 Settings.Instance.TaskbarAssignments = assignments;
                 var existing = windows.FirstOrDefault(w => w.ShowInTaskbar);
                 if (existing != null) existing.BringToFront();
-                else if (Settings.Instance.MoveActivatedWindowsToCurrentDesktop &&
+                else if (!openLocally && Settings.Instance.MoveActivatedWindowsToCurrentDesktop &&
                     matchingWindows.FirstOrDefault(w => w.CanAddToTaskbar &&
                         VirtualDesktopContext.Instance?.IsOnCurrentDesktop(w.Handle) == false) is { } remote &&
                     VirtualDesktopContext.Instance?.TryMoveWindowToDesktop(remote.Handle, desktop) == true)
@@ -131,16 +141,21 @@ namespace UltraWinBar.Utilities
                 }
                 else
                 {
-                    if (Path.IsPathRooted(LaunchTarget) && !File.Exists(LaunchTarget))
+                    if (Path.IsPathRooted(LaunchTarget) && !File.Exists(LaunchTarget) && !Directory.Exists(LaunchTarget))
                     {
                         ShellLogger.Warning($"Pinned application target missing: {LaunchTarget}");
                         string replacement = SelectLaunchTarget(Title);
                         if (replacement == null) return;
                         LaunchTarget = replacement;
                         Settings.Instance.PinnedApplications = Settings.Instance.PinnedApplications.ToList();
+                        target = Settings.Instance.MoveActivatedWindowsToCurrentDesktop
+                            ? DesktopShortcutResolver.ReadLaunchTarget(LaunchTarget) : null;
+                        openLocally = DesktopWindowLauncher.FolderPath(target) != null ||
+                            target != null && DesktopWindowLauncher.SupportsNewWindow(target.TargetPath);
                     }
-                    ShellLogger.Info($"Pinned application launch: {Title}; target={LaunchTarget}");
-                    if (!ShellHelper.StartProcess(LaunchTarget))
+                    ShellLogger.Info($"Pinned application launch: {Title}; target={LaunchTarget}; newWindow={openLocally}");
+                    if (openLocally) Process.Start(DesktopWindowLauncher.CreateStartInfo(target));
+                    else if (!ShellHelper.StartProcess(LaunchTarget))
                         System.Windows.MessageBox.Show("Unable to launch:\n" + LaunchTarget + "\nSee %LOCALAPPDATA%\\UltraWinBar\\Logs.", Title);
                 }
             }

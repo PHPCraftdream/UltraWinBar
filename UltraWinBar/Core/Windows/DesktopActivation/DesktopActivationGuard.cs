@@ -78,6 +78,7 @@ namespace UltraWinBar.Utilities
             public Guid Owner { get; init; }
             public long FirstDownAt { get; init; }
             public uint ProcessId { get; init; }
+            public bool OpenLocally { get; init; }
         }
 
         public DesktopActivationGuard(VirtualDesktopContext desktops, Tasks tasks)
@@ -105,7 +106,6 @@ namespace UltraWinBar.Utilities
 
             desktops.Changed += OnDesktopChanged;
             ShellLogger.Info("DesktopActivation: experimental guard enabled.");
-            _ = Task.Run(DesktopShortcutResolver.ReadSelectedShortcut);
         }
 
         internal static bool ShouldMoveWindow(Guid origin, Guid current, Guid owner, bool onCurrent, long ageMs) =>
@@ -216,10 +216,36 @@ namespace UltraWinBar.Utilities
         {
             try
             {
+                string folderPath = DesktopWindowLauncher.FolderPath(shortcut);
+                if (folderPath != null || DesktopWindowLauncher.SupportsNewWindow(shortcut.TargetPath))
+                {
+                    IntPtr[] folderWindows = folderPath != null ? DesktopShortcutResolver.ReadFolderWindows(folderPath) : null;
+                    var currentWindow = tasks.GroupedWindows.SourceCollection.Cast<object>().OfType<ApplicationWindow>()
+                        .FirstOrDefault(window => window.CanAddToTaskbar && desktops.IsOnCurrentDesktop(window.Handle) &&
+                            (folderWindows != null ? Array.IndexOf(folderWindows, window.Handle) >= 0 :
+                                string.Equals(window.WinFileName, shortcut.TargetPath, StringComparison.OrdinalIgnoreCase)));
+                    return new ShortcutPreflight
+                    {
+                        Shortcut = shortcut, Window = currentWindow, Source = source,
+                        FirstDownAt = firstDownAt, OpenLocally = true
+                    };
+                }
                 var windows = tasks.GroupedWindows.SourceCollection.Cast<object>().OfType<ApplicationWindow>()
                     .Where(window => window.CanAddToTaskbar &&
                         string.Equals(window.WinFileName, shortcut.TargetPath, StringComparison.OrdinalIgnoreCase)).ToList();
                 int currentWindows = windows.Count(window => desktops.IsOnCurrentDesktop(window.Handle));
+                if (currentWindows > 0 && DesktopActions.IsSupported)
+                {
+                    using var actions = new DesktopActions();
+                    var shared = windows.FirstOrDefault(window => desktops.IsOnCurrentDesktop(window.Handle) &&
+                        actions.IsApplicationPinned(window.Handle));
+                    if (shared != null)
+                        return new ShortcutPreflight
+                        {
+                            Shortcut = shortcut, Window = shared, Source = source,
+                            FirstDownAt = firstDownAt, OpenLocally = true
+                        };
+                }
                 var remote = windows.Where(window =>
                     desktops.TryGetWindowDesktopId(window.Handle, out Guid owner) && owner != source &&
                     !desktops.IsOnCurrentDesktop(window.Handle)).Take(2).ToArray();
@@ -242,6 +268,33 @@ namespace UltraWinBar.Utilities
 
         private void OpenPreparedShortcut(ShortcutPreflight prepared)
         {
+            if (prepared.OpenLocally)
+            {
+                CancelIntent();
+                if (disposed || desktops.CurrentIdSnapshot() != prepared.Source) return;
+                try
+                {
+                    if (prepared.Window != null && NativeMethods.IsWindow(prepared.Window.Handle) &&
+                        desktops.IsOnCurrentDesktop(prepared.Window.Handle))
+                    {
+                        prepared.Window.BringToFront();
+                        ShellLogger.Info($"DesktopActivation: reused local window={prepared.Window.Handle}.");
+                    }
+                    else
+                    {
+                        var start = DesktopWindowLauncher.CreateStartInfo(prepared.Shortcut) ??
+                            new ProcessStartInfo { FileName = prepared.Shortcut.ShortcutPath, UseShellExecute = true };
+                        Process.Start(start);
+                        ShellLogger.Info($"DesktopActivation: new local window; target={start.FileName}.");
+                    }
+                }
+                catch (Exception error)
+                {
+                    ShellLogger.Error($"DesktopActivation: local launch failed: {error}");
+                    System.Windows.MessageBox.Show(error.Message, "UltraWinBar");
+                }
+                return;
+            }
             IntPtr hwnd = prepared.Window.Handle;
             bool moved = false;
             try
@@ -297,6 +350,48 @@ namespace UltraWinBar.Utilities
             {
                 CancelIntent();
                 ShellLogger.Error($"DesktopActivation: could not open shortcut: {error.Message}");
+            }
+        }
+
+        private async void OpenDesktopSelection(Guid source, long clickAt, uint inputTick)
+        {
+            int generation = intentGeneration;
+            hasActiveIntent = true;
+            try
+            {
+                var selections = await Task.Run(DesktopShortcutResolver.ReadSelectedItems);
+                if (disposed || generation != intentGeneration || desktops.CurrentIdSnapshot() != source) return;
+                if (Environment.TickCount64 - clickAt > IntentDurationMs || !InputStillFromLaunch())
+                {
+                    CancelIntent();
+                    return;
+                }
+                if (selections.Length == 0) CancelIntent();
+                foreach (var selection in selections)
+                {
+                    var prepared = FindShortcutWindow(selection, source, clickAt);
+                    if (prepared != null)
+                    {
+                        OpenPreparedShortcut(prepared);
+                    }
+                    else
+                    {
+                        intentDesktop = source;
+                        intentProcessId = 0;
+                        intentSource = "desktop icon";
+                        intentAt = Environment.TickCount64;
+                        intentInputTick = inputTick;
+                        armed = true;
+                        hasActiveIntent = true;
+                        Process.Start(new ProcessStartInfo { FileName = selection.ShortcutPath, UseShellExecute = true });
+                    }
+                }
+            }
+            catch (Exception error)
+            {
+                CancelIntent();
+                ShellLogger.Error($"DesktopActivation: desktop launch failed: {error}");
+                System.Windows.MessageBox.Show(error.Message, "UltraWinBar");
             }
         }
 
@@ -362,24 +457,27 @@ namespace UltraWinBar.Utilities
             {
                 ShortcutPreflight ready = preflight;
                 // desktops.CurrentId may be a beat stale here; worst case we skip or intercept a beat late.
-                if (ready != null && ready.FirstDownAt == previousDownAt &&
-                    ready.Source == desktops.CurrentId && !HasSelectionModifiers() && !dispatcher.HasShutdownStarted &&
-                    ready.ProcessId != 0 && ready.ProcessId == ProcessIdForWindow(ready.Window.Handle) &&
-                    NativeMethods.IsWindow(ready.Window.Handle))
+                if (!HasSelectionModifiers() && !dispatcher.HasShutdownStarted && desktops.CurrentId != Guid.Empty)
                 {
+                    Guid source = desktops.CurrentId;
+                    long firstDownAt = previousDownAt;
                     previousDownOnDesktop = false;
                     try
                     {
                         dispatcher.BeginInvoke(new Action(() =>
                         {
                             CancelIntent();
-                            intentDesktop = ready.Source;
+                            intentDesktop = source;
                             intentAt = now;
                             intentInputTick = inputTick;
                             intentSource = "desktop shortcut";
-                            // Logged here (UI thread), not on the hook thread: ShellLogger does file I/O.
-                            ShellLogger.Info($"DesktopActivation: intercepted desktop shortcut for window={ready.Window.Handle}.");
-                            OpenPreparedShortcut(ready);
+                            if (ready != null && ready.FirstDownAt == firstDownAt &&
+                                ready.Source == desktops.CurrentIdSnapshot() &&
+                                (ready.OpenLocally || ready.Window != null && NativeMethods.IsWindow(ready.Window.Handle) &&
+                                    ready.ProcessId == ProcessIdForWindow(ready.Window.Handle)))
+                                OpenPreparedShortcut(ready);
+                            else
+                                OpenDesktopSelection(intentDesktop, now, inputTick);
                         }), DispatcherPriority.Send);
                         suppressNextLeftUp = true;
                         e.Handled = true;
@@ -398,7 +496,7 @@ namespace UltraWinBar.Utilities
                     CancelIntent();
                     intentDesktop = desktops.CurrentIdSnapshot();
                     intentProcessId = 0;
-                    intentSource = "desktop icon";
+                    intentSource = "desktop icon with modifiers";
                     intentAt = now;
                     intentInputTick = inputTick;
                     armed = intentDesktop != Guid.Empty;
