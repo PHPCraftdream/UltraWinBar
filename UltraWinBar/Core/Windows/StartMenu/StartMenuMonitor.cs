@@ -189,6 +189,7 @@ namespace UltraWinBar.Utilities
                 // immersive launcher itself reports visible (e.g. a bare Win-key press).
                 if (_placementTaskbar == IntPtr.Zero && !isModernStartMenuOpen())
                 {
+                    AlignShellFlyout(hwnd);
                     return;
                 }
             }

@@ -13,6 +13,9 @@
 
 ### Fixed
 
+- The Connect (Win+K) and Project (Win+P) flyouts open flush against the panel
+  instead of 64 px away: Windows docks them to Explorer's hidden taskbar, which
+  keeps its own width, so they are moved to the work-area edge when they open.
 - Task buttons appear instantly when switching virtual desktops: every desktop
   keeps its own cached task list, so a switch only makes the new desktop's list
   visible instead of clearing and rebuilding the shared list (which recreated

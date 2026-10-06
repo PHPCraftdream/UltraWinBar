@@ -34,6 +34,43 @@ namespace UltraWinBar.Utilities
             return IntPtr.Zero;
         }
 
+        // Moves a shell flyout docked to Explorer's hidden taskbar next to our panel instead.
+        private static void AlignShellFlyout(IntPtr hwnd)
+        {
+            IntPtr monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+            IntPtr tray = FindExplorerTray(monitor);
+            if (tray == IntPtr.Zero) return;
+            GetWindowRect(hwnd, out ManagedShell.Interop.NativeMethods.Rect flyout);
+            GetWindowRect(tray, out ManagedShell.Interop.NativeMethods.Rect trayRect);
+            var screen = System.Windows.Forms.Screen.FromHandle(hwnd);
+            var bounds = new ManagedShell.Interop.NativeMethods.Rect
+            {
+                Left = screen.Bounds.Left, Top = screen.Bounds.Top, Right = screen.Bounds.Right, Bottom = screen.Bounds.Bottom
+            };
+            Vector? shift = StartMenuPlacement.GetShellFlyoutShift(flyout, trayRect, bounds, WindowPlacementGuard.AvailableArea(screen.Bounds));
+            if (!shift.HasValue) return;
+            int x = flyout.Left + (int)shift.Value.X, y = flyout.Top + (int)shift.Value.Y;
+            bool moved = SetWindowPos(hwnd, IntPtr.Zero, x, y, 0, 0,
+                (int)(SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOZORDER | SetWindowPosFlags.SWP_NOACTIVATE));
+            ShellLogger.Debug($"StartMenuMonitor: shell flyout {hwnd} moved to ({x},{y}): {moved}");
+        }
+
+        // Explorer's own (hidden) taskbar on that monitor; ours shares the class, so filter by process.
+        private static IntPtr FindExplorerTray(IntPtr monitor)
+        {
+            uint ownPid = (uint)Environment.ProcessId;
+            foreach (string className in new[] { "Shell_TrayWnd", "Shell_SecondaryTrayWnd" })
+            {
+                IntPtr hwnd = IntPtr.Zero;
+                while ((hwnd = FindWindowEx(IntPtr.Zero, hwnd, className, IntPtr.Zero)) != IntPtr.Zero)
+                {
+                    GetWindowThreadProcessId(hwnd, out uint pid);
+                    if (pid != ownPid && MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST) == monitor) return hwnd;
+                }
+            }
+            return IntPtr.Zero;
+        }
+
         private IntPtr hMonitorClassicStartMenu()
         {
             return hMonitorByClass("DV2ControlHost");

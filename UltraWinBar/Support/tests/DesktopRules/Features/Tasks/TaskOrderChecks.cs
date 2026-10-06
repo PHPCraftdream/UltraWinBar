@@ -208,6 +208,27 @@ internal static class TaskOrderChecks
             throw new Exception("Start menu anchor must prefer the Start-hosting panel on the menu's monitor, then any panel there, then the primary Start panel.");
         Console.WriteLine("PASS: a Start menu not opened by our button still anchors to a panel: Start-hosting panel on its monitor first.");
 
+        // Regression: Win+K docked to Explorer's 222 px hidden taskbar, leaving a 64 px gap before our 158 px right panel.
+        ManagedShell.Interop.NativeMethods.Rect R(int l, int t, int r, int b) => new() { Left = l, Top = t, Right = r, Bottom = b };
+        var screenRect = R(0, 0, 1920, 1080);
+        var connect = R(1338, 41, 1698, 1039);
+        var flyoutShift = StartMenuPlacement.GetShellFlyoutShift(connect, R(1698, 0, 1920, 1080), screenRect, area);
+        if (flyoutShift != new System.Windows.Vector(64, 0))
+            throw new Exception($"Win+K flyout must move flush to the right panel, got {flyoutShift}");
+        if (StartMenuPlacement.GetShellFlyoutShift(R(1366, 41, 1762, 1039), R(1698, 0, 1920, 1080), screenRect, area) != null)
+            throw new Exception("Action Center already flush with the panel must not move.");
+        if (StartMenuPlacement.GetShellFlyoutShift(R(1402, 41, 1762, 1039), R(1762, 0, 1920, 1080), screenRect, area) != null)
+            throw new Exception("A flyout already at the area edge must not move.");
+        if (StartMenuPlacement.GetShellFlyoutShift(R(200, 200, 600, 600), R(1698, 0, 1920, 1080), screenRect, area) != null)
+            throw new Exception("A window not docked to Explorer's taskbar must not move.");
+        if (StartMenuPlacement.GetShellFlyoutShift(R(222, 41, 582, 1039), R(0, 0, 222, 1080), screenRect, area) != new System.Windows.Vector(-64, 0))
+            throw new Exception("Left-docked flyout must move to the left area edge.");
+        if (StartMenuPlacement.GetShellFlyoutShift(R(1500, 500, 1920, 1000), R(0, 1000, 1920, 1080), screenRect, area) != new System.Windows.Vector(0, 39))
+            throw new Exception("Bottom-docked flyout must move to the bottom area edge.");
+        if (StartMenuPlacement.GetShellFlyoutShift(R(1500, 60, 1920, 400), R(0, 0, 1920, 60), screenRect, area) != new System.Windows.Vector(0, -19))
+            throw new Exception("Top-docked flyout must move to the top area edge.");
+        Console.WriteLine("PASS: shell flyouts docked to Explorer's hidden taskbar move flush to our panel on every edge; others stay.");
+
         var startMenuMonitorType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.StartMenuMonitor");
         var shouldHookMenuEvents = startMenuMonitorType?.GetMethod("ShouldHookMenuEvents", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
         if (shouldHookMenuEvents == null) throw new Exception("Start menu event hook policy is missing.");
