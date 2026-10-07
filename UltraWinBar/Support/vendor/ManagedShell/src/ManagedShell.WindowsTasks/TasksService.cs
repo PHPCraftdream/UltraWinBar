@@ -292,11 +292,13 @@ namespace ManagedShell.WindowsTasks
                 return true;
             }), IntPtr.Zero);
 
-            foreach (IntPtr hwnd in handles)
+            foreach (IntPtr surface in handles)
             {
+                IntPtr hwnd = WindowGhosting.Original(surface);
+                if (_windowsByHandle.ContainsKey(hwnd)) continue;
                 ApplicationWindow win = new ApplicationWindow(this, hwnd);
 
-                if (win.CanAddToTaskbar && win.ShowInTaskbar && !Windows.Contains(win))
+                if (win.CanAddToTaskbar && win.ShowInTaskbar)
                 {
                     Windows.Add(win);
 
@@ -396,6 +398,8 @@ namespace ManagedShell.WindowsTasks
 
         private ApplicationWindow addWindow(IntPtr hWnd, ApplicationWindow.WindowState initialState = ApplicationWindow.WindowState.Inactive, bool sanityCheck = false)
         {
+            hWnd = WindowGhosting.Original(hWnd);
+            if (_windowsByHandle.TryGetValue(hWnd, out var existing)) return existing;
             ApplicationWindow win = new ApplicationWindow(this, hWnd);
 
             // set window state if a non-default value is provided
@@ -431,6 +435,23 @@ namespace ManagedShell.WindowsTasks
             }
         }
 
+
+        internal void ReconcileWindowReplacement(IntPtr hWnd)
+        {
+            hWnd = WindowGhosting.Original(hWnd);
+            if (_windowsByHandle.TryGetValue(hWnd, out var existing))
+            {
+                GetWindowThreadProcessId(hWnd, out uint processId);
+                if (!IsWindow(hWnd) || existing.ProcId != processId)
+                {
+                    removeWindow(hWnd);
+                    return;
+                }
+                existing.UpdateProperties();
+                return;
+            }
+            if (IsWindow(hWnd)) addWindow(hWnd, sanityCheck: true);
+        }
         // Н12: rare liveness sweep (called from HealthReporter's existing 30-min timer, not per
         // event). A window is removed from Windows only via a shell-hook message; if that message
         // is ever lost (posted-message queue overflow during a UI-thread stall), the dead entry
@@ -530,23 +551,15 @@ namespace ManagedShell.WindowsTasks
                                 break;
 
                             case HSHELL.WINDOWDESTROYED:
-                                removeWindow(msg.LParam);
+                                IntPtr original = WindowGhosting.Original(msgCopy.LParam);
+                                if (original == msgCopy.LParam || !IsWindow(original))
+                                    removeWindow(original);
                                 break;
 
                             case HSHELL.WINDOWREPLACING:
-                                if (_windowsByHandle.TryGetValue(msgCopy.LParam, out ApplicationWindow replacingWin))
-                                {
-                                    replacingWin.State = ApplicationWindow.WindowState.Inactive;
-                                    replacingWin.SetShowInTaskbar();
-                                }
-                                else
-                                {
-                                    addWindow(msg.LParam);
-                                }
-                                break;
                             case HSHELL.WINDOWREPLACED:
-                                // TODO: If a window gets replaced, we lose app-level state such as overlay icons.
-                                removeWindow(msg.LParam);
+                                // Replacement is not destruction: keep the original task identity.
+                                ReconcileWindowReplacement(msgCopy.LParam);
                                 break;
 
                             case HSHELL.WINDOWACTIVATED:

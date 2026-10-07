@@ -366,14 +366,15 @@ namespace ManagedShell.WindowsTasks
         {
             get
             {
-                int extendedWindowStyles = ExtendedWindowStyles;
+                IntPtr surface = WindowGhosting.Surface(Handle);
+                int extendedWindowStyles = NativeMethods.GetWindowLong(surface, NativeMethods.WindowLongFlags.GWL_EXSTYLE);
                 bool isWindow = NativeMethods.IsWindow(Handle);
-                bool isVisible = NativeMethods.IsWindowVisible(Handle);
+                bool isVisible = NativeMethods.IsWindowVisible(surface);
                 bool isToolWindow = (extendedWindowStyles & (int)NativeMethods.ExtendedWindowStyles.WS_EX_TOOLWINDOW) != 0;
                 bool isAppWindow = (extendedWindowStyles & (int)NativeMethods.ExtendedWindowStyles.WS_EX_APPWINDOW) != 0;
                 bool isNoActivate = (extendedWindowStyles & (int)NativeMethods.ExtendedWindowStyles.WS_EX_NOACTIVATE) != 0;
-                bool isDeleted = NativeMethods.GetProp(Handle, "ITaskList_Deleted") != IntPtr.Zero;
-                IntPtr ownerWin = NativeMethods.GetWindow(Handle, NativeMethods.GetWindow_Cmd.GW_OWNER);
+                bool isDeleted = NativeMethods.GetProp(surface, "ITaskList_Deleted") != IntPtr.Zero;
+                IntPtr ownerWin = NativeMethods.GetWindow(surface, NativeMethods.GetWindow_Cmd.GW_OWNER);
 
                 return isWindow && isVisible && (ownerWin == IntPtr.Zero || isAppWindow) && (!isNoActivate || isAppWindow) && !isToolWindow && !isDeleted;
             }
@@ -421,7 +422,7 @@ namespace ManagedShell.WindowsTasks
             if (EnvironmentHelper.IsWindows8OrBetter)
             {
                 int cbSize = Marshal.SizeOf(typeof(uint));
-                NativeMethods.DwmGetWindowAttribute(Handle, NativeMethods.DWMWINDOWATTRIBUTE.DWMWA_CLOAKED, out var cloaked, cbSize);
+                NativeMethods.DwmGetWindowAttribute(WindowGhosting.Surface(Handle), NativeMethods.DWMWINDOWATTRIBUTE.DWMWA_CLOAKED, out var cloaked, cbSize);
 
                 if (cloaked > 0)
                 {
@@ -701,6 +702,11 @@ namespace ManagedShell.WindowsTasks
 
         internal void UpdateProperties()
         {
+            if (WindowGhosting.Surface(Handle) != Handle)
+            {
+                SetShowInTaskbar();
+                return;
+            }
             setTitle();
             SetShowInTaskbar();
             setIcon();
@@ -708,6 +714,13 @@ namespace ManagedShell.WindowsTasks
 
         public void BringToFront()
         {
+            IntPtr surface = WindowGhosting.Surface(Handle);
+            if (surface != Handle)
+            {
+                NativeMethods.ShowWindow(surface, NativeMethods.WindowShowStyle.Show);
+                NativeMethods.SetForegroundWindow(surface);
+                return;
+            }
             // call restore if window is minimized
             if (IsMinimized)
             {

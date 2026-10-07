@@ -86,16 +86,18 @@ namespace UltraWinBar.Utilities
                 var moved = new List<ApplicationWindow>();
                 // Cloak flips caused by a desktop switch are not moves: keep the desktop-id cache warm.
                 if (desktops.SwitchedWithin(1500)) cloakChanged.Clear();
-                foreach (var hwnd in cloakChanged)
+                foreach (var surface in cloakChanged)
                 {
+                    var hwnd = WindowGhosting.Original(surface);
                     desktops.ForgetWindowDesktop(hwnd);
                     if (tracked.TryGetValue(hwnd, out var window)) moved.Add(window);
                 }
                 cloakChanged.Clear();
                 bool windowAdded = false;
                 bool showInTaskbarChanged = false;
-                foreach (var hwnd in handles)
+                foreach (var surface in handles)
                 {
+                    var hwnd = WindowGhosting.Original(surface);
                     if (!IsWindow(hwnd)) continue;
                     if (tracked.TryGetValue(hwnd, out var existing))
                     {
@@ -104,12 +106,13 @@ namespace UltraWinBar.Utilities
                         if (existing.ShowInTaskbar != before) showInTaskbarChanged = true;
                         continue;
                     }
-                    if (!CanPossiblyAddToTaskbar(hwnd)) continue;
+                    if (!CanPossiblyAddToTaskbar(surface)) continue;
                     var candidate = new ApplicationWindow(service, hwnd);
                     if (candidate.CanAddToTaskbar)
                     {
                         candidate.SetShowInTaskbar();
                         windows.Add(candidate);
+                        tracked[hwnd] = candidate;
                         windowAdded = true;
                         ShellLogger.Info($"Task recovery: restored window {hwnd}");
                     }

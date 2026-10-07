@@ -21,6 +21,13 @@
 
 ### Fixed
 
+- Explorer task buttons no longer disappear/reappear on live-window replacement
+  notifications. The original task object, order and progress/attention state
+  survive replacement and return; actual window destruction still removes it.
+- Windows ghost surfaces map to their original task during initial discovery,
+  replacement and recovery, preventing duplicate task entries. Visibility and
+  activation use the ghost surface while present.
+
 - Desktop icon activation no longer fails while the C# COM binder scans Shell
   type libraries with duplicate GUIDs; desktop/folder/shortcut automation now
   uses CLR COM dispatch instead.

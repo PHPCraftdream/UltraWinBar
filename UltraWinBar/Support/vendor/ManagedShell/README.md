@@ -12,6 +12,14 @@ not changed; every local modification is listed below and marked in code with `U
 
 - Build: `net480` target, NuGet packaging and SourceLink removed; `Directory.Build.props`
   pins version 0.0.358 instead of git-height versioning.
+- `TasksService`: shell window replacement reconciles native liveness without
+  removing a live task or resetting its state; initial enumeration and later
+  creation notifications map ghost HWNDs to the original HWND and reuse its task.
+- `ApplicationWindow` / `WindowGhosting`: preserve the original task identity
+  through Windows ghosting; use the ghost surface for visibility/activation and
+  retain cached title/icon data while the original is unresponsive. The shared
+  original-HWND mapping also keeps app-level recovery from duplicating a task.
+  Ghost mapping exports are resolved once from user32 when available.
 - `IAppVisibility` / `IAppVisibilityEvents`: `[PreserveSig]` HRESULT methods and 4-byte `BOOL`
   marshalling. The sink (`AppVisibilityEvents`) wrote its `long` result through a garbage
   `[out, retval]` pointer on every Start open/close; it now also never lets an exception reach

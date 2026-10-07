@@ -37,5 +37,51 @@ internal static class WindowDictionaryChecks
             throw new Exception("Handle dictionary was not cleared by Windows.Clear (a Reset notification).");
 
         Console.WriteLine("PASS: TasksService's HWND->ApplicationWindow dictionary stays in sync with Windows through Add, Remove, and Clear.");
+        RunReplacementContinuity();
+    }
+
+    private static void RunReplacementContinuity()
+    {
+        using var form = new System.Windows.Forms.Form { Text = "Task replacement regression" };
+        using var neighbour = new System.Windows.Forms.Form { Text = "Unrelated task regression" };
+        form.Show();
+        neighbour.Show();
+        var service = new TasksService();
+        var task = new ApplicationWindow(service, form.Handle)
+        {
+            State = ApplicationWindow.WindowState.Flashing,
+            ProgressState = ManagedShell.Interop.NativeMethods.TBPFLAG.TBPF_NORMAL,
+            ProgressValue = 63
+        };
+        var other = new ApplicationWindow(service, neighbour.Handle);
+        service.Windows.Add(task);
+        service.Windows.Add(other);
+        int mutations = 0;
+        service.Windows.CollectionChanged += (_, __) => mutations++;
+        IntPtr handle = form.Handle;
+
+        service.ReconcileWindowReplacement(handle);
+        service.ReconcileWindowReplacement(handle);
+        if (mutations != 0 || !ReferenceEquals(service.Windows[0], task) ||
+            !ReferenceEquals(service.WindowsByHandle[handle], task) || !task.ShowInTaskbar ||
+            task.State != ApplicationWindow.WindowState.Flashing || task.ProgressValue != 63 ||
+            task.ProgressState != ManagedShell.Interop.NativeMethods.TBPFLAG.TBPF_NORMAL)
+            throw new Exception("Live window replacement recreated, reordered or reset the task.");
+
+        form.Hide();
+        service.ReconcileWindowReplacement(handle);
+        if (task.ShowInTaskbar || mutations != 0 || !ReferenceEquals(service.Windows[0], task))
+            throw new Exception("Hidden replacement lost task identity or kept a visible button.");
+        form.Show();
+        service.ReconcileWindowReplacement(handle);
+        if (!task.ShowInTaskbar || mutations != 0 || !ReferenceEquals(service.Windows[0], task))
+            throw new Exception("Returning replacement recreated the task instead of restoring visibility.");
+
+        form.Close();
+        service.ReconcileWindowReplacement(handle);
+        if (mutations != 1 || service.WindowsByHandle.ContainsKey(handle) ||
+            service.Windows.Count != 1 || !ReferenceEquals(service.Windows[0], other))
+            throw new Exception("Destroyed replacement left a stale task or removed an unrelated task.");
+        Console.WriteLine("PASS: replacement preserves task identity, order, attention and progress; visibility follows the real window; actual destruction removes only that task.");
     }
 }
