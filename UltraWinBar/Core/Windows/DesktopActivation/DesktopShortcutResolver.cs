@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Globalization;
 using System.Reflection;
@@ -74,6 +75,36 @@ namespace UltraWinBar.Utilities
             finally
             {
                 Release(shortcut);
+                Release(shell);
+            }
+        }
+
+        internal static void StartInDesktopShell(ProcessStartInfo start)
+        {
+            object shell = null, windows = null, desktop = null, document = null, application = null;
+            try
+            {
+                shell = Activator.CreateInstance(Type.GetTypeFromProgID("Shell.Application"));
+                windows = Call(shell, "Windows");
+                object[] findArguments = { 0, null, 8, 0, 1 };
+                desktop = Call(windows, "FindWindowSW", findArguments, FindWindowModifiers);
+                document = Get(desktop, "Document");
+                application = Get(document, "Application");
+                ManagedShell.Interop.NativeMethods.GetWindowThreadProcessId(
+                    new IntPtr(Convert.ToInt64(findArguments[3], CultureInfo.InvariantCulture)), out uint processId);
+                if (processId != 0) ManagedShell.Interop.NativeMethods.AllowSetForegroundWindow(processId);
+                // The desktop shell owns activation, not the background mouse-hook client.
+                Call(application, "ShellExecute", new object[]
+                {
+                    start.FileName, start.Arguments, start.WorkingDirectory, start.Verb, 1
+                });
+            }
+            finally
+            {
+                Release(application);
+                Release(document);
+                Release(desktop);
+                Release(windows);
                 Release(shell);
             }
         }

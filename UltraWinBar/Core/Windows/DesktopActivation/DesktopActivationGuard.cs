@@ -284,7 +284,7 @@ namespace UltraWinBar.Utilities
                     {
                         var start = DesktopWindowLauncher.CreateStartInfo(prepared.Shortcut) ??
                             new ProcessStartInfo { FileName = prepared.Shortcut.ShortcutPath, UseShellExecute = true };
-                        Process.Start(start);
+                        DesktopWindowLauncher.Start(start);
                         ShellLogger.Info($"DesktopActivation: new local window; target={start.FileName}.");
                     }
                 }

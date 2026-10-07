@@ -154,7 +154,7 @@ namespace UltraWinBar.Utilities
                             target != null && DesktopWindowLauncher.SupportsNewWindow(target.TargetPath);
                     }
                     ShellLogger.Info($"Pinned application launch: {Title}; target={LaunchTarget}; newWindow={openLocally}");
-                    if (openLocally) Process.Start(DesktopWindowLauncher.CreateStartInfo(target));
+                    if (openLocally) DesktopWindowLauncher.Start(DesktopWindowLauncher.CreateStartInfo(target));
                     else if (!ShellHelper.StartProcess(LaunchTarget))
                         System.Windows.MessageBox.Show("Unable to launch:\n" + LaunchTarget + "\nSee %LOCALAPPDATA%\\UltraWinBar\\Logs.", Title);
                 }

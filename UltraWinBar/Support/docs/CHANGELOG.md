@@ -21,6 +21,10 @@
 
 ### Fixed
 
+- Folder launches from desktop icons and pinned shortcuts run through the desktop
+  shell with foreground permission and normal-window presentation, rather than
+  leaving new Explorer windows minimized and flashing for attention.
+
 - Explorer task buttons no longer disappear/reappear on live-window replacement
   notifications. The original task object, order and progress/attention state
   survive replacement and return; actual window destruction still removes it.

@@ -84,5 +84,13 @@ namespace UltraWinBar.Utilities
                 Verb = target.RunAsAdministrator ? "runas" : ""
             };
         }
+
+        internal static void Start(ProcessStartInfo start)
+        {
+            if (Kind(start.FileName) == LaunchKind.Explorer)
+                DesktopShortcutResolver.StartInDesktopShell(start);
+            else
+                Process.Start(start)?.Dispose();
+        }
     }
 }
