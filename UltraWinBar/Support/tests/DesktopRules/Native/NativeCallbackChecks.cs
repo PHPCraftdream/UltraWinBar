@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -271,13 +271,15 @@ internal static class NativeCallbackChecks
         ownerThread.SetApartmentState(ApartmentState.STA);
         ownerThread.Start();
         ready.Wait();
+        var probe = new LowLevelMouseHook.LowLevelMouseEventArgs { Message = ManagedShell.Interop.NativeMethods.WM.MOUSEMOVE };
         IDisposable ui = ownerDispatcher.Invoke(() => InputHookHost.SubscribeMouse("NativeCallbackChecks: ui subscriber",
-            (s, e) => uiThreadId = Environment.CurrentManagedThreadId));
+            (s, e) => { if (ReferenceEquals(e, probe)) uiThreadId = Environment.CurrentManagedThreadId; }));
+        // The hook is real: live mouse moves also reach subscribers; only the synthetic event counts.
         IDisposable inline = InputHookHost.SubscribeMouse("NativeCallbackChecks: hook-thread subscriber",
-            (s, e) => inlineThreadId = Environment.CurrentManagedThreadId, onHookThread: true);
+            (s, e) => { if (ReferenceEquals(e, probe)) inlineThreadId = Environment.CurrentManagedThreadId; }, onHookThread: true);
         try
         {
-            InputHookHost.Dispatch(null, new LowLevelMouseHook.LowLevelMouseEventArgs { Message = ManagedShell.Interop.NativeMethods.WM.MOUSEMOVE });
+            InputHookHost.Dispatch(null, probe);
             ownerDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
             if (inlineThreadId != Environment.CurrentManagedThreadId)
                 throw new Exception("An onHookThread subscriber must run inline on the hook thread.");
