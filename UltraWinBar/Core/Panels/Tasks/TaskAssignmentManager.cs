@@ -64,7 +64,7 @@ namespace UltraWinBar.Utilities
                 identity.IsUWP = isUwp;
                 identity.AppUserModelID = aumid;
                 identity.WinFileName = winFileName;
-                identity.Key = hasUwpId ? $"uwp:{aumid}" : (!string.IsNullOrEmpty(winFileName) ? $"exe:{winFileName}" : null);
+                identity.Key = hasUwpId ? $"uwp:{aumid}" : (!string.IsNullOrEmpty(winFileName) ? $"exe:{ExePath.ToLongPath(winFileName)}" : null);
                 identity.Computed = true;
             }
 

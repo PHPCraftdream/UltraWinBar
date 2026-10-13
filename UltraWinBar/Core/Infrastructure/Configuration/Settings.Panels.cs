@@ -68,7 +68,7 @@ namespace UltraWinBar.Utilities
         public List<TaskbarAssignment> TaskbarAssignments
         {
             get => _taskbarAssignments;
-            set => Set(ref _taskbarAssignments, value);
+            set => Set(ref _taskbarAssignments, CanonicalizeIdentifiers(value, a => a.Identifier, (a, id) => a with { Identifier = id }, a => (a.DesktopId, a.Mode)));
         }
 
         // Per-edge task button order, keyed by TaskAssignmentManager's WindowClassAndTitle
@@ -78,7 +78,7 @@ namespace UltraWinBar.Utilities
         public List<PinnedApplication> PinnedApplications
         {
             get => _pinnedApplications;
-            set => Set(ref _pinnedApplications, value ?? []);
+            set => Set(ref _pinnedApplications, CanonicalizeIdentifiers(value ?? [], p => p.Identifier, (p, id) => { p.Identifier = id; return p; }, p => (p.DesktopId, p.Edge)));
         }
 
         private List<TaskOrderEntry> _taskOrder = [];
@@ -86,7 +86,7 @@ namespace UltraWinBar.Utilities
         public List<string> AllDesktopApplications
         {
             get => _allDesktopApplications;
-            set => Set(ref _allDesktopApplications, (value ?? []).Where(id => !string.IsNullOrWhiteSpace(id)).Distinct(StringComparer.Ordinal).ToList());
+            set => Set(ref _allDesktopApplications, (value ?? []).Where(id => !string.IsNullOrWhiteSpace(id)).Select(ExePath.CanonicalIdentifier).Distinct(StringComparer.Ordinal).ToList());
         }
 
         private bool _desktopPinPreferencesInitialized;
@@ -99,7 +99,24 @@ namespace UltraWinBar.Utilities
         public List<TaskOrderEntry> TaskOrder
         {
             get => _taskOrder;
-            set => Set(ref _taskOrder, value);
+            set => Set(ref _taskOrder, CanonicalizeIdentifiers(value, e => e.Identifier, (e, id) => e with { Identifier = id }, e => (e.DesktopId, e.Edge)));
+        }
+
+        // Identifiers saved while a window reported its image under an 8.3 spelling (D:\SYSTEM~2\...) are rewritten to
+        // the long spelling windows now report, so pins, assignments and order keep matching; spellings that collapse
+        // into one are merged (first wins). The list is returned untouched when nothing needs rewriting.
+        private List<T> CanonicalizeIdentifiers<T>(List<T> items, Func<T, string> identifier, Func<T, string, T> withIdentifier, Func<T, object> scope)
+        {
+            if (items == null || !items.Any(item => ExePath.CanonicalIdentifier(identifier(item)) != identifier(item))) return items;
+            var result = new List<T>(items.Count);
+            var seen = new HashSet<(object, string)>();
+            foreach (var item in items)
+            {
+                T canonical = withIdentifier(item, ExePath.CanonicalIdentifier(identifier(item)));
+                if (seen.Add((scope(canonical), identifier(canonical)))) result.Add(canonical);
+            }
+            _migrationPerformed = true;
+            return result;
         }
 
         // Which taskbar each Quick Launch shortcut is shown on. Order within an edge is
