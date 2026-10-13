@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.4.7-alpha (2026-10-13)
 
 ### Added
 
@@ -10,7 +10,6 @@
   `Logs\windows-YYYY-MM-DD.log` as `time, opened|closed, hwnd, executable, title`
   (tab-separated; the closing line keeps the last known title). Toggling the
   flag file takes effect immediately; files follow the 7-day log retention.
-
 - Current-desktop launch policy for pinned applications and desktop icons:
   reuse windows available here (including applications shown on all desktops);
   otherwise open new browser, Explorer-folder and Notepad++ windows without
@@ -19,23 +18,36 @@
 - Desktop folder matching uses the requested folder path; shortcut launch
   arguments, working directory and administrator flags are preserved.
 
+### Changed
+
+- The version is pinned in `version.json` (all four components) and changes
+  only by hand; commits no longer raise it.
+
 ### Fixed
 
+- Resizing a panel by dragging its edge follows the pointer: moves are
+  coalesced and jump straight to the size under the pointer (one layout per
+  frame instead of one row per queued mouse event), the layout uses the new
+  size instead of the previous one, and the shell reservation (10-370 ms per
+  panel per step) is published once the size settles. Maximized windows then
+  follow the new work area, keeping their frame.
+- A pinned application whose process reports its image in 8.3 form (Process
+  Explorer runs from `D:\SYSTEM~2\Temp\procexp64.exe`) takes its pinned button
+  instead of appearing as a separate task: the identifier uses the long path,
+  and pins, assignments and order saved under the short spelling are merged into
+  it on load.
 - Folder launches from desktop icons and pinned shortcuts run through the desktop
   shell with foreground permission and normal-window presentation, rather than
   leaving new Explorer windows minimized and flashing for attention.
-
 - Explorer task buttons no longer disappear/reappear on live-window replacement
   notifications. The original task object, order and progress/attention state
   survive replacement and return; actual window destruction still removes it.
 - Windows ghost surfaces map to their original task during initial discovery,
   replacement and recovery, preventing duplicate task entries. Visibility and
   activation use the ghost surface while present.
-
 - Desktop icon activation no longer fails while the C# COM binder scans Shell
   type libraries with duplicate GUIDs; desktop/folder/shortcut automation now
   uses CLR COM dispatch instead.
-
 - The Connect (Win+K) and Project (Win+P) flyouts open flush against the panel
   instead of 64 px away: Windows docks them to Explorer's hidden taskbar, which
   keeps its own width, so they are moved to the work-area edge when they open.
