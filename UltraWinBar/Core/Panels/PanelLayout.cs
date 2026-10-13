@@ -43,5 +43,13 @@ namespace UltraWinBar.Utilities
 
             return (panels, available);
         }
+
+        /// Row/column count whose inner panel edge lands nearest the pointer, given its distance from the screen edge (pixels).
+        public static int SizeCountForDistance(double distancePx, double dpiScale, double baseDip, double stepDip, double marginDip, int limit)
+        {
+            if (stepDip <= 0 || dpiScale <= 0) return 1;
+            double extraSteps = (distancePx / dpiScale - baseDip - marginDip) / stepDip;
+            return Math.Clamp((int)Math.Round(extraSteps, MidpointRounding.AwayFromZero) + 1, 1, Math.Max(1, limit));
+        }
     }
 }

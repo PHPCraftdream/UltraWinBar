@@ -13,6 +13,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Application = System.Windows.Application;
 
 namespace UltraWinBar
@@ -123,6 +124,9 @@ namespace UltraWinBar
             AppBarMode = _startupAppBarMode;
         }
 
+        // Manual layout reads DesiredThicknessPixels before this panel's own settings handler runs.
+        internal void RefreshDesiredSize() => RecalculateSize(false);
+
         internal int DesiredThicknessPixels => Convert.ToInt32(
             (Orientation == Orientation.Vertical ? DesiredWidth : DesiredHeight) * DpiScale);
 
@@ -131,14 +135,45 @@ namespace UltraWinBar
             _registrationDeferred = false;
             _standaloneBounds = rect;
             SetWindowPosition(rect);
-            _reserved = PanelReservation.Reserve(Handle, AppBarEdge, rect, _reserved);
+            PublishReservation();
         }
 
         internal void SetStandaloneLayout(NativeMethods.Rect rect)
         {
             _standaloneBounds = rect;
             SetWindowPosition(rect);
+            ScheduleReservation();
+        }
+
+        // ABM_SETPOS takes 10-370 ms (the shell recomputes and re-broadcasts the work area), so a resize
+        // publishes the reservation once the layout settles instead of on every step.
+        private static readonly TimeSpan ReservationSettleDelay = TimeSpan.FromMilliseconds(300);
+        private DispatcherTimer _reservationTimer;
+        private NativeMethods.Rect? _reservedRect;
+        private bool _republishReservation;
+
+        private void ScheduleReservation(bool republish = false)
+        {
+            _republishReservation |= republish;
+            if (_reservationTimer == null)
+            {
+                _reservationTimer = new DispatcherTimer(DispatcherPriority.Background, Dispatcher) { Interval = ReservationSettleDelay };
+                _reservationTimer.Tick += (sender, e) => PublishReservation();
+            }
+            _reservationTimer.Stop();
+            _reservationTimer.Start();
+        }
+
+        private void PublishReservation()
+        {
+            _reservationTimer?.Stop();
+            if (!_standaloneBounds.HasValue || AllowClose) return;
+            NativeMethods.Rect rect = _standaloneBounds.Value;
+            if (!PanelReservation.ShouldPublish(_reserved, _reservedRect, rect, _republishReservation)) return;
+            _republishReservation = false;
             _reserved = PanelReservation.Reserve(Handle, AppBarEdge, rect, _reserved);
+            _reservedRect = _reserved ? rect : null;
+            ShellLogger.Debug($"Taskbar {AppBarEdge}: reservation published");
         }
 
         public override bool UpdatePosition()

@@ -28,6 +28,8 @@ namespace UltraWinBar.Utilities
         private readonly IDisposable showSubscription, foregroundSubscription;
         private readonly WinEventHook moveHook;
         private readonly DispatcherTimer refitTimer;
+        // Work area the maximized windows were last fitted to (panel resize), besides the full monitor.
+        private NativeMethods.Rect? refitFrom;
         private IntPtr movingWindow;
         private bool disposed;
 
@@ -75,13 +77,14 @@ namespace UltraWinBar.Utilities
             return new Rect(x, y, width, height);
         }
 
-        // Windows re-maximizes into a cleared (full-monitor) work area and never shrinks back once ours is restored.
-        internal static NativeMethods.Rect? PlanMaximizedRefit(NativeMethods.Rect outer, NativeMethods.Rect monitor, Rect area)
+        // A window maximized into "reference" (the monitor after Windows cleared the work area, or our previous work
+        // area after a panel resize) is not re-maximized by Windows: move it into "area", keeping its frame overhang.
+        internal static NativeMethods.Rect? PlanMaximizedRefit(NativeMethods.Rect outer, NativeMethods.Rect reference, Rect area)
         {
-            int left = monitor.Left - outer.Left, top = monitor.Top - outer.Top;
-            int right = outer.Right - monitor.Right, bottom = outer.Bottom - monitor.Bottom;
+            int left = reference.Left - outer.Left, top = reference.Top - outer.Top;
+            int right = outer.Right - reference.Right, bottom = outer.Bottom - reference.Bottom;
             if (left < 0 || top < 0 || right < 0 || bottom < 0 || Math.Max(Math.Max(left, top), Math.Max(right, bottom)) > 64) return null;
-            if (area.Left == monitor.Left && area.Top == monitor.Top && area.Right == monitor.Right && area.Bottom == monitor.Bottom) return null;
+            if (area.Left == reference.Left && area.Top == reference.Top && area.Right == reference.Right && area.Bottom == reference.Bottom) return null;
             return new NativeMethods.Rect
             {
                 Left = (int)area.Left - left, Top = (int)area.Top - top,
@@ -90,9 +93,10 @@ namespace UltraWinBar.Utilities
         }
 
         // Now and once more after Windows' own late re-layout.
-        internal void ScheduleMaximizedRefit()
+        internal void ScheduleMaximizedRefit(NativeMethods.Rect? previousArea = null)
         {
             if (disposed) return;
+            refitFrom = previousArea;
             dispatcher.BeginInvoke(new Action(RefitMaximizedWindows), DispatcherPriority.Background);
             refitTimer.Stop();
             refitTimer.Start();
@@ -116,7 +120,8 @@ namespace UltraWinBar.Utilities
                 if (!NativeMethods.GetWindowRect(hwnd, out NativeMethods.Rect outer)) continue;
                 var bounds = System.Windows.Forms.Screen.FromHandle(hwnd).Bounds;
                 var monitor = new NativeMethods.Rect { Left = bounds.Left, Top = bounds.Top, Right = bounds.Right, Bottom = bounds.Bottom };
-                var target = PlanMaximizedRefit(outer, monitor, AvailableArea(bounds));
+                var area = AvailableArea(bounds);
+                var target = PlanMaximizedRefit(outer, monitor, area) ?? (refitFrom.HasValue ? PlanMaximizedRefit(outer, refitFrom.Value, area) : null);
                 if (!target.HasValue) continue;
                 // Async: a hung application must not block the UI thread.
                 // Elevated windows refuse (UIPI) and stay stretched.

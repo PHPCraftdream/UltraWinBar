@@ -10,6 +10,7 @@ internal static class LayoutChecks
 {
     internal static void Run(string[] args, System.IO.DirectoryInfo repositoryRoot)
     {
+        RunResizeChecks(repositoryRoot);
         var widthConverter = new UltraWinBar.Converters.TaskButtonWidthConverter();
         foreach (bool launcher in new[] { false, true })
         foreach (var orientation in new[] { System.Windows.Controls.Orientation.Horizontal, System.Windows.Controls.Orientation.Vertical })
@@ -92,6 +93,15 @@ internal static class LayoutChecks
         if (PlanRefit(R(-200, -8, 1928, 1088), monitorRect, reservedArea).HasValue)
             throw new Exception("A window spanning beyond its monitor is not a maximized-into-monitor window.");
         Console.WriteLine("PASS: maximized windows stretched over panels by a cleared work area refit the panel work area once.");
+        // Regression: after a panel resize maximized windows kept the previous work area (Windows does not re-maximize).
+        var widerRight = new System.Windows.Rect(158, 41, 1690 - 158, 1039 - 41);
+        if (PlanRefit(R(150, 33, 1770, 1047), R(158, 41, 1762, 1039), widerRight) is not { } followed || !followed.Equals(R(150, 33, 1698, 1047)))
+            throw new Exception("A window maximized into the previous work area must follow a panel resize keeping its border.");
+        if (PlanRefit(R(150, 33, 1698, 1047), R(158, 41, 1690, 1039), widerRight).HasValue)
+            throw new Exception("A window already fitted to the new work area must not move.");
+        if (PlanRefit(R(300, 200, 900, 700), R(158, 41, 1762, 1039), widerRight).HasValue)
+            throw new Exception("A window not maximized into the previous work area must not be refitted.");
+        Console.WriteLine("PASS: maximized windows follow a panel resize from the previous work area to the new one.");
         // Regression: Explorer recomputes the work area on unlock from registered AppBars only; manual
         // panels must publish their exact rect on their own callback, not ManagedShell's AppBar message.
         var reservation = PanelReservation.Build((IntPtr)0x1234, AppBarEdge.Left, R(0, 41, 158, 1080));
@@ -174,5 +184,52 @@ internal static class LayoutChecks
         if (RecoverArea(failedRecovery, 2000, () => false, () => { }) != "Applied")
             throw new Exception("A failed write permanently held the recovery reentrancy guard.");
         Console.WriteLine("PASS: repeated and reentrant work-area resets are bounded; conflicts pause writes with escalating backoff and retry after each pause.");
+    }
+
+    // Regression: dragging a panel edge stepped one row per queued mouse event and laid the panels out with the
+    // previous size, so the panel trailed the pointer by seconds and settled at the wrong size.
+    private static void RunResizeChecks(System.IO.DirectoryInfo repositoryRoot)
+    {
+        // Right panel at scale 1.2: base 116 + one 36 px column + 6 px unlocked margin = 158 px for two columns.
+        (double distance, double dpi, int expected)[] cases =
+        {
+            (158, 1, 2), (175, 1, 2), (176, 1, 3), (194, 1, 3), (139, 1, 1), (141, 1, 2),
+            (0, 1, 1), (-50, 1, 1), (5000, 1, 7), (237, 1.5, 2), (264, 1.5, 3),
+        };
+        foreach (var c in cases)
+        {
+            int actual = PanelLayout.SizeCountForDistance(c.distance, c.dpi, 116, 36, 6, 7);
+            if (actual != c.expected)
+                throw new Exception($"Resize count for {c.distance}px at {c.dpi}x: expected {c.expected}, got {actual}");
+        }
+        if (PanelLayout.SizeCountForDistance(500, 1, 116, 0, 6, 7) != 1 || PanelLayout.SizeCountForDistance(500, 0, 116, 36, 6, 7) != 1 ||
+            PanelLayout.SizeCountForDistance(5000, 1, 116, 36, 6, 0) != 1)
+            throw new Exception("Degenerate resize inputs must fall back to one row.");
+
+        // Each ABM_SETPOS cost the shell 10-370 ms: publish only new rects, first registrations or shell requests.
+        var rect = new ManagedShell.Interop.NativeMethods.Rect { Left = 1762, Top = 0, Right = 1920, Bottom = 1080 };
+        var moved = new ManagedShell.Interop.NativeMethods.Rect { Left = 1726, Top = 0, Right = 1920, Bottom = 1080 };
+        if (PanelReservation.ShouldPublish(true, rect, rect, false) || !PanelReservation.ShouldPublish(true, rect, moved, false) ||
+            !PanelReservation.ShouldPublish(false, rect, rect, false) || !PanelReservation.ShouldPublish(true, null, rect, false) ||
+            !PanelReservation.ShouldPublish(true, rect, rect, true))
+            throw new Exception("Panel reservation must be republished only for a new rect, a first registration or a shell request.");
+
+        string root = System.IO.Path.Combine(repositoryRoot.FullName, "UltraWinBar");
+        string manager = System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Core", "Desktop", "WindowManager.cs"));
+        int branch = manager.IndexOf("e.PropertyName == nameof(Settings.EdgeSizes)))", StringComparison.Ordinal);
+        int refresh = manager.IndexOf("RefreshDesiredSize()", branch, StringComparison.Ordinal);
+        int apply = manager.IndexOf("ApplyManualLayout(_taskbars, false)", branch, StringComparison.Ordinal);
+        if (branch < 0 || refresh < 0 || apply < 0 || refresh > apply)
+            throw new Exception("Manual layout must refresh every panel's size before laying the panels out.");
+        string drag = System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Shell", "Panels", "Taskbar.PanelDrag.cs"));
+        if (!drag.Contains("if (!_resizePending)") || !drag.Contains("PanelLayout.SizeCountForDistance(") || drag.Contains("TaskbarWidthCount += 1"))
+            throw new Exception("Panel resize must coalesce pointer moves and jump to the size under the pointer.");
+        string panel = System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Shell", "Panels", "Taskbar.xaml.cs"));
+        int layout = panel.IndexOf("internal void SetStandaloneLayout", StringComparison.Ordinal);
+        int layoutEnd = panel.IndexOf('}', layout);
+        if (layout < 0 || !panel.Substring(layout, layoutEnd - layout).Contains("ScheduleReservation()") ||
+            panel.Substring(layout, layoutEnd - layout).Contains("PanelReservation.Reserve("))
+            throw new Exception("A resize step must defer the shell reservation until the layout settles.");
+        Console.WriteLine("PASS: panel resize jumps to the size nearest the pointer (any DPI, clamped), coalesces moves, and lays out with the fresh size.");
     }
 }

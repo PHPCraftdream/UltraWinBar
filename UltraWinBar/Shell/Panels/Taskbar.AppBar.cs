@@ -33,9 +33,10 @@ namespace UltraWinBar
         {
             if (msg == PanelReservation.CallbackMessage)
             {
-                // Another AppBar moved: republish our rect so the shell keeps reserving it.
+                // Another AppBar moved: republish our rect so the shell keeps reserving it (coalesced, so panels
+                // resizing together do not answer each other's notifications one by one).
                 if (_reserved && (int)wParam == PanelReservation.AbnPosChanged && _standaloneBounds.HasValue && !AllowClose)
-                    PanelReservation.Reserve(Handle, AppBarEdge, _standaloneBounds.Value, true);
+                    ScheduleReservation(republish: true);
                 handled = true;
                 return IntPtr.Zero;
             }
@@ -108,6 +109,7 @@ namespace UltraWinBar
         {
             if (AllowClose)
             {
+                _reservationTimer?.Stop();
                 if (_reserved)
                 {
                     PanelReservation.Release(Handle);

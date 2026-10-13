@@ -285,6 +285,10 @@ namespace UltraWinBar.Utilities
             return true;
         }
 
+        /// Republishing an unchanged rect costs a shell broadcast for nothing, unless the shell asked for it.
+        internal static bool ShouldPublish(bool registered, NativeMethods.Rect? published, NativeMethods.Rect rect, bool force) =>
+            !registered || force || !published.HasValue || !published.Value.Equals(rect);
+
         internal static void Release(IntPtr hwnd)
         {
             var data = Build(hwnd, default, default);

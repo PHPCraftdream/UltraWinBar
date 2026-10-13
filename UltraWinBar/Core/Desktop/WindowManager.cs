@@ -31,6 +31,9 @@ namespace UltraWinBar.Utilities
         private WindowPlacementGuard _placementGuard;
         private readonly WorkAreaRecovery _workAreaRecovery = new WorkAreaRecovery();
         private readonly DispatcherTimer _workAreaRecoveryTimer;
+        // Maximized windows follow a panel resize once it settles, from the area they were fitted to before it.
+        private readonly DispatcherTimer _resizeSettleTimer;
+        private NativeMethods.Rect? _areaBeforeResize;
         private readonly DispatcherTimer _lockedWorkAreaTimer;
         private bool _disposed;
 
@@ -53,6 +56,13 @@ namespace UltraWinBar.Utilities
             _hotkeyManager = hotkeyManager;
             _workAreaRecoveryTimer = new DispatcherTimer(DispatcherPriority.Background);
             _workAreaRecoveryTimer.Tick += RecoverWorkArea;
+            _resizeSettleTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(300) };
+            _resizeSettleTimer.Tick += (_, _) =>
+            {
+                _resizeSettleTimer.Stop();
+                _placementGuard?.ScheduleMaximizedRefit(_areaBeforeResize);
+                _areaBeforeResize = null;
+            };
             _lockedWorkAreaTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(250) };
             _lockedWorkAreaTimer.Tick += CheckLockedWorkArea;
 
@@ -136,6 +146,8 @@ namespace UltraWinBar.Utilities
                  e.PropertyName == nameof(Settings.TaskbarWidth) ||
                  e.PropertyName == nameof(Settings.EdgeSizes)))
             {
+                // This handler runs before the panels' own: without the refresh the layout used the previous size.
+                foreach (Taskbar taskbar in _taskbars) taskbar.RefreshDesiredSize();
                 ApplyManualLayout(_taskbars, false);
             }
         }
@@ -393,6 +405,12 @@ namespace UltraWinBar.Utilities
             if (!_expectedWorkArea.HasValue || !_expectedWorkArea.Value.Equals(layout.WorkArea))
             {
                 ResetWorkAreaRecovery();
+                if (!completeDeferredLayout && _expectedWorkArea.HasValue)
+                {
+                    _areaBeforeResize ??= _expectedWorkArea;
+                    _resizeSettleTimer.Stop();
+                    _resizeSettleTimer.Start();
+                }
                 _expectedWorkArea = layout.WorkArea;
                 WorkAreaManager.Apply(layout.WorkArea, (uint)Process.GetCurrentProcess().Id);
             }
@@ -578,6 +596,7 @@ namespace UltraWinBar.Utilities
             Microsoft.Win32.SystemEvents.SessionSwitch -= SystemEvents_SessionSwitch;
             _workAreaRecoveryTimer.Stop();
             _workAreaRecoveryTimer.Tick -= RecoverWorkArea;
+            _resizeSettleTimer.Stop();
             _lockedWorkAreaTimer.Stop();
             _lockedWorkAreaTimer.Tick -= CheckLockedWorkArea;
             _placementGuard?.Dispose();

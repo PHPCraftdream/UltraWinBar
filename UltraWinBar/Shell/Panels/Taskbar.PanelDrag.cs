@@ -102,46 +102,14 @@ namespace UltraWinBar
 
                     if (_mouseDragResize)
                     {
-                        Dispatcher.BeginInvoke(() => {
-                            int mouseX = e.HookStruct.pt.X;
-                            int mouseY = e.HookStruct.pt.Y;
-                            // Calculate where the resize edge should be, in case the actual resize operation is lagging behind the mouse
-                            double scaledRowHeight = DesiredRowHeight * DpiScale;
-                            if (Orientation == Orientation.Horizontal)
-                            {
-                                double taskbarEdge = AppBarEdge == AppBarEdge.Top ? Screen.Bounds.Top + (DesiredHeight * DpiScale) : Screen.Bounds.Bottom - (DesiredHeight * DpiScale);
-                                if ((AppBarEdge == AppBarEdge.Top && mouseY < taskbarEdge - SystemParameters.MinimumVerticalDragDistance ||
-                                     AppBarEdge == AppBarEdge.Bottom && mouseY > taskbarEdge + SystemParameters.MinimumVerticalDragDistance) &&
-                                     Rows > 1)
-                                {
-                                    // If mouse is inside the taskbar and more than the minimum drag distance away, decrement size
-                                    Rows -= 1;
-                                }
-                                else if ((AppBarEdge == AppBarEdge.Top && mouseY >= taskbarEdge + scaledRowHeight ||
-                                          AppBarEdge == AppBarEdge.Bottom && mouseY <= taskbarEdge - scaledRowHeight) &&
-                                          Rows < Settings.Instance.RowLimit)
-                                {
-                                    // If mouse is outside the taskbar and at least one row height away, increment size
-                                    Rows += 1;
-                                }
-                            }
-                            else
-                            {
-                                double taskbarEdge = AppBarEdge == AppBarEdge.Left ? Screen.Bounds.Left + (DesiredWidth * DpiScale) : Screen.Bounds.Right - (DesiredWidth * DpiScale);
-                                if ((AppBarEdge == AppBarEdge.Left && mouseX > taskbarEdge + scaledRowHeight ||
-                                     AppBarEdge == AppBarEdge.Right && mouseX < taskbarEdge - scaledRowHeight) &&
-                                    TaskbarWidthCount < Settings.Instance.TaskbarWidthLimit)
-                                {
-                                    TaskbarWidthCount += 1;
-                                }
-                                else if ((AppBarEdge == AppBarEdge.Left && mouseX < taskbarEdge - SystemParameters.MinimumHorizontalDragDistance ||
-                                          AppBarEdge == AppBarEdge.Right && mouseX > taskbarEdge + SystemParameters.MinimumHorizontalDragDistance) &&
-                                    TaskbarWidthCount > 1)
-                                {
-                                    TaskbarWidthCount -= 1;
-                                }
-                            }
-                        });
+                        // Coalesced: only the latest pointer position is applied, once per frame after rendering,
+                        // so a burst of moves never queues a backlog of one-row steps behind the pointer.
+                        _resizePoint = e.HookStruct.pt;
+                        if (!_resizePending)
+                        {
+                            _resizePending = true;
+                            Dispatcher.BeginInvoke(new Action(ApplyResizePoint), System.Windows.Threading.DispatcherPriority.Input);
+                        }
                         return;
                     }
 
@@ -204,6 +172,30 @@ namespace UltraWinBar
 
             // Assigning a new list instance notifies WindowManager, which reopens the taskbars.
             Settings.Instance.AdditionalEdges = edges;
+        }
+
+        private LowLevelMouseHook.POINT _resizePoint;
+        private bool _resizePending;
+
+        // Jumps straight to the size whose edge is nearest the pointer, instead of one row per event.
+        private void ApplyResizePoint()
+        {
+            _resizePending = false;
+            if (!_mouseDragResize) return;
+            bool vertical = Orientation == Orientation.Vertical;
+            double distance = AppBarEdge switch
+            {
+                AppBarEdge.Left => _resizePoint.X - Screen.Bounds.Left,
+                AppBarEdge.Right => Screen.Bounds.Right - _resizePoint.X,
+                AppBarEdge.Top => _resizePoint.Y - Screen.Bounds.Top,
+                _ => Screen.Bounds.Bottom - _resizePoint.Y
+            };
+            double baseDip = Settings.Instance.TaskbarScale *
+                (Application.Current.FindResource(vertical ? "TaskbarWidth" : "TaskbarHeight") as double? ?? 0);
+            int count = PanelLayout.SizeCountForDistance(distance, DpiScale, baseDip, DesiredRowHeight, _unlockedMargin,
+                vertical ? Settings.Instance.TaskbarWidthLimit : Settings.Instance.RowLimit);
+            if (vertical) { if (TaskbarWidthCount != count) TaskbarWidthCount = count; }
+            else if (Rows != count) Rows = count;
         }
 
         private void StartMouseDragHook()
