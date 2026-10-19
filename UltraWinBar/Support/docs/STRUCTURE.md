@@ -59,3 +59,8 @@ dotnet run --project UltraWinBar/Support/tests/DesktopRules/DesktopRules.csproj 
 ```
 
 The test program checks the layout limits and loads the grouped resources.
+
+To rebuild and replace the installed copy for the current user, run
+`UltraWinBar\Support\BuildTools\scripts\reinstall.cmd` from cmd (options: `-NoBuild`, `-NoReadyToRun`,
+`-NoStart`, `-DryRun`, `-InstallDir <path>`); it publishes a ReadyToRun build (like the released ones) and
+backs the old copy up to `%LOCALAPPDATA%\UltraWinBar\DeploymentBackups` first.
