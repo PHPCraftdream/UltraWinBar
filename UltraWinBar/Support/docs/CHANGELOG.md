@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Tasks shown on every desktop (pinned applications, windows shown on all
+  desktops) keep one order across desktops instead of changing places when the
+  desktop changes. Each desktop still stores its own order, but every write now
+  rearranges the keys it shares with the other desktops into the written order
+  (keys of one desktop only keep their slots), a window that first appears on a
+  desktop takes the place another desktop keeps for it instead of the end, and
+  dragging a button only swaps displayed buttons, leaving other desktops' keys
+  where they were. Orders that had already diverged are aligned on the first
+  update after the upgrade.
+
 ## 2.4.7-alpha (2026-10-13)
 
 ### Added

@@ -208,7 +208,7 @@ namespace UltraWinBar.Utilities
         /// <summary>
         /// Replaces the saved order for one edge, preserving other edges' entries untouched.
         /// </summary>
-        public void SetTaskOrderForEdge(AppBarEdge edge, List<string> identifiers, Guid? desktopId = null)
+        public void SetTaskOrderForEdge(AppBarEdge edge, List<string> identifiers, Guid? desktopId = null, IReadOnlyCollection<string> displayedKeys = null)
         {
             Guid desktop = desktopId ?? VirtualDesktopContext.Instance?.CurrentId ?? Guid.Empty;
             List<TaskOrderEntry> entries = new List<TaskOrderEntry>();
@@ -225,6 +225,9 @@ namespace UltraWinBar.Utilities
             {
                 entries.Add(new TaskOrderEntry { Edge = edge, Identifier = identifier, DesktopId = desktop });
             }
+
+            // Tasks shown on several desktops must not change places when the desktop changes.
+            TaskOrderIdentifier.AlignSharedOrder(entries, edge, desktop, displayedKeys ?? identifiers);
 
             // TaskOrder is a List<T>, so Set<T>'s field.Equals(value) is reference equality —
             // assigning a content-identical new list would still raise PropertyChanged. That

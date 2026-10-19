@@ -146,5 +146,82 @@ internal static class TaskModelOrderingChecks
         if (second.PinPrimaryWindowKeyChanges.Count != 0)
             throw new Exception("Re-running Compute with no pins must not report pin changes.");
         Console.WriteLine("PASS: TaskModel.Compute is idempotent — feeding its own SavedOrder and DisplayKeys back in reproduces the same order with no further changes.");
+
+        RunSharedOrderChecks();
+    }
+
+    // Regression: each desktop kept its own order, so tasks shown on every desktop (pins, all-desktop windows)
+    // changed places when the desktop changed (saved: A = browser, chrome; B = chrome, browser).
+    private static void RunSharedOrderChecks()
+    {
+        const AppBarEdge edge = AppBarEdge.Right;
+        var desktopA = Guid.Parse("00000000-0000-0000-0000-0000000000A1");
+        var desktopB = Guid.Parse("00000000-0000-0000-0000-0000000000B2");
+        TaskOrderEntry Entry(Guid desktop, string key, AppBarEdge e = edge) => new() { Edge = e, DesktopId = desktop, Identifier = key };
+        List<string> Order(IEnumerable<TaskOrderEntry> entries, Guid desktop, AppBarEdge e = edge) =>
+            TaskModel.GetOrderForEdge(entries.ToList(), e, desktop);
+
+        // A write for desktop A rearranges the shared keys in B, whose own keys keep their slots.
+        var stored = new List<TaskOrderEntry>
+        {
+            Entry(desktopA, "pin:taskmgr"), Entry(desktopA, "pin:browser"), Entry(desktopA, "pin:chrome"), Entry(desktopA, "winA"),
+            Entry(desktopB, "pin:taskmgr"), Entry(desktopB, "pin:chrome"), Entry(desktopB, "winB"), Entry(desktopB, "pin:browser"),
+        };
+        var shownA = new[] { "pin:taskmgr", "pin:browser", "pin:chrome", "winA" };
+        var aligned = TaskModel.ApplyOrderForEdge(stored, edge, desktopA, shownA.ToList(), shownA);
+        if (!Order(aligned, desktopB).SequenceEqual(new[] { "pin:taskmgr", "pin:browser", "winB", "pin:chrome" }))
+            throw new Exception("Keys shown on both desktops must follow the written desktop's order, other keys keeping their slots: " + string.Join(",", Order(aligned, desktopB)));
+        if (!Order(aligned, desktopA).SequenceEqual(shownA)) throw new Exception("The written desktop's own order must be stored as given.");
+        var again = TaskModel.ApplyOrderForEdge(aligned, edge, desktopA, shownA.ToList(), shownA);
+        if (!again.SequenceEqual(aligned)) throw new Exception("Aligning an aligned order must change nothing, or settings writes would never settle.");
+        var otherEdge = TaskModel.ApplyOrderForEdge(stored.Concat(new[] { Entry(desktopB, "pin:chrome", AppBarEdge.Left), Entry(desktopB, "pin:browser", AppBarEdge.Left) }).ToList(),
+            edge, desktopA, shownA.ToList(), shownA);
+        if (!Order(otherEdge, desktopB, AppBarEdge.Left).SequenceEqual(new[] { "pin:chrome", "pin:browser" }))
+            throw new Exception("Another edge's order must not be touched.");
+
+        // Keys the source desktop does not show (its stale copies of other desktops' windows) never reorder anything.
+        var withStale = new List<TaskOrderEntry>
+        {
+            Entry(desktopA, "winB"), Entry(desktopA, "pin:browser"), Entry(desktopA, "pin:chrome"),
+            Entry(desktopB, "pin:chrome"), Entry(desktopB, "winB"), Entry(desktopB, "pin:browser"),
+        };
+        var shownOnlyShared = new[] { "pin:browser", "pin:chrome" };
+        var staleAligned = TaskModel.ApplyOrderForEdge(withStale, edge, desktopA, new List<string> { "winB", "pin:browser", "pin:chrome" }, shownOnlyShared);
+        if (!Order(staleAligned, desktopB).SequenceEqual(new[] { "pin:browser", "winB", "pin:chrome" }))
+            throw new Exception("Only keys the source desktop shows may be aligned; got " + string.Join(",", Order(staleAligned, desktopB)));
+
+        // A window shown on all desktops that first appears on B is placed where A keeps it, not at the end.
+        var sharedA = new List<TaskOrderEntry> { Entry(desktopA, "s2"), Entry(desktopA, "s1"), Entry(desktopA, "aOnly"), Entry(desktopB, "bOnly") };
+        var onB = TaskModel.Compute(MakeInput(new[] { Window("s1", "s1"), Window("s2", "s2"), Window("bOnly", "bOnly") }, sharedA, edge, desktopB));
+        if (!onB.Panels[edge].Items.SequenceEqual(new object[] { "bOnly", "s2", "s1" }))
+            throw new Exception("A new shared window must take its place from the other desktop: " + string.Join(",", onB.Panels[edge].Items));
+        var anchored = new List<TaskOrderEntry> { Entry(desktopA, "s1"), Entry(desktopA, "s2"), Entry(desktopA, "s3"), Entry(desktopB, "s1"), Entry(desktopB, "bOnly") };
+        var onBAnchored = TaskModel.Compute(MakeInput(new[] { Window("s3", "s3"), Window("s2", "s2"), Window("s1", "s1"), Window("bOnly", "bOnly") }, anchored, edge, desktopB));
+        if (!onBAnchored.Panels[edge].Items.SequenceEqual(new object[] { "s1", "s2", "s3", "bOnly" }))
+            throw new Exception("New shared windows must follow their neighbour already ordered on this desktop: " + string.Join(",", onBAnchored.Panels[edge].Items));
+        if (TaskModel.GetOtherScopeOrders(sharedA, edge, desktopB).Count != 1 || TaskModel.GetOtherScopeOrders(sharedA, AppBarEdge.Top, desktopB).Count != 0)
+            throw new Exception("Other-scope orders must cover only the edge's other scopes.");
+
+        // A user reorder on A, then B's next pass: the shared windows come out in A's order on B.
+        var reordered = TaskModel.ApplyOrderForEdge(sharedA, edge, desktopA, new List<string> { "s1", "s2", "aOnly" }, new[] { "s1", "s2" });
+        var afterSwitch = TaskModel.Compute(MakeInput(new[] { Window("s1", "s1"), Window("s2", "s2"), Window("bOnly", "bOnly") }, reordered, edge, desktopB));
+        if (!afterSwitch.Panels[edge].Items.SequenceEqual(new object[] { "bOnly", "s1", "s2" }))
+            throw new Exception("A reorder on one desktop must show on the other desktop after switching: " + string.Join(",", afterSwitch.Panels[edge].Items));
+
+        // Dragging keys around only swaps the displayed ones; other desktops' keys keep their positions.
+        if (!TaskOrderIdentifier.ApplyDisplayedOrder(new[] { "a", "x", "b", "y", "c" }, new[] { "c", "a", "b" }).SequenceEqual(new[] { "c", "x", "a", "y", "b" }))
+            throw new Exception("ApplyDisplayedOrder must reuse the displayed keys' slots.");
+        if (!TaskOrderIdentifier.ApplyDisplayedOrder(new[] { "a", "x" }, new[] { "d", "a" }).SequenceEqual(new[] { "a", "x", "d" }))
+            throw new Exception("A displayed key not stored yet must be appended.");
+
+        // Settings.SetTaskOrderForEdge applies the same alignment when the passes persist an order.
+        var settingsType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.Settings");
+        var settings = System.Text.Json.JsonSerializer.Deserialize("{}", settingsType);
+        settingsType.GetProperty("TaskOrder").SetValue(settings, stored.ToList());
+        settingsType.GetMethod("SetTaskOrderForEdge").Invoke(settings, new object[] { edge, shownA.ToList(), desktopA, shownA });
+        var persisted = (List<TaskOrderEntry>)settingsType.GetProperty("TaskOrder").GetValue(settings);
+        if (!Order(persisted, desktopB).SequenceEqual(new[] { "pin:taskmgr", "pin:browser", "winB", "pin:chrome" }))
+            throw new Exception("Settings.SetTaskOrderForEdge must align the other desktops' orders.");
+        Console.WriteLine("PASS: tasks shown on several desktops keep one relative order — writes align the other desktops, new shared windows take their place from them, and dragging only swaps displayed keys.");
     }
 }

@@ -59,7 +59,12 @@ internal static class TaskModelEquivalenceChecks
                     orderSeed = effectiveOrder.Where(e => e.Edge == panel.Edge && e.DesktopId == scope).Select(e => e.Identifier).ToList();
                 }
 
-                var (items, keys, savedOrder) = ComputePanel(panel, orderSeed, windows, pins, currentPrimary, liveKeys);
+                // Orders the edge keeps for other desktops (everything but the scope this desktop reads).
+                bool ownScope = effectiveOrder.Any(e => e.Edge == panel.Edge && e.DesktopId == input.CurrentDesktopId);
+                var others = effectiveOrder.Where(e => e.Edge == panel.Edge && e.DesktopId != (ownScope ? input.CurrentDesktopId : Guid.Empty))
+                    .GroupBy(e => e.DesktopId).Select(g => g.Select(e => e.Identifier).ToList()).ToList();
+
+                var (items, keys, savedOrder) = ComputePanel(panel, orderSeed, windows, pins, currentPrimary, liveKeys, others);
                 edgeOrder[panel.Edge] = savedOrder;
                 panelResults[panel.PanelId] = new TaskModelEdgeResult { Items = items, DisplayKeys = keys, SavedOrder = savedOrder };
             }
@@ -82,7 +87,8 @@ internal static class TaskModelEquivalenceChecks
 
         private static (List<object> Items, Dictionary<object, string> DisplayKeys, List<string> SavedOrder) ComputePanel(
             TaskPanelRequest panel, List<string> orderSeed, IReadOnlyList<TaskWindowSnapshot> allWindows,
-            IReadOnlyList<PinSnapshot> allPins, Dictionary<object, string> currentPrimary, HashSet<string> liveKeys)
+            IReadOnlyList<PinSnapshot> allPins, Dictionary<object, string> currentPrimary, HashSet<string> liveKeys,
+            List<List<string>> others)
         {
             var previousDisplayKeys = panel.PreviousDisplayKeys ?? new Dictionary<object, string>();
             var windows = allWindows.Where(w => panel.Filter != null && panel.Filter(w.Window)).ToList();
@@ -163,6 +169,38 @@ internal static class TaskModelEquivalenceChecks
                 if (claimed.Contains(window)) continue;
                 items.Add(window.Window);
                 keys[window.Window] = window.Key ?? window.FallbackKey;
+            }
+
+            // A key shown here for the first time but ordered on another desktop goes next to a neighbour already
+            // ordered here (previous one first, else the next one); with no neighbour yet, the earliest key seeds it.
+            int SlotFor(List<string> source, int at)
+            {
+                for (int back = at - 1; back >= 0; back--)
+                    if (source[back] != null && order.Contains(source[back])) return order.IndexOf(source[back]) + 1;
+                for (int ahead = at + 1; ahead < source.Count; ahead++)
+                    if (source[ahead] != null && order.Contains(source[ahead])) return order.IndexOf(source[ahead]);
+                return -1;
+            }
+            var unplaced = items.Select(item => keys[item])
+                .Where(k => k != null && !order.Contains(k) && others.Any(s => s.Contains(k))).Distinct().ToList();
+            while (unplaced.Count > 0)
+            {
+                var progressed = new List<string>();
+                foreach (var key in unplaced)
+                {
+                    var source = others.First(s => s.Contains(key));
+                    int slot = SlotFor(source, source.IndexOf(key));
+                    if (slot < 0) continue;
+                    order.Insert(slot, key);
+                    orderSet.Add(key);
+                    progressed.Add(key);
+                }
+                unplaced.RemoveAll(progressed.Contains);
+                if (progressed.Count > 0 || unplaced.Count == 0) continue;
+                string seed = unplaced.OrderBy(k => others.First(s => s.Contains(k)).IndexOf(k)).First();
+                order.Add(seed);
+                orderSet.Add(seed);
+                unplaced.Remove(seed);
             }
 
             var orderIndexes = new Dictionary<string, int>();

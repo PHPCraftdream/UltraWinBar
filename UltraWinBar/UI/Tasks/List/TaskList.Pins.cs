@@ -94,11 +94,10 @@ namespace UltraWinBar.Controls
             index = Math.Max(0, Math.Min(index, displayedTasks.Count - 1));
             if (index == oldIndex) return;
             displayedTasks.Move(oldIndex, index);
-            var order = displayedTasks.Select(t => displayKeys[t]).ToList();
-            var orderSet = new HashSet<string>(order);
-            foreach (var id in Settings.Instance.GetTaskOrderForEdge(HostEdge))
-                if (orderSet.Add(id)) order.Add(id);
-            Settings.Instance.SetTaskOrderForEdge(HostEdge, order);
+            var shown = displayedTasks.Select(t => displayKeys[t]).ToList();
+            // Displayed keys swap places among themselves; other desktops' keys keep their positions.
+            var order = TaskOrderIdentifier.ApplyDisplayedOrder(Settings.Instance.GetTaskOrderForEdge(HostEdge), shown);
+            Settings.Instance.SetTaskOrderForEdge(HostEdge, order, null, shown);
             SetTaskButtonWidth();
             ShellLogger.Debug($"Task reorder: edge={HostEdge}; from={oldIndex}; to={index}; key={key}");
         }

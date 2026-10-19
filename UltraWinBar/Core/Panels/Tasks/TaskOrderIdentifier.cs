@@ -1,3 +1,4 @@
+using ManagedShell.AppBar;
 using ManagedShell.WindowsTasks;
 using System;
 using System.Collections.Generic;
@@ -79,6 +80,92 @@ namespace UltraWinBar.Utilities
             if (!NativeMethods.IsWindow(hwnd)) return false;
             NativeMethods.GetWindowThreadProcessId(hwnd, out uint actualProcess);
             return actualProcess == processId;
+        }
+
+        /// <summary>
+        /// Keys shown on several desktops keep one relative order: in every other scope of the edge, the keys it
+        /// shares with <paramref name="source"/> (limited to <paramref name="sourceKeys"/>, the ones the source
+        /// desktop actually shows) are permuted into the source's order. Their slots are reused, so keys that
+        /// belong to one desktop only keep their positions. Edits <paramref name="entries"/> in place.
+        /// </summary>
+        internal static void AlignSharedOrder(List<TaskOrderEntry> entries, AppBarEdge edge, Guid source, IReadOnlyCollection<string> sourceKeys)
+        {
+            var rank = new Dictionary<string, int>();
+            foreach (var entry in entries)
+                if (entry.Edge == edge && entry.DesktopId == source && entry.Identifier != null && sourceKeys.Contains(entry.Identifier))
+                    rank.TryAdd(entry.Identifier, rank.Count);
+            if (rank.Count < 2) return;
+
+            foreach (Guid scope in entries.Where(e => e.Edge == edge && e.DesktopId != source).Select(e => e.DesktopId).Distinct().ToList())
+            {
+                var slots = new List<int>();
+                var seen = new HashSet<string>();
+                for (int i = 0; i < entries.Count; i++)
+                {
+                    var entry = entries[i];
+                    if (entry.Edge == edge && entry.DesktopId == scope && entry.Identifier != null && rank.ContainsKey(entry.Identifier) && seen.Add(entry.Identifier))
+                        slots.Add(i);
+                }
+                if (slots.Count < 2) continue;
+                var ordered = slots.Select(i => entries[i].Identifier).OrderBy(key => rank[key]).ToList();
+                for (int j = 0; j < slots.Count; j++)
+                    if (entries[slots[j]].Identifier != ordered[j])
+                        entries[slots[j]] = entries[slots[j]] with { Identifier = ordered[j] };
+            }
+        }
+
+        /// <summary>
+        /// A key this desktop has no position for yet (a window shown on all desktops appearing here first) goes
+        /// where another desktop keeps it — after its nearest preceding neighbour already ordered here, else before
+        /// the nearest following one — instead of at the end. Keys unknown everywhere are left for the caller to append.
+        /// </summary>
+        internal static void PlaceNewKeys(List<string> order, HashSet<string> orderSet, IEnumerable<string> newKeys, IReadOnlyList<List<string>> otherScopes)
+        {
+            List<string> ReferenceFor(string key) => otherScopes.FirstOrDefault(scope => scope.Contains(key));
+            var pending = newKeys.Where(key => key != null && !orderSet.Contains(key) && ReferenceFor(key) != null).Distinct().ToList();
+            while (pending.Count > 0)
+            {
+                bool placed = false;
+                foreach (string key in pending.ToList())
+                {
+                    List<string> reference = ReferenceFor(key);
+                    int at = reference.IndexOf(key);
+                    int insertAt = -1;
+                    for (int i = at - 1; i >= 0 && insertAt < 0; i--)
+                        if (reference[i] != null && orderSet.Contains(reference[i])) insertAt = order.IndexOf(reference[i]) + 1;
+                    for (int i = at + 1; i < reference.Count && insertAt < 0; i++)
+                        if (reference[i] != null && orderSet.Contains(reference[i])) insertAt = order.IndexOf(reference[i]);
+                    if (insertAt < 0) continue;
+                    order.Insert(insertAt, key);
+                    orderSet.Add(key);
+                    pending.Remove(key);
+                    placed = true;
+                }
+                if (placed) continue;
+                // No neighbour is ordered here yet: the key that comes first in its reference becomes the anchor.
+                string seed = pending.OrderBy(key => ReferenceFor(key).IndexOf(key)).First();
+                order.Add(seed);
+                orderSet.Add(seed);
+                pending.Remove(seed);
+            }
+        }
+
+        /// <summary>
+        /// The stored order after the user rearranged the displayed keys: displayed keys fill the slots displayed
+        /// keys already had, so keys of other desktops' windows keep their positions. Displayed keys not stored yet are appended.
+        /// </summary>
+        internal static List<string> ApplyDisplayedOrder(IReadOnlyList<string> stored, IReadOnlyList<string> displayed)
+        {
+            var displayedSet = new HashSet<string>(displayed.Where(key => key != null));
+            var storedSet = new HashSet<string>(stored.Where(key => key != null));
+            var inStored = new Queue<string>(displayed.Where(key => key != null && storedSet.Contains(key)).Distinct());
+            var result = new List<string>(stored.Count);
+            var placed = new HashSet<string>();
+            foreach (string key in stored)
+                result.Add(key != null && displayedSet.Contains(key) && placed.Add(key) && inStored.Count > 0 ? inStored.Dequeue() : key);
+            foreach (string key in displayed)
+                if (key != null && !storedSet.Contains(key) && !result.Contains(key)) result.Add(key);
+            return result;
         }
 
         private static bool IsDeadWindowKey(string identifier, HashSet<string> liveKeys) =>

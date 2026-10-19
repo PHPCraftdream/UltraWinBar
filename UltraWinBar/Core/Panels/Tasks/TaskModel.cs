@@ -55,7 +55,8 @@ namespace UltraWinBar.Utilities
                 if (!edgeOrders.TryGetValue(panel.Edge, out List<string> orderIn))
                     orderIn = GetOrderForEdge(effectiveTaskOrder, panel.Edge, input.CurrentDesktopId);
 
-                TaskModelEdgeResult result = ComputePanel(panel, orderIn, windows, pins, liveKeys, pinPrimaryOverride);
+                TaskModelEdgeResult result = ComputePanel(panel, orderIn, windows, pins, liveKeys, pinPrimaryOverride,
+                    GetOtherScopeOrders(effectiveTaskOrder, panel.Edge, input.CurrentDesktopId));
                 edgeOrders[panel.Edge] = result.SavedOrder;
                 panelResults[panel.PanelId] = result;
             }
@@ -92,7 +93,7 @@ namespace UltraWinBar.Utilities
         /// TaskOrder for the first panel on an edge) instead of always re-reading Settings.</summary>
         private static TaskModelEdgeResult ComputePanel(TaskPanelRequest panel, List<string> orderIn,
             IReadOnlyList<TaskWindowSnapshot> allWindows, IReadOnlyList<PinSnapshot> allPins,
-            HashSet<string> liveKeys, Dictionary<object, string> pinPrimaryOverride)
+            HashSet<string> liveKeys, Dictionary<object, string> pinPrimaryOverride, IReadOnlyList<List<string>> otherScopes)
         {
             IReadOnlyDictionary<object, string> previousDisplayKeys = panel.PreviousDisplayKeys ?? EmptyDisplayKeys;
 
@@ -162,6 +163,10 @@ namespace UltraWinBar.Utilities
                 keys[window.Window] = window.Key ?? window.FallbackKey;
             }
 
+            // Keys shown here for the first time, but already ordered on another desktop (a window shown on all
+            // desktops), take that place rather than the end, so switching desktops does not move them.
+            TaskOrderIdentifier.PlaceNewKeys(order, orderSet, items.Select(item => keys[item]), otherScopes);
+
             var orderIndexes = new Dictionary<string, int>();
             int nullOrderIndex = -1;
             for (int i = 0; i < order.Count; i++)
@@ -223,17 +228,30 @@ namespace UltraWinBar.Utilities
             return result;
         }
 
+        /// <summary>The edge's stored orders other than the one GetOrderForEdge reads for this desktop (its own scope,
+        /// else the Guid.Empty default): where other desktops keep keys this desktop has not placed yet.</summary>
+        public static List<List<string>> GetOtherScopeOrders(IReadOnlyList<TaskOrderEntry> taskOrder, AppBarEdge edge, Guid desktopId)
+        {
+            bool hasScopedOrder = taskOrder.Any(entry => entry.Edge == edge && entry.DesktopId == desktopId);
+            Guid used = hasScopedOrder ? desktopId : Guid.Empty;
+            var scopes = new List<List<string>>();
+            foreach (Guid scope in taskOrder.Where(entry => entry.Edge == edge && entry.DesktopId != used).Select(entry => entry.DesktopId).Distinct())
+                scopes.Add(taskOrder.Where(entry => entry.Edge == edge && entry.DesktopId == scope).Select(entry => entry.Identifier).ToList());
+            return scopes;
+        }
+
         /// <summary>Mirrors Settings.SetTaskOrderForEdge's entries-replace logic (minus persistence
         /// and the unchanged-write skip, which are Settings' concerns, not this pure function's):
         /// every other edge/desktop scope's entries kept as-is, this edge/desktopId scope replaced
         /// with 'identifiers'.</summary>
-        public static List<TaskOrderEntry> ApplyOrderForEdge(IReadOnlyList<TaskOrderEntry> taskOrder, AppBarEdge edge, Guid desktopId, List<string> identifiers)
+        public static List<TaskOrderEntry> ApplyOrderForEdge(IReadOnlyList<TaskOrderEntry> taskOrder, AppBarEdge edge, Guid desktopId, List<string> identifiers, IReadOnlyCollection<string> displayedKeys = null)
         {
             var entries = new List<TaskOrderEntry>();
             foreach (var entry in taskOrder)
                 if (entry.Edge != edge || entry.DesktopId != desktopId) entries.Add(entry);
             foreach (var identifier in identifiers)
                 entries.Add(new TaskOrderEntry { Edge = edge, Identifier = identifier, DesktopId = desktopId });
+            TaskOrderIdentifier.AlignSharedOrder(entries, edge, desktopId, displayedKeys ?? identifiers);
             return entries;
         }
     }

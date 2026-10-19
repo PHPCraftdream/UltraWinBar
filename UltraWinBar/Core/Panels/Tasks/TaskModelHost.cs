@@ -161,7 +161,14 @@ namespace UltraWinBar.Utilities
             if (result.PrunedTaskOrder != null) Settings.Instance.TaskOrder = result.PrunedTaskOrder;
             if (result.PrunedTaskbarAssignments != null) Settings.Instance.TaskbarAssignments = result.PrunedTaskbarAssignments;
             foreach (var edgeOrder in result.SavedOrders)
-                Settings.Instance.SetTaskOrderForEdge(edgeOrder.Key, edgeOrder.Value, desktopId);
+            {
+                // Only keys this desktop shows are ordered against the other desktops; the rest stays where it is.
+                var shown = new HashSet<string>();
+                foreach (var panel in live)
+                    if (panel.Edge == edgeOrder.Key && result.Panels.TryGetValue(panel, out TaskModelEdgeResult shownResult))
+                        foreach (string key in shownResult.DisplayKeys.Values) if (key != null) shown.Add(key);
+                Settings.Instance.SetTaskOrderForEdge(edgeOrder.Key, edgeOrder.Value, desktopId, shown);
+            }
             if (result.PinPrimaryWindowKeyChanges.Count > 0)
             {
                 foreach (var change in result.PinPrimaryWindowKeyChanges)
