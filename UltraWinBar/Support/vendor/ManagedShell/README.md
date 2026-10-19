@@ -65,6 +65,13 @@ not changed; every local modification is listed below and marked in code with `U
   checked before use (a failed `OpenProcess` no longer sends `TB_GETBUTTON` with a null remote
   pointer); the per-item `AllocHGlobal` blocks and `VirtualFreeEx`/`CloseHandle` are released in
   `finally` instead of leaking on early return or an exception.
+- `ExplorerTrayService.BeginRun` (replaces `Run`): the read of Explorer's tray icons (it waits on
+  Explorer's UI thread, 2-3 s at logon) runs on its own STA thread, found toolbar handle captured first
+  so our own `Shell_TrayWnd` cannot be taken for Explorer's; the icons are handed to the dispatcher
+  thread in Explorer's order, `EnableAutoTray` is switched back on in `finally`. `NotificationArea`
+  starts the tray (`TrayService.Resume`) at once and announces it (`TrayService.Announce`, split from
+  the old `Run`) when the icons are in, or after 5 s (`OneShot` makes that exactly once, never after
+  `Dispose`).
 - `ImmersiveShellHelper`: added `Reset()`, called by the app on `TaskbarCreated`, to drop the
   static `_immersiveShell`/experience-manager caches that otherwise stay dead forever after an
   Explorer restart; calls on a cached manager that fail with a severed-proxy HRESULT now reset and

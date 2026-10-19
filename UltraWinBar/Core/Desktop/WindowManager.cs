@@ -69,7 +69,7 @@ namespace UltraWinBar.Utilities
             NativeMethods.SystemParametersInfo((int)NativeMethods.SPI.GETWORKAREA, 0, ref _originalWorkArea, 0);
             _originalMonitorBounds = ToRect(AppBarScreen.FromPrimaryScreen().Bounds);
 
-            _shellManager.ExplorerHelper.HideExplorerTaskbar = true;
+            // Explorer's taskbar is hidden inside openTaskbars, once our panels are there to replace it.
 
             openTaskbars();
 
@@ -291,6 +291,13 @@ namespace UltraWinBar.Utilities
             }
             _manualWorkArea = useManualWorkArea;
 
+            // Panels registered as AppBars are laid out around Explorer's own: hide it before they register.
+            // Manual mode places them absolutely, so they come first and the screen is never left bare.
+            if (HidesExplorerTaskbarBeforePanels(_manualWorkArea))
+            {
+                _shellManager.ExplorerHelper.HideExplorerTaskbar = true;
+            }
+
             if (_manualWorkArea && !_workAreaWatchdogStarted)
             {
                 _workAreaWatchdogProcess = Program.StartWorkAreaWatchdog(_originalWorkArea);
@@ -371,9 +378,12 @@ namespace UltraWinBar.Utilities
             finally
             {
                 _isOpeningTaskbars = false;
+                _shellManager.ExplorerHelper.HideExplorerTaskbar = true;
                 QueueManualWorkAreaRecovery();
             }
         }
+
+        internal static bool HidesExplorerTaskbarBeforePanels(bool manualWorkArea) => !manualWorkArea;
 
         private void ApplyManualLayout(List<Taskbar> taskbars, bool completeDeferredLayout)
         {

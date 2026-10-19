@@ -113,13 +113,13 @@ namespace ManagedShell.WindowsTray
         }
 
         /// <summary>
-        /// Starts the system tray listener (send the TaskbarCreated message).
+        /// Asks applications to (re)add their icons (send the TaskbarCreated message). UltraWinBar: split from
+        /// Resume, which starts the tray listener, so Explorer's own icons can be added to the area first.
         /// </summary>
-        internal void Run()
+        internal void Announce()
         {
             if (HwndTray != IntPtr.Zero)
             {
-                Resume();
                 SendTaskbarCreated();
             }
         }

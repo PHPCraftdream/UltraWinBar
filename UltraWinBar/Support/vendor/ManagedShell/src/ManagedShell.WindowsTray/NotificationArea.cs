@@ -8,6 +8,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Threading;
 using static ManagedShell.Interop.NativeMethods;
 
 namespace ManagedShell.WindowsTray
@@ -68,6 +69,9 @@ namespace ManagedShell.WindowsTray
         private IconDataDelegate iconDataDelegate;
         private object _lockObject = new object();
         private ShellServiceObject shellServiceObject;
+        private static readonly TimeSpan AnnounceTimeout = TimeSpan.FromSeconds(5);
+        private OneShot startup;
+        private DispatcherTimer announceTimeout;
         private TrayHostSizeData trayHostSizeData = new TrayHostSizeData
         {
             edge = ABEdge.ABE_TOP,
@@ -157,13 +161,40 @@ namespace ManagedShell.WindowsTray
                 trayDelegate = SysTrayCallback;
                 iconDataDelegate = IconDataCallback;
 
+                // UltraWinBar: reading Explorer's icons waits on Explorer, so it runs beside startup. They are added
+                // first, as before, and only then is the tray announced to applications.
+                startup = new OneShot(AnnounceTray);
                 _explorerTrayService.SetSystrayCallback(trayDelegate);
-                _explorerTrayService.Run();
+                bool reading = _explorerTrayService.BeginRun(Dispatcher, () => startup.Fire());
 
                 _trayService.SetSystrayCallback(trayDelegate);
                 _trayService.SetIconDataCallback(iconDataDelegate);
                 Handle = _trayService.Initialize();
-                _trayService.Run();
+                _trayService.Resume();
+
+                if (reading)
+                {
+                    // Explorer may never answer; the tray must not stay unannounced.
+                    announceTimeout = new DispatcherTimer(AnnounceTimeout, DispatcherPriority.Background, (sender, e) => startup.Fire(), Dispatcher);
+                }
+                else
+                {
+                    startup.Fire();
+                }
+            }
+            catch
+            {
+                IsFailed = true;
+            }
+        }
+
+        private void AnnounceTray()
+        {
+            announceTimeout?.Stop();
+
+            try
+            {
+                _trayService.Announce();
 
                 // load the shell system tray objects (network, power, etc)
                 shellServiceObject = new ShellServiceObject();
@@ -532,6 +563,9 @@ namespace ManagedShell.WindowsTray
 
         public void Dispose()
         {
+            startup?.Cancel();
+            announceTimeout?.Stop();
+
             if (!IsFailed && trayDelegate != null)
             {
                 shellServiceObject?.Dispose();

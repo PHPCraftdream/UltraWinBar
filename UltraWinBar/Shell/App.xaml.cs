@@ -7,6 +7,7 @@ using ManagedShell.Common.Native;
 using ManagedShell.Interop;
 using Application = System.Windows.Application;
 using System.Windows.Interop;
+using System.Windows.Threading;
 using System.Windows.Media;
 using ManagedShell.Common.Enums;
 using System.Diagnostics;
@@ -69,6 +70,7 @@ namespace UltraWinBar
 
         private void App_OnStartup(object sender, StartupEventArgs e)
         {
+            StartupTimeline.Mark("OnStartup entered");
             if (Settings.Instance.UseSoftwareRendering)
             {
                 RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
@@ -88,6 +90,8 @@ namespace UltraWinBar
             _taskRecovery = new TaskWindowRecovery(_shellManager.Tasks, _shellManager.TasksService, _virtualDesktops);
             _desktopPins = new PersistentDesktopPins(_shellManager.Tasks, _virtualDesktops);
             UpdateDesktopActivationGuard();
+            StartupTimeline.Mark("Panels shown, Explorer taskbar hidden");
+            Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() => StartupTimeline.Mark("UI idle")));
         }
 
         private void App_OnExit(object sender, ExitEventArgs e)
@@ -165,12 +169,14 @@ namespace UltraWinBar
             EnvironmentHelper.IsAppRunningAsShell = NativeMethods.GetShellWindow() == IntPtr.Zero;
 
             _logger = new ManagedShellLogger();
+            StartupTimeline.OpenLog();
             CallbackGuard.InstallGlobalHandlers();
 
             ShellConfig config = ShellManager.DefaultShellConfig;
             config.PinnedNotifyIcons = Settings.Instance.NotifyIconBehaviors.Where(setting => setting.Behavior == NotifyIconBehavior.AlwaysShow).Select(setting => setting.Identifier).ToArray();
 
             var shell = new ShellManager(config);
+            StartupTimeline.Mark("Shell services started");
             if (shell.Tasks.GroupedWindows is System.ComponentModel.ICollectionViewLiveShaping view)
             {
                 view.IsLiveFiltering = false;

@@ -27,6 +27,8 @@ namespace UltraWinBar
                 return RunWorkAreaWatchdog(args);
             }
 
+            StartupTimeline.Mark("Main entered");
+
             if (!SingleInstanceCheck())
             {
                 return 1;

@@ -171,7 +171,7 @@ internal static class ServiceLifecycleChecks
 
         string body = ExtractMethodBody(
             ReadVendorSource(repositoryRoot, "Support", "vendor", "ManagedShell", "src", "ManagedShell.WindowsTray", "TrayService.cs"),
-            "internal IntPtr Initialize()", "internal void Run()", "TrayService.cs");
+            "internal IntPtr Initialize()", "internal void Announce()", "TrayService.cs");
         foreach (var marker in new[]
         {
             "LifecycleState == ServiceLifecycleState.Disposed", "LifecycleState = ServiceLifecycleState.Running", "LifecycleState = ServiceLifecycleState.Stopped"

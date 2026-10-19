@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+### Changed
+
+- Start-up no longer leaves the screen without a taskbar: with the manual work
+  area, Explorer's taskbar is hidden only after the panels are shown (it used
+  to go a few seconds before they appeared). Panels that register as AppBars
+  still hide it first.
+- Explorer's notification icons are read beside start-up instead of before the
+  panels exist (the read waits on Explorer and took 2-3 s); they are added in
+  Explorer's order and the tray is announced to applications after them, or
+  after 5 s if Explorer does not answer.
+- The log gets `Startup: <stage> at N ms (+N ms)` lines, counted from the
+  moment the process was created, so a slow start can be pinned on a stage.
+
 ### Fixed
 
 - Tasks shown on every desktop (pinned applications, windows shown on all

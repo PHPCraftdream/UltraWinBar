@@ -2,7 +2,10 @@
 using ManagedShell.Common.Logging;
 using Microsoft.Win32;
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Windows.Threading;
 using static ManagedShell.Interop.NativeMethods;
 
 namespace ManagedShell.WindowsTray
@@ -20,48 +23,116 @@ namespace ManagedShell.WindowsTray
             trayDelegate = theDelegate;
         }
 
-        internal void Run()
+        // UltraWinBar: reading waits on Explorer's UI thread (2-3 s at logon), so it runs on its own thread. The items go to
+        // the dispatcher thread, which owns the tray collections, in Explorer's order; completed runs after them.
+        // False when there is nothing to read (we are the shell), and completed is never called.
+        internal bool BeginRun(Dispatcher dispatcher, Action completed)
         {
-            if (!EnvironmentHelper.IsAppRunningAsShell && trayDelegate != null)
+            if (EnvironmentHelper.IsAppRunningAsShell || trayDelegate == null)
             {
-                bool autoTrayEnabled = GetAutoTrayEnabled();
+                return false;
+            }
 
-                if (autoTrayEnabled)
+            bool autoTrayEnabled = GetAutoTrayEnabled();
+            // Found before our own Shell_TrayWnd exists, so it cannot be taken for Explorer's.
+            IntPtr toolbarHwnd = FindExplorerTrayToolbarHwnd();
+
+            var reader = new Thread(() =>
+            {
+                long started = Environment.TickCount64;
+                List<SafeNotifyIconData> items = ReadItems(autoTrayEnabled, toolbarHwnd);
+                ShellLogger.Debug($"ExplorerTrayService: Read {items.Count} icons in {Environment.TickCount64 - started} ms");
+                try
                 {
-                    // we can't get tray icons that are in the hidden area, so disable that temporarily if enabled
+                    dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(() =>
+                    {
+                        Deliver(items);
+                        completed();
+                    }));
+                }
+                catch (Exception e)
+                {
+                    ShellLogger.Debug($"ExplorerTrayService: Unable to hand over items: {e.Message}");
+                }
+            })
+            {
+                IsBackground = true,
+                Name = "ExplorerTrayService: read"
+            };
+            reader.SetApartmentState(ApartmentState.STA);
+            reader.Start();
+            return true;
+        }
+
+        private List<SafeNotifyIconData> ReadItems(bool autoTrayEnabled, IntPtr toolbarHwnd)
+        {
+            var items = new List<SafeNotifyIconData>();
+
+            if (autoTrayEnabled)
+            {
+                // we can't get tray icons that are in the hidden area, so disable that temporarily if enabled
+                TrayNotify trayNotify = null;
+                try
+                {
+                    trayNotify = new TrayNotify();
+
+                    SetAutoTrayEnabled(trayNotify, false);
                     try
                     {
-                        TrayNotify trayNotify = new TrayNotify();
-
-                        SetAutoTrayEnabled(trayNotify, false);
-                        GetTrayItems();
-                        SetAutoTrayEnabled(trayNotify, true);
-
-                        Marshal.ReleaseComObject(trayNotify);
+                        GetTrayItems(toolbarHwnd, items);
                     }
-                    catch (Exception e)
+                    finally
                     {
-                        ShellLogger.Debug($"ExplorerTrayService: Unable to get items using ITrayNotify: {e.Message}");
+                        SetAutoTrayEnabled(trayNotify, true);
                     }
                 }
-                else
+                catch (Exception e)
                 {
-                    try
+                    ShellLogger.Debug($"ExplorerTrayService: Unable to get items using ITrayNotify: {e.Message}");
+                }
+                finally
+                {
+                    if (trayNotify != null)
                     {
-                        GetTrayItems();
+                        Marshal.ReleaseComObject(trayNotify);
                     }
-                    catch (Exception e)
+                }
+            }
+            else
+            {
+                try
+                {
+                    GetTrayItems(toolbarHwnd, items);
+                }
+                catch (Exception e)
+                {
+                    ShellLogger.Debug($"ExplorerTrayService: Unable to get items: {e.Message}");
+                }
+            }
+
+            return items;
+        }
+
+        private void Deliver(List<SafeNotifyIconData> items)
+        {
+            foreach (SafeNotifyIconData nid in items)
+            {
+                try
+                {
+                    if (!trayDelegate((uint)NIM.NIM_ADD, nid))
                     {
-                        ShellLogger.Debug($"ExplorerTrayService: Unable to get items: {e.Message}");
+                        ShellLogger.Debug("ExplorerTrayService: Ignored notify icon message");
                     }
+                }
+                catch (Exception e)
+                {
+                    ShellLogger.Debug($"ExplorerTrayService: Unable to add {nid.szTip}: {e.Message}");
                 }
             }
         }
 
-        private void GetTrayItems()
+        private void GetTrayItems(IntPtr toolbarHwnd, List<SafeNotifyIconData> items)
         {
-            IntPtr toolbarHwnd = FindExplorerTrayToolbarHwnd();
-
             if (toolbarHwnd == IntPtr.Zero)
             {
                 return;
@@ -104,19 +175,7 @@ namespace ManagedShell.WindowsTray
                             continue;
                         }
 
-                        SafeNotifyIconData nid = GetTrayItemIconData(trayItem);
-
-                        if (trayDelegate != null)
-                        {
-                            if (!trayDelegate((uint)NIM.NIM_ADD, nid))
-                            {
-                                ShellLogger.Debug("ExplorerTrayService: Ignored notify icon message");
-                            }
-                        }
-                        else
-                        {
-                            ShellLogger.Debug("ExplorerTrayService: trayDelegate is null");
-                        }
+                        items.Add(GetTrayItemIconData(trayItem));
                     }
                 }
                 finally
