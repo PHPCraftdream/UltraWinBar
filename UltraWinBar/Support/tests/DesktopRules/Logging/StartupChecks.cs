@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ManagedShell.Common.Native;
 using ManagedShell.WindowsTray;
 using UltraWinBar.Utilities;
 
@@ -12,6 +13,38 @@ internal static class StartupChecks
         RunTimelineCheck();
         RunOneShotCheck();
         RunHideOrderCheck();
+        RunSelfAnnouncementCheck();
+    }
+
+    // Regression: the deferred tray announcement is delivered to ExplorerMonitor, which took it for Explorer
+    // restarting and closed and reopened every panel ~1.5 s after start (the panels flashed).
+    private static void RunSelfAnnouncementCheck()
+    {
+        const int taskbarCreated = 0xC0DE;
+        if (!ExplorerMonitor.IsExplorerRestart(taskbarCreated, taskbarCreated))
+            throw new Exception("TaskbarCreated from outside (Explorer restarting) must rebuild the panels.");
+        if (ExplorerMonitor.IsExplorerRestart(taskbarCreated + 1, taskbarCreated))
+            throw new Exception("Other messages are not an Explorer restart.");
+
+        using (ExplorerLifecycle.BeginSelfAnnouncement())
+        {
+            if (ExplorerMonitor.IsExplorerRestart(taskbarCreated, taskbarCreated))
+                throw new Exception("Our own TaskbarCreated announcement must not rebuild the panels.");
+            using (ExplorerLifecycle.BeginSelfAnnouncement()) { }
+            if (!ExplorerLifecycle.IsSelfAnnouncing)
+                throw new Exception("Ending a nested announcement must not end the outer one.");
+        }
+        if (ExplorerLifecycle.IsSelfAnnouncing)
+            throw new Exception("The suppression must end with the announcement.");
+
+        try
+        {
+            using (ExplorerLifecycle.BeginSelfAnnouncement()) throw new InvalidOperationException();
+        }
+        catch (InvalidOperationException) { }
+        if (ExplorerLifecycle.IsSelfAnnouncing || !ExplorerMonitor.IsExplorerRestart(taskbarCreated, taskbarCreated))
+            throw new Exception("A failing broadcast must not leave a real Explorer restart ignored.");
+        Console.WriteLine("PASS: ExplorerMonitor ignores the TaskbarCreated we broadcast ourselves (no panel reopening at start) and still reacts to a real Explorer restart.");
     }
 
     private static void RunTimelineCheck()

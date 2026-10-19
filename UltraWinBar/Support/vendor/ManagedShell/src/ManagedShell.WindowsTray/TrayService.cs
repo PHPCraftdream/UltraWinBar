@@ -169,8 +169,11 @@ namespace ManagedShell.WindowsTray
             if (msg > 0)
             {
                 ShellLogger.Debug("TrayService: Sending TaskbarCreated message");
-                SendNotifyMessage(HWND_BROADCAST,
-                    (uint)msg, UIntPtr.Zero, IntPtr.Zero);
+                using (ExplorerLifecycle.BeginSelfAnnouncement())
+                {
+                    SendNotifyMessage(HWND_BROADCAST,
+                        (uint)msg, UIntPtr.Zero, IntPtr.Zero);
+                }
             }
         }
 

@@ -32,6 +32,10 @@ namespace UltraWinBar.Utilities
             }
         }
 
+        // TaskbarCreated that we broadcast ourselves (announcing the tray) is not Explorer restarting.
+        internal static bool IsExplorerRestart(int message, int taskbarCreatedMessage) =>
+            message == taskbarCreatedMessage && !ExplorerLifecycle.IsSelfAnnouncing;
+
         public void ExplorerMonitorStart(WindowManager windowManagerRef, ShellManager shellManager)
         {
             if (_explorerMonitorWindow != null) { return; } // Prevent multiple monitors.
@@ -59,7 +63,7 @@ namespace UltraWinBar.Utilities
 
             protected override void WndProc(ref Message m)
             {
-                if (m.Msg == WM_TASKBARCREATEDMESSAGE)
+                if (IsExplorerRestart(m.Msg, WM_TASKBARCREATEDMESSAGE))
                 {
                     Dispatcher.CurrentDispatcher.BeginInvoke(() => {
                         // Recreate COM proxies first so reopened panels never use the dead explorer.exe.

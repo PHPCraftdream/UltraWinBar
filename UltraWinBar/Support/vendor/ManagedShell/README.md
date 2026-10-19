@@ -71,7 +71,9 @@ not changed; every local modification is listed below and marked in code with `U
   thread in Explorer's order, `EnableAutoTray` is switched back on in `finally`. `NotificationArea`
   starts the tray (`TrayService.Resume`) at once and announces it (`TrayService.Announce`, split from
   the old `Run`) when the icons are in, or after 5 s (`OneShot` makes that exactly once, never after
-  `Dispose`).
+  `Dispose`). The broadcast runs inside `ExplorerLifecycle.BeginSelfAnnouncement()`: it reaches our own
+  windows synchronously, and `ExplorerMonitor` must not take it for Explorer restarting (it closed and
+  reopened every panel right after start).
 - `ImmersiveShellHelper`: added `Reset()`, called by the app on `TaskbarCreated`, to drop the
   static `_immersiveShell`/experience-manager caches that otherwise stay dead forever after an
   Explorer restart; calls on a cached manager that fail with a severed-proxy HRESULT now reset and
