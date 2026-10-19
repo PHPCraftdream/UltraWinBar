@@ -30,7 +30,7 @@ namespace UltraWinBar.Controls
             // Stored per desktop: switching lists must not leak the old desktop's ordering keys.
             desktopKeys[desktopLists.CurrentId] = result.DisplayKeys;
             TaskListDiff.Reconcile(displayedTasks, result.Items);
-            if (Settings.Instance.DebugLogging)
+            if (ShellLogger.Severity == LogSeverity.Debug)
             {
                 string snapshot = string.Join("|", displayedTasks.Select(item => displayKeys[item]));
                 if (snapshot != lastOrderSnapshot)

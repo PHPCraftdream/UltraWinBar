@@ -1,4 +1,5 @@
 using ManagedShell.AppBar;
+using ManagedShell.Common.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -238,6 +239,12 @@ namespace UltraWinBar.Utilities
             if (entries.SequenceEqual(TaskOrder))
             {
                 return;
+            }
+
+            if (ShellLogger.Severity == LogSeverity.Debug)
+            {
+                string audit = TaskOrderAudit.Describe(TaskOrder, entries, edge, desktop);
+                if (audit != null) ShellLogger.Debug(audit);
             }
 
             TaskOrder = entries;

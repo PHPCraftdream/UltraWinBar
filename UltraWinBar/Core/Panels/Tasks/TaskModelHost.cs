@@ -158,7 +158,15 @@ namespace UltraWinBar.Utilities
             TaskModelResult result = TaskModel.Compute(input);
 
             // Settings writes, once, outside any panel's view update.
-            if (result.PrunedTaskOrder != null) Settings.Instance.TaskOrder = result.PrunedTaskOrder;
+            if (result.PrunedTaskOrder != null)
+            {
+                if (ShellLogger.Severity == LogSeverity.Debug)
+                {
+                    string pruned = TaskOrderAudit.DescribePrune(Settings.Instance.TaskOrder, result.PrunedTaskOrder);
+                    if (pruned != null) ShellLogger.Debug(pruned);
+                }
+                Settings.Instance.TaskOrder = result.PrunedTaskOrder;
+            }
             if (result.PrunedTaskbarAssignments != null) Settings.Instance.TaskbarAssignments = result.PrunedTaskbarAssignments;
             foreach (var edgeOrder in result.SavedOrders)
             {

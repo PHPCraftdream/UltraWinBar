@@ -14,6 +14,11 @@
   after 5 s if Explorer does not answer.
 - The log gets `Startup: <stage> at N ms (+N ms)` lines, counted from the
   moment the process was created, so a slow start can be pinned on a stage.
+- With debug logging on (the setting or the flag file), the log records every
+  change of the stored task order (`Task order: edge=...; written <desktop>:
+  +added -removed moved=N [...]; aligned <desktop>: ...`) and every dead window
+  key pruned from it, and the task order snapshot is written for the flag file
+  too (it used to need the setting), so a reordering can be traced to a desktop.
 
 ### Fixed
 
