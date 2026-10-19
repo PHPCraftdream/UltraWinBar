@@ -609,34 +609,18 @@ namespace UltraWinBar.Controls
             int taskCount = TasksList.Items.Count;
             TasksList.AlternationCount = taskCount; // keep in sync for correct AlternationIndex
 
-            double margin = TaskButtonLeftMargin + TaskButtonRightMargin;
-            ButtonsPerRow = Math.Max(1, (int)Math.Ceiling((double)taskCount / rows));
-            double maxWidth = TasksList.ActualWidth / ButtonsPerRow;
-            double defaultWidth = DefaultButtonWidth + margin;
-            double minWidth = MinButtonWidth + margin;
+            // The panel's scroll viewer is always laid out; the current desktop's list is not yet when it is new or
+            // was just shown, and sizing from its width of 0 shrank every button to half size.
+            double available = TasksScrollViewer.ViewportWidth > 0 ? TasksScrollViewer.ViewportWidth : TasksList.ActualWidth;
+            TaskButtonSizing? sizing = TaskButtonSizing.Compute(available, taskCount, rows, DefaultButtonWidth, MinButtonWidth,
+                TaskButtonLeftMargin + TaskButtonRightMargin);
+            if (sizing is not { } size)
+                return; // not laid out yet: TaskList_OnSizeChanged runs this again
 
-            if (maxWidth > defaultWidth)
-            {
-                // Room to spare: keep the default width and leave the trailing gap.
-                ExtraWidthCount = 0;
-                ButtonWidth = defaultWidth;
-                SetScrollable(false);
-            }
-            else if (maxWidth < minWidth)
-            {
-                ExtraWidthCount = 0;
-                ButtonWidth = Math.Ceiling(defaultWidth / 2);
-                SetScrollable(true);
-            }
-            else
-            {
-                // Buttons are shrunk to fit a full row: spread the pixels lost to flooring
-                // across the columns so the row fills the taskbar.
-                double baseWidth = Math.Floor(maxWidth);
-                ButtonWidth = baseWidth;
-                ExtraWidthCount = (int)Math.Floor(TasksList.ActualWidth) - (int)baseWidth * ButtonsPerRow;
-                SetScrollable(false);
-            }
+            ButtonsPerRow = size.ButtonsPerRow;
+            ExtraWidthCount = size.ExtraWidthCount;
+            ButtonWidth = size.ButtonWidth;
+            SetScrollable(size.Scrollable);
         }
 
         private void SetScrollable(bool canScroll)

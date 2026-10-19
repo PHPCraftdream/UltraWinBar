@@ -17,6 +17,11 @@
 
 ### Fixed
 
+- After switching to a desktop for the first time (or back to one whose panel
+  had not been laid out yet), task buttons could stay at half width on a nearly
+  empty panel: the width was computed from the new desktop's list before it had
+  any size. It is now taken from the panel's scroll viewer, and left unchanged
+  while the panel has no width yet.
 - Tasks shown on every desktop (pinned applications, windows shown on all
   desktops) keep one order across desktops instead of changing places when the
   desktop changes. Each desktop still stores its own order, but every write now

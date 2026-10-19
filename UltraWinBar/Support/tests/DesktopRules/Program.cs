@@ -33,6 +33,7 @@ CrossProcessMessageChecks.Run();
 NativeCallbackChecks.Run(repositoryRoot);
 HealthDiagnosticsChecks.Run();
 StartupChecks.Run();
+TaskButtonSizingChecks.Run();
 WindowActivityLogChecks.Run();
 WindowDictionaryChecks.Run();
 GhostSweepChecks.Run();
