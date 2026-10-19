@@ -143,8 +143,8 @@ internal static class IdentifierCacheChecks
         return GetShortPathName(path, sb, (uint)sb.Capacity) == 0 ? path : sb.ToString();
     }
 
-    // Regression: a process can report its image as D:\SYSTEM~2\Temp\procexp64.exe while the pin was saved as
-    // D:\system_artefact\Temp\procexp64.exe, so the window got its own task instead of taking the pinned button.
+    // Regression: a process can report its image as C:\PROGRA~1\Tool\tool.exe while the pin was saved as
+    // C:\Program Files\Tool\tool.exe, so the window got its own task instead of taking the pinned button.
     private static void RunShortPathChecks(TasksService service)
     {
         string directory = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "UltraWinBarShortPath" + Guid.NewGuid().ToString("N").Substring(0, 8));

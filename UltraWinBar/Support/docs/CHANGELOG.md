@@ -32,7 +32,7 @@
   panel per step) is published once the size settles. Maximized windows then
   follow the new work area, keeping their frame.
 - A pinned application whose process reports its image in 8.3 form (Process
-  Explorer runs from `D:\SYSTEM~2\Temp\procexp64.exe`) takes its pinned button
+  Explorer runs from `C:\PROGRA~1\Tool\tool.exe`) takes its pinned button
   instead of appearing as a separate task: the identifier uses the long path,
   and pins, assignments and order saved under the short spelling are merged into
   it on load.

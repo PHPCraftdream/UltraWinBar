@@ -102,7 +102,7 @@ namespace UltraWinBar.Utilities
             set => Set(ref _taskOrder, CanonicalizeIdentifiers(value, e => e.Identifier, (e, id) => e with { Identifier = id }, e => (e.DesktopId, e.Edge)));
         }
 
-        // Identifiers saved while a window reported its image under an 8.3 spelling (D:\SYSTEM~2\...) are rewritten to
+        // Identifiers saved while a window reported its image under an 8.3 spelling (C:\PROGRA~1\...) are rewritten to
         // the long spelling windows now report, so pins, assignments and order keep matching; spellings that collapse
         // into one are merged (first wins). The list is returned untouched when nothing needs rewriting.
         private List<T> CanonicalizeIdentifiers<T>(List<T> items, Func<T, string> identifier, Func<T, string, T> withIdentifier, Func<T, object> scope)

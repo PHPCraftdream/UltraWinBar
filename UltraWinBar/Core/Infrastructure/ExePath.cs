@@ -24,7 +24,7 @@ namespace UltraWinBar.Utilities
         static readonly ConcurrentDictionary<string, string> LongPaths = new(StringComparer.Ordinal);
         const int MaxCachedPaths = 512;
 
-        // One file, one spelling: a process can report its image as D:\SYSTEM~2\Temp\x.exe or D:\system_artefact\Temp\x.exe
+        // One file, one spelling: a process can report its image as C:\PROGRA~1\Tool\x.exe or C:\Program Files\Tool\x.exe
         // depending on how its TEMP was expanded. 8.3 names always contain '~', so other paths cost nothing.
         internal static string ToLongPath(string path)
         {
