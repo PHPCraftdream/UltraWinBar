@@ -36,6 +36,12 @@
   dragging a button only swaps displayed buttons, leaving other desktops' keys
   where they were. Orders that had already diverged are aligned on the first
   update after the upgrade.
+- The Win+K and Win+P flyouts were left about 64 px short of the right panel
+  again: the move against the panel only recognised a flyout docked against
+  Explorer's hidden taskbar while that taskbar sat at its shown position, and
+  Explorer parks it past the screen edge once it is auto-hidden. The flyout is
+  now matched against where the taskbar sits when shown. The log says why a
+  flyout was left in place (`shell flyout ... left in place`).
 
 ## 2.4.7-alpha (2026-10-13)
 

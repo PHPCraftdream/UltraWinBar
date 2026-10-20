@@ -48,7 +48,11 @@ namespace UltraWinBar.Utilities
                 Left = screen.Bounds.Left, Top = screen.Bounds.Top, Right = screen.Bounds.Right, Bottom = screen.Bounds.Bottom
             };
             Vector? shift = StartMenuPlacement.GetShellFlyoutShift(flyout, trayRect, bounds, WindowPlacementGuard.AvailableArea(screen.Bounds));
-            if (!shift.HasValue) return;
+            if (!shift.HasValue)
+            {
+                ShellLogger.Debug($"StartMenuMonitor: shell flyout {hwnd} left in place: flyout=({flyout.Left},{flyout.Top},{flyout.Right},{flyout.Bottom}), Explorer taskbar=({trayRect.Left},{trayRect.Top},{trayRect.Right},{trayRect.Bottom})");
+                return;
+            }
             int x = flyout.Left + (int)shift.Value.X, y = flyout.Top + (int)shift.Value.Y;
             bool moved = SetWindowPos(hwnd, IntPtr.Zero, x, y, 0, 0,
                 (int)(SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOZORDER | SetWindowPosFlags.SWP_NOACTIVATE));

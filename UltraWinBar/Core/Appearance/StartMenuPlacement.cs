@@ -27,6 +27,7 @@ namespace UltraWinBar.Utilities
         // moves a flyout flush against Explorer's taskbar to the area edge instead. Null if not docked there.
         public static Vector? GetShellFlyoutShift(NativeMethods.Rect flyout, NativeMethods.Rect explorerTray, NativeMethods.Rect monitor, Rect area)
         {
+            explorerTray = DockedPosition(explorerTray, monitor);
             bool spansHeight = explorerTray.Top <= monitor.Top && explorerTray.Bottom >= monitor.Bottom;
             bool spansWidth = explorerTray.Left <= monitor.Left && explorerTray.Right >= monitor.Right;
             double dx = 0, dy = 0;
@@ -39,6 +40,22 @@ namespace UltraWinBar.Utilities
             else if (spansWidth && explorerTray.Top <= monitor.Top && explorerTray.Bottom < monitor.Bottom && flyout.Top == explorerTray.Bottom)
                 dy = area.Top - flyout.Top;
             return dx == 0 && dy == 0 ? null : new Vector(dx, dy);
+        }
+
+        // An auto-hidden Explorer taskbar is parked just past the screen edge, yet flyouts still dock at its full
+        // thickness: where it sits when shown.
+        private static NativeMethods.Rect DockedPosition(NativeMethods.Rect tray, NativeMethods.Rect monitor)
+        {
+            bool spansHeight = tray.Top <= monitor.Top && tray.Bottom >= monitor.Bottom;
+            bool spansWidth = tray.Left <= monitor.Left && tray.Right >= monitor.Right;
+            if (spansHeight == spansWidth) return tray;
+            if (spansHeight)
+                return tray.Left + tray.Right > monitor.Left + monitor.Right
+                    ? new NativeMethods.Rect(monitor.Right - tray.Width, tray.Top, monitor.Right, tray.Bottom)
+                    : new NativeMethods.Rect(monitor.Left, tray.Top, monitor.Left + tray.Width, tray.Bottom);
+            return tray.Top + tray.Bottom > monitor.Top + monitor.Bottom
+                ? new NativeMethods.Rect(tray.Left, monitor.Bottom - tray.Height, tray.Right, monitor.Bottom)
+                : new NativeMethods.Rect(tray.Left, monitor.Top, tray.Right, monitor.Top + tray.Height);
         }
 
         // Panel to anchor a menu we did not open (Win key, other launchers): the Start-hosting panel on

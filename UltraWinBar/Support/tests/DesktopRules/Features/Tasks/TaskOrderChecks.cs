@@ -224,6 +224,21 @@ internal static class TaskOrderChecks
             throw new Exception("Top-docked flyout must move to the top area edge.");
         Console.WriteLine("PASS: shell flyouts docked to Explorer's hidden taskbar move flush to our panel on every edge; others stay.");
 
+        // Regression: with Explorer's taskbar auto-hidden it sits past the screen edge (x 1918..2140), the flyout still docks at 1698.
+        if (StartMenuPlacement.GetShellFlyoutShift(connect, R(1918, 0, 2140, 1080), screenRect, area) != new System.Windows.Vector(64, 0))
+            throw new Exception("Win+K flyout must move flush to the panel while Explorer's taskbar is parked past the right edge.");
+        if (StartMenuPlacement.GetShellFlyoutShift(R(222, 41, 582, 1039), R(-220, 0, 2, 1080), screenRect, area) != new System.Windows.Vector(-64, 0))
+            throw new Exception("Left-docked flyout must move to the area edge while Explorer's taskbar is parked past the left edge.");
+        if (StartMenuPlacement.GetShellFlyoutShift(R(1500, 500, 1920, 1000), R(0, 1078, 1920, 1158), screenRect, area) != new System.Windows.Vector(0, 39))
+            throw new Exception("Bottom-docked flyout must move to the area edge while Explorer's taskbar is parked below the screen.");
+        if (StartMenuPlacement.GetShellFlyoutShift(R(1500, 60, 1920, 400), R(0, -58, 1920, 2), screenRect, area) != new System.Windows.Vector(0, -19))
+            throw new Exception("Top-docked flyout must move to the area edge while Explorer's taskbar is parked above the screen.");
+        if (StartMenuPlacement.GetShellFlyoutShift(R(1402, 41, 1762, 1039), R(1918, 0, 2140, 1080), screenRect, area) != null)
+            throw new Exception("A flyout already at the area edge must not move while Explorer's taskbar is parked.");
+        if (StartMenuPlacement.GetShellFlyoutShift(R(200, 200, 600, 600), R(1918, 0, 2140, 1080), screenRect, area) != null)
+            throw new Exception("A window not docked to Explorer's taskbar must not move while it is parked.");
+        Console.WriteLine("PASS: shell flyouts also move flush to our panel when Explorer's taskbar is auto-hidden and parked past the screen edge.");
+
         var startMenuMonitorType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.StartMenuMonitor");
         var shouldHookMenuEvents = startMenuMonitorType?.GetMethod("ShouldHookMenuEvents", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
         if (shouldHookMenuEvents == null) throw new Exception("Start menu event hook policy is missing.");
