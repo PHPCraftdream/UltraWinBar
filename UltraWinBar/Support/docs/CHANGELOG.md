@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 2.5.0 (2026-10-20)
+
+First release since 2.4.0. It also carries everything listed under 2.4.7-alpha
+below, which was never published. The version is pinned at 2.5.0.0 in
+`version.json`.
 
 ### Changed
 
