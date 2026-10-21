@@ -1,0 +1,47 @@
+name: Licenses
+
+# Runs only when something that can change the dependency graph changed in the push or the pull request.
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - '**/*.csproj'
+      - '**/*.props'
+      - '**/*.targets'
+      - '**/packages.lock.json'
+      - '.github/licenses/**'
+      - '.github/workflows/licenses.yml'
+  pull_request:
+    branches: [ master ]
+    paths:
+      - '**/*.csproj'
+      - '**/*.props'
+      - '**/*.targets'
+      - '**/packages.lock.json'
+      - '.github/licenses/**'
+      - '.github/workflows/licenses.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+
+  licenses:
+    name: Dependency licenses
+    runs-on: windows-2025
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+
+    - name: Self-test the checker
+      shell: pwsh
+      run: .github\licenses\Check-Licenses.ps1 -SelfTest
+
+    - name: Restore
+      run: dotnet restore UltraWinBar\UltraWinBar.csproj
+
+    - name: Check licenses
+      shell: pwsh
+      run: .github\licenses\Check-Licenses.ps1

@@ -64,3 +64,12 @@ To rebuild and replace the installed copy for the current user, run
 `UltraWinBar\Support\BuildTools\scripts\reinstall.cmd` from cmd (options: `-NoBuild`, `-NoReadyToRun`,
 `-NoStart`, `-DryRun`, `-InstallDir <path>`); it publishes a ReadyToRun build (like the released ones) and
 backs the old copy up to `%LOCALAPPDATA%\UltraWinBar\DeploymentBackups` first.
+
+The `Licenses` workflow (`.github/workflows/licenses.yml`) checks the license of every
+restored package against `.github/licenses/policy.json`: the project is Apache-2.0, so
+only permissive licenses are listed, and a package that states its license as a file
+needs that file's SHA-256 pinned in the policy (a new package version with different
+license text fails until someone reads it and pins it). It starts only when a `.csproj`,
+`.props`, `.targets` or `packages.lock.json` file, the policy or the script changes in a
+push to `master` or a pull request, or by hand; `Check-Licenses.ps1 -SelfTest` checks the
+checker itself before each run.

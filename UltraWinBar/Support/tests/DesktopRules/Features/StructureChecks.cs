@@ -97,5 +97,50 @@ internal static class StructureChecks
         }
         CheckDirectory(repositoryRoot);
         Console.WriteLine("PASS: every source folder has at most seven entries; every source file has at most 1000 lines.");
+        RunLicenseWorkflowCheck(repositoryRoot);
+    }
+
+    // The license check must start for every change that can alter the dependency graph, and only for those.
+    private static void RunLicenseWorkflowCheck(System.IO.DirectoryInfo repositoryRoot)
+    {
+        string root = repositoryRoot.FullName;
+        string workflow = System.IO.File.ReadAllText(System.IO.Path.Combine(root, ".github", "workflows", "licenses.yml"));
+        foreach (string filter in new[] { "'**/*.csproj'", "'**/*.props'", "'**/*.targets'", "'**/packages.lock.json'", "'.github/licenses/**'", "'.github/workflows/licenses.yml'" })
+        {
+            if (System.Text.RegularExpressions.Regex.Matches(workflow, System.Text.RegularExpressions.Regex.Escape(filter)).Count != 2)
+                throw new Exception($"licenses.yml must list {filter} under both push and pull_request paths.");
+        }
+        if (!workflow.Contains("workflow_dispatch:") || workflow.Contains("schedule:"))
+            throw new Exception("The license check runs on dependency changes or by hand, never on a schedule.");
+        if (!System.IO.File.Exists(System.IO.Path.Combine(root, ".github", "licenses", "Check-Licenses.ps1")))
+            throw new Exception("licenses.yml runs .github/licenses/Check-Licenses.ps1, which is missing.");
+
+        // A package reference in a file type the path filter does not cover would change dependencies unnoticed.
+        var skipped = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".git", "bin", "obj", "artifacts", "worktrees", ".claude" };
+        var uncovered = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".proj", ".projitems", ".fsproj", ".vbproj" };
+        void Scan(System.IO.DirectoryInfo folder)
+        {
+            foreach (var entry in folder.EnumerateFileSystemInfos())
+            {
+                if (skipped.Contains(entry.Name) || (entry.Attributes & System.IO.FileAttributes.ReparsePoint) != 0) continue;
+                if (entry is System.IO.DirectoryInfo child) Scan(child);
+                else if (uncovered.Contains(entry.Extension) && System.IO.File.ReadAllText(entry.FullName).Contains("PackageReference"))
+                    throw new Exception($"{entry.FullName} references packages but the license workflow's paths do not cover its file type.");
+            }
+        }
+        Scan(repositoryRoot);
+
+        using var policy = JsonDocument.Parse(System.IO.File.ReadAllText(System.IO.Path.Combine(root, ".github", "licenses", "policy.json")));
+        var allowed = policy.RootElement.GetProperty("allowedLicenses").EnumerateArray().Select(element => element.GetString()).ToArray();
+        if (allowed.Length == 0 || allowed.Any(id => System.Text.RegularExpressions.Regex.IsMatch(id, "^(A?GPL|LGPL|SSPL|EUPL|CC-BY-NC)", System.Text.RegularExpressions.RegexOptions.IgnoreCase)))
+            throw new Exception("The license policy must allow some licenses and none of the copyleft or non-commercial ones.");
+        foreach (var pin in policy.RootElement.GetProperty("licenseFileOverrides").EnumerateArray())
+        {
+            if (string.IsNullOrWhiteSpace(pin.GetProperty("id").GetString()) || string.IsNullOrWhiteSpace(pin.GetProperty("reason").GetString()) ||
+                !allowed.Contains(pin.GetProperty("license").GetString(), StringComparer.OrdinalIgnoreCase) ||
+                !System.Text.RegularExpressions.Regex.IsMatch(pin.GetProperty("licenseFileSha256").GetString(), "^[0-9A-Fa-f]{64}$"))
+                throw new Exception($"A license file pin needs an id, an allowed license, a SHA-256 and a reason: {pin}");
+        }
+        Console.WriteLine("PASS: the license workflow starts on every dependency manifest change (push and pull request), never on a schedule, and the policy allows no copyleft license.");
     }
 }

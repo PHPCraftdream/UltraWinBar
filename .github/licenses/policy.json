@@ -1,0 +1,27 @@
+{
+  "project": "Apache-2.0",
+  "allowedLicenses": [
+    "MIT",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "Apache-2.0",
+    "ISC",
+    "0BSD",
+    "Zlib"
+  ],
+  "allowedExceptions": [],
+  "licenseFileOverrides": [
+    {
+      "id": "gong-wpf-dragdrop",
+      "license": "BSD-3-Clause",
+      "licenseFileSha256": "43D7C4229F065A6EAC262E6ACF07560C257A056DC3C114BF1E7B296B1C5BDF7D",
+      "reason": "The package states its license as a file; read by hand, it is the BSD 3-Clause text that DistLicense.txt reproduces."
+    },
+    {
+      "id": "Microsoft.Windows.CsWinRT",
+      "license": "MIT",
+      "licenseFileSha256": "9906940F61B1F0B533FA7D99BAF55178B2808FBE113EA51DFBFAD8572CCD5F2B",
+      "reason": "The package states its license as a file; read by hand, it is the MIT text of Microsoft Corporation."
+    }
+  ]
+}
