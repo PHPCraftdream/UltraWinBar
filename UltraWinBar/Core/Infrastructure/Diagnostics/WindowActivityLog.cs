@@ -17,29 +17,34 @@ namespace UltraWinBar.Utilities
         private readonly INotifyCollectionChanged windows;
         private readonly string logDirectory;
         private readonly Func<bool> isEnabled;
+        private readonly Func<IntPtr, string> originOf;
         private bool disposed;
 
         internal WindowActivityLog(Tasks tasks)
             : this(tasks?.GroupedWindows?.SourceCollection as INotifyCollectionChanged, "Logs".InLocalAppData(),
-                IsEnabled)
+                IsEnabled, ProcessOrigin.OfWindow)
         {
         }
 
         internal static bool IsEnabled() =>
             Settings.Instance.WindowActivityLogging || File.Exists(FlagFileName.InLocalAppData());
 
-        internal WindowActivityLog(INotifyCollectionChanged windows, string logDirectory, Func<bool> isEnabled)
+        // originOf names the process behind an opening window and the ones that started it (last column of its line).
+        internal WindowActivityLog(INotifyCollectionChanged windows, string logDirectory, Func<bool> isEnabled,
+            Func<IntPtr, string> originOf = null)
         {
             this.windows = windows;
             this.logDirectory = logDirectory;
             this.isEnabled = isEnabled;
+            this.originOf = originOf;
             if (windows != null) windows.CollectionChanged += WindowsChanged;
         }
 
         internal static string FileNameFor(DateTime at) => $"windows-{at:yyyy-MM-dd}.log";
 
-        internal static string FormatLine(DateTime at, string kind, IntPtr hwnd, string binary, string title) =>
-            $"{at:yyyy-MM-dd HH:mm:ss.fff}\t{kind}\t0x{hwnd.ToInt64():X}\t{Clean(binary)}\t{Clean(title)}";
+        internal static string FormatLine(DateTime at, string kind, IntPtr hwnd, string binary, string title, string origin = null) =>
+            $"{at:yyyy-MM-dd HH:mm:ss.fff}\t{kind}\t0x{hwnd.ToInt64():X}\t{Clean(binary)}\t{Clean(title)}" +
+            (string.IsNullOrEmpty(origin) ? "" : "\t" + Clean(origin));
 
         private static string Clean(string value) =>
             string.IsNullOrEmpty(value) ? "-" : value.Replace('\t', ' ').Replace('\r', ' ').Replace('\n', ' ');
@@ -52,16 +57,26 @@ namespace UltraWinBar.Utilities
             foreach (var window in e.OldItems?.OfType<ApplicationWindow>() ?? Enumerable.Empty<ApplicationWindow>())
                 Record(now, "closed", window.Handle, window.WinFileName, window.Title);
             foreach (var window in e.NewItems?.OfType<ApplicationWindow>() ?? Enumerable.Empty<ApplicationWindow>())
-                Record(now, "opened", window.Handle, window.WinFileName, window.Title);
+                Record(now, "opened", window.Handle, window.WinFileName, window.Title, OriginOf(window.Handle));
         }
 
-        internal void Record(DateTime at, string kind, IntPtr hwnd, string binary, string title)
+        private string OriginOf(IntPtr hwnd)
+        {
+            try { return originOf?.Invoke(hwnd); }
+            catch (Exception ex)
+            {
+                ShellLogger.Debug($"WindowActivityLog: origin lookup failed: {ex.Message}");
+                return null;
+            }
+        }
+
+        internal void Record(DateTime at, string kind, IntPtr hwnd, string binary, string title, string origin = null)
         {
             try
             {
                 Directory.CreateDirectory(logDirectory);
                 File.AppendAllText(Path.Combine(logDirectory, FileNameFor(at)),
-                    FormatLine(at, kind, hwnd, binary, title) + Environment.NewLine, Utf8NoBom);
+                    FormatLine(at, kind, hwnd, binary, title, origin) + Environment.NewLine, Utf8NoBom);
             }
             catch (Exception ex)
             {

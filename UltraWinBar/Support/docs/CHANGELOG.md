@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.5.1 (2026-11-01)
+
+### Added
+
+- The window journal names who is behind a window: an `opened` line ends with a
+  sixth column, the owning process and the processes that started it, as
+  `name(pid)[command line] <- parent(pid)[command line] <- ...` (up to four
+  levels, command lines cut at 160 characters). `?(pid)` stands for a process
+  that is already gone (a console window that lives for milliseconds) or that
+  cannot be read (an elevated one), and a parent id that was reused by a newer
+  process is not named. With it, a flashing console window such as `tzutil.exe`
+  can be traced to what started it. The columns before it are unchanged, and
+  `closed` lines have no sixth column. Command lines can hold secrets, so the
+  journal stays opt-in and local.
+
 ## 2.5.0 (2026-10-20)
 
 First release since 2.4.0. It also carries everything listed under 2.4.7-alpha
