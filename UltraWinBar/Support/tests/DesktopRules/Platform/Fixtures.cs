@@ -83,6 +83,12 @@ internal static class DesktopInteropProbe
                 if (currentId == Guid.Empty || !knownDesktops.Contains(currentId))
                     throw new InvalidOperationException("The current registry desktop ID is not in the desktop list.");
 
+                // A start with no recorded desktop asks the open windows; it must land on the recorded one.
+                var inferCurrent = contextType.GetMethod("InferCurrent", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var inferred = (Guid)inferCurrent.Invoke(context, null);
+                if (inferred != Guid.Empty && inferred != currentId)
+                    throw new InvalidOperationException($"The desktop taken from the open windows ({inferred}) differs from the recorded one ({currentId}).");
+
                 // The weak desktop subscription used by task lists/buttons must actually deliver Changed.
                 var weak = typeof(DesktopActions).Assembly.GetType("UltraWinBar.Utilities.WeakSubscriptions");
                 int desktopChanges = 0;

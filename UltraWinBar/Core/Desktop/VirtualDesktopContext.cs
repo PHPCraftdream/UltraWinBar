@@ -1,5 +1,6 @@
 using ManagedShell.Common.Logging;
 using ManagedShell.Common.Native;
+using ManagedShell.Interop;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -59,17 +60,24 @@ namespace UltraWinBar.Utilities
             manager.Recovered += () =>
             {
                 desktopForWindowCache.Clear();
-                dispatcher.BeginInvoke(new Action(() => ManagerRecovered?.Invoke(this, EventArgs.Empty)));
+                dispatcher.BeginInvoke(new Action(() =>
+                {
+                    // A start without a recorded desktop could not ask the manager yet.
+                    if (!disposed) RefreshCurrent();
+                    ManagerRecovered?.Invoke(this, EventArgs.Empty);
+                }));
             };
-            CurrentId = ReadCurrent();
+            Guid recorded = ReadRecorded();
+            CurrentId = ResolveCurrent(recorded, Guid.Empty, InferCurrent);
             // RegistryTreeWatch/RegistryValueWatch marshal the callback to "dispatcher" themselves.
             foreach (string path in new[] { GlobalPath, SessionPath })
                 watches.Add(new RegistryTreeWatch(path, dispatcher, Refresh));
-            ShellLogger.Info($"Virtual desktop: {CurrentId}");
+            ShellLogger.Info($"Virtual desktop: {CurrentId}" + (recorded == Guid.Empty && CurrentId != Guid.Empty ? " (Explorer has not recorded it; taken from the open windows)" : ""));
             LifecycleState = ServiceLifecycleState.Running;
         }
 
-        private Guid ReadCurrent()
+        // The desktop Explorer recorded; Guid.Empty while it has not (see InferCurrent).
+        private static Guid ReadRecorded()
         {
             foreach (string path in new[] { SessionPath, GlobalPath })
             {
@@ -78,7 +86,87 @@ namespace UltraWinBar.Utilities
             }
             using var global = Registry.CurrentUser.OpenSubKey(GlobalPath);
             if (global?.GetValue("VirtualDesktopIDs") is byte[] ids && ids.Length == 16) return new Guid(ids);
-            return CurrentId;
+            return Guid.Empty;
+        }
+
+        private Guid ReadCurrent()
+        {
+            Guid recorded = ReadRecorded();
+            return recorded != Guid.Empty ? recorded : CurrentId;
+        }
+
+        // Recorded desktop, else the one known so far, else a guess from the open windows (never asked when
+        // the first two are known: it makes COM calls into Explorer).
+        internal static Guid ResolveCurrent(Guid recorded, Guid known, Func<Guid> infer) =>
+            recorded != Guid.Empty ? recorded : known != Guid.Empty ? known : infer();
+
+        private const long InferRetryMilliseconds = 1000;
+        private const int InferCandidateLimit = 256, InferVoteLimit = 16;
+        private long inferredAt;
+
+        // Explorer records the current desktop only when it switches; after a driver reset or resume it
+        // recreates the key without the value, and a start then knows nothing (pins are per desktop, so none
+        // showed until the first switch). Ask where the open windows live: those on this desktop report it.
+        private Guid InferCurrent()
+        {
+            long now = Environment.TickCount64;
+            if (inferredAt != 0 && now - inferredAt < InferRetryMilliseconds) return Guid.Empty;
+            inferredAt = now;
+            var current = manager?.Get();
+            if (current == null) return Guid.Empty;
+
+            uint ownProcess = (uint)Environment.ProcessId;
+            var candidates = new List<IntPtr>();
+            NativeMethods.EnumWindows(NativeCallback.Wrap("VirtualDesktopContext: sample windows", (window, _) =>
+            {
+                if (!NativeMethods.IsWindowVisible(window) ||
+                    NativeMethods.GetWindow(window, NativeMethods.GetWindow_Cmd.GW_OWNER) != IntPtr.Zero) return true;
+                NativeMethods.GetWindowThreadProcessId(window, out uint processId);
+                if (processId != ownProcess) candidates.Add(window);
+                return candidates.Count < InferCandidateLimit;
+            }), IntPtr.Zero);
+
+            var votes = new List<Guid>();
+            foreach (IntPtr candidate in candidates)
+            {
+                try
+                {
+                    if (manager.Check(current.IsWindowOnCurrentVirtualDesktop(candidate, out bool onCurrent)) < 0 || !onCurrent) continue;
+                    if (manager.Check(current.GetWindowDesktopId(candidate, out Guid id)) >= 0) votes.Add(id);
+                }
+                catch (Exception error) when (error is COMException || error is InvalidComObjectException)
+                {
+                    manager.Report(error);
+                    break;
+                }
+                if (votes.Count >= InferVoteLimit) break;
+            }
+            return MajorityDesktop(votes, ReadExistingDesktopIds());
+        }
+
+        // The desktop most windows report, the earlier (top-most) one on a tie. Empty ids and ids of desktops
+        // that do not exist are dropped: a window shown on all desktops reports an arbitrary one.
+        internal static Guid MajorityDesktop(IEnumerable<Guid> windowDesktops, ICollection<Guid> existing)
+        {
+            var counts = new Dictionary<Guid, int>();
+            var firstSeen = new List<Guid>();
+            foreach (Guid id in windowDesktops)
+            {
+                if (id == Guid.Empty || (existing.Count > 0 && !existing.Contains(id))) continue;
+                counts.TryGetValue(id, out int seen);
+                if (seen == 0) firstSeen.Add(id);
+                counts[id] = seen + 1;
+            }
+
+            Guid best = Guid.Empty;
+            int bestCount = 0;
+            foreach (Guid id in firstSeen)
+            {
+                if (counts[id] <= bestCount) continue;
+                best = id;
+                bestCount = counts[id];
+            }
+            return best;
         }
 
         private void Refresh()
@@ -113,7 +201,7 @@ namespace UltraWinBar.Utilities
         // Re-reads the current desktop and raises Changed if it moved; dispatcher thread only.
         internal bool RefreshCurrent()
         {
-            Guid id = ReadCurrent();
+            Guid id = ResolveCurrent(ReadRecorded(), CurrentId, InferCurrent);
             if (id == CurrentId) return false;
             CurrentId = id;
             // Windows keep their desktop across a switch: the per-window cache stays valid.

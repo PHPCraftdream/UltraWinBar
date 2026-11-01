@@ -33,6 +33,42 @@ internal static class DesktopTaskListsChecks
         RunOrderChecks();
         RunTaskButtonRectVisibilityChecks();
         RunDesktopIdCacheSurvivesSwitchChecks();
+        RunCurrentDesktopResolutionChecks();
+    }
+
+    // Regression: after a driver reset or resume Explorer recreated its session key without
+    // CurrentVirtualDesktop (it records it only on a switch), the context started on Guid.Empty and no
+    // pin showed - pins are per desktop - until the desktops were switched back and forth. With nothing
+    // recorded or known, the desktop is taken from the open windows; the record always wins.
+    private static void RunCurrentDesktopResolutionChecks()
+    {
+        Guid a = Guid.NewGuid(), b = Guid.NewGuid(), c = Guid.NewGuid(), unknown = Guid.NewGuid();
+        int asked = 0;
+        Guid Infer() { asked++; return c; }
+
+        if (VirtualDesktopContext.ResolveCurrent(a, b, Infer) != a || asked != 0)
+            throw new Exception("A recorded desktop must win without asking the windows.");
+        if (VirtualDesktopContext.ResolveCurrent(Guid.Empty, b, Infer) != b || asked != 0)
+            throw new Exception("Without a record the desktop known so far must stay, without asking the windows.");
+        if (VirtualDesktopContext.ResolveCurrent(Guid.Empty, Guid.Empty, Infer) != c || asked != 1)
+            throw new Exception("With nothing recorded or known the desktop must be taken from the windows.");
+
+        var existing = new[] { a, b, c };
+        if (VirtualDesktopContext.MajorityDesktop(new[] { a, b, b }, existing) != b)
+            throw new Exception("The desktop most windows report must win.");
+        if (VirtualDesktopContext.MajorityDesktop(new[] { a, b }, existing) != a ||
+            VirtualDesktopContext.MajorityDesktop(new[] { b, a, a, b }, existing) != b)
+            throw new Exception("A tie must go to the desktop of the earlier (top-most) window.");
+        if (VirtualDesktopContext.MajorityDesktop(new[] { a, c, a, b, a, c }, existing) != a)
+            throw new Exception("A window shown on all desktops (an arbitrary id) must be outvoted.");
+        if (VirtualDesktopContext.MajorityDesktop(new[] { Guid.Empty, unknown, unknown, Guid.Empty, b }, existing) != b)
+            throw new Exception("Empty ids and ids of desktops that do not exist must not vote.");
+        if (VirtualDesktopContext.MajorityDesktop(new[] { unknown, unknown, a }, new Guid[0]) != unknown)
+            throw new Exception("Without a list of existing desktops no id may be dropped as unknown.");
+        if (VirtualDesktopContext.MajorityDesktop(new Guid[0], existing) != Guid.Empty ||
+            VirtualDesktopContext.MajorityDesktop(new[] { unknown, Guid.Empty }, existing) != Guid.Empty)
+            throw new Exception("No usable window must leave the desktop unknown (Guid.Empty), never a guess.");
+        Console.WriteLine("PASS: a start without a recorded desktop takes it from the open windows (majority, ties to the top-most, all-desktops windows outvoted); a record always wins.");
     }
 
     // Regression: the per-window desktop-id cache used to be cleared on every desktop switch, so the

@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Pinned applications are shown right after start-up again when Explorer has
+  not recorded the current virtual desktop. After a display-driver reset or a
+  resume Explorer recreates its session key without `CurrentVirtualDesktop` and
+  writes it only on the first desktop switch; the panels then started on an
+  unknown desktop and, as pins belong to a desktop, showed none until the
+  desktops were switched back and forth. Without a record, the desktop is now
+  taken from the open windows: the desktop most of them report to Explorer,
+  skipping UltraWinBar's own windows, with windows shown on all desktops
+  outvoted. The record still wins as soon as Explorer writes it.
+
 ## 2.5.1 (2026-11-01)
 
 ### Added
