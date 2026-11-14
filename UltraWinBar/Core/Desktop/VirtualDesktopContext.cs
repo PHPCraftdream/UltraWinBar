@@ -245,7 +245,22 @@ namespace UltraWinBar.Utilities
             if (!TryGetWindowDesktopId(hwnd, out Guid id)) return CurrentId;
             if (desktopForWindowCache.Count >= 1024) desktopForWindowCache.Clear();
             desktopForWindowCache[hwnd] = id;
+            if (IsSharedDesktopId(id, ReadExistingDesktopIds())) sharedDesktopIds.Add(id);
             return id;
+        }
+
+        // A window shown on all desktops (Task Manager, a pinned Telegram) reports an id no desktop has.
+        private readonly HashSet<Guid> sharedDesktopIds = new HashSet<Guid>();
+
+        internal static bool IsSharedDesktopId(Guid id, ICollection<Guid> existing) => existing.Count > 0 && !existing.Contains(id);
+
+        // The desktop a window's panel rule is kept under: its own, or the current one for a window shown on all
+        // desktops. One key for every lookup: a rule made by drag, pin or launch used to be missed (the window went
+        // back to its old panel) whenever one path saw the real desktop and another the id of the shared ones.
+        internal Guid RuleDesktopForWindow(IntPtr hwnd)
+        {
+            Guid id = DesktopForWindowCached(hwnd);
+            return sharedDesktopIds.Contains(id) ? CurrentId : id;
         }
 
         internal void ForgetWindowDesktop(IntPtr hwnd) => desktopForWindowCache.Remove(hwnd);

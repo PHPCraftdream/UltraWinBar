@@ -34,6 +34,38 @@ internal static class DesktopTaskListsChecks
         RunTaskButtonRectVisibilityChecks();
         RunDesktopIdCacheSurvivesSwitchChecks();
         RunCurrentDesktopResolutionChecks();
+        RunRuleDesktopChecks();
+    }
+
+    // Regression: a window shown on all desktops (Task Manager, a pinned Telegram) reports an id no desktop has.
+    // A drag kept its panel rule under that id, a pin launch under the real desktop, so the window went back to its
+    // old panel (or flipped panels once the lookup stopped failing). Every lookup now keys the rule by the real
+    // desktop: the window's own, or the current one for a window shown on all desktops.
+    private static void RunRuleDesktopChecks()
+    {
+        Guid current = Guid.NewGuid(), other = Guid.NewGuid(), shared = Guid.NewGuid();
+        var existing = new[] { current, other };
+        if (!VirtualDesktopContext.IsSharedDesktopId(shared, existing) ||
+            VirtualDesktopContext.IsSharedDesktopId(other, existing) ||
+            VirtualDesktopContext.IsSharedDesktopId(shared, new Guid[0]))
+            throw new Exception("An id no desktop has is a shared-desktop id; with no desktop list nothing is.");
+
+        var context = (VirtualDesktopContext)System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(typeof(VirtualDesktopContext));
+        var onShared = (IntPtr)0x51, onOther = (IntPtr)0x52, onCurrent = (IntPtr)0x53;
+        typeof(VirtualDesktopContext).GetField("desktopForWindowCache", BindingFlags.NonPublic | BindingFlags.Instance)
+            .SetValue(context, new Dictionary<IntPtr, Guid> { [onShared] = shared, [onOther] = other, [onCurrent] = current });
+        typeof(VirtualDesktopContext).GetField("sharedDesktopIds", BindingFlags.NonPublic | BindingFlags.Instance)
+            .SetValue(context, new HashSet<Guid> { shared });
+        var currentId = typeof(VirtualDesktopContext).GetProperty("CurrentId");
+        currentId.SetValue(context, current);
+
+        if (context.RuleDesktopForWindow(onShared) != current || context.RuleDesktopForWindow(onCurrent) != current ||
+            context.RuleDesktopForWindow(onOther) != other)
+            throw new Exception("A window shown on all desktops must be keyed by the current desktop, any other window by its own.");
+        currentId.SetValue(context, other);
+        if (context.RuleDesktopForWindow(onShared) != other)
+            throw new Exception("A window shown on all desktops must follow the current desktop, not stay on the one it was first seen on.");
+        Console.WriteLine("PASS: panel rules of windows shown on all desktops are kept under the current desktop, so a drag, a pin launch and the lookup agree.");
     }
 
     // Regression: after a driver reset or resume Explorer recreated its session key without

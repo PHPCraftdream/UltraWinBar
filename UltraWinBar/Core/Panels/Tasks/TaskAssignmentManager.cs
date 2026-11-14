@@ -106,7 +106,7 @@ namespace UltraWinBar.Utilities
             string legacyWindowId = GetLegacyWindowIdentifier(window);
             string appId = GetIdentifier(window, TaskAssignmentMode.ExecutablePath);
 
-            Guid desktop = VirtualDesktopContext.Instance?.DesktopForWindowCached(window.Handle) ?? Guid.Empty;
+            Guid desktop = VirtualDesktopContext.Instance?.RuleDesktopForWindow(window.Handle) ?? Guid.Empty;
             return ResolveEdgeIndexed(Settings.Instance.TaskbarAssignments, desktop, windowId, legacyWindowId, appId);
         }
 
@@ -233,7 +233,7 @@ namespace UltraWinBar.Utilities
         {
             string identifier = GetIdentifier(window, mode);
             string legacyWindowId = mode == TaskAssignmentMode.WindowClassAndTitle ? GetLegacyWindowIdentifier(window) : null;
-            Guid desktop = VirtualDesktopContext.Instance?.DesktopForWindow(window.Handle) ?? Guid.Empty;
+            Guid desktop = VirtualDesktopContext.Instance?.RuleDesktopForWindow(window.Handle) ?? Guid.Empty;
 
             if (identifier == null)
             {
@@ -251,6 +251,12 @@ namespace UltraWinBar.Utilities
             Settings.Instance.TaskbarAssignments = assignments;
         }
 
+        /// <summary>The assignments with the application's rule for this desktop replaced by one for the edge.</summary>
+        internal static List<TaskbarAssignment> WithApplicationEdge(IEnumerable<TaskbarAssignment> assignments, Guid desktop, string identifier, AppBarEdge edge) =>
+            assignments.Where(a => !(a.Mode == TaskAssignmentMode.ExecutablePath && a.DesktopId == desktop && a.Identifier == identifier))
+                .Append(new TaskbarAssignment { Identifier = identifier, Edge = edge, Mode = TaskAssignmentMode.ExecutablePath, DesktopId = desktop })
+                .ToList();
+
         /// <summary>
         /// Forgets both the window-specific and application-wide assignment for this window,
         /// so it falls back to the default taskbar again.
@@ -260,7 +266,7 @@ namespace UltraWinBar.Utilities
             string windowId = GetIdentifier(window, TaskAssignmentMode.WindowClassAndTitle);
             string legacyWindowId = GetLegacyWindowIdentifier(window);
             string appId = GetIdentifier(window, TaskAssignmentMode.ExecutablePath);
-            Guid desktop = VirtualDesktopContext.Instance?.DesktopForWindow(window.Handle) ?? Guid.Empty;
+            Guid desktop = VirtualDesktopContext.Instance?.RuleDesktopForWindow(window.Handle) ?? Guid.Empty;
 
             List<TaskbarAssignment> assignments = Settings.Instance.TaskbarAssignments
                 .Where(a => a.DesktopId != desktop ||

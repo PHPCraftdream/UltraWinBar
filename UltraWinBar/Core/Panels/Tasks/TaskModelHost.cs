@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows.Threading;
 
 namespace UltraWinBar.Utilities
@@ -48,6 +49,13 @@ namespace UltraWinBar.Utilities
         /// <summary>Number of completed Compute passes. Test-only instrumentation for asserting
         /// that several triggers across several panels coalesce into one pass.</summary>
         internal int ComputeCount { get; private set; }
+
+        // Legacy order slots ("exe#N", kept from before windows had keys) belong to the windows that existed when
+        // the first pass ran: they take their key over on first sight, on whichever desktop that is. A window
+        // opened later never takes one, or it would land wherever a stale slot happens to be, not at the end.
+        private ConditionalWeakTable<ApplicationWindow, object> startupWindows = new();
+        private bool startupWindowsTaken;
+        private static readonly object StartupMarker = new();
 
         internal void Register(ITaskModelPanel panel) => panels.Add(new WeakReference<ITaskModelPanel>(panel));
 
@@ -115,12 +123,17 @@ namespace UltraWinBar.Utilities
             List<ApplicationWindow> windows = tasks?.GroupedWindows?.SourceCollection?.Cast<object>().OfType<ApplicationWindow>().ToList()
                 ?? new List<ApplicationWindow>();
             Dictionary<ApplicationWindow, string> legacyKeys = TaskOrderIdentifier.GetLegacyBatch(windows, tasks);
+            if (!startupWindowsTaken)
+            {
+                startupWindowsTaken = true;
+                foreach (var window in windows) startupWindows.AddOrUpdate(window, StartupMarker);
+            }
             var windowSnapshots = windows.Select(w => new TaskWindowSnapshot
             {
                 Window = w,
                 Key = TaskOrderIdentifier.Get(w, tasks),
                 FallbackKey = "hwnd:" + w.Handle,
-                LegacyKey = legacyKeys[w],
+                LegacyKey = startupWindows.TryGetValue(w, out _) ? legacyKeys[w] : null,
                 AppIdentifier = TaskAssignmentManager.GetIdentifier(w, TaskAssignmentMode.ExecutablePath),
             }).ToList();
 

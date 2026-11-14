@@ -131,6 +131,7 @@ namespace UltraWinBar.Utilities
             var claimed = new HashSet<TaskWindowSnapshot>();
             var items = new List<object>();
             var windowsByAppId = GroupByAppIdentifier(windows);
+            var pinGroups = new List<(string PinKey, List<string> MemberKeys)>();
 
             foreach (var pin in pins)
             {
@@ -151,11 +152,14 @@ namespace UltraWinBar.Utilities
                 foreach (var member in group) claimed.Add(member);
                 items.Add(item);
                 keys[item] = pin.OrderKey;
+                var memberKeys = new List<string>();
                 foreach (var member in group.Where(w => !ReferenceEquals(w, window)))
                 {
                     items.Add(member.Window);
                     keys[member.Window] = member.Key ?? member.FallbackKey;
+                    memberKeys.Add(keys[member.Window]);
                 }
+                pinGroups.Add((pin.OrderKey, memberKeys));
             }
             foreach (var window in windows.Where(w => !claimed.Contains(w)))
             {
@@ -166,6 +170,10 @@ namespace UltraWinBar.Utilities
             // Keys shown here for the first time, but already ordered on another desktop (a window shown on all
             // desktops), take that place rather than the end, so switching desktops does not move them.
             TaskOrderIdentifier.PlaceNewKeys(order, orderSet, items.Select(item => keys[item]), otherScopes);
+
+            // A new window of a pinned application opens right after that application's windows, not at the end of the list.
+            foreach (var (pinKey, memberKeys) in pinGroups)
+                TaskOrderIdentifier.PlaceAfterGroup(order, orderSet, pinKey, memberKeys);
 
             var orderIndexes = new Dictionary<string, int>();
             int nullOrderIndex = -1;

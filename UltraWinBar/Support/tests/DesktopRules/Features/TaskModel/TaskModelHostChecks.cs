@@ -80,6 +80,76 @@ internal static class TaskModelHostChecks
         RunNoOpConvergenceChecks();
         RunUnregisterAndGcChecks();
         RunMultiPanelSameEdgeRegressionChecks();
+        RunLegacySlotChecks();
+    }
+
+    // Regression: a window opened after start-up took the first stale legacy slot ("exe#N") of the saved order
+    // and showed up in the middle of the list. Only windows that existed at the host's first pass may take one.
+    private static void RunLegacySlotChecks()
+    {
+        WithDispatcher(dispatcher =>
+        {
+            var service = new TasksService();
+            var nativeFirst = new NativeWindow();
+            var nativeLater = new NativeWindow();
+            nativeFirst.CreateHandle(new CreateParams());
+            nativeLater.CreateHandle(new CreateParams());
+            try
+            {
+                var first = CreateWindow(service, nativeFirst, @"C:\apps\term.exe");
+                var later = CreateWindow(service, nativeLater, @"C:\apps\term.exe");
+                service.Windows.Add(first);
+                service.Windows.Add(later);
+                var tasks = new Tasks(service);
+                string laterLegacyKey = TaskOrderIdentifier.GetLegacyBatch(new[] { first, later }, tasks)[later];
+                service.Windows.Remove(later);
+
+                // The host's first pass is this one: forget the start-up snapshot earlier checks left behind.
+                const System.Reflection.BindingFlags nonPublicInstance = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+                typeof(TaskModelHost).GetField("startupWindowsTaken", nonPublicInstance).SetValue(TaskModelHost.Instance, false);
+                typeof(TaskModelHost).GetField("startupWindows", nonPublicInstance)
+                    .SetValue(TaskModelHost.Instance, new System.Runtime.CompilerServices.ConditionalWeakTable<ApplicationWindow, object>());
+
+                var originalTaskOrder = Settings.Instance.TaskOrder;
+                var originalAssignments = Settings.Instance.TaskbarAssignments;
+                var originalPins = Settings.Instance.PinnedApplications;
+                try
+                {
+                    Settings.Instance.TaskOrder = new List<TaskOrderEntry>
+                    {
+                        new() { Edge = AppBarEdge.Bottom, Identifier = laterLegacyKey },
+                        new() { Edge = AppBarEdge.Bottom, Identifier = "class:Other|title:Other" },
+                    };
+                    Settings.Instance.TaskbarAssignments = new List<TaskbarAssignment>();
+                    Settings.Instance.PinnedApplications = new List<PinnedApplication>();
+
+                    var panel = new FakePanel { Edge = AppBarEdge.Bottom, Tasks = tasks };
+                    TaskModelHost.Instance.Register(panel);
+                    try
+                    {
+                        TaskModelHost.Instance.RequestPass(dispatcher);
+                        Pump(dispatcher);
+                        if (!panel.LastResult.Items.SequenceEqual(new object[] { first }))
+                            throw new Exception("The first pass must show the one window that exists.");
+
+                        service.Windows.Add(later);
+                        TaskModelHost.Instance.RequestPass(dispatcher);
+                        Pump(dispatcher);
+                        if (!panel.LastResult.Items.SequenceEqual(new object[] { first, later }))
+                            throw new Exception("A window opened after start-up must go to the end of the list, not into a stale legacy slot of the saved order.");
+                    }
+                    finally { TaskModelHost.Instance.Unregister(panel); }
+                }
+                finally
+                {
+                    Settings.Instance.TaskOrder = originalTaskOrder;
+                    Settings.Instance.TaskbarAssignments = originalAssignments;
+                    Settings.Instance.PinnedApplications = originalPins;
+                }
+            }
+            finally { nativeFirst.DestroyHandle(); nativeLater.DestroyHandle(); }
+        });
+        Console.WriteLine("PASS: a window opened after start-up goes to the end of the list; stale legacy slots of the saved order are only taken by windows that existed at start-up.");
     }
 
     private static void RunCoalescingChecks()

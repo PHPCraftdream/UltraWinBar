@@ -2,7 +2,43 @@
 
 ## Unreleased
 
+### Changed
+
+- A newly opened window now always goes to the end of its panel's task list,
+  and one of a pinned application goes right after that application's windows
+  (the pin's own place when it has none), not to the end of the whole list. A
+  window opened after start-up used to take over the first stale legacy slot
+  (`exe#N`, kept from before windows had keys) of the saved order, and so
+  appeared in the middle of the list; only the windows that existed at start-up
+  take such a slot now.
+- Restored windows are no longer moved or resized to fit the panel work area
+  after they are shown, activated or dragged, so a window can be dragged past
+  the panels or off the work area. Maximized windows are still fitted to the
+  panels.
+
 ### Fixed
+
+- Panels that are not shown after a logon are put right. Once, right after a
+  Windows logon (the shell starts together with Explorer), the left and bottom
+  panels were not there at all while the other two were, until the virtual
+  desktops were switched back and forth; the log held nothing about it. For the
+  first three minutes after start-up the panels are now checked: shown, not
+  cloaked, opaque, topmost, and the window under some probed point of the panel
+  is the panel itself. A panel that fails is named in the log with the reason
+  (and the window covering it); it is put right at once, and if it still fails
+  at the next check the panels are opened again, once. A panel that gave way to
+  a full-screen app is left alone, and so is everything while auto-hide is on.
+- A pinned application, such as Task Manager on the right panel, can be dragged
+  to another panel: its pin and the application's rule move together (they did
+  not move at all for a pin without a window, and for a running one only the
+  window moved while the pin stayed and sent it back on the next click). Ctrl+drag
+  still moves just the window.
+- The panel a window shown on all desktops (Task Manager, a pinned Telegram)
+  belongs to no longer depends on which code path looked it up. Windows reports
+  an id for these that no desktop has, so a rule made by dragging was kept under
+  that id but one made by launching a pin under the real desktop: the window went
+  back to its old panel, or moved to another by itself seconds after it opened.
+  All lookups now key such a window by the current desktop.
 
 - Pinned applications are shown right after start-up again when Explorer has
   not recorded the current virtual desktop. After a display-driver reset or a

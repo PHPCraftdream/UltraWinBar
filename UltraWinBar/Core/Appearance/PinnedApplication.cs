@@ -82,6 +82,16 @@ namespace UltraWinBar.Utilities
             return pin;
         }
 
+        // The pins after pin moved to edge; a pin of the same application already there absorbs it.
+        internal static List<PinnedApplication> MoveToEdge(IEnumerable<PinnedApplication> pins, PinnedApplication pin, AppBarEdge edge)
+        {
+            var result = pins.ToList();
+            if (result.Any(p => !ReferenceEquals(p, pin) && p.DesktopId == pin.DesktopId && p.Identifier == pin.Identifier && p.Edge == edge))
+                result.Remove(pin);
+            else pin.Edge = edge;
+            return result;
+        }
+
         internal static bool IsTemporaryTarget(string path) =>
             !string.IsNullOrEmpty(path) && Path.GetFullPath(path).StartsWith(
                 Path.GetFullPath(Path.GetTempPath()).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar,

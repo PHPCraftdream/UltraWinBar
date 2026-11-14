@@ -54,26 +54,52 @@ internal static class LayoutChecks
         if (topFirst.Panels[0].Bounds.Right != 1920 || topFirst.Panels[1].Bounds.Top != 40)
             throw new Exception("Edge priority was not preserved.");
         Console.WriteLine("PASS: panel bounds never intersect for every edge subset/order, including tight monitors.");
-        var placementGuard = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.WindowPlacementGuard");
-        var planPlacement = placementGuard?.GetMethod("PlanPlacement", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
-        if (planPlacement == null) throw new Exception("Window placement policy is missing.");
-        System.Windows.Rect? PlanWindow(ManagedShell.Interop.NativeMethods.Rect visible, System.Windows.Rect area, bool maximized) =>
-            (System.Windows.Rect?)planPlacement.Invoke(null, new object[] { visible, area, maximized });
+        var placementGuard = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.WindowPlacementGuard")
+            ?? throw new Exception("Window placement guard is missing.");
+        // Regression: the guard moved and shrank every restored window into the panel work area after it was shown,
+        // activated or dragged, so windows could not be dragged past the panels or off the work area.
+        // Only maximized windows are fitted to the panels; a restored window is never repositioned.
+        var guardMembers = placementGuard.GetMembers(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Static |
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic).Select(member => member.Name).ToArray();
+        if (guardMembers.Contains("PlanPlacement") || guardMembers.Contains("Constrain"))
+            throw new Exception("The placement guard must not relocate or resize restored windows.");
+        string guardSource = System.IO.File.ReadAllText(System.IO.Path.Combine(repositoryRoot.FullName,
+            "UltraWinBar", "Core", "Desktop", "WindowPlacementGuard.cs"));
+        if (System.Text.RegularExpressions.Regex.Matches(guardSource, @"\bSetWindowPos\(").Count != 1 ||
+            guardSource.IndexOf("SetWindowPos(") < guardSource.IndexOf("private void RefitMaximizedWindows"))
+            throw new Exception("The maximized refit must be the only place the placement guard repositions a window.");
+        if (guardSource.Contains("WinEventHook(") || guardSource.Contains("0x8002") || guardSource.Contains("0x000A"))
+            throw new Exception("The placement guard must not watch window show or move events: nothing is moved in response.");
+        Console.WriteLine("PASS: restored windows are never relocated or resized by the placement guard; only maximized windows are refitted.");
+
+        // Regression: after a logon two of the four panels (left and bottom) were not shown at all while the other two
+        // were, until the desktops were switched; nothing was logged. The guard names what is wrong with a panel and
+        // escalates from putting it right to opening the panels again, but never fights a panel that conceded to a
+        // full-screen app.
+        var healthyPanel = new PanelVisibilityGuard.PanelState { Visible = true, Opacity = 1, ExpectOnTop = true, Topmost = true, Reachable = true };
+        string ProblemsOf(Func<PanelVisibilityGuard.PanelState, PanelVisibilityGuard.PanelState> change) => PanelVisibilityGuard.Problems(change(healthyPanel));
+        if (PanelVisibilityGuard.Problems(healthyPanel).Length != 0)
+            throw new Exception("A panel that is shown, opaque, topmost and reachable has no problems.");
+        if (ProblemsOf(state => { state.Visible = false; state.Reachable = false; return state; }) != "not visible")
+            throw new Exception("A panel that is not visible must be reported as such, and nothing else.");
+        if (ProblemsOf(state => { state.Cloaked = 2; state.Reachable = false; return state; }) != "cloaked (2)")
+            throw new Exception("A cloaked panel must be reported with its cloak reason, and nothing else.");
+        if (ProblemsOf(state => { state.Opacity = 0; return state; }) != "opacity 0")
+            throw new Exception("A fully transparent panel must be reported.");
+        if (ProblemsOf(state => { state.Topmost = false; return state; }) != "not topmost")
+            throw new Exception("A panel that lost its topmost style must be reported.");
+        if (ProblemsOf(state => { state.Reachable = false; return state; }) != "covered")
+            throw new Exception("A panel with another window over every probed point must be reported as covered.");
+        if (ProblemsOf(state => { state.ExpectOnTop = false; state.Topmost = false; state.Reachable = false; return state; }).Length != 0)
+            throw new Exception("A panel that conceded to a full-screen app belongs at the bottom and must be left alone.");
+        if (PanelVisibilityGuard.ActionFor(1, 0) != "reassert" || PanelVisibilityGuard.ActionFor(2, 0) != "reopen" ||
+            PanelVisibilityGuard.ActionFor(2, 1) != "report" || PanelVisibilityGuard.ActionFor(3, 0) != "report")
+            throw new Exception("A panel must be put right first, then the panels opened again once, then only reported.");
+        if (PanelVisibilityGuard.Schedule[0] > TimeSpan.FromSeconds(5) ||
+            PanelVisibilityGuard.Schedule.Aggregate(TimeSpan.Zero, (total, delay) => total + delay) < TimeSpan.FromMinutes(2))
+            throw new Exception("The panel checks must begin within seconds of start-up and last past the logon rush.");
+        Console.WriteLine("PASS: the panel visibility guard names what is wrong with a panel, escalates reassert -> reopen -> report, and leaves a panel that conceded to a full-screen app alone.");
         var reservedArea = new System.Windows.Rect(158, 41, 1604, 998);
-        var oversizedWindow = new ManagedShell.Interop.NativeMethods.Rect { Left = 0, Top = 0, Right = 1920, Bottom = 1080 };
-        if (PlanWindow(oversizedWindow, reservedArea, true).HasValue)
-            throw new Exception("Maximized windows must retain Windows-managed placement and restore bounds.");
-        var normalWindow = new ManagedShell.Interop.NativeMethods.Rect { Left = 0, Top = 0, Right = 900, Bottom = 700 };
-        var relocated = PlanWindow(normalWindow, reservedArea, false);
-        if (!relocated.HasValue || relocated.Value.X != 158 || relocated.Value.Y != 41 ||
-            relocated.Value.Width != 900 || relocated.Value.Height != 700 ||
-            PlanWindow(new ManagedShell.Interop.NativeMethods.Rect { Left = 158, Top = 41, Right = 1058, Bottom = 741 },
-                reservedArea, false).HasValue)
-            throw new Exception("Restored windows must move out of panel space without changing a fitting size.");
-        var clipped = PlanWindow(oversizedWindow, reservedArea, false);
-        if (!clipped.HasValue || clipped.Value != reservedArea)
-            throw new Exception("An oversized restored window must fit the reserved work area.");
-        Console.WriteLine("PASS: maximized placement is untouched; restored windows move without unnecessary resizing.");
         var planRefit = placementGuard.GetMethod("PlanMaximizedRefit", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
         if (planRefit == null) throw new Exception("Maximized refit policy is missing.");
         ManagedShell.Interop.NativeMethods.Rect? PlanRefit(ManagedShell.Interop.NativeMethods.Rect outer, ManagedShell.Interop.NativeMethods.Rect monitor, System.Windows.Rect area) =>

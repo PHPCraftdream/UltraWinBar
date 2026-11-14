@@ -128,6 +128,7 @@ internal static class TaskModelEquivalenceChecks
             var keys = new Dictionary<object, string>();
             var claimed = new HashSet<TaskWindowSnapshot>();
             var items = new List<object>();
+            var groups = new List<(string PinKey, List<string> Members)>();
 
             foreach (var pin in pins)
             {
@@ -157,12 +158,15 @@ internal static class TaskModelEquivalenceChecks
                 foreach (var candidate in group) claimed.Add(candidate);
                 items.Add(item);
                 keys[item] = pin.OrderKey;
+                var members = new List<string>();
                 foreach (var candidate in group)
                 {
                     if (ReferenceEquals(candidate, chosen)) continue;
                     items.Add(candidate.Window);
                     keys[candidate.Window] = candidate.Key ?? candidate.FallbackKey;
+                    members.Add(keys[candidate.Window]);
                 }
+                groups.Add((pin.OrderKey, members));
             }
             foreach (var window in windows)
             {
@@ -201,6 +205,23 @@ internal static class TaskModelEquivalenceChecks
                 order.Add(seed);
                 orderSet.Add(seed);
                 unplaced.Remove(seed);
+            }
+
+            // A new window of a pinned application goes right after the application's last ordered key (the pin's own
+            // counts), in group order; with none of them ordered yet it is left to the append at the end.
+            foreach (var (groupPinKey, groupMembers) in groups)
+            {
+                var fresh = groupMembers.Where(k => k != null && !order.Contains(k)).Distinct().ToList();
+                if (fresh.Count == 0) continue;
+                int lastSlot = order.IndexOf(groupPinKey);
+                foreach (var k in groupMembers)
+                    if (k != null && order.IndexOf(k) > lastSlot) lastSlot = order.IndexOf(k);
+                if (lastSlot < 0) continue;
+                foreach (var k in fresh)
+                {
+                    order.Insert(++lastSlot, k);
+                    orderSet.Add(k);
+                }
             }
 
             var orderIndexes = new Dictionary<string, int>();

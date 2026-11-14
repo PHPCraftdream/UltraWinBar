@@ -34,6 +34,59 @@ internal static class TaskModelPinChecks
         RunDeduplicationAndClaimChecks();
         RunReconciliationChecks();
         RunMultiEdgeChecks();
+        RunNewWindowPlacementChecks();
+    }
+
+    private static List<TaskOrderEntry> Order(params string[] keys) =>
+        keys.Select(key => new TaskOrderEntry { Edge = Edge, Identifier = key }).ToList();
+
+    // A newly opened window goes to the end of its panel's list; one of a pinned application goes right after that
+    // application's windows (the pin's own place when it has none), not to the end of the whole list.
+    private static void RunNewWindowPlacementChecks()
+    {
+        var other = Window("o", "kO", "other");
+        var a1 = Window("a1", "kA1", "app");
+        var a2 = Window("a2", "kA2", "app");
+        var a3 = Window("a3", "kA3", "app");
+        var a4 = Window("a4", "kA4", "app");
+        var pin = Pin("pinA", "app", primaryWindowKey: "kA1");
+
+        var grouped = TaskModel.Compute(MakeInput(new[] { other, a1, a2, a3 }, new[] { pin }, Order("pin:app", "kA2", "kO")));
+        if (!grouped.Panels[Edge].Items.SequenceEqual(new object[] { "a1", "a2", "a3", "o" }) ||
+            !grouped.Panels[Edge].SavedOrder.SequenceEqual(new[] { "pin:app", "kA2", "kA3", "kO" }))
+            throw new Exception("A new window of a pinned application must go right after the application's last window, not to the end of the list: " +
+                string.Join(",", grouped.Panels[Edge].Items) + " / " + string.Join(",", grouped.Panels[Edge].SavedOrder));
+        var again = TaskModel.Compute(MakeInput(new[] { other, a1, a2, a3 }, new[] { pin }, Order(grouped.Panels[Edge].SavedOrder.ToArray())));
+        if (!again.Panels[Edge].Items.SequenceEqual(grouped.Panels[Edge].Items))
+            throw new Exception("A placed window of a pinned application must stay where it was placed on the next pass.");
+
+        var several = TaskModel.Compute(MakeInput(new[] { other, a1, a2, a3, a4 }, new[] { pin }, Order("pin:app", "kA2", "kO")));
+        if (!several.Panels[Edge].Items.SequenceEqual(new object[] { "a1", "a2", "a3", "a4", "o" }))
+            throw new Exception("Several new windows of a pinned application must keep their opening order after the application's windows.");
+
+        var afterPin = TaskModel.Compute(MakeInput(new[] { other, a1, a2 }, new[] { pin }, Order("pin:app", "kO")));
+        if (!afterPin.Panels[Edge].Items.SequenceEqual(new object[] { "a1", "a2", "o" }))
+            throw new Exception("With no other window of the application yet, a new one must go right after the pin's place.");
+
+        var movedLater = TaskModel.Compute(MakeInput(new[] { other, a1, a2, a3 }, new[] { pin }, Order("kA2", "kO", "pin:app")));
+        if (!movedLater.Panels[Edge].Items.SequenceEqual(new object[] { "a2", "o", "a1", "a3" }))
+            throw new Exception("A new window must follow the application's last window even where the user dragged the group apart.");
+
+        var unpinned = TaskModel.Compute(MakeInput(new[] { other, a2, a3 }, Array.Empty<PinSnapshot>(), Order("kA2", "kO")));
+        if (!unpinned.Panels[Edge].Items.SequenceEqual(new object[] { "a2", "o", "a3" }))
+            throw new Exception("A new window of an application that is not pinned must go to the end of the list.");
+
+        // A stale legacy slot ("exe#N") in the middle of the saved order must not pull a new window into the middle:
+        // the host gives a legacy key only to windows that existed at start-up.
+        var fresh = new TaskWindowSnapshot { Window = "n", Key = "kN", FallbackKey = "hwnd:n", AppIdentifier = null };
+        var staleSlot = TaskModel.Compute(MakeInput(new[] { other, fresh }, Array.Empty<PinSnapshot>(), Order("class:Old|title:X", "kO")));
+        if (!staleSlot.Panels[Edge].Items.SequenceEqual(new object[] { "o", "n" }))
+            throw new Exception("A window without a legacy key must go to the end of the list, not into a stale legacy slot.");
+        var migrating = new TaskWindowSnapshot { Window = "n", Key = "kN", FallbackKey = "hwnd:n", LegacyKey = "class:Old|title:X" };
+        var migrated = TaskModel.Compute(MakeInput(new[] { other, migrating }, Array.Empty<PinSnapshot>(), Order("class:Old|title:X", "kO")));
+        if (!migrated.Panels[Edge].Items.SequenceEqual(new object[] { "n", "o" }))
+            throw new Exception("A start-up window with a legacy key must still take over its legacy slot.");
+        Console.WriteLine("PASS: a new window goes to the end of its panel's list; a new window of a pinned application goes right after that application's windows.");
     }
 
     private static void RunRepresentativeSelectionChecks()

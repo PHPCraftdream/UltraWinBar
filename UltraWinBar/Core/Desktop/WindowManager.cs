@@ -29,6 +29,7 @@ namespace UltraWinBar.Utilities
         private Process _workAreaWatchdogProcess;
         private NativeMethods.Rect? _expectedWorkArea;
         private WindowPlacementGuard _placementGuard;
+        private PanelVisibilityGuard _panelGuard;
         private readonly WorkAreaRecovery _workAreaRecovery = new WorkAreaRecovery();
         private readonly DispatcherTimer _workAreaRecoveryTimer;
         // Maximized windows follow a panel resize once it settles, from the area they were fitted to before it.
@@ -74,6 +75,7 @@ namespace UltraWinBar.Utilities
             openTaskbars();
 
             _placementGuard = new WindowPlacementGuard(QueueManualWorkAreaRecovery);
+            _panelGuard = new PanelVisibilityGuard(() => _taskbars, RequestReopenTaskbars);
 
             _explorerMonitor.ExplorerMonitorStart(this, _shellManager);
 
@@ -380,6 +382,7 @@ namespace UltraWinBar.Utilities
                 _isOpeningTaskbars = false;
                 _shellManager.ExplorerHelper.HideExplorerTaskbar = true;
                 QueueManualWorkAreaRecovery();
+                _panelGuard?.Restart();
             }
         }
 
@@ -610,6 +613,7 @@ namespace UltraWinBar.Utilities
             _lockedWorkAreaTimer.Stop();
             _lockedWorkAreaTimer.Tick -= CheckLockedWorkArea;
             _placementGuard?.Dispose();
+            _panelGuard?.Dispose();
             if (_manualWorkArea)
             {
                 WorkAreaManager.Apply(_originalWorkArea, (uint)Process.GetCurrentProcess().Id);

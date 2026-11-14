@@ -151,6 +151,26 @@ namespace UltraWinBar.Utilities
         }
 
         /// <summary>
+        /// Windows of a pinned application that have no place yet go right after the last of the group already
+        /// ordered (the pin's own key counts), in the given order, not to the end of the list. With nothing of the
+        /// group ordered yet the keys are left for the caller to append.
+        /// </summary>
+        internal static void PlaceAfterGroup(List<string> order, HashSet<string> orderSet, string pinKey, IReadOnlyList<string> memberKeys)
+        {
+            var fresh = memberKeys.Where(key => key != null && order.IndexOf(key) < 0).Distinct().ToList();
+            if (fresh.Count == 0) return;
+            int last = pinKey == null ? -1 : order.IndexOf(pinKey);
+            foreach (string key in memberKeys)
+                if (key != null) last = Math.Max(last, order.IndexOf(key));
+            if (last < 0) return;
+            foreach (string key in fresh)
+            {
+                order.Insert(++last, key);
+                orderSet.Add(key);
+            }
+        }
+
+        /// <summary>
         /// The stored order after the user rearranged the displayed keys: displayed keys fill the slots displayed
         /// keys already had, so keys of other desktops' windows keep their positions. Displayed keys not stored yet are appended.
         /// </summary>

@@ -50,5 +50,47 @@ internal static class AssignmentChecks
         Check(desktopA, "window", AppBarEdge.Left);
         Console.WriteLine("PASS: desktop isolation, window precedence, JSON restart round-trip, scoped removal, legacy settings.");
         Console.WriteLine("PASS: stable per-window rules outrank legacy title rules while legacy assignments remain readable.");
+        RunPinMoveChecks(desktopA, desktopB);
+    }
+
+    // Regression: a pinned application (Task Manager on the Right panel) could not be dragged to another panel:
+    // a pin without a window ignored the drop, and for a running one only the window moved, so the pin stayed and
+    // a click on it sent the application back. The pin and the application's rule move together.
+    private static void RunPinMoveChecks(Guid desktopA, Guid desktopB)
+    {
+        PinnedApplication Pin(string identifier, AppBarEdge edge, Guid desktop) =>
+            new() { Identifier = identifier, Edge = edge, DesktopId = desktop };
+
+        var taskManager = Pin("exe:taskmgr", AppBarEdge.Right, desktopA);
+        var sameAppOtherDesktop = Pin("exe:taskmgr", AppBarEdge.Right, desktopB);
+        var otherApp = Pin("exe:browser", AppBarEdge.Right, desktopA);
+        var moved = PinnedApplication.MoveToEdge(new[] { taskManager, sameAppOtherDesktop, otherApp }, taskManager, AppBarEdge.Bottom);
+        if (moved.Count != 3 || taskManager.Edge != AppBarEdge.Bottom ||
+            sameAppOtherDesktop.Edge != AppBarEdge.Right || otherApp.Edge != AppBarEdge.Right)
+            throw new Exception("Moving a pin must change only that pin's panel, not the same application's pin on another desktop.");
+
+        var onTarget = Pin("exe:taskmgr", AppBarEdge.Left, desktopA);
+        var absorbed = PinnedApplication.MoveToEdge(new[] { taskManager, onTarget, otherApp }, taskManager, AppBarEdge.Left);
+        if (absorbed.Count != 2 || absorbed.Contains(taskManager) || !absorbed.Contains(onTarget) || onTarget.Edge != AppBarEdge.Left)
+            throw new Exception("A pin of the same application already on the target panel must absorb the moved one.");
+
+        var rules = new List<TaskbarAssignment>
+        {
+            new() { Identifier = "exe:taskmgr", Mode = TaskAssignmentMode.ExecutablePath, Edge = AppBarEdge.Right, DesktopId = desktopA },
+            new() { Identifier = "exe:taskmgr", Mode = TaskAssignmentMode.ExecutablePath, Edge = AppBarEdge.Right, DesktopId = desktopB },
+            new() { Identifier = "exe:taskmgr", Mode = TaskAssignmentMode.ExecutablePath, Edge = AppBarEdge.Top },
+            new() { Identifier = "exe:browser", Mode = TaskAssignmentMode.ExecutablePath, Edge = AppBarEdge.Right, DesktopId = desktopA },
+            new() { Identifier = "exe:taskmgr", Mode = TaskAssignmentMode.WindowClassAndTitle, Edge = AppBarEdge.Left, DesktopId = desktopA },
+        };
+        var updated = TaskAssignmentManager.WithApplicationEdge(rules, desktopA, "exe:taskmgr", AppBarEdge.Bottom);
+        if (updated.Count != 5 ||
+            TaskAssignmentManager.ResolveEdge(updated, desktopA, null, "exe:taskmgr") != AppBarEdge.Bottom ||
+            TaskAssignmentManager.ResolveEdge(updated, desktopB, null, "exe:taskmgr") != AppBarEdge.Right ||
+            TaskAssignmentManager.ResolveEdge(updated, Guid.NewGuid(), null, "exe:taskmgr") != AppBarEdge.Top ||
+            TaskAssignmentManager.ResolveEdge(updated, desktopA, null, "exe:browser") != AppBarEdge.Right)
+            throw new Exception("The application's rule must be replaced for that desktop only, leaving other desktops, other applications and the all-desktops rule alone.");
+        if (!updated.Any(rule => rule.Mode == TaskAssignmentMode.WindowClassAndTitle && rule.Edge == AppBarEdge.Left))
+            throw new Exception("A per-window rule must survive moving the application.");
+        Console.WriteLine("PASS: dragging a pinned application moves its pin and its rule together, for the current desktop only.");
     }
 }

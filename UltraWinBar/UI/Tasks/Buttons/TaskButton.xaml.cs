@@ -542,9 +542,14 @@ namespace UltraWinBar.Controls
                 Host.ReorderTask(DataContext, new Point(pt.X, pt.Y));
                 return;
             }
-            if (Pinned != null || Window == null) return;
+            if (Pinned == null && Window == null) return;
 
             AppBarEdge targetEdge = targetTaskbar.AppBarEdge;
+            if (Pinned != null)
+            {
+                Host?.MovePin(Pinned, targetEdge);
+                return;
+            }
             AppBarEdge currentEdge = TaskAssignmentManager.GetAssignedEdge(Window) ?? Settings.Instance.ResolvedDefaultTaskEdge;
 
             if (targetEdge == currentEdge)
@@ -562,6 +567,12 @@ namespace UltraWinBar.Controls
                 ? TaskAssignmentMode.WindowClassAndTitle
                 : TaskAssignmentMode.ExecutablePath;
 
+            // A pinned application moves with its pin, or a click on the pin would send it back.
+            if (mode == TaskAssignmentMode.ExecutablePath && Host?.FindPin(Window) is { } pin)
+            {
+                Host.MovePin(pin, targetEdge);
+                return;
+            }
             TaskAssignmentManager.AssignToEdge(Window, targetEdge, mode);
         }
 

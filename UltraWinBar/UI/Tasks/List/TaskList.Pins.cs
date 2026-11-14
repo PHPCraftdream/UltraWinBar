@@ -48,6 +48,26 @@ namespace UltraWinBar.Controls
             return Settings.Instance.PinnedApplications.Any(p => p.Edge == HostEdge && p.Identifier == id && p.OnCurrentDesktop);
         }
 
+        // This panel's pin of the window's application on the current desktop.
+        internal PinnedApplication FindPin(ApplicationWindow window)
+        {
+            string id = TaskAssignmentManager.GetIdentifier(window, TaskAssignmentMode.ExecutablePath);
+            return id == null ? null : Settings.Instance.PinnedApplications.FirstOrDefault(p =>
+                p.Edge == HostEdge && p.Identifier == id && p.OnCurrentDesktop);
+        }
+
+        // A pinned application belongs to its pin's panel: the pin and the windows it opens move together.
+        internal void MovePin(PinnedApplication pin, AppBarEdge edge)
+        {
+            try
+            {
+                Settings.Instance.TaskbarAssignments = TaskAssignmentManager.WithApplicationEdge(
+                    Settings.Instance.TaskbarAssignments, pin.DesktopId, pin.Identifier, edge);
+                Settings.Instance.PinnedApplications = PinnedApplication.MoveToEdge(Settings.Instance.PinnedApplications, pin, edge);
+            }
+            catch (Exception ex) { ShellLogger.Error($"Move pin failed: {ex}"); }
+        }
+
         internal List<ApplicationWindow> GetPinnedWindows(ApplicationWindow window)
         {
             if (window == null || !IsPinned(window)) return new List<ApplicationWindow>();
