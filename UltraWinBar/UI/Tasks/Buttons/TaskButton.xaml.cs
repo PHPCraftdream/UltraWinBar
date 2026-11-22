@@ -379,6 +379,12 @@ namespace UltraWinBar.Controls
                 Pinned.Launch(Host.Tasks);
                 return;
             }
+            // A window whose title bar the mouse cannot reach is brought into view instead of being minimized.
+            if (Window != null && WindowPlacementGuard.BringIntoReach(Window.Handle))
+            {
+                Window.BringToFront();
+                return;
+            }
             if (PressedWindowState == ApplicationWindow.WindowState.Active && Window?.CanMinimize == true)
             {
                 Window?.Minimize();
