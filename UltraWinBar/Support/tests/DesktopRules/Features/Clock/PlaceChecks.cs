@@ -367,8 +367,11 @@ internal static class PlaceChecks
                     throw new Exception($"{name}.xaml names the handler {handler.Groups[1].Value}, which {name}.xaml.cs does not have.");
 
         // The settings window: the place is for the Hebrew date, so it is off while that is off; Choose and Clear exist.
-        int blockStart = Math.Max(0, properties.IndexOf("{DynamicResource hebrew_place}", StringComparison.Ordinal) - 900);
-        string block = properties.Substring(blockStart, Math.Min(2400, properties.Length - blockStart));
+        // The block is what lies between the Hebrew date checkbox and the next control, whatever the line breaks and indentation.
+        int blockStart = properties.IndexOf("x:Name=\"cbShowHebrewDate\"", StringComparison.Ordinal);
+        int blockEnd = blockStart < 0 ? -1 : properties.IndexOf("x:Name=\"cbShowDesktopButton\"", blockStart, StringComparison.Ordinal);
+        if (blockEnd < 0) throw new Exception("The Hebrew date checkbox and the control after it are not in the settings window.");
+        string block = properties.Substring(blockStart, blockEnd - blockStart);
         if (!block.Contains("IsEnabled=\"{Binding ElementName=cbShowHebrewDate, Path=IsChecked}\"") || !block.Contains("HebrewPlaceChoose_Click") ||
             !block.Contains("HebrewPlaceClear_Click") || !block.Contains("x:Name=\"HebrewPlaceText\""))
             throw new Exception("The Hebrew place block of the settings is not as designed.");
