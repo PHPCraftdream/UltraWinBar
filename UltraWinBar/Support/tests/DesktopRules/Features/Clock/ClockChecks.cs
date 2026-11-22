@@ -151,5 +151,59 @@ internal static class ClockChecks
         if (cachedAfterLiveRead != watchArmedAfterLiveRead)
             throw new Exception("A live kanaMd read must cache the value and arm the registry watch together, or do neither.");
         Console.WriteLine($"PASS: a cached kanaMd is reused without a registry read; an uncached read (found={cachedAfterLiveRead}, value={liveResult}) arms its registry watch exactly when it caches.");
+
+        // Running lights around the Hebrew date while the pointer is over it: evenly spaced and seamless around the
+        // frame, one lamp in four lit and moving clockwise, and cheap - nothing runs unless the lights are on, shown
+        // and animations are allowed.
+        var lamps = MarqueeFrame.LampPositions(120, 18);
+        double frameWidth = 120 - 2 * MarqueeFrame.Inset, frameHeight = 18 - 2 * MarqueeFrame.Inset, lampStep = 2 * (frameWidth + frameHeight) / lamps.Length;
+        if (lamps.Length < 8 || lamps.Length % MarqueeFrame.GroupSize != 0 || Math.Abs(lampStep - MarqueeFrame.Spacing) > MarqueeFrame.Spacing * 0.15)
+            throw new Exception($"The lights must keep their spacing and a lamp count that fits the light pattern, got {lamps.Length} lamps {lampStep:0.00} apart.");
+        if (Math.Abs(lamps[0].X - MarqueeFrame.Inset) > 1e-9 || Math.Abs(lamps[0].Y - MarqueeFrame.Inset) > 1e-9 ||
+            Math.Abs(lamps[^1].X - MarqueeFrame.Inset) > 1e-9 || Math.Abs(lamps[^1].Y - MarqueeFrame.Inset - lampStep) > 1e-9)
+            throw new Exception("The lights must start at the top left corner and the last lamp must sit one step before it, so the frame has no seam.");
+        if (lamps.Distinct().Count() != lamps.Length || lamps.Any(lamp =>
+                lamp.X < MarqueeFrame.Inset - 1e-9 || lamp.X > 120 - MarqueeFrame.Inset + 1e-9 || lamp.Y < MarqueeFrame.Inset - 1e-9 || lamp.Y > 18 - MarqueeFrame.Inset + 1e-9 ||
+                Math.Min(Math.Min(lamp.X - MarqueeFrame.Inset, 120 - MarqueeFrame.Inset - lamp.X), Math.Min(lamp.Y - MarqueeFrame.Inset, 18 - MarqueeFrame.Inset - lamp.Y)) > 1e-9))
+            throw new Exception("Every lamp must be a different point on the edge of the frame.");
+        if (MarqueeFrame.LampPositions(8, 8).Length != 8 || MarqueeFrame.LampPositions(2, 50).Length != 0 ||
+            MarqueeFrame.LampPositions(0, 0).Length != 0 || MarqueeFrame.LampPositions(double.NaN, 10).Length != 0)
+            throw new Exception("A tiny frame keeps the minimum of eight lamps; one too small for a lamp, or without a size, has none.");
+        for (int phase = 0; phase < MarqueeFrame.GroupSize; phase++)
+        {
+            int lit = 0, glowing = 0;
+            for (int lamp = 0; lamp < 8; lamp++)
+            {
+                int level = MarqueeFrame.Level(lamp, phase);
+                if (level == 2) lit++;
+                if (level == 1) glowing++;
+                if (lamp > 0 && MarqueeFrame.Level(lamp, phase + 1) != MarqueeFrame.Level(lamp - 1, phase))
+                    throw new Exception("A step must move the whole light pattern one lamp on, clockwise.");
+            }
+            if (lit != 2 || glowing != 2 || MarqueeFrame.Level(phase, phase) != 2 || MarqueeFrame.Level(phase - 1, phase) != 1)
+                throw new Exception($"One lamp in four must be lit and the one behind it glowing (phase {phase}: {lit} lit, {glowing} glowing).");
+        }
+        for (int mask = 0; mask < 8; mask++)
+            if (MarqueeFrame.ShouldAnimate((mask & 1) != 0, (mask & 2) != 0, (mask & 4) != 0) != (mask == 7))
+                throw new Exception("The lights may animate only while they are on, shown, and Windows animations are allowed.");
+        if (MarqueeFrame.StepInterval < TimeSpan.FromMilliseconds(80) || MarqueeFrame.StepInterval > TimeSpan.FromMilliseconds(250))
+            throw new Exception("The lights must step about ten times a second: smooth enough, and cheap.");
+        string marqueeSource = System.IO.File.ReadAllText(System.IO.Path.Combine(repositoryRoot.FullName, "UltraWinBar", "UI", "Clock", "MarqueeFrame.cs"));
+        foreach (string forbidden in new[] { "Storyboard", "DoubleAnimation", "BeginAnimation", "CompositionTarget" })
+            if (marqueeSource.Contains(forbidden))
+                throw new Exception($"The lights must not use WPF's per-frame animation clock ({forbidden}): they step on one timer.");
+        if (System.Text.RegularExpressions.Regex.Matches(marqueeSource, @"new DispatcherTimer\(").Count != 1 || !marqueeSource.Contains("DispatcherPriority.Background"))
+            throw new Exception("The lights must have exactly one background-priority timer, created when they first run.");
+        string clockXaml = System.IO.File.ReadAllText(System.IO.Path.Combine(repositoryRoot.FullName, "UltraWinBar", "UI", "Clock", "Clock.xaml"));
+        int hebrewStart = clockXaml.IndexOf("x:Key=\"HebrewClockTemplate\"", StringComparison.Ordinal);
+        int hebrewEnd = clockXaml.IndexOf("</ControlTemplate>", hebrewStart, StringComparison.Ordinal);
+        if (hebrewStart < 0 || hebrewEnd < 0) throw new Exception("The Hebrew date clock template is missing.");
+        string hebrewTemplate = clockXaml.Substring(hebrewStart, hebrewEnd - hebrewStart);
+        if (System.Text.RegularExpressions.Regex.Matches(clockXaml, "<local:MarqueeFrame").Count != 1 ||
+            !System.Text.RegularExpressions.Regex.IsMatch(hebrewTemplate, "<local:MarqueeFrame[^>]*IsHitTestVisible=\"False\"") ||
+            !System.Text.RegularExpressions.Regex.IsMatch(hebrewTemplate,
+                @"<Trigger SourceName=""HebrewDateHost"" Property=""IsMouseOver"" Value=""True"">\s*<Setter TargetName=""HebrewDateLights"" Property=""IsRunning"" Value=""True""\s*/>"))
+            throw new Exception("The lights belong to the Hebrew date template only, must not take the pointer, and run while the pointer is over the date.");
+        Console.WriteLine("PASS: the Hebrew date lights are evenly spaced and seamless, one lamp in four lit and moving clockwise; they run on one slow timer only while hovered, shown and animations are allowed.");
     }
 }

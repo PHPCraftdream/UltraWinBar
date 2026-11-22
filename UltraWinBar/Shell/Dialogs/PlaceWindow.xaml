@@ -1,0 +1,114 @@
+<Window x:Class="UltraWinBar.PlaceWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{DynamicResource hebrew_place_title}"
+        Height="540"
+        Width="400"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        FlowDirection="{DynamicResource flow_direction}"
+        Style="{DynamicResource PropertiesWindow}">
+    <Window.Resources>
+        <ResourceDictionary>
+            <Style TargetType="{x:Type Button}">
+                <Setter Property="MinHeight"
+                        Value="21" />
+                <Setter Property="MinWidth"
+                        Value="73" />
+                <Setter Property="Padding"
+                        Value="10,0" />
+                <Setter Property="VerticalAlignment"
+                        Value="Center" />
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid Margin="9,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TabControl x:Name="Tabs"
+                    SelectionChanged="Tabs_SelectionChanged">
+            <TabItem Header="{DynamicResource hebrew_place_city_tab}">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Label Content="{DynamicResource hebrew_place_search}"
+                           Target="{Binding ElementName=SearchBox}" />
+                    <TextBox x:Name="SearchBox"
+                             Grid.Row="1"
+                             TextChanged="SearchBox_TextChanged" />
+                    <ListBox x:Name="ResultList"
+                             Grid.Row="2"
+                             Margin="0,6"
+                             SelectionChanged="ResultList_SelectionChanged"
+                             MouseDoubleClick="ResultList_MouseDoubleClick">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Display}"
+                                           TextTrimming="CharacterEllipsis" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <TextBlock Grid.Row="3"
+                               Text="{DynamicResource hebrew_place_search_hint}"
+                               TextWrapping="Wrap" />
+                </Grid>
+            </TabItem>
+            <TabItem Header="{DynamicResource hebrew_place_coordinates_tab}">
+                <StackPanel Margin="8">
+                    <Label Content="{DynamicResource hebrew_place_country}"
+                           Target="{Binding ElementName=CountryBox}" />
+                    <ComboBox x:Name="CountryBox"
+                              DisplayMemberPath="Name"
+                              IsTextSearchEnabled="True"
+                              TextSearch.TextPath="Name"
+                              SelectionChanged="CoordinatesInput_Changed" />
+                    <Label Content="{DynamicResource hebrew_place_coordinates}"
+                           Target="{Binding ElementName=CoordinatesBox}"
+                           Margin="0,8,0,0" />
+                    <TextBox x:Name="CoordinatesBox"
+                             TextChanged="CoordinatesInput_Changed" />
+                    <TextBlock x:Name="CoordinatesResult"
+                               TextWrapping="Wrap"
+                               MinHeight="64"
+                               Margin="0,8,0,0" />
+                    <TextBlock Text="{DynamicResource hebrew_place_coordinates_hint}"
+                               TextWrapping="Wrap"
+                               Margin="0,8,0,0" />
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+        <StackPanel Grid.Row="1"
+                    Margin="0,8,0,0">
+            <Label Content="{DynamicResource hebrew_place_zone}"
+                   Target="{Binding ElementName=ZoneBox}" />
+            <ComboBox x:Name="ZoneBox"
+                      DisplayMemberPath="Display"
+                      IsTextSearchEnabled="True"
+                      TextSearch.TextPath="Id"
+                      SelectionChanged="Zone_SelectionChanged" />
+            <TextBlock Text="{DynamicResource hebrew_place_zone_hint}"
+                       TextWrapping="Wrap"
+                       Margin="0,6,0,0" />
+        </StackPanel>
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,12,0,0">
+            <Button x:Name="OkButton"
+                    Content="{DynamicResource ok_dialog}"
+                    IsDefault="True"
+                    IsEnabled="False"
+                    Margin="0,0,6,0"
+                    Click="Ok_Click" />
+            <Button Content="{DynamicResource cancel_dialog}"
+                    IsCancel="True" />
+        </StackPanel>
+    </Grid>
+</Window>

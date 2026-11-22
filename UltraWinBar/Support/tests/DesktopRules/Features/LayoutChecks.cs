@@ -58,19 +58,22 @@ internal static class LayoutChecks
             ?? throw new Exception("Window placement guard is missing.");
         // Regression: the guard moved and shrank every restored window into the panel work area after it was shown,
         // activated or dragged, so windows could not be dragged past the panels or off the work area.
-        // Only maximized windows are fitted to the panels; a restored window is never repositioned.
+        // Only maximized windows are fitted to the panels; a restored window is never resized, and is moved only when
+        // its title bar is out of the mouse's reach (see the PlanReach checks below).
         var guardMembers = placementGuard.GetMembers(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Static |
             System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic).Select(member => member.Name).ToArray();
         if (guardMembers.Contains("PlanPlacement") || guardMembers.Contains("Constrain"))
             throw new Exception("The placement guard must not relocate or resize restored windows.");
         string guardSource = System.IO.File.ReadAllText(System.IO.Path.Combine(repositoryRoot.FullName,
             "UltraWinBar", "Core", "Desktop", "WindowPlacementGuard.cs"));
-        if (System.Text.RegularExpressions.Regex.Matches(guardSource, @"\bSetWindowPos\(").Count != 1 ||
-            guardSource.IndexOf("SetWindowPos(") < guardSource.IndexOf("private void RefitMaximizedWindows"))
-            throw new Exception("The maximized refit must be the only place the placement guard repositions a window.");
-        if (guardSource.Contains("WinEventHook(") || guardSource.Contains("0x8002") || guardSource.Contains("0x000A"))
-            throw new Exception("The placement guard must not watch window show or move events: nothing is moved in response.");
-        Console.WriteLine("PASS: restored windows are never relocated or resized by the placement guard; only maximized windows are refitted.");
+        if (System.Text.RegularExpressions.Regex.Matches(guardSource, @"\bSetWindowPos\(").Count != 2 ||
+            guardSource.IndexOf("SetWindowPos(") > guardSource.IndexOf("private void RefitMaximizedWindows") ||
+            !guardSource.Substring(guardSource.IndexOf("internal static bool BringIntoReach"), guardSource.IndexOf("private static bool IsMovable") -
+                guardSource.IndexOf("internal static bool BringIntoReach")).Contains("SWP_NOSIZE"))
+            throw new Exception("The placement guard may reposition a window in two places only: the maximized refit and the size-keeping title bar rescue.");
+        if (guardSource.Contains("WinEventHook(") || guardSource.Contains("0x000A") || guardSource.Contains("0x000B"))
+            throw new Exception("The placement guard must not watch window dragging: a window is dragged freely while its title bar can be grabbed.");
+        Console.WriteLine("PASS: the placement guard never resizes a restored window nor watches dragging; it repositions only maximized windows and those with an unreachable title bar.");
 
         // Regression: after a logon two of the four panels (left and bottom) were not shown at all while the other two
         // were, until the desktops were switched; nothing was logged. The guard names what is wrong with a panel and
@@ -128,6 +131,44 @@ internal static class LayoutChecks
         if (PlanRefit(R(300, 200, 900, 700), R(158, 41, 1762, 1039), widerRight).HasValue)
             throw new Exception("A window not maximized into the previous work area must not be refitted.");
         Console.WriteLine("PASS: maximized windows follow a panel resize from the previous work area to the new one.");
+        // Regression: a dialog opened at (0,0) had its title bar under the top panel and could not be dragged at all;
+        // a window parked at (-32000,-32000) could not even be seen. A window is moved into the work area only when
+        // no draggable part of its title bar (not the icon, not the caption buttons) is within the mouse's reach.
+        var planReach = placementGuard.GetMethod("PlanReach", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)
+            ?? throw new Exception("Title bar reach policy is missing.");
+        var reachScreen = new System.Windows.Rect(0, 0, 1920, 1080);
+        ManagedShell.Interop.NativeMethods.Rect? PlanReach(ManagedShell.Interop.NativeMethods.Rect window, bool activated, params System.Windows.Rect[] areas) =>
+            (ManagedShell.Interop.NativeMethods.Rect?)planReach.Invoke(null, new object[] { window, 31, 31, 138, areas, areas[0], reachScreen, activated });
+        void ExpectReach(string what, ManagedShell.Interop.NativeMethods.Rect window, ManagedShell.Interop.NativeMethods.Rect? expected, params System.Windows.Rect[] areas) =>
+            ExpectReachWhen(what, window, true, expected, areas);
+        void ExpectReachWhen(string what, ManagedShell.Interop.NativeMethods.Rect window, bool activated, ManagedShell.Interop.NativeMethods.Rect? expected, params System.Windows.Rect[] areas)
+        {
+            var actual = PlanReach(window, activated, areas);
+            if (actual.HasValue != expected.HasValue || actual.HasValue && !actual.Value.Equals(expected.Value))
+                throw new Exception($"{what}: expected {(expected.HasValue ? expected.ToString() : "no move")}, got {(actual.HasValue ? actual.ToString() : "no move")}.");
+            if (actual.HasValue && (actual.Value.Width != window.Width || actual.Value.Height != window.Height))
+                throw new Exception($"{what}: the window size must be kept.");
+            if (actual.HasValue && PlanReach(actual.Value, true, areas).HasValue)
+                throw new Exception($"{what}: the moved window must be reachable, so a second pass must not move it again.");
+        }
+        ExpectReach("A dialog at (0,0) with its title bar under the top panel", R(0, 0, 1414, 910), R(158, 41, 1572, 951), reservedArea);
+        ExpectReach("A window parked at (-32000,-32000)", R(-32000, -32000, -31700, -31750), R(810, 415, 1110, 665), reservedArea);
+        ExpectReach("A window whose title bar is reachable", R(400, 300, 1000, 800), null, reservedArea);
+        ExpectReach("A title bar with 20 px of its height below the top panel", R(300, 30, 900, 600), null, reservedArea);
+        ExpectReach("A title bar with only 8 px of its height below the top panel", R(300, 18, 900, 600), R(300, 41, 900, 623), reservedArea);
+        ExpectReach("A window partly under the left panel with a reachable title bar", R(0, 200, 800, 600), null, reservedArea);
+        ExpectReach("A title bar with 81 px of its draggable part in reach", R(1650, 300, 2250, 700), null, reservedArea);
+        ExpectReach("A title bar with 31 px of its draggable part in reach", R(1700, 300, 2300, 700), R(1162, 300, 1762, 700), reservedArea);
+        ExpectReach("A window of which only the caption buttons are in reach", R(-300, 300, 300, 700), R(158, 300, 758, 700), reservedArea);
+        ExpectReach("A non-maximized window larger than the work area", R(100, 0, 1800, 1050), R(158, 41, 1858, 1091), reservedArea);
+        ExpectReach("A full-screen window that keeps its caption style", R(0, 0, 1920, 1080), null, reservedArea);
+        ExpectReach("A full-screen window with a frame overhang", R(-8, -8, 1928, 1088), null, reservedArea);
+        ExpectReach("A title bar reachable on the second monitor", R(2000, 100, 2600, 500), null, reservedArea, new System.Windows.Rect(1920, 0, 1920, 1080));
+        ExpectReach("A window without size", R(100, 100, 100, 100), null, reservedArea);
+        ExpectReachWhen("A window only shown (not activated) off every monitor, maybe parked there on purpose",
+            R(-32000, -32000, -31700, -31750), false, null, reservedArea);
+        ExpectReachWhen("A window only shown at (0,0) with its title bar under the top panel", R(0, 0, 1414, 910), false, R(158, 41, 1572, 951), reservedArea);
+        Console.WriteLine("PASS: a window moves into the work area only when no draggable part of its title bar is within the mouse's reach; its size is kept; full-screen windows, and windows merely shown off-screen, stay.");
         // Regression: Explorer recomputes the work area on unlock from registered AppBars only; manual
         // panels must publish their exact rect on their own callback, not ManagedShell's AppBar message.
         var reservation = PanelReservation.Build((IntPtr)0x1234, AppBarEdge.Left, R(0, 41, 158, 1080));

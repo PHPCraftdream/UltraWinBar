@@ -38,6 +38,10 @@ namespace UltraWinBar.Controls
         }
         public static readonly DependencyProperty TimeTextProperty = DependencyProperty.Register(nameof(TimeText), typeof(string), typeof(Clock));
         public string TimeText { get => (string)GetValue(TimeTextProperty); set => SetValue(TimeTextProperty, value); }
+        public static readonly DependencyProperty SecondTimeTextProperty = DependencyProperty.Register(nameof(SecondTimeText), typeof(string), typeof(Clock), new PropertyMetadata(string.Empty));
+        public string SecondTimeText { get => (string)GetValue(SecondTimeTextProperty); set => SetValue(SecondTimeTextProperty, value); }
+        public static readonly DependencyProperty SecondTimeVisibilityProperty = DependencyProperty.Register(nameof(SecondTimeVisibility), typeof(Visibility), typeof(Clock), new PropertyMetadata(Visibility.Collapsed));
+        public Visibility SecondTimeVisibility { get => (Visibility)GetValue(SecondTimeVisibilityProperty); set => SetValue(SecondTimeVisibilityProperty, value); }
         public static readonly DependencyProperty OrdinaryDateTextProperty = DependencyProperty.Register(nameof(OrdinaryDateText), typeof(string), typeof(Clock));
         public string OrdinaryDateText { get => (string)GetValue(OrdinaryDateTextProperty); set => SetValue(OrdinaryDateTextProperty, value); }
         public static readonly DependencyProperty WeekdayTextProperty = DependencyProperty.Register(nameof(WeekdayText), typeof(string), typeof(Clock));
@@ -46,6 +50,7 @@ namespace UltraWinBar.Controls
 
         private readonly DispatcherTimer _clock = new DispatcherTimer(DispatcherPriority.Background);
         private bool _isLoaded;
+        private DateTime _zonesRead = DateTime.UtcNow;
 
         private const int LOCALE_NAME_MAX_LENGTH = 85;
         private const int TickMarginMilliseconds = 20;
@@ -158,6 +163,14 @@ namespace UltraWinBar.Controls
                         RescheduleClock();
                     }
                     break;
+                case nameof(Settings.HebrewPlace):
+                    UpdateClockText();
+                    break;
+                case nameof(Settings.SecondTimeZone):
+                    UpdateClockTemplate();
+                    UpdateUserCulture();
+                    SetTime();
+                    break;
                 case nameof(Settings.Language):
                 case nameof(Settings.OverrideAMPMDesignators):
                 case nameof(Settings.AMDesignator):
@@ -175,7 +188,7 @@ namespace UltraWinBar.Controls
 
         private void TimeChanged(object sender, EventArgs e)
         {
-            TimeZoneInfo.ClearCachedData();
+            ZoneClock.Refresh();
             if (_clock.IsEnabled)
             {
                 SetTime();
@@ -285,6 +298,12 @@ namespace UltraWinBar.Controls
 
         private void SetTime()
         {
+            // Time zone rules change by law and Windows updates them: read them again now and then.
+            if (DateTime.UtcNow - _zonesRead > TimeSpan.FromHours(6))
+            {
+                ZoneClock.Refresh();
+                _zonesRead = DateTime.UtcNow;
+            }
             Now = DateTime.Now;
             UpdateClockText();
             UpdateBottomSpacing();
@@ -308,19 +327,46 @@ namespace UltraWinBar.Controls
             var value = Now == default ? DateTime.Now : Now;
             string timeText = value.ToString("t", clockCulture);
             if (TimeText != timeText) TimeText = timeText;
+            UpdateSecondTime(value);
             string dateText = value.ToString("d", clockCulture);
             if (OrdinaryDateText != dateText) OrdinaryDateText = dateText;
-            string weekdayText = HebrewClockFormatter.DayName(value.DayOfWeek);
-            if (WeekdayText != weekdayText) WeekdayText = weekdayText;
             if (Settings.Instance.ShowHebrewDate)
             {
-                string hebrewDateText = HebrewClockFormatter.FormatDate(value, Settings.Instance.Language);
+                // With a place chosen the Hebrew day turns at its sunset: until midnight the day is the next one,
+                // with the day that is still on in brackets.
+                HebrewDayNow hebrewDay = HebrewDayClock.Now(value.ToUniversalTime(), Settings.Instance.HebrewPlace);
+                string weekday = HebrewClockFormatter.DayName(hebrewDay.Day.DayOfWeek, hebrewDay.Civil?.DayOfWeek);
+                if (WeekdayText != weekday) WeekdayText = weekday;
+                string hebrewDateText = HebrewClockFormatter.FormatDate(hebrewDay.Day, Settings.Instance.Language, null, hebrewDay.Civil);
                 if (HebrewDateText != hebrewDateText) HebrewDateText = hebrewDateText;
+            }
+            else
+            {
+                string weekdayText = HebrewClockFormatter.DayName(value.DayOfWeek);
+                if (WeekdayText != weekdayText) WeekdayText = weekdayText;
             }
         }
 
+        // The time in the second time zone: "15:05 Jerusalem", with "+1" or "-1" when it is already the next or still the
+        // previous day there. Nothing when no zone is chosen or this computer does not know the one chosen.
+        private void UpdateSecondTime(DateTime computerTime)
+        {
+            string text = "";
+            string zone = Settings.Instance.SecondTimeZone;
+            DateTime? there = string.IsNullOrEmpty(zone) ? null : ZoneClock.Now(zone, computerTime.ToUniversalTime());
+            if (there.HasValue)
+            {
+                int days = (there.Value.Date - computerTime.Date).Days;
+                text = there.Value.ToString("t", clockCulture) + " " + ZoneClock.ShortName(zone) + (days == 0 ? "" : days > 0 ? " +" + days : " " + days);
+            }
+            if (SecondTimeText != text) SecondTimeText = text;
+            Visibility visibility = text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+            if (SecondTimeVisibility != visibility) SecondTimeVisibility = visibility;
+        }
+
         private void UpdateClockTemplate() => SetResourceReference(TemplateProperty,
-            Settings.Instance.ShowHebrewDate ? "HebrewClockTemplate" : "ClockTemplateKey");
+            Settings.Instance.ShowHebrewDate ? "HebrewClockTemplate"
+            : string.IsNullOrEmpty(Settings.Instance.SecondTimeZone) ? "ClockTemplateKey" : "TwoZoneClockTemplate");
 
         private static string GetUserDefaultLocaleNameWrapper()
         {
@@ -366,6 +412,14 @@ namespace UltraWinBar.Controls
             {
                 // Moved past the click threshold since mouse-down — this was a drag
                 // (e.g. to another taskbar), not a click, so don't act on it.
+                return;
+            }
+
+            // A click on the Hebrew date opens the Jewish calendar, whatever the clock does on a click elsewhere.
+            if (Settings.Instance.ShowHebrewDate && Template?.FindName("HebrewDateHost", this) is FrameworkElement hebrewDateHost && hebrewDateHost.IsMouseOver)
+            {
+                e.Handled = true;
+                CalendarWindow.ShowSingle();
                 return;
             }
 

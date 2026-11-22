@@ -1,6 +1,7 @@
 ﻿<UserControl x:Class="UltraWinBar.Controls.Clock"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:UltraWinBar.Controls"
              MouseLeftButtonDown="Clock_OnMouseLeftButtonDown"
              MouseLeftButtonUp="Clock_OnMouseLeftButtonUp"
              MouseDoubleClick="Clock_OnMouseDoubleClick"
@@ -8,6 +9,13 @@
              Unloaded="UserControl_Unloaded"
              Template="{DynamicResource ClockTemplateKey}">
     <UserControl.Resources>
+        <!-- The clock's own time and, under it, the time in the second time zone. -->
+        <ControlTemplate x:Key="TwoZoneClockTemplate" TargetType="UserControl">
+            <StackPanel Orientation="Vertical">
+                <TextBlock Style="{DynamicResource Clock}" Text="{Binding TimeText}" />
+                <TextBlock Style="{DynamicResource Clock}" Text="{Binding SecondTimeText}" />
+            </StackPanel>
+        </ControlTemplate>
         <ControlTemplate x:Key="HebrewClockTemplate" TargetType="UserControl">
             <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
                 <Grid>
@@ -16,23 +24,37 @@
                         <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Style="{DynamicResource Clock}" Margin="4,1"
-                               Text="{Binding TimeText}" />
+                    <StackPanel Grid.Row="0">
+                        <TextBlock Style="{DynamicResource Clock}" Margin="4,1"
+                                   Text="{Binding TimeText}" />
+                        <!-- The time in the second time zone, when one is chosen. -->
+                        <TextBlock Style="{DynamicResource Clock}" Margin="4,1"
+                                   Text="{Binding SecondTimeText}"
+                                   Visibility="{Binding SecondTimeVisibility}" />
+                    </StackPanel>
                     <TextBlock Grid.Row="1" Style="{DynamicResource Clock}" Margin="4,1"
                                Text="{Binding WeekdayText}" />
-                    <TextBlock x:Name="HebrewDate" Grid.Row="2" Style="{DynamicResource Clock}" Margin="4,1"
-                               FlowDirection="LeftToRight" Text="{Binding HebrewDateText}" />
+                    <!-- The pointer over the Hebrew date lights up a frame of running lights around it. -->
+                    <Grid x:Name="HebrewDateHost" Grid.Row="2" Background="Transparent">
+                        <TextBlock x:Name="HebrewDate" Style="{DynamicResource Clock}" Margin="4,1"
+                                   FlowDirection="LeftToRight" Text="{Binding HebrewDateText}" />
+                        <local:MarqueeFrame x:Name="HebrewDateLights" IsHitTestVisible="False"
+                                            Foreground="{Binding Foreground, ElementName=HebrewDate}" />
+                    </Grid>
                     <TextBlock x:Name="OrdinaryDate" Grid.Row="3" Style="{DynamicResource Clock}" Margin="4,1"
                                Text="{Binding OrdinaryDateText}" />
                 </Grid>
             </Viewbox>
             <ControlTemplate.Triggers>
                 <DataTrigger Binding="{Binding Orientation, RelativeSource={RelativeSource AncestorType=Window}}" Value="Horizontal">
-                    <Setter TargetName="HebrewDate" Property="Grid.Column" Value="1"/>
-                    <Setter TargetName="HebrewDate" Property="Grid.Row" Value="0"/>
+                    <Setter TargetName="HebrewDateHost" Property="Grid.Column" Value="1"/>
+                    <Setter TargetName="HebrewDateHost" Property="Grid.Row" Value="0"/>
                     <Setter TargetName="OrdinaryDate" Property="Grid.Column" Value="1"/>
                     <Setter TargetName="OrdinaryDate" Property="Grid.Row" Value="1"/>
                 </DataTrigger>
+                <Trigger SourceName="HebrewDateHost" Property="IsMouseOver" Value="True">
+                    <Setter TargetName="HebrewDateLights" Property="IsRunning" Value="True"/>
+                </Trigger>
             </ControlTemplate.Triggers>
         </ControlTemplate>
     </UserControl.Resources>

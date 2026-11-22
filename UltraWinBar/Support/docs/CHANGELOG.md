@@ -2,6 +2,45 @@
 
 ## Unreleased
 
+### Added
+
+- A place for the Hebrew date in the clock settings, under the Hebrew date checkbox: a city of the world with
+  10 000 inhabitants or more, found by its English name (typing a start of its words, in any order, accents
+  ignored; the region and the country count too, "paris texas"), or coordinates typed in with their country, and
+  the time zone of the place. A city brings its own zone and typed-in coordinates the zone of the nearest city of
+  the country; the user may change it, and it is never taken from the computer. The cities (45 355 in 220
+  countries, with 334 time zones, GeoNames, CC BY 4.0, under 1 MB) are part of the program.
+- The Jewish calendar, opened by a click on the Hebrew date of the clock: a month of days with their Hebrew
+  dates, the festivals, fasts, Rosh Chodesh, weekly portions and yahrzeits marked; for the chosen day the Hebrew
+  date, the festival with its day number (one day less in the Land of Israel, by the country of the place), the
+  weekly portion, the beginning and end of a festival or of Shabbat (candle lighting to nightfall), the times of
+  the day at the place (dawn, sunrise, latest Shema and Shacharit by the Gra, midday, Mincha Gedola and Ketana,
+  Plag, sunset, nightfall, candles and havdalah), the molad of the coming month, and the yahrzeits. The times are
+  computed by the program from the sun's coordinates, in the time zone of the place; the halachic opinions are the
+  commonly kept, more lenient ones.
+- Yahrzeits of 46 well-known Torah figures in 8 categories (biblical figures, sages, Rishonim, Acharonim,
+  Kabbalists, Chassidic masters, Chabad Rebbes, recent generations). The calendar's settings have a tree with a
+  check box for everyone, for each category and for each figure.
+- With a place chosen, the Hebrew day changes at the sunset of the place: from sunset until midnight the date
+  reads "02[01]" (the new day, and the day that is still on in brackets) and the weekday "Day-2[1]"; after midnight
+  only the new one. With no place the date still changes at midnight.
+- A second time under the clock's own, in a time zone of your choice (in the calendar's settings): "15:05
+  Jerusalem", with "+1" or "-1" when it is already the next or still the previous day there. The first time stays as
+  on the computer. The zone's rules (summer time and the laws that change it) are the ones Windows has, read
+  again every few hours and whenever the computer's time changes.
+- Coordinates are read in almost any form: a dot or a comma in the fraction; a comma, a semicolon, a colon, a slash
+  or a space between the numbers, in any mixture; brackets and words around them; N, S, E, W (and С, Ю, В, З) and
+  "lat", "lon", "широта", "долгота"; degrees, minutes and seconds. Which number is the latitude is found from the
+  text when it says so, from the sizes when only one order is possible (a latitude is up to 90 degrees), and from
+  the country otherwise: the order that lands nearer to the cities of the country wins, and a point far from the
+  country is flagged.
+- With the Hebrew date shown next to the clock, the pointer over it lights a
+  frame of running lights around the date. It costs almost nothing: nothing is
+  drawn and no timer runs until the pointer is over the date, then one timer
+  redraws a few dozen dots about ten times a second (no WPF animation clock);
+  with animations switched off in Windows, or in a remote session, the lights
+  stand still.
+
 ### Changed
 
 - A newly opened window now always goes to the end of its panel's task list,
@@ -14,10 +53,23 @@
 - Restored windows are no longer moved or resized to fit the panel work area
   after they are shown, activated or dragged, so a window can be dragged past
   the panels or off the work area. Maximized windows are still fitted to the
-  panels.
+  panels, and a window whose title bar cannot be reached is brought back (see
+  Fixed).
 
 ### Fixed
 
+- A window whose title bar the mouse cannot reach is moved into the work area.
+  Proxifier's main window once stayed shown at (-32000,-32000) and its rules
+  dialog opened at (0,0), with the title bar under the top panel, so neither
+  could be seen or dragged. When such a window is activated, or its taskbar
+  button is clicked (the click moves it instead of minimizing it), it is moved,
+  size kept, wholly into the work area (a window off every monitor goes to the
+  middle). A window that is only shown is moved too when it is partly on a
+  monitor; one shown off every monitor may be parked there on purpose and waits
+  until it is activated. Full-screen windows stay. The icon and the caption
+  buttons do not count as a handle: a window is left alone while at least
+  48 x 12 px of the rest of its title bar are in reach, even when part of the
+  title bar is under a panel or off the screen.
 - Panels that are not shown after a logon are put right. Once, right after a
   Windows logon (the shell starts together with Explorer), the left and bottom
   panels were not there at all while the other two were, until the virtual

@@ -324,8 +324,12 @@ namespace UltraWinBar.Controls
                         }
                         else
                         {
-                            // Normal behavior - switch to existing window
-                            if (window.State == ApplicationWindow.WindowState.Active && window.CanMinimize)
+                            // Normal behavior - switch to existing window; one with its title bar out of reach is brought into view
+                            if (WindowPlacementGuard.BringIntoReach(window.Handle))
+                            {
+                                window.BringToFront();
+                            }
+                            else if (window.State == ApplicationWindow.WindowState.Active && window.CanMinimize)
                             {
                                 window.Minimize();
                             }
