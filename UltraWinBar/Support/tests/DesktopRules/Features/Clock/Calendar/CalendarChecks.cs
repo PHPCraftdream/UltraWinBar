@@ -175,9 +175,10 @@ internal static class CalendarChecks
         Console.WriteLine($"PASS: {spotChecks.Length} Shabbatot read the way an independent calendar reads them.");
 
         // The fixed points of the calendar, in every year from 5700 to 5900, in the diaspora and in Israel. They do not
-        // depend on the tables: every portion is read once and in order; Bamidbar before Shavuot, Devarim on the
-        // Shabbat of or before the ninth of Av, Nitzavim before Rosh Hashana, Haazinu between Rosh Hashana and Sukkot;
-        // a Shabbat is without a portion of its own exactly when a festival falls on it.
+        // depend on the tables: every portion is read once and in order; Bamidbar before Shavuot (in most years the Shabbat
+        // before it, in some leap years up to eleven days before, with Nasso read before Shavuot too) and Beha'alotcha after it,
+        // Devarim on the Shabbat of or before the ninth of Av, Nitzavim before Rosh Hashana, Haazinu between Rosh Hashana and
+        // Sukkot; a Shabbat is without a portion of its own exactly when a festival falls on it.
         for (int year = 5700; year <= 5900; year++)
         foreach (bool israel in new[] { false, true })
         {
@@ -201,12 +202,13 @@ internal static class CalendarChecks
             DateTime Of(int portion) => shabbatot.First(item => item.Reading != null && (item.Reading.First == portion || item.Reading.Second == portion)).Shabbat;
             DateTime shavuot = Day(year, Sivan(year), 6), tishaBeAv = Day(year, Av(year), 9);
             DateTime roshHashana = Day(year + 1, 1, 1), sukkot = Day(year + 1, 1, 15);
-            Check(Of(33) < shavuot && (shavuot - Of(33)).Days <= 7, $"{year}/{israel}: Bamidbar is not the Shabbat before Shavuot");
+            Check(Of(33) < shavuot && (shavuot - Of(33)).Days <= 14, $"{year}/{israel}: Bamidbar is not read before Shavuot");
+            Check(Of(35) > shavuot, $"{year}/{israel}: Beha'alotcha is not read after Shavuot");
             Check(Of(43) <= tishaBeAv && (tishaBeAv - Of(43)).Days < 7, $"{year}/{israel}: Devarim is not the Shabbat of or before the ninth of Av");
             Check(Of(50) < roshHashana && (roshHashana - Of(50)).Days <= 7, $"{year}/{israel}: Nitzavim is not the Shabbat before Rosh Hashana");
             Check(Of(52) > roshHashana && Of(52) < sukkot, $"{year}/{israel}: Haazinu is not between Rosh Hashana and Sukkot");
         }
-        Console.WriteLine("PASS: in 402 schedules (201 years, diaspora and Israel) every portion is read once and in order, Bamidbar comes before Shavuot, Devarim on or before the ninth of Av, Nitzavim before Rosh Hashana, Haazinu before Sukkot, and festival Shabbatot are exactly the ones without a portion.");
+        Console.WriteLine("PASS: in 402 schedules (201 years, diaspora and Israel) every portion is read once and in order, Bamidbar comes before Shavuot and Beha'alotcha after it, Devarim on or before the ninth of Av, Nitzavim before Rosh Hashana, Haazinu before Sukkot, and festival Shabbatot are exactly the ones without a portion.");
 
         // Names, in three languages; two portions read together are joined by a hyphen.
         foreach (string language in new[] { "English", "русский", "עברית", "Deutsch" })

@@ -25,8 +25,8 @@ namespace UltraWinBar.Utilities
     /// 14 possible kinds), and from whether the place is in Israel, where the festivals last a day less. The schedules
     /// are public facts of the Jewish calendar, written down here as sequences of portion numbers ("21-22" for two
     /// read together, "_" for a Shabbat that has a festival's own reading); the tests check them against the
-    /// calendar's fixed points, which do not depend on them: Bamidbar the Shabbat before Shavuot, Devarim the Shabbat
-    /// before Tisha B'Av, Nitzavim the Shabbat before Rosh Hashana, every portion once and in order.
+    /// calendar's fixed points, which do not depend on them: Bamidbar before Shavuot (in some leap years Nasso too), Devarim
+    /// the Shabbat before Tisha B'Av, Nitzavim the Shabbat before Rosh Hashana, every portion once and in order.
     /// </summary>
     public static class TorahReadings
     {

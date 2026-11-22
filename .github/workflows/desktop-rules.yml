@@ -1,0 +1,36 @@
+name: Desktop rules
+
+# The desktop assignment checks are not part of the release solution, so they get a
+# workflow of their own: every pull request to master must pass them too.
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+permissions:
+  contents: read
+
+jobs:
+
+  desktop-rules:
+    name: Desktop rules
+    runs-on: windows-2025
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+      with:
+        # Nerdbank.GitVersioning works out the version from the full git history.
+        fetch-depth: 0
+
+    # DesktopRules links UltraWinBar.dll and the ManagedShell DLLs from the net6.0-windows
+    # Debug output, so the app and the vendored libraries it references are built first.
+    - name: Build UltraWinBar for net6.0-windows
+      run: dotnet build UltraWinBar\UltraWinBar.csproj -c Debug -f net6.0-windows
+
+    # The runner prints a PASS line per rule and throws on a broken one, so a failure
+    # fails this step. Its Program.cs points Settings at a scratch file in %TEMP%, so the
+    # user settings file is only read, never written.
+    - name: Run desktop assignment checks
+      run: dotnet run --project UltraWinBar\Support\tests\DesktopRules\DesktopRules.csproj

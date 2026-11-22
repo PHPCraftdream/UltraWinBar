@@ -76,8 +76,14 @@ namespace UltraWinBar.Utilities
             LifecycleState = ServiceLifecycleState.Running;
         }
 
+        // Where the recorded desktop is read from: Explorer's registry. The checks replace it with a fixed
+        // value, so that they do not depend on what the machine they run on has recorded.
+        internal static Func<Guid> RecordedReader = ReadRecordedFromRegistry;
+
+        private static Guid ReadRecorded() => RecordedReader();
+
         // The desktop Explorer recorded; Guid.Empty while it has not (see InferCurrent).
-        private static Guid ReadRecorded()
+        private static Guid ReadRecordedFromRegistry()
         {
             foreach (string path in new[] { SessionPath, GlobalPath })
             {

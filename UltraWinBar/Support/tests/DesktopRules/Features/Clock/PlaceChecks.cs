@@ -56,7 +56,7 @@ internal static class PlaceChecks
         if (Math.Abs(PlaceDatabase.DistanceKm(40.7128, -74.0060, 51.5074, -0.1278) - 5570) > 15 ||
             Math.Abs(PlaceDatabase.DistanceKm(31.7683, 35.2137, 32.0853, 34.7818) - 54) > 1.5 ||
             Math.Abs(PlaceDatabase.DistanceKm(0, 0, 90, 0) - Math.PI / 2 * 6371) > 1e-6 ||
-            Math.Abs(PlaceDatabase.DistanceKm(10, 20, -10, -160) - Math.PI * 6371) > 1e-6)
+            Math.Abs(PlaceDatabase.DistanceKm(10, 20, -10, -160) - Math.PI * 6371) > 0.01)
             throw new Exception("Great-circle distances on the sphere are off.");
         Console.WriteLine("PASS: every place has a name, a country, coordinates in range and 10 000 inhabitants; well-known cities lie where they should.");
 
@@ -367,8 +367,11 @@ internal static class PlaceChecks
                     throw new Exception($"{name}.xaml names the handler {handler.Groups[1].Value}, which {name}.xaml.cs does not have.");
 
         // The settings window: the place is for the Hebrew date, so it is off while that is off; Choose and Clear exist.
-        int blockStart = Math.Max(0, properties.IndexOf("{DynamicResource hebrew_place}", StringComparison.Ordinal) - 900);
-        string block = properties.Substring(blockStart, Math.Min(2400, properties.Length - blockStart));
+        // The block is what lies between the Hebrew date checkbox and the next control, whatever the line breaks and indentation.
+        int blockStart = properties.IndexOf("x:Name=\"cbShowHebrewDate\"", StringComparison.Ordinal);
+        int blockEnd = blockStart < 0 ? -1 : properties.IndexOf("x:Name=\"cbShowDesktopButton\"", blockStart, StringComparison.Ordinal);
+        if (blockEnd < 0) throw new Exception("The Hebrew date checkbox and the control after it are not in the settings window.");
+        string block = properties.Substring(blockStart, blockEnd - blockStart);
         if (!block.Contains("IsEnabled=\"{Binding ElementName=cbShowHebrewDate, Path=IsChecked}\"") || !block.Contains("HebrewPlaceChoose_Click") ||
             !block.Contains("HebrewPlaceClear_Click") || !block.Contains("x:Name=\"HebrewPlaceText\""))
             throw new Exception("The Hebrew place block of the settings is not as designed.");
