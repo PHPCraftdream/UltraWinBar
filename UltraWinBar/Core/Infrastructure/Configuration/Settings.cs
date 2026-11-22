@@ -481,6 +481,37 @@ namespace UltraWinBar.Utilities
             set => Set(ref _showHebrewDate, value);
         }
 
+        // Where the Hebrew date is kept for (a city or typed-in coordinates); none until the user chooses.
+        private HebrewPlace _hebrewPlace;
+        public HebrewPlace HebrewPlace
+        {
+            get => _hebrewPlace;
+            set
+            {
+                if (!Equals(_hebrewPlace, value))
+                {
+                    _hebrewPlace = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        // The time zone (IANA id, "Asia/Jerusalem") of a second time shown under the clock's own; empty shows none.
+        private string _secondTimeZone = "";
+        public string SecondTimeZone
+        {
+            get => _secondTimeZone;
+            set => Set(ref _secondTimeZone, value ?? "");
+        }
+
+        // Keys of the yahrzeit figures (Yahrzeits.All) the user switched off in the calendar; everyone is on until then.
+        private List<string> _hiddenYahrzeits = [];
+        public List<string> HiddenYahrzeits
+        {
+            get => _hiddenYahrzeits;
+            set => Set(ref _hiddenYahrzeits, value ?? []);
+        }
+
         private bool _moveActivatedWindowsToCurrentDesktop;
         public bool MoveActivatedWindowsToCurrentDesktop
         {

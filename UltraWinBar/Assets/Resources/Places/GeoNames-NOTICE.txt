@@ -1,0 +1,23 @@
+Place data: GeoNames
+
+places.tsv.gz holds the cities of the world with at least 10 000 inhabitants (45 355 places in 220 countries):
+English name, region, country, latitude, longitude, population and IANA time zone.
+
+Source:   GeoNames, https://www.geonames.org (dumps at https://download.geonames.org/export/dump/)
+License:  Creative Commons Attribution 4.0, https://creativecommons.org/licenses/by/4.0/
+Files:    cities500.zip, countryInfo.txt, admin1CodesASCII.txt, downloaded on 2026-11-22.
+Changes:  only the places with at least 10 000 inhabitants kept; the English names of the country and of the
+          region joined from countryInfo.txt and admin1CodesASCII.txt, and the time zone identifiers, stored once
+          each; coordinates rounded
+          to four decimals; written as tab-separated text, gzip-compressed.
+
+The data is provided by GeoNames "as is" without warranty or any representation of accuracy, timeliness or
+completeness.
+
+File format (UTF-8 text, one record per line, fields separated by a tab; numbers count from 0):
+
+  places v2  <places>  <countries>  <regions>  <zones>              header
+  C  <ISO2 code>  <English name>                                    countries, by name
+  R  <country number>  <English name>                               regions, by country and name
+  Z  <IANA time zone identifier>                                    time zones, by name
+  P  <name>  <region number>  <country number>  <lat>  <lng>  <population>  <zone number>     places, the biggest first

@@ -71,6 +71,7 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <EmbeddedResource Include="Assets\Resources\Calendar\HebrewMonths.json" LogicalName="UltraWinBar.Resources.HebrewMonths.json" />
+    <EmbeddedResource Include="Assets\Resources\Places\places.tsv.gz" LogicalName="UltraWinBar.Resources.Places.tsv.gz" />
     <Resource Include="Assets\Resources\Start\Group01\start9x.png" />
   </ItemGroup>
 
