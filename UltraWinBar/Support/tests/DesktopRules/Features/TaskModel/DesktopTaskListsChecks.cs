@@ -116,7 +116,13 @@ internal static class DesktopTaskListsChecks
         cache[hwnd] = desktop;
         typeof(VirtualDesktopContext).GetProperty("CurrentId").SetValue(context, Guid.NewGuid());
 
-        context.RefreshCurrent(); // reads the real current desktop, differs from the random id: a switch
+        // The recorded desktop is whatever the machine has; the check gives it one that differs from the random id: a switch.
+        var recordedReader = typeof(VirtualDesktopContext).GetField("RecordedReader", BindingFlags.NonPublic | BindingFlags.Static);
+        var machinesReader = recordedReader.GetValue(null);
+        Guid recorded = Guid.NewGuid();
+        recordedReader.SetValue(null, (Func<Guid>)(() => recorded));
+        try { context.RefreshCurrent(); }
+        finally { recordedReader.SetValue(null, machinesReader); }
         if (!context.SwitchedWithin(1500)) throw new Exception("A desktop change must be visible to SwitchedWithin.");
         if (context.DesktopForWindowCached(hwnd) != desktop)
             throw new Exception("A desktop switch must not drop cached window desktop ids.");
