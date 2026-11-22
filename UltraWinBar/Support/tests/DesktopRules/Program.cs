@@ -18,47 +18,59 @@ while (repositoryRoot != null && !System.IO.File.Exists(System.IO.Path.Combine(r
     repositoryRoot = repositoryRoot.Parent;
 if (repositoryRoot == null) throw new Exception("Repository root not found for structure checks.");
 
-LoggingChecks.Run(args, repositoryRoot);
-StructureChecks.Run(args, repositoryRoot);
-LayoutChecks.Run(args, repositoryRoot);
-EnvironmentChecks.Run(args, repositoryRoot);
-AssignmentChecks.Run(args, repositoryRoot);
-ClockChecks.Run(args, repositoryRoot);
-CoordinateChecks.Run(args, repositoryRoot);
-PlaceChecks.Run(args, repositoryRoot);
-CalendarChecks.Run(args, repositoryRoot);
-HolidayChecks.Run(args, repositoryRoot);
-ZmanimChecks.Run(args, repositoryRoot);
-YahrzeitChecks.Run(args, repositoryRoot);
-CalendarWindowChecks.Run(args, repositoryRoot);
-PersistenceChecks.Run(args, repositoryRoot);
-ActivationChecks.Run(args, repositoryRoot);
-PinChecks.Run(args, repositoryRoot);
-UptimeChecks.Run();
-InteropChecks.Run(repositoryRoot);
-CrossProcessMessageChecks.Run();
-NativeCallbackChecks.Run(repositoryRoot);
-HealthDiagnosticsChecks.Run();
-StartupChecks.Run();
-TaskOrderAuditChecks.Run();
-TaskButtonSizingChecks.Run();
-WindowActivityLogChecks.Run();
-WindowDictionaryChecks.Run();
-GhostSweepChecks.Run();
-StartMenuFadeChecks.Run();
-TrayHotkeyChecks.Run();
-ServiceLifecycleChecks.Run(args, repositoryRoot);
-TaskOrderChecks.Run(args, repositoryRoot);
-IdentifierCacheChecks.Run(args, repositoryRoot);
-EdgeCacheChecks.Run(args, repositoryRoot);
-TaskGroupingAndDiffChecks.Run(args, repositoryRoot);
-LegacyOrdinalBatchChecks.Run(args, repositoryRoot);
-TaskModelOrderingChecks.Run(args, repositoryRoot);
-TaskModelPinChecks.Run(args, repositoryRoot);
-TaskModelPruningChecks.Run(args, repositoryRoot);
-TaskModelEquivalenceChecks.Run(args, repositoryRoot);
-TaskModelHostChecks.Run(args, repositoryRoot);
-DesktopTaskListsChecks.Run(args, repositoryRoot);
+// A check group that fails is reported and the others still run, so one run lists every failure; the exit code tells.
+var failures = new List<string>();
+void Step(string name, Action run)
+{
+    try { run(); }
+    catch (Exception e)
+    {
+        failures.Add(name + ": " + e.GetType().Name + ": " + e.Message.Split('\n')[0]);
+        Console.WriteLine("FAIL: " + name + ": " + e);
+    }
+}
+
+Step("LoggingChecks", () => LoggingChecks.Run(args, repositoryRoot));
+Step("StructureChecks", () => StructureChecks.Run(args, repositoryRoot));
+Step("LayoutChecks", () => LayoutChecks.Run(args, repositoryRoot));
+Step("EnvironmentChecks", () => EnvironmentChecks.Run(args, repositoryRoot));
+Step("AssignmentChecks", () => AssignmentChecks.Run(args, repositoryRoot));
+Step("ClockChecks", () => ClockChecks.Run(args, repositoryRoot));
+Step("CoordinateChecks", () => CoordinateChecks.Run(args, repositoryRoot));
+Step("PlaceChecks", () => PlaceChecks.Run(args, repositoryRoot));
+Step("CalendarChecks", () => CalendarChecks.Run(args, repositoryRoot));
+Step("HolidayChecks", () => HolidayChecks.Run(args, repositoryRoot));
+Step("ZmanimChecks", () => ZmanimChecks.Run(args, repositoryRoot));
+Step("YahrzeitChecks", () => YahrzeitChecks.Run(args, repositoryRoot));
+Step("CalendarWindowChecks", () => CalendarWindowChecks.Run(args, repositoryRoot));
+Step("PersistenceChecks", () => PersistenceChecks.Run(args, repositoryRoot));
+Step("ActivationChecks", () => ActivationChecks.Run(args, repositoryRoot));
+Step("PinChecks", () => PinChecks.Run(args, repositoryRoot));
+Step("UptimeChecks", () => UptimeChecks.Run());
+Step("InteropChecks", () => InteropChecks.Run(repositoryRoot));
+Step("CrossProcessMessageChecks", () => CrossProcessMessageChecks.Run());
+Step("NativeCallbackChecks", () => NativeCallbackChecks.Run(repositoryRoot));
+Step("HealthDiagnosticsChecks", () => HealthDiagnosticsChecks.Run());
+Step("StartupChecks", () => StartupChecks.Run());
+Step("TaskOrderAuditChecks", () => TaskOrderAuditChecks.Run());
+Step("TaskButtonSizingChecks", () => TaskButtonSizingChecks.Run());
+Step("WindowActivityLogChecks", () => WindowActivityLogChecks.Run());
+Step("WindowDictionaryChecks", () => WindowDictionaryChecks.Run());
+Step("GhostSweepChecks", () => GhostSweepChecks.Run());
+Step("StartMenuFadeChecks", () => StartMenuFadeChecks.Run());
+Step("TrayHotkeyChecks", () => TrayHotkeyChecks.Run());
+Step("ServiceLifecycleChecks", () => ServiceLifecycleChecks.Run(args, repositoryRoot));
+Step("TaskOrderChecks", () => TaskOrderChecks.Run(args, repositoryRoot));
+Step("IdentifierCacheChecks", () => IdentifierCacheChecks.Run(args, repositoryRoot));
+Step("EdgeCacheChecks", () => EdgeCacheChecks.Run(args, repositoryRoot));
+Step("TaskGroupingAndDiffChecks", () => TaskGroupingAndDiffChecks.Run(args, repositoryRoot));
+Step("LegacyOrdinalBatchChecks", () => LegacyOrdinalBatchChecks.Run(args, repositoryRoot));
+Step("TaskModelOrderingChecks", () => TaskModelOrderingChecks.Run(args, repositoryRoot));
+Step("TaskModelPinChecks", () => TaskModelPinChecks.Run(args, repositoryRoot));
+Step("TaskModelPruningChecks", () => TaskModelPruningChecks.Run(args, repositoryRoot));
+Step("TaskModelEquivalenceChecks", () => TaskModelEquivalenceChecks.Run(args, repositoryRoot));
+Step("TaskModelHostChecks", () => TaskModelHostChecks.Run(args, repositoryRoot));
+Step("DesktopTaskListsChecks", () => DesktopTaskListsChecks.Run(args, repositoryRoot));
 const System.Reflection.BindingFlags hidden = System.Reflection.BindingFlags.NonPublic |
     System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Instance;
 var settingsType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.Settings");
@@ -76,3 +88,11 @@ System.IO.File.Delete(scratchSettingsPath);
 Console.WriteLine(userSettingsChanged
     ? "PASS: the test run kept Settings on a scratch file; the user's settings changed only by the running UltraWinBar."
     : "PASS: the test run kept Settings on a scratch file and never wrote the user's settings.");
+
+if (failures.Count > 0)
+{
+    Console.WriteLine("FAIL: " + failures.Count + " check group(s) failed:");
+    foreach (string failure in failures) Console.WriteLine("FAIL: " + failure);
+    return 1;
+}
+return 0;

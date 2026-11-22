@@ -79,7 +79,7 @@ internal static class StructureChecks
         Console.WriteLine("PASS: ExitApp is idempotent, SessionEnding signals graceful shutdown, and both FailFast restart paths flush settings first.");
 
         // "vendor": third-party sources keep upstream layout so they stay diffable against upstream.
-        var generatedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".git", ".vs", ".claude", "bin", "obj", "artifacts", "worktrees", "checkpoints", "vendor" };
+        var generatedFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".git", ".gitattributes", ".gitignore", ".rush", ".vs", ".claude", "bin", "obj", "artifacts", "worktrees", "checkpoints", "vendor" };
         var sourceExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             { ".cs", ".xaml", ".json", ".iss", ".ps1", ".bat", ".pubxml", ".hlsl", ".props", ".csproj", ".sln", ".md", ".yml" };
         void CheckDirectory(System.IO.DirectoryInfo folder)
