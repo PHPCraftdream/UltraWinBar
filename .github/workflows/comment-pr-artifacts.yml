@@ -10,6 +10,11 @@ jobs:
   pr_comment:
     if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    # The repository's default token is read-only, so a comment on a pull request needs these rights here.
+    permissions:
+      actions: read          # list the artifacts of the build run
+      issues: write          # comments of a pull request are issue comments
+      pull-requests: write   # find the pull request of the build and read it
     steps:
       - uses: actions/github-script@v9
         with:
