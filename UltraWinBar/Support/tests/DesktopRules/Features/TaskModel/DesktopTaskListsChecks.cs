@@ -51,7 +51,7 @@ internal static class DesktopTaskListsChecks
             throw new Exception("An id no desktop has is a shared-desktop id; with no desktop list nothing is.");
 
         var context = (VirtualDesktopContext)System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(typeof(VirtualDesktopContext));
-        var onShared = (IntPtr)0x51, onOther = (IntPtr)0x52, onCurrent = (IntPtr)0x53;
+        IntPtr onShared = (IntPtr)0x51, onOther = (IntPtr)0x52, onCurrent = (IntPtr)0x53;
         typeof(VirtualDesktopContext).GetField("desktopForWindowCache", BindingFlags.NonPublic | BindingFlags.Instance)
             .SetValue(context, new Dictionary<IntPtr, Guid> { [onShared] = shared, [onOther] = other, [onCurrent] = current });
         typeof(VirtualDesktopContext).GetField("sharedDesktopIds", BindingFlags.NonPublic | BindingFlags.Instance)
