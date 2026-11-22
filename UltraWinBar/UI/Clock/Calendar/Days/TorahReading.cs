@@ -13,7 +13,7 @@ namespace UltraWinBar.Utilities
         /// <summary>The name in the language of the settings ("עברית", "русский"; anything else is English).</summary>
         public string Name(string language)
         {
-            string[] names = TorahReadings.NamesIn(language);
+            IReadOnlyList<string> names = TorahReadings.NamesIn(language);
             return IsDouble ? names[First] + "-" + names[Second] : names[First];
         }
     }
