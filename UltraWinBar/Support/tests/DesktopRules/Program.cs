@@ -43,6 +43,7 @@ Step("HolidayChecks", () => HolidayChecks.Run(args, repositoryRoot));
 Step("ZmanimChecks", () => ZmanimChecks.Run(args, repositoryRoot));
 Step("YahrzeitChecks", () => YahrzeitChecks.Run(args, repositoryRoot));
 Step("CalendarWindowChecks", () => CalendarWindowChecks.Run(args, repositoryRoot));
+Step("ModernThemeChecks", () => ModernThemeChecks.Run(args, repositoryRoot));
 Step("PersistenceChecks", () => PersistenceChecks.Run(args, repositoryRoot));
 Step("ActivationChecks", () => ActivationChecks.Run(args, repositoryRoot));
 Step("PinChecks", () => PinChecks.Run(args, repositoryRoot));

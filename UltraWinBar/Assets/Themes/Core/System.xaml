@@ -38,6 +38,19 @@
         <Setter Property="Control.FlowDirection" Value="LeftToRight" />
     </Style>
 
+    <!-- Empty base styles of the controls that the windows' own styles extend with BasedOn: a theme such as
+         Modern Glass fills them in, and where it does not they change nothing. -->
+    <Style TargetType="Button" />
+    <Style TargetType="CheckBox" />
+    <Style TargetType="ComboBox" />
+    <Style TargetType="ComboBoxItem" />
+    <Style TargetType="GroupBox" />
+    <Style TargetType="Label" />
+    <Style TargetType="ListBoxItem" />
+    <Style TargetType="Slider" />
+    <Style TargetType="TextBox" />
+    <Style TargetType="TreeViewItem" />
+
     <Style TargetType="MenuItem" x:Key="TaskManMenuItem">
         <Setter Property="Header" Value="{DynamicResource show_taskman_2k}" />
     </Style>

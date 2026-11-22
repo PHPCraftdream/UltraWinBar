@@ -1,6 +1,7 @@
 {
   "Language": "System",
-  "Theme": "Windows XP Royale Noir",
+  "Theme": "Modern Glass",
+  "AccentColor": "cyan",
   "ShowInputLanguage": true,
   "ShowClock": true,
   "OverrideClockFormat": false,

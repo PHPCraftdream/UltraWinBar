@@ -10,7 +10,8 @@
         Style="{DynamicResource PropertiesWindow}">
     <Window.Resources>
         <ResourceDictionary>
-            <Style TargetType="{x:Type Button}">
+            <Style TargetType="{x:Type Button}"
+                   BasedOn="{StaticResource {x:Type Button}}">
                 <Setter Property="MinHeight"
                         Value="21" />
                 <Setter Property="MinWidth"

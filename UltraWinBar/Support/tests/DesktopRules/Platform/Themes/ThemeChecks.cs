@@ -67,6 +67,11 @@ internal static class ThemeChecks
             app.Resources["GlobalFontFamily"] = new FontFamily("Segoe UI");
             flatTheme.GetMethod("Apply", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, null);
             SettingsLayoutChecks.Check();
+            if (Path.GetFileName(file) == "Modern Glass.xaml")
+            {
+                ModernThemeChecks.CheckInApp(app);
+                ModernThemeChecks.RenderControls(app);
+            }
             drawing.DrawRectangle(Brushes.White, null, new Rect(0, row * 44, 1200, 44));
             drawing.DrawText(new FormattedText(Path.GetFileNameWithoutExtension(file), System.Globalization.CultureInfo.InvariantCulture,
                 FlowDirection.LeftToRight, new Typeface("Segoe UI"), 11, Brushes.Black, 1), new Point(2, row * 44 + 12));

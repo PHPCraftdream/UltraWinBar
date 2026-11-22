@@ -77,6 +77,7 @@ namespace UltraWinBar
             _screen = screen;
 
             InitializeComponent();
+            ModernTheme.Track(this);
 
             LoadPreviewHeight();
             LoadAutoStart();
@@ -84,6 +85,7 @@ namespace UltraWinBar
             LoadOSSupport();
             LoadRows();
             LoadThemes();
+            LoadAccent();
             LoadWidth();
             LoadAppInfo();
             LoadClockActions();
@@ -102,12 +104,15 @@ namespace UltraWinBar
             else if (e.PropertyName == nameof(Settings.Theme))
             {
                 LoadPreviewHeight();
+                LoadAccent();
+                Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, new Action(ReloadStyles));
             }
             else if (e.PropertyName == nameof(Settings.Language))
             {
                 LoadAppInfo();
                 LoadClockActions();
                 LoadHebrewPlace();
+                LoadAccent();
             }
             else if (e.PropertyName == nameof(Settings.HebrewPlace))
             {
@@ -151,6 +156,26 @@ namespace UltraWinBar
 
             TaskbarAppearancePreviewControl.Height = size;
             NotificationAreaPreviewControl.Height = size;
+        }
+
+        // The window's own styles extend the controls of the theme (BasedOn); read them again so that the open
+        // window follows a theme chosen in it.
+        private void ReloadStyles()
+        {
+            Resources = new ResourceDictionary { Source = new Uri("pack://application:,,,/UltraWinBar;component/Shell/Dialogs/SettingsStyles.xaml") };
+        }
+
+        // The accent row is only for the Modern Glass theme; the list of names comes with the language.
+        private void LoadAccent()
+        {
+            AccentRow.Visibility = Settings.Instance.Theme == ModernTheme.ThemeName ? Visibility.Visible : Visibility.Collapsed;
+            cboAccentSelect.SelectedIndex = Math.Max(0, Array.IndexOf(ModernTheme.Accents, Settings.Instance.AccentColor));
+        }
+
+        private void CboAccentSelect_OnSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            int index = cboAccentSelect.SelectedIndex;
+            if (index >= 0 && index < ModernTheme.Accents.Length) Settings.Instance.AccentColor = ModernTheme.Accents[index];
         }
 
         private void LoadAutoStart()

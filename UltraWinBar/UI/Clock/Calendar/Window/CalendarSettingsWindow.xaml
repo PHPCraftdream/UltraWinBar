@@ -11,7 +11,8 @@
         Style="{DynamicResource PropertiesWindow}">
     <Window.Resources>
         <ResourceDictionary>
-            <Style TargetType="{x:Type Button}">
+            <Style TargetType="{x:Type Button}"
+                   BasedOn="{StaticResource {x:Type Button}}">
                 <Setter Property="MinHeight"
                         Value="21" />
                 <Setter Property="MinWidth"
@@ -70,7 +71,8 @@
             <TreeView x:Name="YahrzeitTree"
                       Grid.Row="1">
                 <TreeView.ItemContainerStyle>
-                    <Style TargetType="{x:Type TreeViewItem}">
+                    <Style TargetType="{x:Type TreeViewItem}"
+                   BasedOn="{StaticResource {x:Type TreeViewItem}}">
                         <Setter Property="IsExpanded"
                                 Value="{Binding IsExpanded, Mode=TwoWay}" />
                     </Style>

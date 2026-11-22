@@ -20,6 +20,7 @@ namespace UltraWinBar
             _notificationArea = notificationArea;
 
             InitializeComponent();
+            ModernTheme.Track(this);
 
             DataContext = _notificationArea;
             WeakSubscriptions.SubscribeSettings(Settings_PropertyChanged);

@@ -101,11 +101,19 @@ namespace UltraWinBar.Utilities
             set => Set(ref _language, value);
         }
 
-        private string _theme = "Windows XP Royale Noir";
+        private string _theme = "Modern Glass";
         public string Theme
         {
             get => _theme;
             set => Set(ref _theme, value);
+        }
+
+        // The neon accent of the Modern Glass theme: one of ModernTheme.Accents.
+        private string _accentColor = "cyan";
+        public string AccentColor
+        {
+            get => _accentColor;
+            set => Set(ref _accentColor, ModernTheme.IsAccent(value) ? value : "cyan");
         }
 
         private bool _showInputLanguage = true;

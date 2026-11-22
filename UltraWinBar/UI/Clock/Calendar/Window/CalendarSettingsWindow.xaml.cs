@@ -19,6 +19,7 @@ namespace UltraWinBar
         public CalendarSettingsWindow()
         {
             InitializeComponent();
+            ModernTheme.Track(this);
             ShowPlace();
 
             DateTime now = DateTime.UtcNow;

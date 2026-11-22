@@ -7,9 +7,30 @@
         </DrawingImage.Drawing>
     </DrawingImage>
     <ControlTemplate x:Key="FlatPanelTemplate" TargetType="ContentControl">
-        <Border Background="{DynamicResource FlatPanel}" BorderThickness="0">
-            <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
-        </Border>
+        <Grid>
+            <Border Background="{DynamicResource FlatPanel}" BorderThickness="0">
+                <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+            </Border>
+            <!-- A hairline on the side that faces the desktop; transparent unless the theme gives it a color. -->
+            <Border x:Name="Edge" Background="{DynamicResource FlatPanelEdge}" Height="1" VerticalAlignment="Top" HorizontalAlignment="Stretch" IsHitTestVisible="False" />
+        </Grid>
+        <ControlTemplate.Triggers>
+            <DataTrigger Binding="{Binding AppBarEdge, RelativeSource={RelativeSource AncestorType=Window}}" Value="Top">
+                <Setter TargetName="Edge" Property="VerticalAlignment" Value="Bottom" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding AppBarEdge, RelativeSource={RelativeSource AncestorType=Window}}" Value="Left">
+                <Setter TargetName="Edge" Property="HorizontalAlignment" Value="Right" />
+                <Setter TargetName="Edge" Property="VerticalAlignment" Value="Stretch" />
+                <Setter TargetName="Edge" Property="Width" Value="1" />
+                <Setter TargetName="Edge" Property="Height" Value="Auto" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding AppBarEdge, RelativeSource={RelativeSource AncestorType=Window}}" Value="Right">
+                <Setter TargetName="Edge" Property="HorizontalAlignment" Value="Left" />
+                <Setter TargetName="Edge" Property="VerticalAlignment" Value="Stretch" />
+                <Setter TargetName="Edge" Property="Width" Value="1" />
+                <Setter TargetName="Edge" Property="Height" Value="Auto" />
+            </DataTrigger>
+        </ControlTemplate.Triggers>
     </ControlTemplate>
     <ControlTemplate x:Key="FlatTrayTemplate" TargetType="GroupBox">
         <Border Background="{DynamicResource FlatPanel}" Padding="2,0">
@@ -17,17 +38,23 @@
         </Border>
     </ControlTemplate>
     <ControlTemplate x:Key="FlatTaskTemplate" TargetType="Button">
-        <Border x:Name="Surface" Background="{DynamicResource FlatTask}" BorderBrush="{DynamicResource FlatBorder}"
-                BorderThickness="1" CornerRadius="4" Margin="0,0,2,2" Padding="{TemplateBinding Padding}">
-            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Stretch" />
-        </Border>
+        <Grid>
+            <Border x:Name="Surface" Background="{DynamicResource FlatTask}" BorderBrush="{DynamicResource FlatBorder}"
+                    BorderThickness="1" CornerRadius="4" Margin="0,0,2,2" Padding="{TemplateBinding Padding}">
+                <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Stretch" />
+            </Border>
+            <!-- A bar along the foot of the active task; transparent unless the theme gives it a color. -->
+            <Border x:Name="ActiveBar" Background="{DynamicResource FlatActiveBar}" Height="2" CornerRadius="1" Margin="6,0,8,3"
+                    VerticalAlignment="Bottom" IsHitTestVisible="False" Visibility="Collapsed" />
+        </Grid>
         <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter TargetName="Surface" Property="Background" Value="{DynamicResource FlatHover}" />
             </Trigger>
             <DataTrigger Binding="{Binding State}" Value="Active">
                 <Setter TargetName="Surface" Property="Background" Value="{DynamicResource FlatActive}" />
-                <Setter TargetName="Surface" Property="BorderBrush" Value="{DynamicResource FlatText}" />
+                <Setter TargetName="Surface" Property="BorderBrush" Value="{DynamicResource FlatActiveBorder}" />
+                <Setter TargetName="ActiveBar" Property="Visibility" Value="Visible" />
             </DataTrigger>
             <DataTrigger Binding="{Binding State}" Value="Flashing">
                 <Setter TargetName="Surface" Property="Background" Value="{DynamicResource ButtonFlashingFace}" />

@@ -4,6 +4,13 @@
 
 ### Added
 
+- A modern look, the theme "Modern Glass", now the default for new installations: slate surfaces with matte glass
+  (flat translucent layers and hairlines over the base) and a neon accent, on the panel, the settings, the calendar,
+  the place chooser, the menus, the drop-downs and the tool tips. The accent is one of six Tailwind colors (cyan,
+  violet, fuchsia, emerald, amber, rose), chosen in the settings under the theme and applied at once. The active task
+  has a bar of the accent, the window title bars are dark. Made for speed: plain brushes only, with no effects, no
+  transparent windows, no gradients and no animations (see `modern-theme.md`). The older themes remain in the list.
+
 - A place for the Hebrew date in the clock settings, under the Hebrew date checkbox: a city of the world with
   10 000 inhabitants or more, found by its English name (typing a start of its words, in any order, accents
   ignored; the region and the country count too, "paris texas"), or coordinates typed in with their country, and

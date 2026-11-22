@@ -17,7 +17,8 @@
             <converters:NewLineToSpaceConverter x:Key="newLineToSpaceConverter" />
             <converters:NotifyIconBehaviorConverter x:Key="notifyIconBehaviorConverter" />
             <converters:NotifyIconCanInvertConverter x:Key="notifyIconCanInvertConverter" />
-            <Style TargetType="{x:Type ComboBox}">
+            <Style TargetType="{x:Type ComboBox}"
+                   BasedOn="{StaticResource {x:Type ComboBox}}">
                 <Setter Property="HorizontalAlignment"
                         Value="Right" />
                 <Setter Property="IsDropDownOpen"
@@ -29,7 +30,8 @@
                 <Setter Property="Height"
                         Value="16" />
             </Style>
-            <Style TargetType="{x:Type Button}">
+            <Style TargetType="{x:Type Button}"
+                   BasedOn="{StaticResource {x:Type Button}}">
                 <Setter Property="MinHeight"
                         Value="21" />
                 <Setter Property="MinWidth"
@@ -39,7 +41,8 @@
                 <Setter Property="VerticalAlignment"
                         Value="Center" />
             </Style>
-            <Style TargetType="{x:Type ComboBoxItem}">
+            <Style TargetType="{x:Type ComboBoxItem}"
+                   BasedOn="{StaticResource {x:Type ComboBoxItem}}">
                 <Setter Property="ContentTemplate">
                     <Setter.Value>
                         <DataTemplate>

@@ -48,6 +48,8 @@
     <None Remove="Assets\Resources\Brand\help.png" />
     <None Remove="Assets\Resources\Brand\ultrawinbar.ico" />
     <None Remove="Assets\Resources\Brand\FlatControls.xaml" />
+    <None Remove="Assets\Resources\Brand\ModernControls.xaml" />
+    <None Remove="Assets\Resources\Brand\ModernMenus.xaml" />
     <None Remove="Assets\Resources\Effects\shader_invert.ps" />
     <None Remove="Assets\Resources\Start\Group01\start9x.png" />
     <None Remove="Assets\Languages\Group01\English.xaml" />
@@ -67,6 +69,8 @@
     <Resource Include="Assets\Resources\Brand\help.png" />
     <Resource Include="Assets\Resources\Effects\shader_invert.ps" />
     <Resource Include="Assets\Resources\Brand\FlatControls.xaml" />
+    <Resource Include="Assets\Resources\Brand\ModernControls.xaml" />
+    <Resource Include="Assets\Resources\Brand\ModernMenus.xaml" />
     <Resource Include="Assets\Resources\Brand\ultrawinbar.ico">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>

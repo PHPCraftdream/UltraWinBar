@@ -30,6 +30,9 @@ namespace UltraWinBar.Utilities
             Put("FlatActive", Mix(task, text, 0.22));
             Put("FlatPressed", Mix(task, text, 0.30));
             Put("FlatBorder", Mix(task, text, 0.25));
+            Put("FlatActiveBorder", Contrast(panel));
+            Put("FlatActiveBar", Colors.Transparent);
+            Put("FlatPanelEdge", Colors.Transparent);
             var icon = new DrawingImage(new GeometryDrawing(new SolidColorBrush(Contrast(panel)), null,
                 Geometry.Parse("M0,0 H9 V9 H0 Z M12,0 H21 V9 H12 Z M0,12 H9 V21 H0 Z M12,12 H21 V21 H12 Z")));
             icon.Freeze();

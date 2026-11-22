@@ -32,6 +32,7 @@ namespace UltraWinBar
         public PlaceWindow(HebrewPlace current)
         {
             InitializeComponent();
+            ModernTheme.Track(this);
             CountryBox.ItemsSource = places.Countries;
             DateTime now = DateTime.UtcNow;
             ZoneBox.ItemsSource = places.TimeZones.Where(id => ZoneClock.Find(id) != null)

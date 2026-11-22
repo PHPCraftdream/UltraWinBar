@@ -13,7 +13,8 @@
         KeyDown="Window_KeyDown">
     <Window.Resources>
         <ResourceDictionary>
-            <Style TargetType="{x:Type Button}">
+            <Style TargetType="{x:Type Button}"
+                   BasedOn="{StaticResource {x:Type Button}}">
                 <Setter Property="MinHeight"
                         Value="21" />
                 <Setter Property="MinWidth"
@@ -82,7 +83,8 @@
                     </ItemsPanelTemplate>
                 </ListBox.ItemsPanel>
                 <ListBox.ItemContainerStyle>
-                    <Style TargetType="{x:Type ListBoxItem}">
+                    <Style TargetType="{x:Type ListBoxItem}"
+                   BasedOn="{StaticResource {x:Type ListBoxItem}}">
                         <Setter Property="Padding"
                                 Value="0" />
                         <Setter Property="Margin"
@@ -130,7 +132,7 @@
                                          Value="True">
                                 <Setter TargetName="Cell"
                                         Property="BorderBrush"
-                                        Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
+                                        Value="{DynamicResource {x:Static SystemColors.HotTrackBrushKey}}" />
                             </DataTrigger>
                             <DataTrigger Binding="{Binding IsRest}"
                                          Value="True">

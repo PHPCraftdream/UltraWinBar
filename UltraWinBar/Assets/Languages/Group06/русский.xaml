@@ -15,6 +15,16 @@
     <s:String x:Key="language_tip">Выберите язык, который хотите использовать.</s:String>
     <s:String x:Key="theme_text">_Тема оформления:</s:String>
     <s:String x:Key="theme_tip">Устанавливайте темы оформления в папку Themes.</s:String>
+    <s:String x:Key="accent_text">_Цвет неона:</s:String>
+    <s:String x:Key="accent_tip">Цвет неона темы Modern Glass.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>Голубой</s:String>
+        <s:String>Фиолетовый</s:String>
+        <s:String>Фуксия</s:String>
+        <s:String>Изумрудный</s:String>
+        <s:String>Янтарный</s:String>
+        <s:String>Розовый</s:String>
+    </x:Array>
     <s:String x:Key="location_text">Рас_положение:</s:String>
     <s:String x:Key="location_tip">Изменение положения панели задач на экране.</s:String>
     <x:Array x:Key="location_values" Type="s:String">

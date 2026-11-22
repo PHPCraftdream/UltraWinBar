@@ -204,6 +204,11 @@
                                         x:Name="cboThemeSelect"
                                         SelectedValue="{Binding Source={x:Static Settings:Settings.Instance}, Path=Theme, UpdateSourceTrigger=PropertyChanged}" />
                                 </Grid>
+                                <Grid x:Name="AccentRow">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <Label VerticalAlignment="Center" Target="{Binding ElementName=cboAccentSelect}"><AccessText Text="{DynamicResource accent_text}" ToolTip="{DynamicResource accent_tip}" /></Label>
+                                    <ComboBox Grid.Column="1" x:Name="cboAccentSelect" ItemsSource="{DynamicResource accent_values}" SelectionChanged="CboAccentSelect_OnSelectionChanged" />
+                                </Grid>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition

@@ -36,7 +36,8 @@
                     Value="Wrap" />
             </Style>
             <Style
-                TargetType="{x:Type ComboBox}">
+                TargetType="{x:Type ComboBox}"
+                BasedOn="{StaticResource {x:Type ComboBox}}">
                 <Setter
                     Property="HorizontalAlignment"
                     Value="Right" />
@@ -60,19 +61,22 @@
                     Value="193" />
             </Style>
             <Style
-                TargetType="{x:Type Label}">
+                TargetType="{x:Type Label}"
+                BasedOn="{StaticResource {x:Type Label}}">
                 <Setter
                     Property="Padding"
                     Value="0" />
             </Style>
             <Style
-                TargetType="{x:Type CheckBox}">
+                TargetType="{x:Type CheckBox}"
+                BasedOn="{StaticResource {x:Type CheckBox}}">
                 <Style.Resources>
                     <Style
                         TargetType="{x:Type Path}"
                         BasedOn="{StaticResource DefaultDirection}" />
                     <Style
-                        TargetType="{x:Type Label}">
+                        TargetType="{x:Type Label}"
+                        BasedOn="{StaticResource {x:Type Label}}">
                         <Setter
                             Property="Padding"
                             Value="1,2,0,0" />
@@ -86,13 +90,15 @@
                     Value="0" />
             </Style>
             <Style
-                TargetType="{x:Type GroupBox}">
+                TargetType="{x:Type GroupBox}"
+                BasedOn="{StaticResource {x:Type GroupBox}}">
                 <Setter
                     Property="Padding"
                     Value="5,5,5,0" />
             </Style>
             <Style
-                TargetType="{x:Type Button}">
+                TargetType="{x:Type Button}"
+                BasedOn="{StaticResource {x:Type Button}}">
                 <Setter
                     Property="MinHeight"
                     Value="21" />
@@ -107,13 +113,15 @@
                     Value="Center" />
             </Style>
             <Style
-                TargetType="{x:Type Slider}">
+                TargetType="{x:Type Slider}"
+                BasedOn="{StaticResource {x:Type Slider}}">
                 <Setter
                     Property="Margin"
                     Value="4,0,4,2" />
             </Style>
             <Style
-                TargetType="{x:Type TextBox}">
+                TargetType="{x:Type TextBox}"
+                BasedOn="{StaticResource {x:Type TextBox}}">
                 <Setter
                     Property="Padding"
                     Value="2" />
@@ -142,7 +150,8 @@
             </Style>
             <Style
                 x:Key="IconButton"
-                TargetType="{x:Type Button}">
+                TargetType="{x:Type Button}"
+                BasedOn="{StaticResource {x:Type Button}}">
                 <Setter
                     Property="Padding"
                     Value="3" />

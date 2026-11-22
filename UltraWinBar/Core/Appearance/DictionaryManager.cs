@@ -65,6 +65,7 @@ namespace UltraWinBar.Utilities
                 SetTheme(Settings.Instance.Theme);
             }
             FlatTheme.Apply();
+            ModernTheme.Apply();
         }
 
         private void SetSystemThemeParams()
@@ -233,6 +234,10 @@ namespace UltraWinBar.Utilities
             if (e.PropertyName == nameof(Settings.Theme))
             {
                 SetThemeFromSettings();
+            }
+            if (e.PropertyName == nameof(Settings.AccentColor))
+            {
+                ModernTheme.Apply();
             }
         }
 

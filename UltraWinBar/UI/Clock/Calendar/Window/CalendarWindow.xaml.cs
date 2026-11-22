@@ -38,6 +38,7 @@ namespace UltraWinBar
         public CalendarWindow()
         {
             InitializeComponent();
+            ModernTheme.Track(this);
             WeakSubscriptions.SubscribeSettings(Settings_PropertyChanged);
             Closed += (_, _) => WeakSubscriptions.UnsubscribeSettings(Settings_PropertyChanged);
             Rebuild();

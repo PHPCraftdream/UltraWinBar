@@ -14,6 +14,16 @@
     <s:String x:Key="language_tip">Абярыце мову інтэрфейсу.</s:String>
     <s:String x:Key="theme_text">Тэма:</s:String>
     <s:String x:Key="theme_tip">Усталюйце тэмы афармленьня ў папку Themes.</s:String>
+    <s:String x:Key="accent_text">Колер неону:</s:String>
+    <s:String x:Key="accent_tip">Колер неону тэмы Modern Glass.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>Блакітны</s:String>
+        <s:String>Фіялкавы</s:String>
+        <s:String>Фуксія</s:String>
+        <s:String>Смарагдавы</s:String>
+        <s:String>Бурштынавы</s:String>
+        <s:String>Ружовы</s:String>
+    </x:Array>
     <s:String x:Key="location_text">_Размяшчэньне:</s:String>
     <s:String x:Key="location_tip">Змяніць размяшчэньне панэлі задач на экране.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
