@@ -138,6 +138,11 @@ internal static class ModernThemeChecks
         if (!theme.Contains("x:Key=\"ModernAccent\" Color=\"#22D3EE\"")) throw new Exception("The theme's default accent is not cyan-400.");
         if (!theme.Contains("x:Key=\"ListRowHover\" Color=\"#2622D3EE\"") || !theme.Contains("x:Key=\"ListRowHoverEdge\" Color=\"#6622D3EE\""))
             throw new Exception("The rows of the calendar do not light up in the cyan accent by default.");
+        // The surfaces of the dark theme (the default is the light one now): checked with the dark theme chosen.
+        string chosenTheme = Settings.Instance.Theme;
+        Settings.Instance.Theme = ModernTheme.ThemeName;
+        try
+        {
         var cyan = ModernTheme.SurfacesOf("cyan");
         foreach (var (key, color) in new[] { ("ModernBase", cyan.Base), ("ModernBaseDeep", cyan.Deep), ("ModernRaised", cyan.Raised), ("ButtonFace", cyan.Panel) })
             if (!theme.Contains($"x:Key=\"{key}\" Color=\"#{Hex(color)}\"")) throw new Exception($"The theme's default {key} is not the cyan-tinted #{Hex(color)}.");
@@ -150,15 +155,20 @@ internal static class ModernThemeChecks
             if (Contrast(Color.FromRgb(0xE2, 0xE8, 0xF0), surfaces.Raised) < 7 || Contrast(Color.FromRgb(0x94, 0xA3, 0xB8), surfaces.Base) < 4.5)
                 throw new Exception($"Text on the {name}-tinted surfaces is too faint.");
         }
+        }
+        finally
+        {
+            Settings.Instance.Theme = chosenTheme;
+        }
 
         var settings = new Settings();
-        if (settings.Theme != ModernTheme.ThemeName || settings.AccentColor != "cyan")
-            throw new Exception("A new installation does not start with Modern Glass in cyan.");
+        if (settings.Theme != ModernTheme.LightThemeName || settings.AccentColor != "cyan")
+            throw new Exception("A new installation does not start with Modern Glass Light in cyan.");
         settings.AccentColor = "not-a-color";
         if (settings.AccentColor != "cyan") throw new Exception("An unknown accent in the settings file is not turned into cyan.");
         settings.AccentColor = "rose";
         if (settings.AccentColor != "rose") throw new Exception("A known accent was not kept.");
-        Console.WriteLine("PASS: the six accents are the Tailwind colors, readable under dark text; Modern Glass in cyan is the default and a wrong accent falls back to cyan.");
+        Console.WriteLine("PASS: the six accents are the Tailwind colors, readable under dark text; Modern Glass Light in cyan is the default and a wrong accent falls back to cyan.");
     }
 
     // Inside the application of ThemeChecks, with the Modern Glass dictionary loaded.

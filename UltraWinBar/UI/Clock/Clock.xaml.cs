@@ -367,7 +367,7 @@ namespace UltraWinBar.Controls
         }
 
         // On a vertical panel the zone's name goes under the time: one long line would shrink the whole clock.
-        private string NameSeparator => Window.GetWindow(this) is Taskbar { Orientation: Orientation.Vertical } ? Environment.NewLine : " ";
+        private string NameSeparator => ClockZones.NameSeparator(Window.GetWindow(this) is Taskbar { Orientation: Orientation.Vertical });
 
         private void UpdateClockText()
         {
@@ -387,9 +387,10 @@ namespace UltraWinBar.Controls
                 if (WeekdayText != weekday) WeekdayText = weekday;
                 string hebrewDateText = HebrewClockFormatter.FormatDate(hebrewDay.Day, Settings.Instance.Language, null, hebrewDay.Civil);
                 if (HebrewDateText != hebrewDateText) HebrewDateText = hebrewDateText;
-                Visibility yahrzeit = Yahrzeits.On(hebrewDay.Day, Settings.Instance.HiddenYahrzeits).Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+                var marks = DayDetailsBuilder.MarksOf(hebrewDay.Day, Settings.Instance.HiddenYahrzeits);
+                Visibility yahrzeit = marks.Yahrzeit ? Visibility.Visible : Visibility.Collapsed;
                 if (YahrzeitVisibility != yahrzeit) YahrzeitVisibility = yahrzeit;
-                int omer = JewishCalendar.OmerDay(hebrewDay.Day);
+                int omer = marks.Omer;
                 string omerText = omer > 0 ? omer.ToString(CultureInfo.InvariantCulture) : "";
                 if (OmerText != omerText) OmerText = omerText;
                 Visibility omerVisibility = omer > 0 ? Visibility.Visible : Visibility.Collapsed;

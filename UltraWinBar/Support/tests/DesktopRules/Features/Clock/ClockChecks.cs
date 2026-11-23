@@ -195,15 +195,20 @@ internal static class ClockChecks
         if (System.Text.RegularExpressions.Regex.Matches(marqueeSource, @"new DispatcherTimer\(").Count != 1 || !marqueeSource.Contains("DispatcherPriority.Background"))
             throw new Exception("The lights must have exactly one background-priority timer, created when they first run.");
         string clockXaml = System.IO.File.ReadAllText(System.IO.Path.Combine(repositoryRoot.FullName, "UltraWinBar", "UI", "Clock", "Clock.xaml"));
-        int hebrewStart = clockXaml.IndexOf("x:Key=\"HebrewClockTemplate\"", StringComparison.Ordinal);
-        int hebrewEnd = clockXaml.IndexOf("</ControlTemplate>", hebrewStart, StringComparison.Ordinal);
-        if (hebrewStart < 0 || hebrewEnd < 0) throw new Exception("The Hebrew date clock template is missing.");
-        string hebrewTemplate = clockXaml.Substring(hebrewStart, hebrewEnd - hebrewStart);
-        if (System.Text.RegularExpressions.Regex.Matches(clockXaml, "<local:MarqueeFrame").Count != 1 ||
-            !System.Text.RegularExpressions.Regex.IsMatch(hebrewTemplate, "<local:MarqueeFrame[^>]*IsHitTestVisible=\"False\"") ||
-            !System.Text.RegularExpressions.Regex.IsMatch(hebrewTemplate,
-                @"<Trigger SourceName=""HebrewDateHost"" Property=""IsMouseOver"" Value=""True"">\s*<Setter TargetName=""HebrewDateLights"" Property=""IsRunning"" Value=""True""\s*/>"))
-            throw new Exception("The lights belong to the Hebrew date template only, must not take the pointer, and run while the pointer is over the date.");
+        // The Hebrew templates (the horizontal panel's and the vertical one's) each have the lights; no other template does.
+        if (System.Text.RegularExpressions.Regex.Matches(clockXaml, "<local:MarqueeFrame").Count != 2)
+            throw new Exception("The lights belong to the two Hebrew date templates only.");
+        foreach (string key in new[] { "HebrewClockTemplate", "HebrewClockVerticalTemplate" })
+        {
+            int hebrewStart = clockXaml.IndexOf($"x:Key=\"{key}\"", StringComparison.Ordinal);
+            int hebrewEnd = hebrewStart < 0 ? -1 : clockXaml.IndexOf("</ControlTemplate>", hebrewStart, StringComparison.Ordinal);
+            if (hebrewStart < 0 || hebrewEnd < 0) throw new Exception($"The clock template {key} is missing.");
+            string hebrewTemplate = clockXaml.Substring(hebrewStart, hebrewEnd - hebrewStart);
+            if (!System.Text.RegularExpressions.Regex.IsMatch(hebrewTemplate, "<local:MarqueeFrame[^>]*IsHitTestVisible=\"False\"") ||
+                !System.Text.RegularExpressions.Regex.IsMatch(hebrewTemplate,
+                    @"<Trigger SourceName=""HebrewDateHost"" Property=""IsMouseOver"" Value=""True"">\s*<Setter TargetName=""HebrewDateLights"" Property=""IsRunning"" Value=""True""\s*/>"))
+                throw new Exception($"The lights of {key} must not take the pointer and run while the pointer is over the date.");
+        }
         Console.WriteLine("PASS: the Hebrew date lights are evenly spaced and seamless, one lamp in four lit and moving clockwise; they run on one slow timer only while hovered, shown and animations are allowed.");
     }
 }

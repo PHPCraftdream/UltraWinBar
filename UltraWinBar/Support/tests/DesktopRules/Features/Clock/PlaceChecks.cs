@@ -412,6 +412,22 @@ internal static class PlaceChecks
                 throw new Exception("A zone that is not set is not followed: the calendar goes by the computer's clock.");
             settings.HebrewPlace = null;
             if (ClockZones.CalendarPlace() != null) throw new Exception("With no place there is no place for the calendar.");
+            // The place set for a zone is that zone's; the calendar by the second zone takes it with the zone's clock.
+            var london = HebrewPlace.FromCoordinates(51.5072, -0.1276, null, "Europe/London");
+            ClockZones.SetPlace(ClockZones.Second, london);
+            settings.CalendarZone = ClockZones.Second;
+            if (settings.SecondPlace != london || settings.HebrewPlace != null || ClockZones.PlaceOf(ClockZones.Second) != london ||
+                ClockZones.CalendarPlace()?.Latitude != 51.5072 || ClockZones.CalendarPlace()?.TimeZoneId != "Europe/Moscow")
+                throw new Exception("The place set for the second zone is the calendar's place on that zone's clock, and not the main zone's.");
+            ClockZones.SetPlace(ClockZones.Second, null);
+            if (settings.SecondPlace != null || ClockZones.CalendarPlace() != null)
+                throw new Exception("Clearing the place of the calendar's zone leaves the calendar without a place.");
+            // A zone removed: the calendar that went by it goes by the main zone.
+            settings.SecondTimeZone = "";
+            if (ClockZones.IsSet(ClockZones.Second) || ClockZones.CalendarZone() != ClockZones.Main)
+                throw new Exception("A removed zone is not set, and the calendar goes by the main zone.");
+            if (ClockZones.NameSeparator(true) != Environment.NewLine || ClockZones.NameSeparator(false) != " ")
+                throw new Exception("On a vertical panel the zone's name goes under its time; on a horizontal one after a space.");
         }
         finally
         {
@@ -429,8 +445,9 @@ internal static class PlaceChecks
             throw new Exception("The clock carries the third time and whether it shows.");
         string clock = File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "UI", "Clock", "Clock.xaml"));
         string clockCode = File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "UI", "Clock", "Clock.xaml.cs"));
-        if (Regex.Matches(clock, @"\{Binding ThirdTimeText\}").Count != 2 || Regex.Matches(clock, @"\{Binding ThirdTimeVisibility\}").Count != 2)
-            throw new Exception("Both templates of several times show the third one.");
+        // The two-zone template, the Hebrew one and the vertical Hebrew one.
+        if (Regex.Matches(clock, @"\{Binding ThirdTimeText\}").Count != 3 || Regex.Matches(clock, @"\{Binding ThirdTimeVisibility\}").Count != 3)
+            throw new Exception("All three templates of several times show the third one.");
         foreach (string needed in new[] { "nameof(Settings.ThirdTimeZone)", "nameof(Settings.ShowMainZoneName)", "nameof(Settings.ShowSecondZoneName)", "nameof(Settings.ShowThirdZoneName)", "nameof(Settings.CalendarZone)", "ClockZones.CalendarPlace()" })
             if (!clockCode.Contains(needed)) throw new Exception("The clock does not follow " + needed + ".");
         if (clock.Contains("ClockTip") || clock.Contains("<UserControl.ToolTip>") || clockCode.Contains("ClockTip"))

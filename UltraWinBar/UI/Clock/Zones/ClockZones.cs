@@ -26,6 +26,9 @@ namespace UltraWinBar.Utilities
         /// <summary>The name shown for the zone: the place it is named after ("Jerusalem"); the computer's own zone as Windows names it.</summary>
         public static string NameOf(int zone) => zone == Main && IdOf(Main) == "" ? ZoneClock.LocalName() : ZoneClock.ShortName(IdOf(zone));
 
+        /// <summary>Between a time and its zone's name: a new line on a vertical panel (one long line would shrink the clock), else a space.</summary>
+        public static string NameSeparator(bool vertical) => vertical ? System.Environment.NewLine : " ";
+
         /// <summary>The zone the calendar goes by: its choice, or the main one when the chosen zone is not set.</summary>
         public static int CalendarZone() => IsSet(Settings.Instance.CalendarZone) ? Settings.Instance.CalendarZone : Main;
 

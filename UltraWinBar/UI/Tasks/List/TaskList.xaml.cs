@@ -621,7 +621,7 @@ namespace UltraWinBar.Controls
             double height = ActualHeight;
             int rows = Host.Rows;
             // The buttons fill the panel's height, not only their content's.
-            ButtonHeight = height > 0 && rows > 0 ? Math.Floor(height / rows) : double.NaN;
+            ButtonHeight = TaskButtonSizing.RowHeight(height, rows);
 
             int taskCount = TasksList.Items.Count;
             TasksList.AlternationCount = taskCount; // keep in sync for correct AlternationIndex

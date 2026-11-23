@@ -14,6 +14,10 @@ internal static class TaskButtonSizingChecks
         if (roomy != new TaskButtonSizing(166, 0, 4, false))
             throw new Exception($"With room to spare buttons keep the default width: {roomy}");
 
+        // The height of a row: the list's height shared by the rows, in whole pixels; none before the layout.
+        if (TaskButtonSizing.RowHeight(40, 1) != 40 || TaskButtonSizing.RowHeight(40, 2) != 20 || TaskButtonSizing.RowHeight(33.34, 1) != 33 ||
+            TaskButtonSizing.RowHeight(41, 2) != 20 || !double.IsNaN(TaskButtonSizing.RowHeight(0, 1)) || !double.IsNaN(TaskButtonSizing.RowHeight(40, 0)))
+            throw new Exception("A row of task buttons takes the list's height shared by the rows, in whole pixels, and none before the layout.");
         if (TaskButtonSizing.Compute(0, 4, 1, defaultWidth, minWidth, margin) != null)
             throw new Exception("An unknown width (not laid out yet) must leave the buttons alone, not shrink them to half size.");
 

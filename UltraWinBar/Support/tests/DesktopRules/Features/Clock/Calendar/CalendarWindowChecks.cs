@@ -84,8 +84,10 @@ internal static class CalendarWindowChecks
 
         // Yahrzeits: those chosen show, in the language of the settings.
         var rambam = DayDetailsBuilder.Describe(Day("2026-01-09"), null, "English", null, text);
-        Check(rambam.Yahrzeits.SequenceEqual(new[] { "Rambam (Maimonides)" }) && DayDetailsBuilder.Describe(Day("2026-01-09"), null, "русский", null, text).Yahrzeits.SequenceEqual(new[] { "Рамбам (Маймонид)" }) &&
-            DayDetailsBuilder.Describe(Day("2026-01-09"), null, "English", new[] { "rambam" }, text).Yahrzeits.Count == 0, "The yahrzeit of the Rambam shows, in the language chosen, unless hidden.");
+        // 20 Tevet is also the Abir Yaakov's: the Rambam, born first, comes first.
+        Check(rambam.Yahrzeits.First() == "Rambam (Maimonides)" && DayDetailsBuilder.Describe(Day("2026-01-09"), null, "русский", null, text).Yahrzeits.First() == "Рамбам (Маймонид)" &&
+            !DayDetailsBuilder.Describe(Day("2026-01-09"), null, "English", new[] { "rambam" }, text).Yahrzeits.Contains("Rambam (Maimonides)"),
+            $"The yahrzeit of the Rambam shows, in the language chosen, unless hidden: {string.Join("; ", rambam.Yahrzeits)}.");
 
         // With no place: no times, no place line, no start and end of the rest; the rest is the diaspora's.
         var bare = DayDetailsBuilder.Describe(Day("2026-11-21"), null, "English", null, text);
@@ -267,6 +269,28 @@ internal static class CalendarWindowChecks
         Check(JewishCalendar.OmerDay(Day("2026-04-02")) == 0 && JewishCalendar.OmerDay(Day("2026-04-03")) == 1 && JewishCalendar.OmerDay(Day("2026-05-05")) == 33 &&
               JewishCalendar.OmerDay(Day("2026-05-21")) == 49 && JewishCalendar.OmerDay(Day("2026-05-22")) == 0 && JewishCalendar.OmerDay(Day("2026-11-23")) == 0,
             "The days of the Omer run from 16 Nisan (1) to 5 Sivan (49).");
+        // In a leap year (5787: Adar I and Adar II) the count still starts on 16 Nisan: 23 April 2027 to 10 June 2027.
+        Check(JewishCalendar.OmerDay(Day("2027-04-22")) == 0 && JewishCalendar.OmerDay(Day("2027-04-23")) == 1 && JewishCalendar.OmerDay(Day("2027-05-07")) == 15 &&
+              JewishCalendar.OmerDay(Day("2027-05-08")) == 16 && JewishCalendar.OmerDay(Day("2027-06-10")) == 49 && JewishCalendar.OmerDay(Day("2027-06-11")) == 0,
+            "In a leap year the Omer runs from 16 Nisan to 5 Sivan too, with 30 Nisan day 15 and 1 Iyar day 16.");
+        // Every day of the count once: 49 days in a row, numbered 1 to 49, and 49 different sefirot.
+        var omerDays = Enumerable.Range(0, 60).Select(offset => JewishCalendar.OmerDay(Day("2026-03-30").AddDays(offset))).Where(day => day > 0).ToList();
+        Check(omerDays.SequenceEqual(Enumerable.Range(1, 49)) &&
+              Enumerable.Range(1, 49).Select(day => JewishCalendar.OmerSefira(day, "English")).Distinct().Count() == 49 &&
+              JewishCalendar.OmerSefira(7, "English") == "Malchut she'b'Chesed" && JewishCalendar.OmerSefira(8, "English") == "Chesed she'b'Gevurah" &&
+              JewishCalendar.OmerSefira(2, "עברית") == "גבורה שבחסד" && JewishCalendar.OmerSefira(50, "English") == "",
+            "The count has each day once and each pairing of the sefirot once.");
+        // The marks by the clock's weekday: a candle for a yahrzeit that is shown, the Omer's day; after sunset the next day's.
+        var lag = DayDetailsBuilder.MarksOf(Day("2026-05-05"), new List<string>());
+        var lagHidden = DayDetailsBuilder.MarksOf(Day("2026-05-05"), Yahrzeits.On(Day("2026-05-05")).Select(person => person.Key).ToList());
+        var plain = DayDetailsBuilder.MarksOf(Day("2026-11-24"), null);
+        Check(lag.Yahrzeit && lag.Omer == 33 && !lagHidden.Yahrzeit && lagHidden.Omer == 33 && !plain.Yahrzeit && plain.Omer == 0,
+            "The clock's marks: a candle unless every yahrzeit of the day is hidden, the Omer's day apart from it.");
+        // Jerusalem, 2 April 2026 (15 Nisan): by day no count yet; after its sunset the Hebrew day is 16 Nisan, day 1.
+        HebrewDayNow noon = HebrewDayClock.Now(new DateTime(2026, 4, 2, 9, 0, 0, DateTimeKind.Utc), Jerusalem);
+        HebrewDayNow evening = HebrewDayClock.Now(new DateTime(2026, 4, 2, 18, 0, 0, DateTimeKind.Utc), Jerusalem);
+        Check(DayDetailsBuilder.MarksOf(noon.Day, null).Omer == 0 && evening.AfterSunset && DayDetailsBuilder.MarksOf(evening.Day, null).Omer == 1,
+            $"After sunset the clock shows the count of the night that has begun: {noon.Day:d} / {evening.Day:d}.");
         // The sefira of the day within the week's; the cell carries the day and its line; the place says Israel or the diaspora.
         Check(JewishCalendar.OmerSefira(1, "English") == "Chesed she'b'Chesed" && JewishCalendar.OmerSefira(2, "English") == "Gevurah she'b'Chesed" &&
               JewishCalendar.OmerSefira(33, "English") == "Hod she'b'Hod" && JewishCalendar.OmerSefira(49, "русский") == "Малхут ше-бе-Малхут" &&
@@ -279,8 +303,7 @@ internal static class CalendarWindowChecks
               !DayDetailsBuilder.Cell(Day("2026-11-23"), Day("2026-11-01"), Day("2026-11-23"), false, "English", new List<string>(), Text).HasOmer &&
               calendarXaml.Contains("Visibility=\"{Binding HasOmer, Converter={StaticResource OmerVisibility}}\"") && calendarXaml.Contains("<Border.ToolTip>"),
             $"A cell of the Omer has its day, the tree of the sefirot by the candle's place, and the sefira in its tooltip: {lagBaomer.OmerText}.");
-        Check(calendarCode.Contains("JewishCalendar.OmerDay(chosen)") && calendarCode.Contains("Text(\"calendar_omer\")") && clockCode.Contains("JewishCalendar.OmerDay(hebrewDay.Day)") &&
-              clockCode.Contains("Yahrzeits.On(hebrewDay.Day, Settings.Instance.HiddenYahrzeits)") && icons.Contains("x:Key=\"OmerIcon\""),
+        Check(calendarCode.Contains("JewishCalendar.OmerDay(chosen)") && calendarCode.Contains("Text(\"calendar_omer\")") && clockCode.Contains("DayDetailsBuilder.MarksOf(hebrewDay.Day, Settings.Instance.HiddenYahrzeits)") && icons.Contains("x:Key=\"OmerIcon\""),
             "The calendar has an Omer card; the clock shows the Omer's day with the tree of the sefirot and a candle on a yahrzeit.");
         // The days of the week over the grid: 1 (Sunday) to 6 (Friday) and Shabbat, no day names of a language.
         Check(CalendarWindow.WeekdayHeaders("Shabbat").SequenceEqual(new[] { "1", "2", "3", "4", "5", "6", "Shabbat" }) &&

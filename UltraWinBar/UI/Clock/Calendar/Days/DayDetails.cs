@@ -34,6 +34,13 @@ namespace UltraWinBar.Utilities
         /// <summary>The country codes of the place data that are the Land of Israel, where the festivals last a day less.</summary>
         public static bool IsLandOfIsrael(HebrewPlace place) => place != null && (place.CountryCode == "IL" || place.CountryCode == "PS");
 
+        /// <summary>
+        /// The marks by the clock's weekday for a Hebrew day: whether it has a yahrzeit that is shown (not hidden), and its day
+        /// of the Omer (0 outside it).
+        /// </summary>
+        public static (bool Yahrzeit, int Omer) MarksOf(DateTime hebrewDay, ICollection<string> hidden) =>
+            (Yahrzeits.On(hebrewDay, hidden).Count > 0, JewishCalendar.OmerDay(hebrewDay));
+
         /// <summary>The day of the Omer as a line: "Day 23 of the Omer — Netzach she'b'Tiferet"; null outside it.</summary>
         public static string OmerLine(int day, string language, Func<string, string> text) =>
             day > 0 ? string.Format(text("calendar_omer_day"), day) + " — " + JewishCalendar.OmerSefira(day, language) : null;
