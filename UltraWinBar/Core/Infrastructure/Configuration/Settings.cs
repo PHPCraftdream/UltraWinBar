@@ -101,7 +101,7 @@ namespace UltraWinBar.Utilities
             set => Set(ref _language, value);
         }
 
-        private string _theme = "Modern Glass";
+        private string _theme = "Modern Glass Light";
         public string Theme
         {
             get => _theme;
@@ -605,6 +605,22 @@ namespace UltraWinBar.Utilities
         {
             get => _calendarZone;
             set => Set(ref _calendarZone, value < 0 || value > 2 ? 0 : value);
+        }
+
+        // The light Modern Glass became the main theme: set once the theme of earlier runs was moved to it.
+        private bool _lightThemeIntroduced;
+        public bool LightThemeIntroduced
+        {
+            get => _lightThemeIntroduced;
+            set => Set(ref _lightThemeIntroduced, value);
+        }
+
+        // The calendar's grid shows a Hebrew month (1 Kislev to its end) instead of a civil one.
+        private bool _calendarHebrewGrid;
+        public bool CalendarHebrewGrid
+        {
+            get => _calendarHebrewGrid;
+            set => Set(ref _calendarHebrewGrid, value);
         }
 
         // Keys of the yahrzeit figures (Yahrzeits.All) the user switched off in the calendar; everyone is on until then.

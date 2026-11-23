@@ -92,6 +92,9 @@
         <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
     </Style>
 
+    <!-- A window that draws its own title bar (the calendar). -->
+    <Style TargetType="Window" x:Key="OwnTitleWindow" BasedOn="{StaticResource PropertiesWindow}" />
+
     <Style TargetType="Window" x:Key="TaskbarWindow">
         <Setter Property="Background" Value="{DynamicResource ButtonFace}" />
 
@@ -343,6 +346,7 @@
     </Style>
 
     <Style TargetType="TextBlock" x:Key="TaskLabel" BasedOn="{StaticResource GlobalFonts}">
+        <Setter Property="FontWeight" Value="{DynamicResource PanelFontWeight}" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="VerticalAlignment" Value="Center" />
@@ -355,9 +359,30 @@
         <Setter Property="TextOptions.TextRenderingMode" Value="Auto" />
     </Style>
 
+    <!-- The weight of the panel's text (tasks, clock); a light theme makes it heavier: text on a layered window has no ClearType. -->
+    <FontWeight x:Key="PanelFontWeight">Normal</FontWeight>
+
+    <!-- A time with its zone's name: on a vertical panel, where the name is under the time, each zone has a frame of
+         its own, so the lines of several zones do not run together. -->
+    <Style TargetType="Border" x:Key="ClockZoneFrame">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Path=Orientation, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}" Value="Vertical">
+                <Setter Property="BorderThickness" Value="2" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ModernAccent}" />
+                <Setter Property="Background" Value="{DynamicResource ModernGlassPressed}" />
+                <Setter Property="CornerRadius" Value="5" />
+                <Setter Property="Margin" Value="3,3" />
+                <Setter Property="Padding" Value="0,1" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
     <Style TargetType="TextBlock" x:Key="Clock" BasedOn="{StaticResource GlobalFonts}">
-        <Setter Property="FontSize" Value="13" />
-        <Setter Property="TextOptions.TextRenderingMode" Value="Auto" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="{DynamicResource PanelFontWeight}" />
+        <!-- Text rendered as the task labels are (inherited from the panel); digits of one width, so the ticking
+             seconds do not move the clock's blocks. -->
+        <Setter Property="Typography.NumeralAlignment" Value="Tabular" />
         <Setter Property="Foreground" Value="{DynamicResource ClockForeground}" />
         <Setter Property="Margin" Value="8,0" />
         <Setter Property="TextAlignment" Value="Center" />

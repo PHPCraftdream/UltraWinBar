@@ -46,14 +46,9 @@ namespace UltraWinBar.Controls
 
         private void SetIconSize()
         {
-            if (DpiHelper.DpiScale > 1 || Settings.Instance.TaskbarScale > 1)
-            {
-                ShowDesktopIcon.Source = (System.Windows.Media.ImageSource)FindResource("ShowDesktopIconImageLarge");
-            }
-            else
-            {
-                ShowDesktopIcon.Source = (System.Windows.Media.ImageSource)FindResource("ShowDesktopIconImageSmall");
-            }
+            // A reference, not a lookup: it follows a theme change and does not throw while the themes are swapped.
+            ShowDesktopIcon.SetResourceReference(Image.SourceProperty,
+                DpiHelper.DpiScale > 1 || Settings.Instance.TaskbarScale > 1 ? "ShowDesktopIconImageLarge" : "ShowDesktopIconImageSmall");
         }
 
         private void ContextMenu_Opened(object sender, RoutedEventArgs e)

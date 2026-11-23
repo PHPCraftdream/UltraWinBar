@@ -20,7 +20,18 @@ namespace UltraWinBar
     {
         private static CalendarWindow shown;
 
-        private DateTime month = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        // The first day of the month in the grid: a civil month, or a Hebrew one (CalendarGrid).
+        private DateTime month = CalendarGrid.MonthStart(DateTime.Today, Settings.Instance.CalendarHebrewGrid);
+
+        private static bool HebrewGrid => Settings.Instance.CalendarHebrewGrid;
+
+        // The evening the grid was built for (the civil day after whose sunset it was), to build it again when that changed.
+        private DateTime? eveningShown;
+
+        private void RebuildIfEveningChanged()
+        {
+            if (HebrewDayClock.Now(DateTime.UtcNow, ClockZones.CalendarPlace()).Civil != eveningShown) Rebuild();
+        }
         private DateTime chosen = DateTime.Today;
         private bool rebuilding;
 
@@ -58,9 +69,9 @@ namespace UltraWinBar
             try
             {
                 prepared = new CalendarWindow();
-                // The month's cells are laid out now too, not on the click.
-                prepared.Measure(new Size(prepared.Width, prepared.Height));
-                prepared.Arrange(new Rect(0, 0, prepared.Width, prepared.Height));
+                // The month's cells are laid out now too, not on the click (the height follows the content).
+                prepared.Measure(new Size(prepared.Width, double.PositiveInfinity));
+                prepared.Arrange(new Rect(0, 0, prepared.Width, prepared.DesiredSize.Height));
             }
             catch (Exception error)
             {
@@ -105,7 +116,9 @@ namespace UltraWinBar
                 prepared = null;
                 shown.Closed += (_, _) => shown = null;
             }
-            if (clock != null) shown.PlaceAtCorner(clock);
+            if (!created) shown.RebuildIfEveningChanged();
+            else if (shown.eveningShown != HebrewDayClock.Now(DateTime.UtcNow, ClockZones.CalendarPlace()).Civil) shown.Rebuild();
+            shown.FillWorkArea(clock);
             if (created) shown.Show();
             if (shown.WindowState == WindowState.Minimized) shown.WindowState = WindowState.Normal;
             // Up over the other windows even when Windows refuses the activation (a click on the panel).
@@ -114,46 +127,25 @@ namespace UltraWinBar
             shown.Activate();
         }
 
-        // The corner of the calendar that is nearest to the clock meets the clock's corner: above a bottom panel,
-        // under a top one, beside a side one, always inside the work area of the clock's screen.
-        private void PlaceAtCorner(FrameworkElement clock)
+        // The calendar fills the work area of the clock's screen (the screen less the panels); it is neither resized
+        // nor maximized.
+        private void FillWorkArea(FrameworkElement clock)
         {
-            if (PresentationSource.FromVisual(clock) == null) return;
+            Rect area = SystemParameters.WorkArea; // no clock: the main screen's
+            if (clock != null && PresentationSource.FromVisual(clock) != null) area = WorkAreaOf(clock);
+            MinWidth = MinHeight = 0;
+            Left = area.Left;
+            Top = area.Top;
+            Width = area.Width;
+            Height = area.Height;
+        }
+
+        private static Rect WorkAreaOf(FrameworkElement clock)
+        {
             DpiScale dpi = VisualTreeHelper.GetDpi(clock);
             Point topLeft = clock.PointToScreen(new Point(0, 0));
-            Point bottomRight = clock.PointToScreen(new Point(clock.ActualWidth, clock.ActualHeight));
             System.Drawing.Rectangle workPixels = System.Windows.Forms.Screen.FromPoint(new System.Drawing.Point((int)topLeft.X, (int)topLeft.Y)).WorkingArea;
-            Rect area = new Rect(workPixels.Left / dpi.DpiScaleX, workPixels.Top / dpi.DpiScaleY, workPixels.Width / dpi.DpiScaleX, workPixels.Height / dpi.DpiScaleY);
-            Rect at = new Rect(new Point(topLeft.X / dpi.DpiScaleX, topLeft.Y / dpi.DpiScaleY), new Point(bottomRight.X / dpi.DpiScaleX, bottomRight.Y / dpi.DpiScaleY));
-
-            const double gap = 8;
-            double width = Math.Min(Width, area.Width - 2 * gap), height = Math.Min(Height, area.Height - 2 * gap);
-            Width = width;
-            Height = height;
-            ManagedShell.AppBar.AppBarEdge edge = (GetWindow(clock) as ManagedShell.AppBar.AppBarWindow)?.AppBarEdge ?? ManagedShell.AppBar.AppBarEdge.Bottom;
-            bool lowerHalf = (at.Top + at.Bottom) / 2 > (area.Top + area.Bottom) / 2;
-            double left, top;
-            switch (edge)
-            {
-                case ManagedShell.AppBar.AppBarEdge.Left:
-                    left = area.Left + gap;
-                    top = lowerHalf ? at.Bottom - height : at.Top;
-                    break;
-                case ManagedShell.AppBar.AppBarEdge.Right:
-                    left = area.Right - width - gap;
-                    top = lowerHalf ? at.Bottom - height : at.Top;
-                    break;
-                case ManagedShell.AppBar.AppBarEdge.Top:
-                    left = at.Right - width;
-                    top = area.Top + gap;
-                    break;
-                default:
-                    left = at.Right - width;
-                    top = area.Bottom - height - gap;
-                    break;
-            }
-            Left = Math.Max(area.Left + gap, Math.Min(left, area.Right - width - gap));
-            Top = Math.Max(area.Top + gap, Math.Min(top, area.Bottom - height - gap));
+            return new Rect(workPixels.Left / dpi.DpiScaleX, workPixels.Top / dpi.DpiScaleY, workPixels.Width / dpi.DpiScaleX, workPixels.Height / dpi.DpiScaleY);
         }
 
         private void Close_Click(object sender, RoutedEventArgs e) => Close();
@@ -190,12 +182,24 @@ namespace UltraWinBar
                 WeekdayHeader.Children.Clear();
                 // The days of the week as the Jewish count has them: 1 (Sunday) to 6 (Friday), then Shabbat; no names of a language.
                 foreach (string name in WeekdayHeaders(Text("calendar_shabbat")))
-                    WeekdayHeader.Children.Add(new TextBlock { Text = name, TextAlignment = TextAlignment.Center, FontSize = 14, Opacity = 0.7, Margin = new Thickness(0, 0, 0, 4) });
+                    WeekdayHeader.Children.Add(new TextBlock { Text = name, TextAlignment = TextAlignment.Center, FontSize = 14, FontWeight = FontWeights.Bold, Opacity = 0.85, Margin = new Thickness(0, 0, 0, 4) });
 
                 bool israel = DayDetailsBuilder.IsLandOfIsrael(ClockZones.CalendarPlace());
-                DateTime start = month.AddDays(-(int)month.DayOfWeek);
-                var cells = Enumerable.Range(0, 42)
-                    .Select(i => DayDetailsBuilder.Cell(start.AddDays(i), month, DateTime.Today, israel, AppLanguage, Settings.Instance.HiddenYahrzeits, Text)).ToList();
+                bool hebrew = HebrewGrid;
+                // From sunset to midnight the Hebrew day has turned already: the civil day that is still on and the one
+                // whose Hebrew date has begun share a shade (two half cells that make a parallelogram).
+                HebrewDayNow now = HebrewDayClock.Now(DateTime.UtcNow, ClockZones.CalendarPlace());
+                eveningShown = now.Civil;
+                // Five weeks at most: a month that needs a sixth puts its last days in the first week.
+                var cells = CalendarGrid.Days(month, hebrew)
+                    .Select(day => DayDetailsBuilder.Cell(day, month, DateTime.Today, israel, AppLanguage, Settings.Instance.HiddenYahrzeits, Text))
+                    .Select(cell => cell with
+                    {
+                        OutsideMonth = !CalendarGrid.InMonth(cell.Date, month, hebrew),
+                        EveningEnds = now.Civil == cell.Date,
+                        EveningBegins = now.AfterSunset && now.Day == cell.Date,
+                    }).ToList();
+                GridSwitch.Content = Text(hebrew ? "calendar_grid_civil" : "calendar_grid_hebrew");
                 MonthList.ItemsSource = cells;
                 MonthList.SelectedItem = cells.FirstOrDefault(cell => cell.Date == chosen.Date) ?? cells.First(cell => cell.Date == month);
             }
@@ -208,20 +212,26 @@ namespace UltraWinBar
 
         private void ShowMonth(DateTime anyDay, DateTime day)
         {
-            month = new DateTime(anyDay.Year, anyDay.Month, 1);
+            month = CalendarGrid.MonthStart(anyDay, HebrewGrid);
             chosen = day.Date;
             Rebuild();
         }
 
-        private void Previous_Click(object sender, RoutedEventArgs e) => ShowMonth(month.AddMonths(-1), SameDayOf(month.AddMonths(-1)));
+        private void Previous_Click(object sender, RoutedEventArgs e) => ShowOther(CalendarGrid.Previous(month, HebrewGrid));
 
-        private void Next_Click(object sender, RoutedEventArgs e) => ShowMonth(month.AddMonths(1), SameDayOf(month.AddMonths(1)));
+        private void Next_Click(object sender, RoutedEventArgs e) => ShowOther(CalendarGrid.Next(month, HebrewGrid));
+
+        // Another month, on the chosen day's number there.
+        private void ShowOther(DateTime start) => ShowMonth(start, CalendarGrid.SameDay(chosen, start, HebrewGrid));
+
+        // The grid goes from civil months to Hebrew ones and back; it stays on the chosen day.
+        private void GridSwitch_Click(object sender, RoutedEventArgs e)
+        {
+            Settings.Instance.CalendarHebrewGrid = !Settings.Instance.CalendarHebrewGrid;
+            ShowMonth(chosen, chosen);
+        }
 
         private void Today_Click(object sender, RoutedEventArgs e) => ShowMonth(DateTime.Today, DateTime.Today);
-
-        // The chosen day's number in another month, or its last day when that month is shorter.
-        private DateTime SameDayOf(DateTime otherMonth) =>
-            new DateTime(otherMonth.Year, otherMonth.Month, Math.Min(chosen.Day, DateTime.DaysInMonth(otherMonth.Year, otherMonth.Month)));
 
         private void MonthList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -238,7 +248,7 @@ namespace UltraWinBar
             if (FlowDirection == FlowDirection.RightToLeft && (e.Key == Key.Left || e.Key == Key.Right)) step = -step;
             e.Handled = true;
             DateTime day = chosen.AddDays(step);
-            if (day.Year == month.Year && day.Month == month.Month)
+            if (CalendarGrid.InMonth(day, month, HebrewGrid))
             {
                 MonthList.SelectedItem = MonthList.Items.OfType<DayCell>().First(cell => cell.Date == day.Date);
                 (MonthList.ItemContainerGenerator.ContainerFromItem(MonthList.SelectedItem) as ListBoxItem)?.Focus();
@@ -252,8 +262,8 @@ namespace UltraWinBar
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape) Close();
-            else if (e.Key == Key.PageUp) ShowMonth(month.AddMonths(-1), SameDayOf(month.AddMonths(-1)));
-            else if (e.Key == Key.PageDown) ShowMonth(month.AddMonths(1), SameDayOf(month.AddMonths(1)));
+            else if (e.Key == Key.PageUp) ShowOther(CalendarGrid.Previous(month, HebrewGrid));
+            else if (e.Key == Key.PageDown) ShowOther(CalendarGrid.Next(month, HebrewGrid));
             else return;
             e.Handled = true;
         }
@@ -270,12 +280,33 @@ namespace UltraWinBar
             MonthTitle.Text = chosen.ToString("d MMMM yyyy", DayDetailsBuilder.CultureOf(AppLanguage));
             HebrewMonthTitle.Text = details.HebrewDate;
             PortionTitle.Text = details.Portion ?? "";
-            foreach (string name in details.Events) Line(name, bold: true, top: 4);
-            if (details.RestStarts != null) Line(details.RestStarts, top: 4);
-            if (details.RestEnds != null) Line(details.RestEnds);
+            // The details as cards: the day (its special days as colored blocks, the start and end of the rest), the
+            // yahrzeits, the times of the day, the molad.
+            var day = DayDetailsBuilder.Cell(chosen, chosen, DateTime.Today, DayDetailsBuilder.IsLandOfIsrael(place), AppLanguage, Settings.Instance.HiddenYahrzeits, Text);
+            if (day.Events.Count > 0 || details.RestStarts != null || details.RestEnds != null)
+            {
+                Panel card = Card(null);
+                foreach (CellEvent special in day.Events) card.Children.Add(Chip(special));
+                // The day of rest: when it begins and ends, as highlighted lines with candles.
+                if (details.RestStarts != null) card.Children.Add(RestLine(details.RestStarts, null));
+                if (details.RestEnds != null) card.Children.Add(RestLine(details.RestEnds, null));
+            }
+            // The counting of the Omer, a card of its own: the day, and from the seventh the weeks and days.
+            int omer = JewishCalendar.OmerDay(chosen);
+            if (omer > 0)
+            {
+                // The heading after the tree of the sefirot; the day, its weeks and days, and its sefira.
+                var heading = new StackPanel { Orientation = Orientation.Horizontal };
+                heading.Children.Add(new Viewbox { Height = 22, Margin = new Thickness(0, 0, 6, 0), VerticalAlignment = VerticalAlignment.Center, Child = new ContentControl { Focusable = false, Content = FindResource("OmerIcon") } });
+                heading.Children.Add(Heading(Text("calendar_omer")));
+                Panel card = Card(heading);
+                Line(card, string.Format(Text("calendar_omer_day"), omer), bold: true);
+                if (omer >= 7) Line(card, string.Format(Text("calendar_omer_weeks"), omer / 7, omer % 7), opacity: 0.85);
+                Line(card, JewishCalendar.OmerSefira(omer, AppLanguage), opacity: 0.85);
+            }
             if (details.Yahrzeits.Count > 0)
             {
-                Line(Text("calendar_yahrzeits"), bold: true, top: 10);
+                Panel card = Card(Heading(Text("calendar_yahrzeits")));
                 // Each name after a memorial candle; the eldest first (the list comes in order of birth).
                 foreach (string name in details.Yahrzeits)
                 {
@@ -286,37 +317,176 @@ namespace UltraWinBar
                     candle.VerticalAlignment = VerticalAlignment.Center;
                     DockPanel.SetDock(candle, Dock.Left);
                     row.Children.Add(candle);
+                    row.Children.Add(NameActions(name, row));
                     row.Children.Add(new TextBlock { Text = name, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center });
-                    Details.Children.Add(row);
+                    card.Children.Add(row);
                 }
             }
-            TimesHeading(details.Place);
-            if (details.Place == null)
             {
-                Line(Text("calendar_no_place"));
-            }
-            else
-            {
-                foreach (TimeLine time in details.Times)
+                Panel card = Card(TimesHeading(details.Place));
+                if (details.Place == null)
                 {
-                    // The whole row lights up under the pointer (the style takes the colors of the theme).
-                    var row = new DockPanel();
-                    var when = new TextBlock { Text = time.Time, Margin = new Thickness(12, 0, 0, 0), FontWeight = FontWeights.SemiBold, FlowDirection = FlowDirection.LeftToRight };
-                    DockPanel.SetDock(when, Dock.Right);
-                    row.Children.Add(when);
-                    row.Children.Add(new TextBlock { Text = time.Name, TextTrimming = TextTrimming.CharacterEllipsis });
-                    Details.Children.Add(new Border { Style = (Style)FindResource("DetailRow"), Child = row });
+                    Line(card, Text("calendar_no_place"), opacity: 0.8);
+                }
+                else
+                {
+                    foreach (TimeLine time in details.Times)
+                    {
+                        // The candles and the havdalah of a day of rest stand out among the times.
+                        if (time.Rest)
+                        {
+                            card.Children.Add(RestLine(time.Name, time.Time));
+                            continue;
+                        }
+                        // The whole row lights up under the pointer (the style takes the colors of the theme).
+                        var row = new DockPanel();
+                        var when = new TextBlock { Text = time.Time, Margin = new Thickness(12, 0, 0, 0), FontWeight = FontWeights.SemiBold, FlowDirection = FlowDirection.LeftToRight };
+                        DockPanel.SetDock(when, Dock.Right);
+                        row.Children.Add(when);
+                        row.Children.Add(new TextBlock { Text = time.Name, TextTrimming = TextTrimming.CharacterEllipsis });
+                        card.Children.Add(new Border { Style = (Style)FindResource("DetailRow"), Child = row });
+                    }
                 }
             }
-            if (details.Molad != null) Line(details.Molad, top: 10, opacity: 0.7);
+            if (details.Molad != null) Line(Card(null), details.Molad, opacity: 0.8);
+        }
+
+        // A line of the day of rest: the accent's soft fill with its edge, two candles, the text in bold and the time at the right.
+        private FrameworkElement RestLine(string text, string time)
+        {
+            var row = new DockPanel();
+            var candles = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center };
+            for (int i = 0; i < 2; i++)
+            {
+                var candle = (FrameworkElement)FindResource("YahrzeitCandleIcon");
+                candle.LayoutTransform = new ScaleTransform(0.7, 0.7);
+                candles.Children.Add(candle);
+            }
+            DockPanel.SetDock(candles, Dock.Left);
+            row.Children.Add(candles);
+            if (time != null)
+            {
+                var when = new TextBlock { Text = time, Margin = new Thickness(12, 0, 0, 0), FontWeight = FontWeights.Bold, FlowDirection = FlowDirection.LeftToRight, VerticalAlignment = VerticalAlignment.Center };
+                DockPanel.SetDock(when, Dock.Right);
+                row.Children.Add(when);
+            }
+            row.Children.Add(new TextBlock { Text = text, FontWeight = FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center });
+            return new Border
+            {
+                Child = row,
+                Margin = new Thickness(0, 4, 0, 4),
+                Padding = new Thickness(8, 4, 10, 4),
+                CornerRadius = new CornerRadius(6),
+                BorderThickness = new Thickness(3, 0, 0, 0),
+                Background = (Brush)(TryFindResource("ModernAccentSoft") ?? Brushes.Transparent),
+                BorderBrush = (Brush)(TryFindResource("ModernAccent") ?? SystemColors.HighlightBrush),
+            };
+        }
+
+        // A card of the details: glass with a rounded border, an optional heading, and the panel its lines go into.
+        private Panel Card(FrameworkElement heading)
+        {
+            var body = new StackPanel();
+            if (heading != null)
+            {
+                heading.Margin = new Thickness(0, 0, 0, 6);
+                body.Children.Add(heading);
+            }
+            Details.Children.Add(new Border
+            {
+                Child = body,
+                Margin = new Thickness(0, 0, 0, 10),
+                Padding = new Thickness(12, 10, 12, 10),
+                CornerRadius = new CornerRadius(8),
+                BorderThickness = new Thickness(1),
+                Background = (Brush)(TryFindResource("ModernGlass") ?? Brushes.Transparent),
+                BorderBrush = (Brush)(TryFindResource("ModernGlassBorder") ?? SystemColors.ActiveBorderBrush),
+            });
+            return body;
+        }
+
+        private TextBlock Heading(string text) => new TextBlock
+        {
+            Text = text,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = (Brush)(TryFindResource("ModernTextStrong") ?? SystemColors.WindowTextBrush),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+
+        // A special day as the cells show it: a block with a colored edge by its kind.
+        internal static (Color Back, Color Edge) ChipColors(DayKind kind) => kind switch
+        {
+            DayKind.YomTov => (Color.FromArgb(0x38, 0xFB, 0x71, 0x85), Color.FromArgb(0xCC, 0xFB, 0x71, 0x85)),
+            DayKind.CholHamoed => (Color.FromArgb(0x26, 0xFB, 0x71, 0x85), Color.FromArgb(0x99, 0xFB, 0x71, 0x85)),
+            DayKind.Fast => (Color.FromArgb(0x26, 0x94, 0xA3, 0xB8), Color.FromArgb(0x99, 0x94, 0xA3, 0xB8)),
+            DayKind.Minor => (Color.FromArgb(0x2E, 0xFB, 0xBF, 0x24), Color.FromArgb(0xB3, 0xFB, 0xBF, 0x24)),
+            _ => (Color.FromArgb(0x2E, 0x38, 0xBD, 0xF8), Color.FromArgb(0x99, 0x38, 0xBD, 0xF8)),
+        };
+
+        private static Border Chip(CellEvent special)
+        {
+            var (back, edge) = ChipColors(special.Kind);
+            return new Border
+            {
+                Margin = new Thickness(0, 0, 0, 4),
+                Padding = new Thickness(8, 3, 8, 3),
+                CornerRadius = new CornerRadius(4),
+                BorderThickness = new Thickness(3, 0, 0, 0),
+                Background = new SolidColorBrush(back),
+                BorderBrush = new SolidColorBrush(edge),
+                Child = new TextBlock
+                {
+                    Text = special.Name,
+                    TextWrapping = TextWrapping.Wrap,
+                    FontWeight = special.Kind == DayKind.YomTov ? FontWeights.Bold : FontWeights.SemiBold,
+                },
+            };
+        }
+
+        // Two buttons at the right of a name, shown while the pointer is on its row: copy the name, and look it up with
+        // Google in the browser of the system.
+        private FrameworkElement NameActions(string name, Panel row)
+        {
+            var copy = new Button { Style = (Style)FindResource("RowIconButton"), Content = new TextBlock { Text = "\uE8C8", FontFamily = new FontFamily("Segoe MDL2 Assets"), FontSize = 13 }, ToolTip = Text("calendar_copy_name") };
+            copy.Click += (_, _) => CopyName(name);
+            var search = new Button { Style = (Style)FindResource("RowIconButton"), Content = FindResource("ChromeIcon"), ToolTip = Text("calendar_search_name") };
+            search.Click += (_, _) => SearchName(name);
+            var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(6, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Hidden };
+            actions.Children.Add(copy);
+            actions.Children.Add(search);
+            DockPanel.SetDock(actions, Dock.Right);
+            row.Background = Brushes.Transparent;
+            row.MouseEnter += (_, _) => actions.Visibility = Visibility.Visible;
+            row.MouseLeave += (_, _) => actions.Visibility = Visibility.Hidden;
+            return actions;
+        }
+
+        // The name without what is in brackets ("Vilna Gaon (Gra)" is looked up as "Vilna Gaon").
+        internal static string SearchAddress(string name) =>
+            "https://www.google.com/search?q=" + Uri.EscapeDataString(System.Text.RegularExpressions.Regex.Replace(name, @"\s*\([^)]*\)", "").Trim());
+
+        private static void CopyName(string name)
+        {
+            // The clipboard may be held by another program for a moment.
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                try { Clipboard.SetText(name); return; }
+                catch (System.Runtime.InteropServices.COMException) { System.Threading.Thread.Sleep(30); }
+            }
+        }
+
+        private static void SearchName(string name)
+        {
+            try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(SearchAddress(name)) { UseShellExecute = true })?.Dispose(); }
+            catch (Exception error) { ManagedShell.Common.Logging.ShellLogger.Warning($"CalendarWindow: the browser did not open: {error.Message}"); }
         }
 
         // "Times of the day", with a globe at the right whose popup tells the place they are for. The popup stands above the
         // globe, right-aligned to it (so over the calendar, not beyond its edge); it shows while the pointer is on the globe,
         // and a click pins it until the next click.
-        private void TimesHeading(string place)
+        private FrameworkElement TimesHeading(string place)
         {
-            var heading = new DockPanel { Margin = new Thickness(0, 10, 0, 0) };
+            var heading = new DockPanel();
             if (place != null)
             {
                 var text = new TextBlock { Text = place, TextWrapping = TextWrapping.Wrap, MaxWidth = 360, Margin = new Thickness(10, 6, 10, 6) };
@@ -362,17 +532,17 @@ namespace UltraWinBar
                 heading.Children.Add(globe);
                 heading.Children.Add(popup);
             }
-            heading.Children.Add(new TextBlock { Text = Text("calendar_times"), FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center });
-            Details.Children.Add(heading);
+            heading.Children.Add(Heading(Text("calendar_times")));
+            return heading;
         }
 
-        private void Line(string text, bool bold = false, double size = 0, double top = 0, double opacity = 1, FlowDirection? flow = null)
+        private static void Line(Panel target, string text, bool bold = false, double size = 0, double top = 0, double opacity = 1, FlowDirection? flow = null)
         {
             var block = new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, top, 0, 0), Opacity = opacity };
             if (bold) block.FontWeight = FontWeights.SemiBold;
             if (size > 0) block.FontSize = size;
             if (flow.HasValue) block.FlowDirection = flow.Value;
-            Details.Children.Add(block);
+            target.Children.Add(block);
         }
     }
 }

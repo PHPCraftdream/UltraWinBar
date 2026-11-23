@@ -22,6 +22,9 @@
                                 <WrapPanel.Style>
                                     <Style TargetType="WrapPanel" BasedOn="{StaticResource TaskListWrapPanel}">
                                         <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Orientation, RelativeSource={RelativeSource AncestorType=Window}}" Value="Horizontal">
+                                                <Setter Property="ItemHeight" Value="{Binding ButtonHeight, RelativeSource={RelativeSource AncestorType=local:TaskList}}" />
+                                            </DataTrigger>
                                             <DataTrigger Binding="{Binding Orientation, RelativeSource={RelativeSource AncestorType=Window}}" Value="Vertical">
                                                 <Setter Property="ItemWidth" Value="{Binding ButtonWidth, RelativeSource={RelativeSource AncestorType=local:TaskList}}" />
                                             </DataTrigger>

@@ -90,6 +90,12 @@ if (Test-Path $installedExe) {
 Run "Copying $buildDir to $InstallDir" {
     New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
     Copy-Item -Path (Join-Path $buildDir '*') -Destination $InstallDir -Recurse -Force
+    # The themes the build no longer ships go (they would still be offered); the backup above keeps them.
+    $builtThemes = Join-Path $buildDir 'Themes'
+    $installedThemes = Join-Path $InstallDir 'Themes'
+    if ((Test-Path $builtThemes) -and (Test-Path $installedThemes)) {
+        Get-ChildItem -Path $installedThemes -File | Where-Object { -not (Test-Path (Join-Path $builtThemes $_.Name)) } | Remove-Item -Force
+    }
 }
 
 if (-not $DryRun) {

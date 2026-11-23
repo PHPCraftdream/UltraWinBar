@@ -42,6 +42,15 @@ namespace UltraWinBar.Controls
             set { SetValue(ButtonWidthProperty, value); }
         }
 
+        // Height of a row of buttons on a horizontal panel: the list's height shared by its rows (NaN: by content).
+        public static DependencyProperty ButtonHeightProperty = DependencyProperty.Register(nameof(ButtonHeight), typeof(double), typeof(TaskList), new PropertyMetadata(double.NaN));
+
+        public double ButtonHeight
+        {
+            get { return (double)GetValue(ButtonHeightProperty); }
+            set { SetValue(ButtonHeightProperty, value); }
+        }
+
         public static DependencyProperty ButtonsPerRowProperty = DependencyProperty.Register(nameof(ButtonsPerRow), typeof(int), typeof(TaskList), new PropertyMetadata(0));
 
         public int ButtonsPerRow
@@ -611,6 +620,8 @@ namespace UltraWinBar.Controls
 
             double height = ActualHeight;
             int rows = Host.Rows;
+            // The buttons fill the panel's height, not only their content's.
+            ButtonHeight = height > 0 && rows > 0 ? Math.Floor(height / rows) : double.NaN;
 
             int taskCount = TasksList.Items.Count;
             TasksList.AlternationCount = taskCount; // keep in sync for correct AlternationIndex

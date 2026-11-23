@@ -752,11 +752,14 @@
                     CanContentScroll="False">
                     <DockPanel
                         Margin="10">
-                        <GroupBox
-                            Header="{DynamicResource general_heading}"
+                        <!-- Sub-tabs, as on the notification area tab. -->
+                        <TabControl
                             DockPanel.Dock="Top">
+                        <TabItem
+                            Header="{DynamicResource general_heading}">
                             <StackPanel
-                                Orientation="Vertical">
+                                Orientation="Vertical"
+                                Margin="6">
                                 <CheckBox
                                     x:Name="cbUseSoftwareRendering"
                                     IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=UseSoftwareRendering, UpdateSourceTrigger=PropertyChanged}">
@@ -776,12 +779,12 @@
                                         Content="{DynamicResource window_activity_logging}" />
                                 </CheckBox>
                             </StackPanel>
-                        </GroupBox>
-                        <GroupBox
-                            Header="{DynamicResource behavior_heading}"
-                            DockPanel.Dock="Top">
+                        </TabItem>
+                        <TabItem
+                            Header="{DynamicResource behavior_heading}">
                             <StackPanel
-                                Orientation="Vertical">
+                                Orientation="Vertical"
+                                Margin="6">
                                 <CheckBox
                                     x:Name="cbAllowBlurBehind"
                                     IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=AllowBlurBehind, UpdateSourceTrigger=PropertyChanged}">
@@ -882,12 +885,12 @@
                                         SelectionChanged="CboTaskWheelAction_SelectionChanged" />
                                 </Grid>
                             </StackPanel>
-                        </GroupBox>
-                        <GroupBox
-                            Header="{DynamicResource multiple_displays}"
-                            DockPanel.Dock="Top">
+                        </TabItem>
+                        <TabItem
+                            Header="{DynamicResource multiple_displays}">
                             <StackPanel
-                                Orientation="Vertical">
+                                Orientation="Vertical"
+                                Margin="6">
                                 <CheckBox
                                     x:Name="cbShowMultiMon"
                                     IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=ShowMultiMon, UpdateSourceTrigger=PropertyChanged}">
@@ -923,7 +926,8 @@
                                         SelectionChanged="CboMultiMonMode_SelectionChanged" />
                                 </Grid>
                             </StackPanel>
-                        </GroupBox>
+                        </TabItem>
+                        </TabControl>
                         <DockPanel
                             Margin="0,10,0,0"
                             DockPanel.Dock="Bottom">

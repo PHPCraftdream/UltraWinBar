@@ -213,6 +213,7 @@
     <s:String x:Key="hebrew_place_none">не выбрано</s:String>
     <s:String x:Key="hebrew_place_choose">Выбрать...</s:String>
     <s:String x:Key="hebrew_place_clear">Сбросить</s:String>
+    <s:String x:Key="zone_clear">Убрать</s:String>
     <s:String x:Key="hebrew_place_hint">Место, по закату в котором заканчивается еврейский день и для которого календарь показывает галахические времена.</s:String>
     <s:String x:Key="hebrew_place_title">Место для еврейской даты</s:String>
     <s:String x:Key="hebrew_place_city_tab">Город</s:String>
@@ -227,6 +228,10 @@
     <s:String x:Key="hebrew_place_zone_hint">Подставляется вместе с городом; смените, если он неверен. Правила пояса (летнее время и его изменения) берутся из Windows.</s:String>
     <s:String x:Key="calendar_title">Еврейский календарь</s:String>
     <s:String x:Key="calendar_today">Сегодня</s:String>
+    <s:String x:Key="calendar_copy_name">Копировать имя</s:String>
+    <s:String x:Key="calendar_search_name">Найти имя в Google</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Еврейский месяц</s:String>
+    <s:String x:Key="calendar_grid_civil">Обычный месяц</s:String>
     <s:String x:Key="calendar_shabbat">Шаббат</s:String>
     <s:String x:Key="calendar_previous_month">Предыдущий месяц</s:String>
     <s:String x:Key="calendar_next_month">Следующий месяц</s:String>
@@ -236,7 +241,12 @@
     <s:String x:Key="calendar_festival_reading">В эту субботу читают праздничное чтение</s:String>
     <s:String x:Key="calendar_day_of">{0}, день {1} из {2}</s:String>
     <s:String x:Key="calendar_molad">Молад месяца {0}: {1}, {2} и {3} халаким</s:String>
+    <s:String x:Key="calendar_omer">Счёт Омера</s:String>
+    <s:String x:Key="calendar_omer_day">{0}-й день Омера</s:String>
+    <s:String x:Key="calendar_omer_weeks">недель: {0}, дней: {1}</s:String>
     <s:String x:Key="calendar_place">Место: {0}</s:String>
+    <s:String x:Key="calendar_israel">Земля Израиля</s:String>
+    <s:String x:Key="calendar_diaspora">диаспора</s:String>
     <s:String x:Key="calendar_no_place">Выберите место в настройках календаря, чтобы увидеть времена дня.</s:String>
     <s:String x:Key="calendar_times">Времена дня</s:String>
     <s:String x:Key="calendar_yahrzeits">Йорцайты</s:String>
@@ -245,7 +255,7 @@
     <s:String x:Key="calendar_rest_begins">Начало: {0} (зажигание свечей)</s:String>
     <s:String x:Key="calendar_rest_ends">Конец: {0} (выход звёзд)</s:String>
     <s:String x:Key="calendar_settings_title">Настройки календаря</s:String>
-    <s:String x:Key="calendar_settings_place">Место главного часового пояса (компьютера), для еврейского дня и времён дня:</s:String>
+    <s:String x:Key="calendar_settings_place">Место пояса:</s:String>
     <s:String x:Key="calendar_settings_zone">Часовой пояс для даты, смены дня и времён дня:</s:String>
     <s:String x:Key="calendar_zone_main">{0} (компьютера)</s:String>
     <s:String x:Key="zones_heading">Часовые пояса часов</s:String>
@@ -253,7 +263,7 @@
     <s:String x:Key="zone_second">Второй часовой пояс:</s:String>
     <s:String x:Key="zone_third">Третий часовой пояс:</s:String>
     <s:String x:Key="zone_show_name">Показывать название</s:String>
-    <s:String x:Key="zone_place">Место (для его еврейского дня и времён дня):</s:String>
+    <s:String x:Key="zone_place">Место:</s:String>
     <s:String x:Key="zones_tab">Часовые пояса</s:String>
     <s:String x:Key="hebrew_date_tab">Еврейская дата</s:String>
     <s:String x:Key="zone_computer">Компьютера ({0})</s:String>

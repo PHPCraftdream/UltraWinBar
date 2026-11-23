@@ -166,7 +166,7 @@ namespace UltraWinBar
         // The accent row is only for the Modern Glass theme; the list of names comes with the language.
         private void LoadAccent()
         {
-            AccentRow.Visibility = Settings.Instance.Theme == ModernTheme.ThemeName ? Visibility.Visible : Visibility.Collapsed;
+            AccentRow.Visibility = ModernTheme.IsActive ? Visibility.Visible : Visibility.Collapsed;
             cboAccentSelect.SelectedIndex = Math.Max(0, Array.IndexOf(ModernTheme.Accents, Settings.Instance.AccentColor));
         }
 

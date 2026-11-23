@@ -224,6 +224,7 @@
     <s:String x:Key="hebrew_place_none">не абрана</s:String>
     <s:String x:Key="hebrew_place_choose">Абраць...</s:String>
     <s:String x:Key="hebrew_place_clear">Скінуць</s:String>
+    <s:String x:Key="zone_clear">Прыбраць</s:String>
     <s:String x:Key="hebrew_place_hint">Месца, па захадзе сонца ў якім заканчваецца габрэйскі дзень і для якога каляндар паказвае галахічныя часы.</s:String>
     <s:String x:Key="hebrew_place_title">Месца для габрэйскай даты</s:String>
     <s:String x:Key="hebrew_place_city_tab">Горад</s:String>
@@ -238,6 +239,10 @@
     <s:String x:Key="hebrew_place_zone_hint">Падстаўляецца разам з горадам; змяніце, калі ён няправільны. Правілы пояса (летні час і яго змены) бяруцца з Windows.</s:String>
     <s:String x:Key="calendar_title">Габрэйскі каляндар</s:String>
     <s:String x:Key="calendar_today">Сёння</s:String>
+    <s:String x:Key="calendar_copy_name">Скапіяваць імя</s:String>
+    <s:String x:Key="calendar_search_name">Знайсці імя ў Google</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Габрэйскі месяц</s:String>
+    <s:String x:Key="calendar_grid_civil">Звычайны месяц</s:String>
     <s:String x:Key="calendar_shabbat">Шабат</s:String>
     <s:String x:Key="calendar_previous_month">Папярэдні месяц</s:String>
     <s:String x:Key="calendar_next_month">Наступны месяц</s:String>
@@ -247,7 +252,12 @@
     <s:String x:Key="calendar_festival_reading">У гэту суботу чытаюць святочнае чытанне</s:String>
     <s:String x:Key="calendar_day_of">{0}, дзень {1} з {2}</s:String>
     <s:String x:Key="calendar_molad">Молад месяца {0}: {1}, {2} і {3} халакім</s:String>
+    <s:String x:Key="calendar_omer">Лік Амера</s:String>
+    <s:String x:Key="calendar_omer_day">{0}-ы дзень Амера</s:String>
+    <s:String x:Key="calendar_omer_weeks">тыдняў: {0}, дзён: {1}</s:String>
     <s:String x:Key="calendar_place">Месца: {0}</s:String>
+    <s:String x:Key="calendar_israel">Зямля Ізраіля</s:String>
+    <s:String x:Key="calendar_diaspora">дыяспара</s:String>
     <s:String x:Key="calendar_no_place">Абярыце месца ў наладах календара, каб убачыць часы дня.</s:String>
     <s:String x:Key="calendar_times">Часы дня</s:String>
     <s:String x:Key="calendar_yahrzeits">Ёрцайты</s:String>
@@ -256,7 +266,7 @@
     <s:String x:Key="calendar_rest_begins">Пачатак: {0} (запальванне свечак)</s:String>
     <s:String x:Key="calendar_rest_ends">Канец: {0} (выхад зорак)</s:String>
     <s:String x:Key="calendar_settings_title">Налады календара</s:String>
-    <s:String x:Key="calendar_settings_place">Месца галоўнага гадзіннага пояса (камп’ютара), для габрэйскага дня і часоў дня:</s:String>
+    <s:String x:Key="calendar_settings_place">Месца пояса:</s:String>
     <s:String x:Key="calendar_settings_zone">Гадзінны пояс для даты, змены дня і часоў дня:</s:String>
     <s:String x:Key="calendar_zone_main">{0} (камп’ютара)</s:String>
     <s:String x:Key="zones_heading">Гадзінныя паясы гадзінніка</s:String>
@@ -264,7 +274,7 @@
     <s:String x:Key="zone_second">Другі гадзінны пояс:</s:String>
     <s:String x:Key="zone_third">Трэці гадзінны пояс:</s:String>
     <s:String x:Key="zone_show_name">Паказваць назву</s:String>
-    <s:String x:Key="zone_place">Месца (для яго габрэйскага дня і часоў дня):</s:String>
+    <s:String x:Key="zone_place">Месца:</s:String>
     <s:String x:Key="zones_tab">Гадзінныя паясы</s:String>
     <s:String x:Key="hebrew_date_tab">Габрэйская дата</s:String>
     <s:String x:Key="zone_computer">Камп’ютара ({0})</s:String>

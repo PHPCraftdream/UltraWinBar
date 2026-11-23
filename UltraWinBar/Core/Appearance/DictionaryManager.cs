@@ -49,6 +49,15 @@ namespace UltraWinBar.Utilities
         public void SetThemeFromSettings()
         {
             FlatTheme.LoadResources();
+            // Only Modern Glass and its light variant ship: the light one is the main theme. A theme that is no longer
+            // there (the classic themes were removed) and, once, the dark Modern Glass of earlier runs go to it.
+            if (!Settings.Instance.LightThemeIntroduced)
+            {
+                Settings.Instance.LightThemeIntroduced = true;
+                if (Settings.Instance.Theme == ModernTheme.ThemeName) Settings.Instance.Theme = ModernTheme.LightThemeName;
+            }
+            if (!GetThemes().Contains(Settings.Instance.Theme))
+                Settings.Instance.Theme = ModernTheme.LightThemeName;
             SetTheme(THEME_DEFAULT);
 
             if (Settings.Instance.Theme.StartsWith(THEME_DEFAULT))
@@ -74,6 +83,7 @@ namespace UltraWinBar.Utilities
             ModernTheme.Apply();
             FlatTheme.Apply();
             ModernTheme.ApplyPanel();
+            ManagedShell.Common.Logging.ShellLogger.Debug($"DictionaryManager: theme {Settings.Instance.Theme} (light {ModernTheme.IsLight}): clock {Application.Current.TryFindResource("ClockForeground")}, text {Application.Current.TryFindResource("ModernText")}, task text {Application.Current.TryFindResource("FlatTaskText")}, dictionaries {string.Join(" | ", GetMergedDictionaries().Select(d => d.Source?.ToString() ?? "-"))}");
         }
 
         private void SetSystemThemeParams()
@@ -96,17 +106,14 @@ namespace UltraWinBar.Utilities
             return Application.Current.Resources.MergedDictionaries;
         }
 
-        private void ClearPreviousThemes()
-        {
-            RemoveThemeDictionaries(GetMergedDictionaries());
-        }
-
         internal static void RemoveThemeDictionaries(Collection<ResourceDictionary> dictionaries)
         {
-            foreach (var dictionary in dictionaries.Where(item =>
-                item.Source?.ToString().Replace('\\', '/').IndexOf(THEME_FOLDER + "/", StringComparison.OrdinalIgnoreCase) >= 0).ToArray())
+            foreach (var dictionary in dictionaries.Where(IsThemeDictionary).ToArray())
                 dictionaries.Remove(dictionary);
         }
+
+        private static bool IsThemeDictionary(ResourceDictionary item) =>
+            item.Source?.ToString().Replace('\\', '/').IndexOf(THEME_FOLDER + "/", StringComparison.OrdinalIgnoreCase) >= 0;
 
         private void ClearPreviousLanguages()
         {
@@ -149,12 +156,11 @@ namespace UltraWinBar.Utilities
         {
             string dictFilePath;
 
+            bool replaceThemes = false;
             if (dictionary == dictDefault)
             {
-                if (dictType == 0)
-                {
-                    ClearPreviousThemes();
-                }
+                // The previous themes go only once the new base is in: no moment without the theme's resources.
+                replaceThemes = dictType == 0;
                 dictFilePath = dictType == 0
                     ? "pack://application:,,,/UltraWinBar;component/Assets/Themes/Core/System.xaml"
                     : "pack://application:,,,/UltraWinBar;component/Assets/Languages/Group01/English.xaml";
@@ -187,10 +193,20 @@ namespace UltraWinBar.Utilities
 
             try
             {
-                GetMergedDictionaries().Add(new ResourceDictionary()
+                var loaded = new ResourceDictionary()
                 {
                     Source = new Uri(dictFilePath, UriKind.RelativeOrAbsolute)
-                });
+                };
+                if (replaceThemes)
+                {
+                    var previous = GetMergedDictionaries().Where(IsThemeDictionary).ToArray();
+                    GetMergedDictionaries().Add(loaded);
+                    foreach (var old in previous) GetMergedDictionaries().Remove(old);
+                }
+                else
+                {
+                    GetMergedDictionaries().Add(loaded);
+                }
             }
             catch (Exception e)
             {
@@ -203,9 +219,12 @@ namespace UltraWinBar.Utilities
             return THEME_FOLDER.InLocalAppData();
         }
 
+        // The themes to choose from: the files, not the base dictionary they are all laid over.
         public List<string> GetThemes()
         {
-            return GetDictionaries(THEME_DEFAULT, THEME_FOLDER, THEME_EXT);
+            List<string> themes = GetDictionaries(THEME_DEFAULT, THEME_FOLDER, THEME_EXT);
+            themes.Remove(THEME_DEFAULT);
+            return themes;
         }
 
         public List<string> GetLanguages()

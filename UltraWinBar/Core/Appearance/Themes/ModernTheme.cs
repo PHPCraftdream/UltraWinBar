@@ -16,6 +16,8 @@ namespace UltraWinBar.Utilities
     internal static class ModernTheme
     {
         internal const string ThemeName = "Modern Glass";
+        // The same theme made light (slate-200, not white): the theme of a new install.
+        internal const string LightThemeName = "Modern Glass Light";
 
         // The accents: Tailwind CSS colors (MIT), the 400 shade and the 500 shade of each.
         internal static readonly string[] Accents = { "cyan", "violet", "fuchsia", "emerald", "amber", "rose" };
@@ -26,6 +28,11 @@ namespace UltraWinBar.Utilities
         private static readonly Color Slate800 = Color.FromRgb(0x1E, 0x29, 0x3B);
         private static readonly Color Slate700 = Color.FromRgb(0x33, 0x41, 0x55);
         private static readonly Color Slate600 = Color.FromRgb(0x47, 0x55, 0x69);
+        // The light surfaces: Tailwind slate-100, 200, 300 and 400.
+        private static readonly Color Slate100 = Color.FromRgb(0xF1, 0xF5, 0xF9);
+        private static readonly Color Slate200 = Color.FromRgb(0xE2, 0xE8, 0xF0);
+        private static readonly Color Slate300 = Color.FromRgb(0xCB, 0xD5, 0xE1);
+        private static readonly Color Slate400 = Color.FromRgb(0x94, 0xA3, 0xB8);
 
         private static readonly object[] OwnKeys =
         {
@@ -41,14 +48,24 @@ namespace UltraWinBar.Utilities
 
         private static readonly string[] PanelKeys = { "FlatActiveBorder", "FlatActiveBar", "FlatPanelEdge" };
 
-        internal const byte WindowGlassAlpha = 0xB8;
+        // Dense enough that buttons stay readable over a white page behind the window.
+        internal const byte WindowGlassAlpha = 0xE0;
         internal const byte PanelGlassAlpha = 0xA6;
 
         private static bool applied;
 
         internal static bool IsAccent(string name) => Array.IndexOf(Accents, name) >= 0;
 
-        internal static bool IsActive => Settings.Instance.Theme == ThemeName;
+        internal static bool IsActive => Settings.Instance.Theme == ThemeName || Settings.Instance.Theme == LightThemeName;
+
+        internal static bool IsLight => Settings.Instance.Theme == LightThemeName;
+
+        // The accent as the theme paints it: on the light glass one shade deeper (the 500 shade, and darker for its strong one).
+        private static (Color Light, Color Strong) AccentOf(string name)
+        {
+            var (light, strong) = ColorsOf(name);
+            return IsLight ? (strong, Darker(strong, 0.18)) : (light, strong);
+        }
 
         internal static (Color Light, Color Strong) ColorsOf(string name) => name switch
         {
@@ -64,6 +81,8 @@ namespace UltraWinBar.Utilities
         internal static (Color Base, Color Deep, Color Raised, Color Panel) SurfacesOf(string accent)
         {
             Color light = ColorsOf(accent).Light;
+            if (IsLight)
+                return (Mix(Slate200, light, 0.08), Mix(Slate300, light, 0.08), Mix(Slate100, light, 0.06), Mix(Slate200, light, 0.14));
             return (Mix(Slate900, light, 0.14), Mix(Slate950, light, 0.10), Mix(Slate800, light, 0.20), Mix(Slate900, light, 0.18));
         }
 
@@ -83,14 +102,15 @@ namespace UltraWinBar.Utilities
             }
 
             string accent = Settings.Instance.AccentColor;
-            var (light, strong) = ColorsOf(accent);
+            var (light, strong) = AccentOf(accent);
             var (back, deep, raised, panel) = SurfacesOf(accent);
+            bool bright = IsLight;
             Put(resources, "ModernBase", back);
             Put(resources, "ModernBaseDeep", deep);
             Put(resources, "ModernRaised", raised);
             Put(resources, "ModernInput", WithAlpha(deep, 0x99));
             // The window is a translucent layer over the blurred desktop; opaque when there is no blur.
-            Put(resources, "ModernWindowFill", WithAlpha(back, ModernBackdrop.Wanted ? WindowGlassAlpha : (byte)0xFF));
+            Put(resources, "ModernWindowFill", WithAlpha(Darker(back, bright ? 0.03 : 0.12), ModernBackdrop.Wanted ? WindowGlassAlpha : (byte)0xFF));
             Put(resources, "ModernGlass", WithAlpha(light, 0x14));
             Put(resources, "ModernGlassHover", WithAlpha(light, 0x26));
             Put(resources, "ModernGlassPressed", WithAlpha(light, 0x38));
@@ -112,9 +132,9 @@ namespace UltraWinBar.Utilities
             Put(resources, "ToolTipBackground", raised);
             Put(resources, SystemColors.WindowBrushKey, back);
             Put(resources, SystemColors.ControlBrushKey, raised);
-            Put(resources, SystemColors.ControlLightBrushKey, Mix(Slate700, light, 0.20));
-            Put(resources, SystemColors.ControlLightLightBrushKey, Mix(Slate600, light, 0.20));
-            Put(resources, SystemColors.ControlDarkBrushKey, Mix(Slate700, light, 0.20));
+            Put(resources, SystemColors.ControlLightBrushKey, Mix(bright ? Slate300 : Slate700, light, bright ? 0.08 : 0.20));
+            Put(resources, SystemColors.ControlLightLightBrushKey, Mix(bright ? Slate100 : Slate600, light, bright ? 0.06 : 0.20));
+            Put(resources, SystemColors.ControlDarkBrushKey, Mix(bright ? Slate400 : Slate700, light, bright ? 0.08 : 0.20));
             Put(resources, SystemColors.ControlDarkDarkBrushKey, raised);
             Put(resources, SystemColors.MenuBrushKey, back);
             Put(resources, SystemColors.MenuBarBrushKey, back);
@@ -130,7 +150,7 @@ namespace UltraWinBar.Utilities
         {
             if (!IsActive) return;
             var resources = Application.Current.Resources;
-            Color light = ColorsOf(Settings.Instance.AccentColor).Light;
+            Color light = AccentOf(Settings.Instance.AccentColor).Light;
             Put(resources, "FlatActiveBorder", WithAlpha(light, 0x99));
             Put(resources, "FlatActiveBar", light);
             Put(resources, "FlatPanelEdge", WithAlpha(light, 0x80));
@@ -145,6 +165,9 @@ namespace UltraWinBar.Utilities
             Put(resources, "FlatActive", WithAlpha(light, 0x5C));
             Put(resources, "FlatPressed", WithAlpha(light, 0x73));
             Put(resources, "FlatBorder", WithAlpha(light, 0x59));
+            // The tray's icons lie on a layer of the glass too, not on an opaque (and, in the light theme, near white) block.
+            Put(resources, "TrayBackground", WithAlpha(light, 0x1A));
+            Put(resources, "TrayVerticalBackground", WithAlpha(light, 0x1A));
         }
 
         private static Color Mix(Color from, Color to, double amount) => Color.FromRgb(
@@ -153,6 +176,9 @@ namespace UltraWinBar.Utilities
             (byte)Math.Round(from.B + (to.B - from.B) * amount));
 
         private static Color WithAlpha(Color color, byte alpha) => Color.FromArgb(alpha, color.R, color.G, color.B);
+
+        private static Color Darker(Color color, double by) =>
+            Color.FromArgb(color.A, (byte)(color.R * (1 - by)), (byte)(color.G * (1 - by)), (byte)(color.B * (1 - by)));
 
         private static void Put(ResourceDictionary resources, object key, Color color)
         {
@@ -170,12 +196,14 @@ namespace UltraWinBar.Utilities
         internal static void Track(Window window)
         {
             bool blurred = false;
+            // The close button of the theme's own title bar.
+            window.CommandBindings.Add(new System.Windows.Input.CommandBinding(SystemCommands.CloseWindowCommand, (_, _) => SystemCommands.CloseWindow(window)));
 
             void Style()
             {
                 IntPtr handle = new WindowInteropHelper(window).Handle;
                 if (handle == IntPtr.Zero) return;
-                int dark = IsActive ? 1 : 0;
+                int dark = IsActive && !IsLight ? 1 : 0;
                 try
                 {
                     // Attribute 20 since Windows 10 2004, 19 on the first builds that had a dark frame.

@@ -68,12 +68,7 @@ namespace UltraWinBar.Controls
 
         private static HebrewPlace PlaceOf(int zone) => ClockZones.PlaceOf(zone);
 
-        private static void SetPlace(int zone, HebrewPlace place)
-        {
-            if (zone == ClockZones.Second) Settings.Instance.SecondPlace = place;
-            else if (zone == ClockZones.Third) Settings.Instance.ThirdPlace = place;
-            else Settings.Instance.HebrewPlace = place;
-        }
+        private static void SetPlace(int zone, HebrewPlace place) => ClockZones.SetPlace(zone, place);
 
         private ComboBox BoxOf(int zone) => zone == ClockZones.Second ? SecondBox : zone == ClockZones.Third ? ThirdBox : MainBox;
 
@@ -104,6 +99,14 @@ namespace UltraWinBar.Controls
         private void SecondPlaceClear_Click(object sender, RoutedEventArgs e) => SetPlace(ClockZones.Second, null);
 
         private void ThirdPlaceClear_Click(object sender, RoutedEventArgs e) => SetPlace(ClockZones.Third, null);
+
+        // The zone itself is removed: the box goes to its first entry (none; the computer's zone for the main one), which
+        // writes the setting through its handler.
+        private void MainZoneClear_Click(object sender, RoutedEventArgs e) => Select(MainBox, "");
+
+        private void SecondZoneClear_Click(object sender, RoutedEventArgs e) => Select(SecondBox, "");
+
+        private void ThirdZoneClear_Click(object sender, RoutedEventArgs e) => Select(ThirdBox, "");
 
         private void MainBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {

@@ -26,9 +26,9 @@ internal static class YahrzeitChecks
     private static void CheckList()
     {
         var all = Yahrzeits.All;
-        Check(all.Count == 46, $"The list has 46 figures, has {all.Count}.");
+        Check(all.Count == 142, $"The list has 142 figures, has {all.Count}.");
         Check(all.Select(person => person.Key).Distinct().Count() == all.Count, "Every figure has a key of its own.");
-        Check(Yahrzeits.Categories.Count == 8 && Yahrzeits.Categories.Distinct().Count() == 8, "Eight categories.");
+        Check(Yahrzeits.Categories.Count == 12 && Yahrzeits.Categories.Distinct().Count() == 12, "Twelve categories.");
         // A month has at most this many days (Cheshvan and Kislev vary); the month numbering has no 6 in a plain year, and Adar I has no yahrzeits.
         var monthLength = new Dictionary<int, int> { [1] = 30, [2] = 30, [3] = 30, [4] = 29, [5] = 30, [7] = 29, [8] = 30, [9] = 29, [10] = 30, [11] = 29, [12] = 30, [13] = 29 };
         foreach (var person in all)
@@ -84,6 +84,33 @@ internal static class YahrzeitChecks
             ("chazon_ish", "1953-10-24", 0),
             ("moshe_feinstein", "1986-03-23", 1),
             ("ovadia", "2013-10-07", 0),
+            // The figures added later, each day also confirmed by two or more sources.
+            ("baal_hasulam", "1954-10-07", 0), ("rabash", "1991-09-13", 0), ("rav_berg", "2013-09-16", 0), ("rashash", "1777-01-18", 0),
+            ("kaduri", "2006-01-28", 1), ("nosson", "1844-12-20", 0), ("odesser", "1994-10-23", 0), ("chaim_brisker", "1918-07-30", 0),
+            ("brisker_rav", "1959-10-11", 0), ("netziv", "1893-08-10", 0), ("yitzchak_elchanan", "1896-03-06", 0), ("chaim_ozer", "1940-08-09", 0),
+            ("alter_slabodka", "1927-01-31", 1), ("aharon_kotler", "1962-11-29", 0), ("steipler", "1985-08-10", 0), ("shach", "2001-11-02", 0),
+            ("elyashiv", "2012-07-18", 0), ("chaim_kanievsky", "2022-03-18", 0), ("chida", "1806-03-01", 0), ("abir_yaakov", "1880-01-04", 0),
+            ("kaf_hachaim", "1939-05-27", 0), ("ben_zion_abba_shaul", "1998-07-13", 0), ("mordechai_eliyahu", "2010-06-07", 0), ("kafih", "2000-07-21", 0),
+            ("chiddushei_harim", "1866-03-10", 0), ("sfas_emes", "1905-01-11", 0), ("sar_shalom", "1855-09-10", 0), ("divrei_yoel", "1979-08-19", 0),
+            ("divrei_chaim", "1876-04-19", 0), ("ruzhin", "1850-10-09", 0), ("bnei_yissaschar", "1841-01-11", 0), ("apter_rav", "1825-03-24", 0),
+            ("kozhnitz", "1814-09-28", 0), ("yid_hakadosh", "1813-10-13", 0), ("simcha_bunim", "1827-09-04", 0), ("meor_einayim", "1797-10-31", 0),
+            ("brandwein", "1969-04-06", 0),
+            // The third set.
+            ("noda_biyehuda", "1793-04-29", 0), ("shelah", "1630-03-24", 0), ("malbim", "1879-09-18", 0), ("karlin", "1772-04-22", 0),
+            ("ropshitz", "1827-05-08", 0), ("zidichov", "1831-06-22", 0), ("imrei_emes", "1948-06-13", 0), ("belz_aharon", "1957-08-18", 0),
+            ("klausenburg", "1994-06-18", 0), ("bobov", "2000-08-02", 0), ("shkop", "1939-10-22", 0), ("meltzer", "1953-11-17", 0),
+            ("shmulevitz", "1979-01-02", 0), ("soloveitchik_rav", "1993-04-09", 0), ("chaim_pinto", "1845-09-28", 0), ("uziel", "1953-09-04", 0),
+            ("aryeh_levin", "1969-03-28", 0), ("tzvi_yehuda", "1982-03-09", 0),
+            // The fourth set.
+            ("pnei_yehoshua", "1756-01-16", 0), ("eybeschutz", "1764-09-18", 0), ("yaavetz", "1776-04-19", 0), ("chayei_adam", "1820-09-12", 0),
+            ("ksav_sofer", "1871-12-31", 0), ("hirsch", "1888-12-31", 0), ("degel", "1800-05-12", 0), ("rimanov", "1815-05-29", 0),
+            ("shmelke", "1778-04-28", 0), ("sassov", "1807-01-13", 0), ("tzadok", "1900-09-03", 0), ("belz_yissachar_dov", "1926-10-29", 1),
+            ("beis_yisrael", "1977-02-20", 0), ("shteinman", "2017-12-12", 0), ("palagi", "1868-02-10", 0), ("tzadka", "1991-10-20", 0),
+            // The fifth set.
+            ("chacham_tzvi", "1718-05-02", 0), ("haflaah", "1805-07-01", 0), ("nesivos", "1832-05-25", 0), ("aruch_hashulchan", "1908-03-25", 0),
+            ("uri_strelisk", "1826-09-25", 0), ("yismach_moshe", "1841-07-17", 0), ("tiferes_shlomo", "1866-03-16", 0), ("yehoshua_belz", "1894-01-30", 0),
+            ("meir_simcha", "1926-08-14", 0), ("novardok", "1919-12-09", 0), ("rogatchover", "1936-03-05", 0), ("elya_lopian", "1970-09-21", 0),
+            ("yitzchak_nissim", "1981-08-09", 0),
         };
         foreach (var (key, death, evening) in documented)
         {

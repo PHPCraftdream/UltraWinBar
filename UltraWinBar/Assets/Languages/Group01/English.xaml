@@ -231,6 +231,7 @@
     <s:String x:Key="hebrew_place_none">not chosen</s:String>
     <s:String x:Key="hebrew_place_choose">Choose...</s:String>
     <s:String x:Key="hebrew_place_clear">Clear</s:String>
+    <s:String x:Key="zone_clear">Remove</s:String>
     <s:String x:Key="hebrew_place_hint">The place whose sunset ends the Hebrew day, and whose halachic times the calendar shows.</s:String>
     <s:String x:Key="hebrew_place_title">Place for the Hebrew date</s:String>
     <s:String x:Key="hebrew_place_city_tab">City</s:String>
@@ -245,6 +246,10 @@
     <s:String x:Key="hebrew_place_zone_hint">Chosen with the city; change it if it is wrong. The rules of the zone (summer time and its changes) are the ones Windows has.</s:String>
     <s:String x:Key="calendar_title">Jewish calendar</s:String>
     <s:String x:Key="calendar_today">Today</s:String>
+    <s:String x:Key="calendar_copy_name">Copy the name</s:String>
+    <s:String x:Key="calendar_search_name">Search Google for the name</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Hebrew month</s:String>
+    <s:String x:Key="calendar_grid_civil">Civil month</s:String>
     <s:String x:Key="calendar_shabbat">Shabbat</s:String>
     <s:String x:Key="calendar_previous_month">Previous month</s:String>
     <s:String x:Key="calendar_next_month">Next month</s:String>
@@ -254,7 +259,12 @@
     <s:String x:Key="calendar_festival_reading">A festival reading is read this Shabbat</s:String>
     <s:String x:Key="calendar_day_of">{0}, day {1} of {2}</s:String>
     <s:String x:Key="calendar_molad">Molad of {0}: {1}, {2} and {3} chalakim</s:String>
+    <s:String x:Key="calendar_omer">Counting of the Omer</s:String>
+    <s:String x:Key="calendar_omer_day">Day {0} of the Omer</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} week(s) and {1} day(s)</s:String>
     <s:String x:Key="calendar_place">Place: {0}</s:String>
+    <s:String x:Key="calendar_israel">Land of Israel</s:String>
+    <s:String x:Key="calendar_diaspora">diaspora</s:String>
     <s:String x:Key="calendar_no_place">Choose a place in the settings of the calendar to see the times of the day.</s:String>
     <s:String x:Key="calendar_times">Times of the day</s:String>
     <s:String x:Key="calendar_yahrzeits">Yahrzeits</s:String>
@@ -263,7 +273,7 @@
     <s:String x:Key="calendar_rest_begins">Begins: {0} (candle lighting)</s:String>
     <s:String x:Key="calendar_rest_ends">Ends: {0} (nightfall)</s:String>
     <s:String x:Key="calendar_settings_title">Calendar settings</s:String>
-    <s:String x:Key="calendar_settings_place">Place of the main time zone (the computer's), for the Hebrew day and the times of the day:</s:String>
+    <s:String x:Key="calendar_settings_place">Place of the zone:</s:String>
     <s:String x:Key="calendar_settings_zone">Time zone for the date, the change of the day and the times of the day:</s:String>
     <s:String x:Key="calendar_zone_main">{0} (the computer's)</s:String>
     <s:String x:Key="zones_heading">Time zones of the clock</s:String>
@@ -271,7 +281,7 @@
     <s:String x:Key="zone_second">Second time zone:</s:String>
     <s:String x:Key="zone_third">Third time zone:</s:String>
     <s:String x:Key="zone_show_name">Show the name</s:String>
-    <s:String x:Key="zone_place">Place (for its Hebrew day and times of the day):</s:String>
+    <s:String x:Key="zone_place">Place:</s:String>
     <s:String x:Key="zones_tab">Time zones</s:String>
     <s:String x:Key="hebrew_date_tab">Hebrew date</s:String>
     <s:String x:Key="zone_computer">The computer's ({0})</s:String>

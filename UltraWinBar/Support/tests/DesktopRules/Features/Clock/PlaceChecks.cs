@@ -350,6 +350,13 @@ internal static class PlaceChecks
             throw new Exception("The clock has a template of two times and the Hebrew template carries the second time.");
         if (!clockCode.Contains("\"TwoZoneClockTemplate\"") || !clockCode.Contains("nameof(Settings.SecondTimeZone)") || !clockCode.Contains("ZoneClock.Refresh()"))
             throw new Exception("The clock picks the two-time template, follows the setting, and reads the time zone rules again when the time changes.");
+        // Regressions: the calendar's settings set the place of the zone the calendar goes by (they always set the main
+        // zone's, so a calendar by the second zone had no times of the day); each zone can be removed.
+        string calendarSettings = File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "UI", "Clock", "Calendar", "Window", "CalendarSettingsWindow.xaml.cs"));
+        string zonesPanel = File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "UI", "Clock", "Zones", "ClockZonesPanel.xaml"));
+        if (calendarSettings.Contains("Settings.Instance.HebrewPlace") || !calendarSettings.Contains("ClockZones.SetPlace(ChosenZone, window.Result)") ||
+            new[] { "MainZoneClear_Click", "SecondZoneClear_Click", "ThirdZoneClear_Click" }.Any(handler => !zonesPanel.Contains($"Click=\"{handler}\"")))
+            throw new Exception("The calendar's place is the place of its zone, and each zone has a button that removes it.");
         Console.WriteLine("PASS: the second time zone is a setting (none by default, announced when it changes, kept in the settings file), shown by the name of its place under the clock's own time.");
     }
 

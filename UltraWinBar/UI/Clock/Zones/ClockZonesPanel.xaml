@@ -14,6 +14,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <ComboBox x:Name="MainBox"
                       utilities:ComboSearch.IsEnabled="True"
@@ -27,6 +28,11 @@
                       Margin="10,5,0,5"
                       Content="{DynamicResource zone_show_name}"
                       IsChecked="{Binding ShowMainZoneName, UpdateSourceTrigger=PropertyChanged}" />
+            <!-- Removes the zone itself (the main one goes back to the computer's); the place has its own Clear. -->
+            <Button Grid.Column="2"
+                    Margin="6,0,0,0"
+                    Content="{DynamicResource zone_clear}"
+                    Click="MainZoneClear_Click" />
         </Grid>
         <Grid ToolTip="{DynamicResource hebrew_place_hint}">
             <Grid.ColumnDefinitions>
@@ -55,6 +61,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <ComboBox x:Name="SecondBox"
                       utilities:ComboSearch.IsEnabled="True"
@@ -68,6 +75,11 @@
                       Margin="10,5,0,5"
                       Content="{DynamicResource zone_show_name}"
                       IsChecked="{Binding ShowSecondZoneName, UpdateSourceTrigger=PropertyChanged}" />
+            <!-- Removes the zone itself (the main one goes back to the computer's); the place has its own Clear. -->
+            <Button Grid.Column="2"
+                    Margin="6,0,0,0"
+                    Content="{DynamicResource zone_clear}"
+                    Click="SecondZoneClear_Click" />
         </Grid>
         <Grid ToolTip="{DynamicResource hebrew_place_hint}">
             <Grid.ColumnDefinitions>
@@ -96,6 +108,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <ComboBox x:Name="ThirdBox"
                       utilities:ComboSearch.IsEnabled="True"
@@ -109,6 +122,11 @@
                       Margin="10,5,0,5"
                       Content="{DynamicResource zone_show_name}"
                       IsChecked="{Binding ShowThirdZoneName, UpdateSourceTrigger=PropertyChanged}" />
+            <!-- Removes the zone itself (the main one goes back to the computer's); the place has its own Clear. -->
+            <Button Grid.Column="2"
+                    Margin="6,0,0,0"
+                    Content="{DynamicResource zone_clear}"
+                    Click="ThirdZoneClear_Click" />
         </Grid>
         <Grid ToolTip="{DynamicResource hebrew_place_hint}">
             <Grid.ColumnDefinitions>

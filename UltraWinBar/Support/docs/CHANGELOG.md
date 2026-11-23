@@ -57,6 +57,85 @@
 
 ### Changed
 
+- Themes: only Modern Glass ships, in two variants; the classic themes (Windows 9x/2000/Me, XP, Vista, Longhorn,
+  Watercolor) are gone. The new Modern Glass Light (slate-200 surfaces with the blur, not white; dark text; the accent
+  one shade deeper) is the main theme: a new install starts with it, the dark one moves to it once, and a theme that is
+  no longer there falls back to it. Its panel text is semibold (text on the layered panel has no ClearType), and the
+  tray's icons lie on the glass instead of an opaque block. The deploy script removes installed themes that no longer ship.
+- The clock renders its text as the task labels do, in the same weight, and its digits are all one width: the ticking
+  seconds no longer move its blocks. The windows of the light theme (the calendar, the dialogs) take the panel's
+  semibold weight. The clock's text is a size larger (14), its lines closer.
+- Jewish calendar: the week's portion is a solid accent badge (readable on the selected, accent-tinted day too); the
+  dates, the special days and the weekday numbers in the grid are darker and bolder. The details on the right start
+  on the line of the first week's cards.
+- A theme change no longer fails with "'ShowDesktopIconImageLarge' resource not found": the new base dictionary is
+  added before the old themes are removed (no moment without the theme's resources), and the show-desktop icon is a
+  resource reference instead of a lookup.
+- Jewish calendar: the window fills the work area of the clock's screen and can be neither resized nor maximized.
+- Clock on a vertical panel: a zone's name goes under its time, so one long line no longer shrinks the whole clock,
+  and each zone (its time with its name) has a frame of its own, so several zones do not run together.
+- Yahrzeits: 21 more figures (109 in all): the Noda BiYehuda, the Shelah, the Taz, the Maharsha, the Malbim; Rabbi
+  Aharon of Karlin, of Ropshitz, of Zidichov, of Chernobyl, the Imrei Emes, Rabbi Aharon of Belz, the Klausenburger and
+  the Bobover Rebbes; Rabbi Shimon Shkop, Rabbi Isser Zalman Meltzer, Rabbi Chaim Shmulevitz, Rav Soloveitchik; Rabbi
+  Chaim Pinto, Rabbi Uziel; Rabbi Aryeh Levin, Rabbi Tzvi Yehuda Kook. Each day was confirmed by two or more sources
+  and, for 18 of them, by the Hebrew date of the documented day of death (a test); left out where the sources disagree
+  (the Kitzur Shulchan Aruch, Rav Dessler, Rav Yaakov Kamenetsky).
+- Yahrzeits: 17 more figures (126 in all): the Bach, the Pnei Yehoshua, Rabbi Yonasan Eybeschutz, the Yaavetz, the
+  Chayei Adam, Rabbi Samson Raphael Hirsch, the Ksav Sofer; Rabbi Shmelke of Nikolsburg, Rabbi Menachem Mendel of
+  Rimanov, Rabbi Moshe Leib of Sassov, the Degel Machaneh Ephraim, Rabbi Tzadok HaKohen, Rabbi Yissachar Dov of Belz,
+  the Beis Yisrael; Rav Aharon Leib Shteinman; Rabbi Chaim Palagi, Rabbi Yehuda Tzadka. Confirmed the same way (16 by
+  the documented day of death); left out: the Toldos Yaakov Yosef and Rabbi Boruch Ber Leibowitz (sources disagree).
+- Yahrzeits: 16 more figures (142 in all): the Chacham Tzvi, the Haflaah, the Nesivos, the Aruch HaShulchan; the
+  Seraph of Strelisk, the Yismach Moshe, Rabbi Yitzchak of Vorka, the Tiferes Shlomo, Rabbi Yehoshua of Belz, the
+  Ahavas Yisrael, the Minchas Elazar; the Ohr Sameach, the Alter of Novardok, the Rogatchover Gaon, Rabbi Elya Lopian;
+  Rabbi Yitzchak Nissim. Confirmed the same way (13 by the documented day of death); left out: Rabbi Shlomo Kluger and
+  the Alter of Kelm (sources disagree), Rav Wosner and Rabbi Shalom Messas (no source of the Hebrew day).
+- Jewish calendar: its settings set the place of the zone the calendar goes by (they always set the main zone's, so a
+  calendar by the second or third zone showed no times of the day). Each time zone in the clock settings has a Remove
+  button (the main one goes back to the computer's zone); Clear beside the place clears only the place.
+- On a vertical panel the clock's blocks are framed in the accent, with 6 px between them: each time zone, the weekday
+  with the Hebrew date, and the civil date. There the whole Hebrew
+  block (weekday and date) opens the calendar, shows the hand and runs the lights around it. Shorter labels of the place
+  in the settings ("Place:", "Place of the zone:").
+- The clock's weekday has a memorial candle before it when the Hebrew day has a yahrzeit that is shown, and during the
+  Omer the tree of the sefirot with the day of the count after it. The calendar shows the counting of the Omer as a card of its
+  own (the tree of the sefirot, the day, from the seventh the weeks and days, and the day's sefira within the week's,
+  "Hod she'b'Hod"); each cell of the Omer has the tree and the day at its top left (after the candle of a yahrzeit, or
+  in its place), and its tooltip the day with its sefira. The candle and the tree are in a dictionary the calendar and the clock share. The place in the
+  calendar says whether its festivals, Rosh Chodesh and portions are those of the Land of Israel or of the diaspora
+  (by the place's country, as before).
+- Jewish calendar: the memorial candle is brighter: a saturated amber glow, a deeper flame with an outline and an
+  outlined candle, so it stands out on the light theme's glass.
+- Jewish calendar: today stands out with a thick accent frame and the accent's soft fill.
+- Settings: the Advanced tab has sub-tabs (General, Behavior, Multiple displays), as the notification area tab has.
+- On a horizontal panel the task buttons fill its height (the list's height shared by its rows), not only their
+  content's.
+- Jewish calendar: the window takes the whole width of the work area; the grid has five weeks at most (a month that
+  would need a sixth puts its last days in the first week, as a paper calendar does); each day is a card with its own
+  fill and border.
+- Jewish calendar: the candle lighting, the havdalah and the start and end of a Shabbat or festival are highlighted
+  lines with two candles (the accent's soft fill and edge, the time in bold) among the times of the day.
+- Modern Glass dialogs: the glass is denser and a little darker (buttons stay readable over a white page), and the
+  windows draw their own title bar: dark and solid, its text light with a dark shadow and a close button (the system's
+  caption showed its text on a black box over the glass).
+- Yahrzeits: 42 more figures (88 in all) in four new categories (Breslov, Lithuanian, Sephardic, Yemenite) and the
+  existing ones: Baal HaSulam, the Rabash, Rabbi Yehuda Tzvi Brandwein, Rav Philip Berg, Reb Noson and the Saba of
+  Breslov, the Brisker Rav and Reb Chaim, the Netziv, Rav Shach, Rav Elyashiv, the Steipler, Rav Chaim Kanievsky, the
+  Chida, the Kaf HaChaim, the Maharitz, Rav Kafih, the Rebbes of Ger, Belz, Satmar, Sanz, Ruzhin, Peshischa and more.
+  Every day was confirmed by two or more sources and, where the date of death is documented, by the Hebrew calendar
+  (a test); figures whose sources disagree (Rabbi Elchanan Wasserman) or whose day is not known (Rabbi Shalom Shabazi)
+  are left out. The list is ordered by category and, within it, by birth.
+- Jewish calendar: nothing in a cell is cut any more: the weeks are all as high as the fullest day, and only when
+  the month does not fit on the screen do the weeks with less in them give way; once grown the window keeps its height
+  (another month or day no longer makes it shrink and flicker), the window takes the height of its content up to the work area and stays by the clock. The details
+  are cards: the day's special days as colored blocks with the start and end of the rest, the yahrzeits, the times of
+  the day, the molad. Names: Mitteler Rebbe, Chatam Sofer, Kotzker Rebbe; a search leaves out what is in brackets.
+- Jewish calendar: from the sunset of the place until midnight the day that is ending (its lower right half, its
+  frame a little darker) and the day whose Hebrew date has begun (its upper left half) share a diagonal shade, a
+  parallelogram across the two cells. A yahrzeit name shows, on hover, buttons to copy it and to look it up with Google
+  in the system's browser (a one-color Chrome mark). The special days in the cells are in a larger font.
+- Jewish calendar: a button beside Today switches the grid between civil months and Hebrew ones (1 Kislev to the end
+  of Kislev); the arrows, PageUp and PageDown and the arrow keys move by the kind shown, and the choice is kept.
 - Jewish calendar: the days of the week over the grid are numbered 1 (Sunday) to 6 (Friday), then Shabbat, with no
   day names of a language. The yahrzeits of the chosen day, above the times of the day, each follow a memorial candle,
   the eldest (born first) first; every figure has its year of birth.

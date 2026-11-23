@@ -20,6 +20,14 @@ internal static class ModernThemeChecks
         ("emerald", "34D399", "10B981"), ("amber", "FBBF24", "F59E0B"), ("rose", "FB7185", "F43F5E"),
     };
 
+    // The task label takes the panel's weight from the theme (inheritance from the button does not reach it).
+    private static bool TaskLabelHasPanelWeight(string system)
+    {
+        int label = system.IndexOf("x:Key=\"TaskLabel\"", StringComparison.Ordinal);
+        int weight = label < 0 ? -1 : system.IndexOf("<Setter Property=\"FontWeight\" Value=\"{DynamicResource PanelFontWeight}\" />", label, StringComparison.Ordinal);
+        return weight > 0 && weight - label < 200;
+    }
+
     internal static void Run(string[] args, DirectoryInfo repositoryRoot)
     {
         string project = Path.Combine(repositoryRoot.FullName, "UltraWinBar");
@@ -33,9 +41,61 @@ internal static class ModernThemeChecks
             if (File.ReadAllText(Path.Combine(project, "Assets", "Resources", "Brand", brand + ".xaml")).Contains(";assembly=UltraWinBar\""))
                 throw new Exception($"{brand}.xaml: a compiled page cannot name its own assembly in a clr-namespace.");
         }
+        // Dialogs draw their own title bar under the theme (the system's GDI caption text shows on a black box over the
+        // glass); the calendar, which has its own, takes the colors only; the glass of a window is dense enough to read on.
+        string glass = File.ReadAllText(Path.Combine(project, "Assets", "Themes", "Other", "Modern Glass.xaml"));
+        int dialogStyle = glass.IndexOf("x:Key=\"PropertiesWindow\"", StringComparison.Ordinal);
+        if (dialogStyle < 0 || glass.IndexOf("<shell:WindowChrome CaptionHeight=", dialogStyle, StringComparison.Ordinal) < 0 ||
+            glass.IndexOf("Command=\"{x:Static SystemCommands.CloseWindowCommand}\"", dialogStyle, StringComparison.Ordinal) < 0 ||
+            !glass.Contains("x:Key=\"OwnTitleWindow\"") ||
+            !File.ReadAllText(Path.Combine(project, "Assets", "Themes", "Core", "System.xaml")).Contains("x:Key=\"OwnTitleWindow\"") ||
+            !File.ReadAllText(Path.Combine(project, "UI", "Clock", "Calendar", "Window", "CalendarWindow.xaml")).Contains("Style=\"{DynamicResource OwnTitleWindow}\"") ||
+            !File.ReadAllText(Path.Combine(project, "Core", "Appearance", "Themes", "ModernTheme.cs")).Contains("SystemCommands.CloseWindowCommand, (_, _) => SystemCommands.CloseWindow(window)"))
+            throw new Exception("Modern Glass dialogs draw their own title bar (with a working close button); the calendar keeps its own.");
+        // Only Modern Glass ships, dark and light; the light one (slate-200 with dark text, not white) is the main theme.
+        var shipped = Directory.GetFiles(Path.Combine(project, "Assets", "Themes"), "*.xaml", SearchOption.AllDirectories).Select(Path.GetFileName).OrderBy(name => name).ToArray();
+        if (!shipped.SequenceEqual(new[] { "Modern Glass Light.xaml", "Modern Glass.xaml", "System.xaml" }))
+            throw new Exception("Only the base and the two Modern Glass themes ship: " + string.Join(", ", shipped));
+        string lightTheme = File.ReadAllText(Path.Combine(project, "Assets", "Themes", "Other", "Modern Glass Light.xaml"));
+        if (!lightTheme.Contains("<SolidColorBrush x:Key=\"ModernBase\" Color=\"#E2E8F0\" />") || !lightTheme.Contains("<SolidColorBrush x:Key=\"ModernText\" Color=\"#1E293B\" />") ||
+            !File.ReadAllText(Path.Combine(project, "Core", "Infrastructure", "Configuration", "Settings.cs")).Contains("private string _theme = \"Modern Glass Light\";") ||
+            UltraWinBar.Utilities.ModernTheme.LightThemeName != "Modern Glass Light")
+            throw new Exception("Modern Glass Light is light gray with dark text and is the theme of a new install.");
+        // The light theme makes the panel's text heavier (no ClearType on the layered panel) and the tray a glass layer.
+        if (!lightTheme.Contains("<FontWeight x:Key=\"PanelFontWeight\">SemiBold</FontWeight>") ||
+            !File.ReadAllText(Path.Combine(project, "Assets", "Resources", "Brand", "FlatControls.xaml")).Contains("TextElement.FontWeight=\"{DynamicResource PanelFontWeight}\"") ||
+            !TaskLabelHasPanelWeight(File.ReadAllText(Path.Combine(project, "Assets", "Themes", "Core", "System.xaml"))) ||
+            !File.ReadAllText(Path.Combine(project, "Core", "Appearance", "Themes", "ModernTheme.cs")).Contains("Put(resources, \"TrayBackground\", WithAlpha(light, 0x1A));"))
+            throw new Exception("The light theme's panel text is heavier and the tray's icons lie on glass.");
+        string baseTheme = File.ReadAllText(Path.Combine(project, "Assets", "Themes", "Core", "System.xaml"));
+        int clockStyle = baseTheme.IndexOf("x:Key=\"Clock\"", StringComparison.Ordinal);
+        int tabular = clockStyle < 0 ? -1 : baseTheme.IndexOf("Typography.NumeralAlignment\" Value=\"Tabular\"", clockStyle, StringComparison.Ordinal);
+        int autoRendering = clockStyle < 0 ? -1 : baseTheme.IndexOf("TextOptions.TextRenderingMode\" Value=\"Auto\"", clockStyle, StringComparison.Ordinal);
+        if (clockStyle < 0 || tabular < 0 || tabular - clockStyle > 600 || (autoRendering > 0 && autoRendering - clockStyle < 400) ||
+            !glass.Contains("<Setter Property=\"FontWeight\" Value=\"{DynamicResource PanelFontWeight}\" />") || !lightTheme.Contains("<Setter Property=\"FontWeight\" Value=\"{DynamicResource PanelFontWeight}\" />"))
+            throw new Exception("The clock renders as the task labels with digits of one width; the windows take the panel's weight.");
+        // Regression: a theme change removed every theme dictionary before adding the new base, and the show-desktop
+        // button's FindResource in that gap threw "resource not found" (a crash dialog).
+        string manager = File.ReadAllText(Path.Combine(project, "Core", "Appearance", "DictionaryManager.cs"));
+        string showDesktop = File.ReadAllText(Path.Combine(project, "UI", "Tray", "Flyouts", "ShowDesktopButton.xaml.cs"));
+        int added = manager.IndexOf("GetMergedDictionaries().Add(loaded);", StringComparison.Ordinal);
+        int removed = manager.IndexOf("foreach (var old in previous) GetMergedDictionaries().Remove(old);", StringComparison.Ordinal);
+        if (added < 0 || removed < added || manager.Contains("ClearPreviousThemes()") ||
+            showDesktop.Contains("FindResource(\"ShowDesktopIconImage") || !showDesktop.Contains("SetResourceReference(Image.SourceProperty"))
+            throw new Exception("A theme change adds the new base before removing the old themes; the show-desktop icon is a resource reference.");
+        // On a vertical panel each zone of the clock and its dates are framed in the accent; the tray, Start and the language are not.
+        string ui = Path.Combine(project, "UI");
+        string clockXaml = File.ReadAllText(Path.Combine(ui, "Clock", "Clock.xaml"));
+        if (File.ReadAllText(Path.Combine(ui, "Input", "InputLanguage.xaml")).Contains("BorderBrush=\"{DynamicResource ModernAccent}\"") ||
+            !clockXaml.Contains("x:Key=\"HebrewClockVerticalTemplate\"") ||
+            !File.ReadAllText(Path.Combine(ui, "Clock", "Clock.xaml.cs")).Contains("\"HebrewClockVerticalTemplate\""))
+            throw new Exception("Only the vertical clock's blocks are framed in the accent.");
+        if (UltraWinBar.Utilities.ModernTheme.WindowGlassAlpha < 0xE0)
+            throw new Exception("The glass of a window is too thin to read buttons on over a white page.");
         string[] files =
         {
             Path.Combine(project, "Assets", "Themes", "Other", "Modern Glass.xaml"),
+            Path.Combine(project, "Assets", "Themes", "Other", "Modern Glass Light.xaml"),
             Path.Combine(project, "Assets", "Resources", "Brand", "ModernControls.xaml"),
             Path.Combine(project, "Assets", "Resources", "Brand", "ModernMenus.xaml"),
         };
@@ -142,7 +202,7 @@ internal static class ModernThemeChecks
                     Math.Abs(pixel.B - Convert.ToInt32(light.Substring(4, 2), 16)) > 3)
                     throw new Exception($"A checked box is {pixel.R:X2}{pixel.G:X2}{pixel.B:X2} under the {name} accent, expected {light}.");
             }
-            settings.Theme = "Windows XP Royale Noir";
+            settings.Theme = "System";
             ModernTheme.Apply();
             if (app.Resources.Contains("ModernAccent") || app.Resources.Contains("ModernBase") || app.Resources.Contains("ButtonFace") || app.Resources.Contains(SystemColors.HighlightBrushKey))
                 throw new Exception("The accent stays in the application's resources after another theme is chosen.");

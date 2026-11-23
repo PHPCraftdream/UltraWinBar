@@ -9,14 +9,22 @@
              Unloaded="UserControl_Unloaded"
              Template="{DynamicResource ClockTemplateKey}">
     <UserControl.Resources>
+        <ResourceDictionary>
+        <ResourceDictionary.MergedDictionaries>
+            <ResourceDictionary Source="pack://application:,,,/UltraWinBar;component/UI/Clock/Calendar/CalendarIcons.xaml" />
+        </ResourceDictionary.MergedDictionaries>
         <!-- The clock's own time and, under it, the times in the second and the third time zone (those chosen). -->
         <ControlTemplate x:Key="TwoZoneClockTemplate" TargetType="UserControl">
             <StackPanel Orientation="Vertical">
-                <TextBlock Style="{DynamicResource Clock}" Text="{Binding TimeText}" />
-                <TextBlock Style="{DynamicResource Clock}" Text="{Binding SecondTimeText}"
-                           Visibility="{Binding SecondTimeVisibility}" />
-                <TextBlock Style="{DynamicResource Clock}" Text="{Binding ThirdTimeText}"
-                           Visibility="{Binding ThirdTimeVisibility}" />
+                <Border Style="{DynamicResource ClockZoneFrame}">
+                    <TextBlock Style="{DynamicResource Clock}" Text="{Binding TimeText}" />
+                </Border>
+                <Border Style="{DynamicResource ClockZoneFrame}" Visibility="{Binding SecondTimeVisibility}">
+                    <TextBlock Style="{DynamicResource Clock}" Text="{Binding SecondTimeText}" />
+                </Border>
+                <Border Style="{DynamicResource ClockZoneFrame}" Visibility="{Binding ThirdTimeVisibility}">
+                    <TextBlock Style="{DynamicResource Clock}" Text="{Binding ThirdTimeText}" />
+                </Border>
             </StackPanel>
         </ControlTemplate>
         <ControlTemplate x:Key="HebrewClockTemplate" TargetType="UserControl">
@@ -28,26 +36,41 @@
                         <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0">
-                        <TextBlock Style="{DynamicResource Clock}" Margin="4,1"
+                        <Border Style="{DynamicResource ClockZoneFrame}">
+                            <TextBlock Style="{DynamicResource Clock}" Margin="4,0"
                                    Text="{Binding TimeText}" />
+                        </Border>
                         <!-- The times in the second and the third time zone, when chosen. -->
-                        <TextBlock Style="{DynamicResource Clock}" Margin="4,1"
-                                   Text="{Binding SecondTimeText}"
-                                   Visibility="{Binding SecondTimeVisibility}" />
-                        <TextBlock Style="{DynamicResource Clock}" Margin="4,1"
-                                   Text="{Binding ThirdTimeText}"
-                                   Visibility="{Binding ThirdTimeVisibility}" />
+                        <Border Style="{DynamicResource ClockZoneFrame}" Visibility="{Binding SecondTimeVisibility}">
+                            <TextBlock Style="{DynamicResource Clock}" Margin="4,0"
+                                   Text="{Binding SecondTimeText}" />
+                        </Border>
+                        <Border Style="{DynamicResource ClockZoneFrame}" Visibility="{Binding ThirdTimeVisibility}">
+                            <TextBlock Style="{DynamicResource Clock}" Margin="4,0"
+                                   Text="{Binding ThirdTimeText}" />
+                        </Border>
                     </StackPanel>
-                    <TextBlock Grid.Row="1" Style="{DynamicResource Clock}" Margin="4,1"
-                               Text="{Binding WeekdayText}" />
+                    <!-- The weekday, after a candle when the Hebrew day has a yahrzeit, and during the Omer the tree of the sefirot with its day. -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="1" Margin="4,0">
+                        <Viewbox Height="15" Margin="0,0,3,0" VerticalAlignment="Center" Visibility="{Binding YahrzeitVisibility}">
+                            <ContentControl Focusable="False" IsHitTestVisible="False" Content="{DynamicResource YahrzeitCandleIcon}" />
+                        </Viewbox>
+                        <TextBlock Style="{DynamicResource Clock}" Margin="0" Text="{Binding WeekdayText}" />
+                        <StackPanel Orientation="Horizontal" Margin="4,0,0,0" Visibility="{Binding OmerVisibility}">
+                            <Viewbox Height="18" Margin="0,0,2,0" VerticalAlignment="Center">
+                                <ContentControl Focusable="False" IsHitTestVisible="False" Content="{DynamicResource OmerIcon}" />
+                            </Viewbox>
+                            <TextBlock Style="{DynamicResource Clock}" Margin="0" Text="{Binding OmerText}" />
+                        </StackPanel>
+                    </StackPanel>
                     <!-- The pointer over the Hebrew date lights up a frame of running lights around it. -->
                     <Grid x:Name="HebrewDateHost" Grid.Row="2" Background="Transparent" Cursor="Hand">
-                        <TextBlock x:Name="HebrewDate" Style="{DynamicResource Clock}" Margin="4,1"
+                        <TextBlock x:Name="HebrewDate" Style="{DynamicResource Clock}" Margin="4,0"
                                    FlowDirection="LeftToRight" Text="{Binding HebrewDateText}" />
                         <local:MarqueeFrame x:Name="HebrewDateLights" IsHitTestVisible="False"
                                             Foreground="{Binding Foreground, ElementName=HebrewDate}" />
                     </Grid>
-                    <TextBlock x:Name="OrdinaryDate" Grid.Row="3" Style="{DynamicResource Clock}" Margin="4,1"
+                    <TextBlock x:Name="OrdinaryDate" Grid.Row="3" Style="{DynamicResource Clock}" Margin="4,0"
                                Text="{Binding OrdinaryDateText}" />
                 </Grid>
             </Viewbox>
@@ -63,5 +86,55 @@
                 </Trigger>
             </ControlTemplate.Triggers>
         </ControlTemplate>
+        <!-- On a vertical panel: each zone in its frame, the weekday with the Hebrew date in one, the civil date in its own. -->
+        <ControlTemplate x:Key="HebrewClockVerticalTemplate" TargetType="UserControl">
+            <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
+                <StackPanel>
+                    <Border Style="{DynamicResource ClockZoneFrame}">
+                        <TextBlock Style="{DynamicResource Clock}" Margin="4,0" Text="{Binding TimeText}" />
+                    </Border>
+                    <Border Style="{DynamicResource ClockZoneFrame}" Visibility="{Binding SecondTimeVisibility}">
+                        <TextBlock Style="{DynamicResource Clock}" Margin="4,0" Text="{Binding SecondTimeText}" />
+                    </Border>
+                    <Border Style="{DynamicResource ClockZoneFrame}" Visibility="{Binding ThirdTimeVisibility}">
+                        <TextBlock Style="{DynamicResource Clock}" Margin="4,0" Text="{Binding ThirdTimeText}" />
+                    </Border>
+                    <!-- The whole Hebrew block (weekday and date, with its frame) opens the calendar: the hand and the
+                         running lights cover all of it. -->
+                    <Grid x:Name="HebrewDateHost" Background="Transparent" Cursor="Hand">
+                        <Border Style="{DynamicResource ClockZoneFrame}">
+                            <StackPanel>
+                                <!-- The weekday, after a candle when the Hebrew day has a yahrzeit, and during the Omer the tree of the sefirot with its day. -->
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="4,0">
+                                    <Viewbox Height="15" Margin="0,0,3,0" VerticalAlignment="Center" Visibility="{Binding YahrzeitVisibility}">
+                                        <ContentControl Focusable="False" IsHitTestVisible="False" Content="{DynamicResource YahrzeitCandleIcon}" />
+                                    </Viewbox>
+                                    <TextBlock Style="{DynamicResource Clock}" Margin="0" Text="{Binding WeekdayText}" />
+                                    <StackPanel Orientation="Horizontal" Margin="4,0,0,0" Visibility="{Binding OmerVisibility}">
+                                        <Viewbox Height="18" Margin="0,0,2,0" VerticalAlignment="Center">
+                                            <ContentControl Focusable="False" IsHitTestVisible="False" Content="{DynamicResource OmerIcon}" />
+                                        </Viewbox>
+                                        <TextBlock Style="{DynamicResource Clock}" Margin="0" Text="{Binding OmerText}" />
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBlock x:Name="HebrewDate" Style="{DynamicResource Clock}" Margin="4,0"
+                                           FlowDirection="LeftToRight" Text="{Binding HebrewDateText}" />
+                            </StackPanel>
+                        </Border>
+                        <local:MarqueeFrame x:Name="HebrewDateLights" IsHitTestVisible="False"
+                                            Foreground="{Binding Foreground, ElementName=HebrewDate}" />
+                    </Grid>
+                    <Border Style="{DynamicResource ClockZoneFrame}">
+                        <TextBlock x:Name="OrdinaryDate" Style="{DynamicResource Clock}" Margin="4,0" Text="{Binding OrdinaryDateText}" />
+                    </Border>
+                </StackPanel>
+            </Viewbox>
+            <ControlTemplate.Triggers>
+                <Trigger SourceName="HebrewDateHost" Property="IsMouseOver" Value="True">
+                    <Setter TargetName="HebrewDateLights" Property="IsRunning" Value="True"/>
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+        </ResourceDictionary>
     </UserControl.Resources>
 </UserControl>

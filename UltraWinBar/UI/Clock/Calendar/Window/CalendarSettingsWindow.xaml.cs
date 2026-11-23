@@ -36,6 +36,7 @@ namespace UltraWinBar
                 if (ClockZones.IsSet(zone)) zones.Add(new CalendarZoneChoice(zone, ZoneClock.Describe(ClockZones.IdOf(zone), now) + PlaceOf(zone)));
             ZoneBox.ItemsSource = zones;
             ZoneBox.SelectedItem = zones.FirstOrDefault(zone => zone.Zone == ClockZones.CalendarZone()) ?? zones[0];
+            ShowPlace();
 
             everyone = YahrzeitNode.Build(Settings.Instance.Language, Text("calendar_all_figures"), Settings.Instance.HiddenYahrzeits);
             everyone.FigureChanged += (_, _) => Settings.Instance.HiddenYahrzeits = everyone.UncheckedKeys().ToList();
@@ -45,27 +46,32 @@ namespace UltraWinBar
 
         private static string Text(string key) => Application.Current.TryFindResource(key) as string ?? key;
 
-        private void ShowPlace() => PlaceText.Text = Settings.Instance.HebrewPlace?.Display ?? Text("hebrew_place_none");
+        // The place shown and set here is the place of the zone the calendar goes by (it was always the main zone's, so a
+        // calendar going by the second or third zone stayed without times of the day).
+        private int ChosenZone => ZoneBox?.SelectedItem is CalendarZoneChoice zone ? zone.Zone : ClockZones.CalendarZone();
+
+        private void ShowPlace() => PlaceText.Text = ClockZones.PlaceOf(ChosenZone)?.Display ?? Text("hebrew_place_none");
 
         private void PlaceChoose_Click(object sender, RoutedEventArgs e)
         {
-            var window = new PlaceWindow(Settings.Instance.HebrewPlace) { Owner = this };
+            var window = new PlaceWindow(ClockZones.PlaceOf(ChosenZone)) { Owner = this };
             if (window.ShowDialog() == true && window.Result != null)
             {
-                Settings.Instance.HebrewPlace = window.Result;
+                ClockZones.SetPlace(ChosenZone, window.Result);
                 ShowPlace();
             }
         }
 
         private void PlaceClear_Click(object sender, RoutedEventArgs e)
         {
-            Settings.Instance.HebrewPlace = null;
+            ClockZones.SetPlace(ChosenZone, null);
             ShowPlace();
         }
 
         private void Zone_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (ready && ZoneBox.SelectedItem is CalendarZoneChoice zone) Settings.Instance.CalendarZone = zone.Zone;
+            ShowPlace();
         }
     }
 }

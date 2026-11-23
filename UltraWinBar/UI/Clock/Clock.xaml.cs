@@ -48,6 +48,16 @@ namespace UltraWinBar.Controls
         public Visibility ThirdTimeVisibility { get => (Visibility)GetValue(ThirdTimeVisibilityProperty); set => SetValue(ThirdTimeVisibilityProperty, value); }
         public static readonly DependencyProperty OrdinaryDateTextProperty = DependencyProperty.Register(nameof(OrdinaryDateText), typeof(string), typeof(Clock));
         public string OrdinaryDateText { get => (string)GetValue(OrdinaryDateTextProperty); set => SetValue(OrdinaryDateTextProperty, value); }
+
+        // A candle by the weekday when the Hebrew day has a yahrzeit that is shown; the tree of the sefirot and the day during the Omer.
+        public static readonly DependencyProperty YahrzeitVisibilityProperty = DependencyProperty.Register(nameof(YahrzeitVisibility), typeof(Visibility), typeof(Clock), new PropertyMetadata(Visibility.Collapsed));
+        public Visibility YahrzeitVisibility { get => (Visibility)GetValue(YahrzeitVisibilityProperty); set => SetValue(YahrzeitVisibilityProperty, value); }
+
+        public static readonly DependencyProperty OmerTextProperty = DependencyProperty.Register(nameof(OmerText), typeof(string), typeof(Clock), new PropertyMetadata(""));
+        public string OmerText { get => (string)GetValue(OmerTextProperty); set => SetValue(OmerTextProperty, value); }
+
+        public static readonly DependencyProperty OmerVisibilityProperty = DependencyProperty.Register(nameof(OmerVisibility), typeof(Visibility), typeof(Clock), new PropertyMetadata(Visibility.Collapsed));
+        public Visibility OmerVisibility { get => (Visibility)GetValue(OmerVisibilityProperty); set => SetValue(OmerVisibilityProperty, value); }
         public static readonly DependencyProperty WeekdayTextProperty = DependencyProperty.Register(nameof(WeekdayText), typeof(string), typeof(Clock));
         public string WeekdayText { get => (string)GetValue(WeekdayTextProperty); set => SetValue(WeekdayTextProperty, value); }
         private CultureInfo clockCulture = CultureInfo.CurrentCulture;
@@ -340,6 +350,7 @@ namespace UltraWinBar.Controls
             Now = ClockZones.MainTime(_utcNow);
             UpdateClockText();
             UpdateBottomSpacing();
+            UpdateClockTemplate(); // the panel may have moved to another edge
         }
 
         private void UpdateBottomSpacing()
@@ -355,11 +366,14 @@ namespace UltraWinBar.Controls
                 Margin = new Thickness(0, 0, 0, bottom);
         }
 
+        // On a vertical panel the zone's name goes under the time: one long line would shrink the whole clock.
+        private string NameSeparator => Window.GetWindow(this) is Taskbar { Orientation: Orientation.Vertical } ? Environment.NewLine : " ";
+
         private void UpdateClockText()
         {
             DateTime utc = _utcNow == default ? DateTime.UtcNow : _utcNow;
             var value = Now == default ? ClockZones.MainTime(utc) : Now;
-            string timeText = value.ToString("t", clockCulture) + (ClockZones.ShowsName(ClockZones.Main) ? " " + ClockZones.NameOf(ClockZones.Main) : "");
+            string timeText = value.ToString("t", clockCulture) + (ClockZones.ShowsName(ClockZones.Main) ? NameSeparator + ClockZones.NameOf(ClockZones.Main) : "");
             if (TimeText != timeText) TimeText = timeText;
             UpdateZoneTimes(value, utc);
             string dateText = value.ToString("d", clockCulture);
@@ -373,6 +387,13 @@ namespace UltraWinBar.Controls
                 if (WeekdayText != weekday) WeekdayText = weekday;
                 string hebrewDateText = HebrewClockFormatter.FormatDate(hebrewDay.Day, Settings.Instance.Language, null, hebrewDay.Civil);
                 if (HebrewDateText != hebrewDateText) HebrewDateText = hebrewDateText;
+                Visibility yahrzeit = Yahrzeits.On(hebrewDay.Day, Settings.Instance.HiddenYahrzeits).Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+                if (YahrzeitVisibility != yahrzeit) YahrzeitVisibility = yahrzeit;
+                int omer = JewishCalendar.OmerDay(hebrewDay.Day);
+                string omerText = omer > 0 ? omer.ToString(CultureInfo.InvariantCulture) : "";
+                if (OmerText != omerText) OmerText = omerText;
+                Visibility omerVisibility = omer > 0 ? Visibility.Visible : Visibility.Collapsed;
+                if (OmerVisibility != omerVisibility) OmerVisibility = omerVisibility;
             }
             else
             {
@@ -403,12 +424,21 @@ namespace UltraWinBar.Controls
             DateTime? there = string.IsNullOrEmpty(id) ? null : ZoneClock.Now(id, utc);
             if (!there.HasValue) return "";
             int days = (there.Value.Date - mainTime.Date).Days;
-            return there.Value.ToString("t", clockCulture) + (ClockZones.ShowsName(zone) ? " " + ClockZones.NameOf(zone) : "") + (days == 0 ? "" : days > 0 ? " +" + days : " " + days);
+            return there.Value.ToString("t", clockCulture) + (ClockZones.ShowsName(zone) ? NameSeparator + ClockZones.NameOf(zone) : "") + (days == 0 ? "" : days > 0 ? " +" + days : " " + days);
         }
 
-        private void UpdateClockTemplate() => SetResourceReference(TemplateProperty,
-            Settings.Instance.ShowHebrewDate ? "HebrewClockTemplate"
-            : !ClockZones.IsSet(ClockZones.Second) && !ClockZones.IsSet(ClockZones.Third) && !ClockZones.ShowsName(ClockZones.Main) ? "ClockTemplateKey" : "TwoZoneClockTemplate");
+        private string _templateKey;
+
+        // A vertical panel has a template of its own: the zones and the dates each in a frame.
+        private void UpdateClockTemplate()
+        {
+            bool vertical = Window.GetWindow(this) is Taskbar { Orientation: Orientation.Vertical };
+            string key = Settings.Instance.ShowHebrewDate ? (vertical ? "HebrewClockVerticalTemplate" : "HebrewClockTemplate")
+                : !ClockZones.IsSet(ClockZones.Second) && !ClockZones.IsSet(ClockZones.Third) && !ClockZones.ShowsName(ClockZones.Main) ? "ClockTemplateKey" : "TwoZoneClockTemplate";
+            if (key == _templateKey) return;
+            _templateKey = key;
+            SetResourceReference(TemplateProperty, key);
+        }
 
         private static string GetUserDefaultLocaleNameWrapper()
         {

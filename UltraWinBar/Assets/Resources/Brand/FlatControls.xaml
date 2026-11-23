@@ -41,7 +41,7 @@
         <Grid>
             <Border x:Name="Surface" Background="{DynamicResource FlatTask}" BorderBrush="{DynamicResource FlatBorder}"
                     BorderThickness="1" CornerRadius="4" Margin="0,0,2,2" Padding="{TemplateBinding Padding}">
-                <ContentPresenter x:Name="Content" VerticalAlignment="Center" HorizontalAlignment="Stretch" />
+                <ContentPresenter x:Name="Content" VerticalAlignment="Center" HorizontalAlignment="Stretch" TextElement.FontWeight="{DynamicResource PanelFontWeight}" />
             </Border>
             <!-- A bar along the foot of the active task; transparent unless the theme gives it a color. -->
             <Border x:Name="ActiveBar" Background="{DynamicResource FlatActiveBar}" Height="2" CornerRadius="1" Margin="6,0,8,3"
@@ -55,8 +55,8 @@
                 <Setter TargetName="Surface" Property="Background" Value="{DynamicResource FlatActive}" />
                 <Setter TargetName="Surface" Property="BorderBrush" Value="{DynamicResource FlatActiveBorder}" />
                 <Setter TargetName="ActiveBar" Property="Visibility" Value="Visible" />
-                <!-- No bold label on the panel, in any theme. -->
-                <Setter TargetName="Content" Property="TextElement.FontWeight" Value="Normal" />
+                <!-- The active task is not bolder than the others: the panel's weight (the theme's) for all. -->
+                <Setter TargetName="Content" Property="TextElement.FontWeight" Value="{DynamicResource PanelFontWeight}" />
             </DataTrigger>
             <DataTrigger Binding="{Binding State}" Value="Flashing">
                 <Setter TargetName="Surface" Property="Background" Value="{DynamicResource ButtonFlashingFace}" />

@@ -33,6 +33,13 @@ namespace UltraWinBar.Utilities
         public static HebrewPlace PlaceOf(int zone) =>
             zone == Second ? Settings.Instance.SecondPlace : zone == Third ? Settings.Instance.ThirdPlace : Settings.Instance.HebrewPlace;
 
+        public static void SetPlace(int zone, HebrewPlace place)
+        {
+            if (zone == Second) Settings.Instance.SecondPlace = place;
+            else if (zone == Third) Settings.Instance.ThirdPlace = place;
+            else Settings.Instance.HebrewPlace = place;
+        }
+
         /// <summary>
         /// The place of the calendar: the place of the zone the calendar goes by, with the clock of that zone (the computer's
         /// clock for the main one): its date, its day that turns at its own sunset, its times of the day. Null when the zone

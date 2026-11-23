@@ -6,7 +6,8 @@ using System.Linq;
 namespace UltraWinBar.Utilities
 {
     /// <summary>A line of the times of a day: what it is and when ("Sunrise (Netz)", "06:02").</summary>
-    public sealed record TimeLine(string Name, string Time);
+    /// <summary>A time of the day; Rest marks the lighting of the candles or the havdalah of a day of rest.</summary>
+    public sealed record TimeLine(string Name, string Time, bool Rest = false);
 
     /// <summary>What the calendar says about a day, ready to show: every text is in the language of the settings.</summary>
     public sealed record DayDetails(string Heading, string HebrewDate, string Portion, IReadOnlyList<string> Events,
@@ -15,7 +16,11 @@ namespace UltraWinBar.Utilities
     /// <summary>A day of the month grid: its numbers, the one thing worth showing in the cell, and what it says when pointed at.</summary>
     public sealed record DayCell(DateTime Date, string GregorianNumber, string HebrewNumber, string Marker, bool OutsideMonth,
         bool IsToday, bool IsRest, bool HasYahrzeit, string Tooltip, string HebrewLabel = "", string GregorianLabel = "",
-        string Portion = null, IReadOnlyList<CellEvent> Events = null);
+        string Portion = null, IReadOnlyList<CellEvent> Events = null, bool EveningEnds = false, bool EveningBegins = false,
+        int Omer = 0, string OmerText = null)
+    {
+        public bool HasOmer => Omer > 0;
+    }
 
     /// <summary>A festival, fast, minor day or Rosh Chodesh in a cell, with its kind (the color of its block).</summary>
     public sealed record CellEvent(string Name, DayKind Kind);
@@ -28,6 +33,10 @@ namespace UltraWinBar.Utilities
     {
         /// <summary>The country codes of the place data that are the Land of Israel, where the festivals last a day less.</summary>
         public static bool IsLandOfIsrael(HebrewPlace place) => place != null && (place.CountryCode == "IL" || place.CountryCode == "PS");
+
+        /// <summary>The day of the Omer as a line: "Day 23 of the Omer — Netzach she'b'Tiferet"; null outside it.</summary>
+        public static string OmerLine(int day, string language, Func<string, string> text) =>
+            day > 0 ? string.Format(text("calendar_omer_day"), day) + " — " + JewishCalendar.OmerSefira(day, language) : null;
 
         public static CultureInfo CultureOf(string language)
         {
@@ -58,6 +67,7 @@ namespace UltraWinBar.Utilities
             lines.AddRange(people.Select(person => person.Name(language)));
             string hebrew = HebrewClockFormatter.FormatDate(date, language);
             string tooltip = string.Join(Environment.NewLine, new[] { date.ToString("D", CultureOf(language)), hebrew }.Concat(lines));
+            int omer = JewishCalendar.OmerDay(date);
             string number = hebrew.Length >= 2 ? hebrew.Substring(0, 2) : "";
             // The cell shows the Hebrew date at its top right ("Kislev, 13") and the civil date at its bottom left ("23, November").
             CultureInfo culture = CultureOf(language);
@@ -68,7 +78,8 @@ namespace UltraWinBar.Utilities
                 HebrewClockFormatter.FormatMonthDay(date, language), civil,
                 // The portion of a Shabbat, unless a festival's day is read instead; the days, festivals first.
                 reading != null && !events.Any(day => day.Kind == DayKind.YomTov || day.Kind == DayKind.CholHamoed) ? reading.Name(language) : null,
-                events.OrderBy(day => day.Kind == DayKind.RoshChodesh ? 1 : 0).Select(day => new CellEvent(EventName(day, language, text), day.Kind)).ToList());
+                events.OrderBy(day => day.Kind == DayKind.RoshChodesh ? 1 : 0).Select(day => new CellEvent(EventName(day, language, text), day.Kind)).ToList(),
+                Omer: omer, OmerText: OmerLine(omer, language, text));
         }
 
         // The time as the clocks of the place show it: in its zone, or the computer's when none was chosen.
@@ -108,7 +119,8 @@ namespace UltraWinBar.Utilities
             if (place != null)
             {
                 string zone = string.IsNullOrEmpty(place.TimeZoneId) ? null : ZoneClock.Describe(place.TimeZoneId, DateTime.UtcNow);
-                placeText = string.Format(text("calendar_place"), zone == null ? place.Display : place.Display + " · " + zone);
+                // The festivals, Rosh Chodesh and portions go by the Land of Israel or the diaspora, by the place's country.
+                placeText = string.Format(text("calendar_place"), (zone == null ? place.Display : place.Display + " · " + zone) + " · " + text(israel ? "calendar_israel" : "calendar_diaspora"));
                 var day = Zmanim.Of(date, place.Latitude, place.Longitude);
                 foreach (Zman zman in new[]
                 {
@@ -119,13 +131,13 @@ namespace UltraWinBar.Utilities
                 switch (Zmanim.EveningOf(date, israel))
                 {
                     case RestEvent.CandleLighting:
-                        times.Add(new TimeLine(Zmanim.NameOf(Zman.CandleLighting, language), Short(OnClock(day[Zman.CandleLighting], place), culture)));
+                        times.Add(new TimeLine(Zmanim.NameOf(Zman.CandleLighting, language), Short(OnClock(day[Zman.CandleLighting], place), culture), true));
                         break;
                     case RestEvent.CandleLightingAfterNightfall:
-                        times.Add(new TimeLine(text("calendar_candles_after_dark"), Short(OnClock(day[Zman.Tzeit], place), culture)));
+                        times.Add(new TimeLine(text("calendar_candles_after_dark"), Short(OnClock(day[Zman.Tzeit], place), culture), true));
                         break;
                     case RestEvent.Havdalah:
-                        times.Add(new TimeLine(text("calendar_havdalah"), Short(OnClock(day[Zman.Tzeit], place), culture)));
+                        times.Add(new TimeLine(text("calendar_havdalah"), Short(OnClock(day[Zman.Tzeit], place), culture), true));
                         break;
                 }
 

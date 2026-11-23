@@ -83,6 +83,36 @@ namespace UltraWinBar.Utilities
             return !Calendar.IsLeapYear(Calendar.GetYear(date)) && month >= 6 ? month + 1 : month;
         }
 
+        /// <summary>
+        /// The day of the counting of the Omer (1 on 16 Nisan to 49 on 5 Sivan); 0 outside it or outside the Hebrew calendar.
+        /// The count of a day is said on the evening that begins it.
+        /// </summary>
+        public static int OmerDay(DateTime date)
+        {
+            date = date.Date;
+            if (date < Calendar.MinSupportedDateTime || date > Calendar.MaxSupportedDateTime) return 0;
+            int month = MonthNumber(date), day = Calendar.GetDayOfMonth(date);
+            return month == Nisan && day >= 16 ? day - 15 : month == Iyar ? 15 + day : month == Sivan && day <= 5 ? 44 + day : 0;
+        }
+
+        // The seven sefirot of the weeks and days of the Omer, in English, Russian and Hebrew.
+        private static readonly string[][] Sefirot =
+        {
+            new[] { "Chesed", "Gevurah", "Tiferet", "Netzach", "Hod", "Yesod", "Malchut" },
+            new[] { "Хесед", "Гвура", "Тиферет", "Нецах", "Ход", "Йесод", "Малхут" },
+            new[] { "חסד", "גבורה", "תפארת", "נצח", "הוד", "יסוד", "מלכות" },
+        };
+
+        /// <summary>The sefira of a day of the Omer: the day's within the week's ("Gevurah she'b'Chesed" for day 2); "" outside it.</summary>
+        public static string OmerSefira(int day, string language)
+        {
+            if (day < 1 || day > 49) return "";
+            bool hebrew = language == "עברית", slavic = language == "русский" || language == "беларуская";
+            string[] names = Sefirot[hebrew ? 2 : slavic ? 1 : 0];
+            string ofDay = names[(day - 1) % 7], ofWeek = names[(day - 1) / 7];
+            return hebrew ? ofDay + " שב" + ofWeek : slavic ? ofDay + " ше-бе-" + ofWeek : ofDay + " she'b'" + ofWeek;
+        }
+
         // The .NET month of a month of the numbering above in a given year.
         private static int NetMonth(int year, int month) => !Calendar.IsLeapYear(year) && month >= 7 ? month - 1 : month;
 
