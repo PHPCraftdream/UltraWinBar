@@ -130,7 +130,8 @@ internal static class CalendarWindowChecks
         // The yahrzeits of a day come eldest first: on 6 Sivan King David (born 2854) before the Baal Shem Tov (5458).
         Check(Yahrzeits.All.All(person => person.Born > 2000 && person.Born < 5800), "Every figure has a year of birth (anno mundi).");
         var sivan6 = Yahrzeits.On(Day("2026-05-22"));
-        Check(sivan6.Select(person => person.Key).SequenceEqual(new[] { "david", "baal_shem_tov" }), $"6 Sivan, eldest first: {string.Join(", ", sivan6.Select(person => person.Key))}.");
+        // The Imrei Emes (5626) passed on Shavuot too: after them.
+        Check(sivan6.Select(person => person.Key).SequenceEqual(new[] { "david", "baal_shem_tov", "imrei_emes" }), $"6 Sivan, eldest first: {string.Join(", ", sivan6.Select(person => person.Key))}.");
         // The grid's months: civil, or Hebrew (13 Kislev 5787 is 23 November 2026; Kislev has 30 days that year).
         DateTime kislevStart = CalendarGrid.MonthStart(Day("2026-11-23"), true);
         Check(kislevStart == Day("2026-11-11") && CalendarGrid.Length(kislevStart, true) == 30 &&

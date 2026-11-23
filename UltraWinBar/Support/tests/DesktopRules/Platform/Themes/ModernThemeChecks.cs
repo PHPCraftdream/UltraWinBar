@@ -79,7 +79,7 @@ internal static class ModernThemeChecks
         string manager = File.ReadAllText(Path.Combine(project, "Core", "Appearance", "DictionaryManager.cs"));
         string showDesktop = File.ReadAllText(Path.Combine(project, "UI", "Tray", "Flyouts", "ShowDesktopButton.xaml.cs"));
         int added = manager.IndexOf("GetMergedDictionaries().Add(loaded);", StringComparison.Ordinal);
-        int removed = manager.IndexOf("foreach (var old in previous) GetMergedDictionaries().Remove(old);", StringComparison.Ordinal);
+        int removed = added < 0 ? -1 : manager.IndexOf("foreach (var old in previous) GetMergedDictionaries().Remove(old);", added, StringComparison.Ordinal);
         if (added < 0 || removed < added || manager.Contains("ClearPreviousThemes()") ||
             showDesktop.Contains("FindResource(\"ShowDesktopIconImage") || !showDesktop.Contains("SetResourceReference(Image.SourceProperty"))
             throw new Exception("A theme change adds the new base before removing the old themes; the show-desktop icon is a resource reference.");
