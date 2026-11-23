@@ -3,6 +3,7 @@ using ManagedShell.Common.Native;
 using ManagedShell.Interop;
 using Microsoft.Win32;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -55,7 +56,7 @@ namespace UltraWinBar.Utilities
             Instance = this;
             manager = new ShellComProxy<IDesktopManager>("Virtual desktop manager", CreateManager,
                 stale => Marshal.ReleaseComObject(stale));
-            manager.Dropped += () => desktopForWindowCache.Clear();
+            manager.Dropped += () => { desktopForWindowCache.Clear(); Prefetched.Clear(); };
             // Always after a null period (the constructor's first manager does not count): panels re-filter.
             manager.Recovered += () =>
             {
@@ -248,7 +249,7 @@ namespace UltraWinBar.Utilities
         internal Guid DesktopForWindowCached(IntPtr hwnd)
         {
             if (desktopForWindowCache.TryGetValue(hwnd, out Guid cached)) return cached;
-            if (!TryGetWindowDesktopId(hwnd, out Guid id)) return CurrentId;
+            if (!(Prefetched.TryRemove(hwnd, out Guid id) && id != Guid.Empty) && !TryGetWindowDesktopId(hwnd, out id)) return CurrentId;
             if (desktopForWindowCache.Count >= 1024) desktopForWindowCache.Clear();
             desktopForWindowCache[hwnd] = id;
             if (IsSharedDesktopId(id, ReadExistingDesktopIds())) sharedDesktopIds.Add(id);
@@ -269,7 +270,50 @@ namespace UltraWinBar.Utilities
             return sharedDesktopIds.Contains(id) ? CurrentId : id;
         }
 
-        internal void ForgetWindowDesktop(IntPtr hwnd) => desktopForWindowCache.Remove(hwnd);
+        internal void ForgetWindowDesktop(IntPtr hwnd)
+        {
+            desktopForWindowCache.Remove(hwnd);
+            Prefetched.TryRemove(hwnd, out _);
+        }
+
+        // The desktops of the windows known at start, asked on a thread of its own (the documented manager is free
+        // threaded) while the UI thread loads the theme: the first filter of each panel asked Explorer window by window.
+        private static readonly ConcurrentDictionary<IntPtr, Guid> Prefetched = new ConcurrentDictionary<IntPtr, Guid>();
+
+        internal static void Prefetch(IReadOnlyCollection<IntPtr> windows)
+        {
+            if (windows.Count == 0) return;
+            var thread = new System.Threading.Thread(() =>
+            {
+                IDesktopManager own = null;
+                try
+                {
+                    own = CreateManager();
+                    foreach (IntPtr hwnd in windows)
+                        if (own.GetWindowDesktopId(hwnd, out Guid id) >= 0 && id != Guid.Empty) Prefetched.TryAdd(hwnd, id);
+                }
+                catch (Exception error) { ShellLogger.Debug($"Virtual desktop: prefetch failed: {error.Message}"); }
+                finally { if (own != null) Marshal.ReleaseComObject(own); }
+            }) { IsBackground = true, Name = "UltraWinBar desktop prefetch" };
+            thread.SetApartmentState(System.Threading.ApartmentState.MTA);
+            thread.Start();
+        }
+
+        /// <summary>
+        /// True when the window is on the desktop the user is on (or on all desktops, or its desktop cannot be read: then
+        /// there is nothing to move).
+        /// </summary>
+        public bool IsWindowOnCurrentDesktop(IntPtr hwnd)
+        {
+            if (hwnd == IntPtr.Zero || CurrentId == Guid.Empty || !TryGetWindowDesktopId(hwnd, out Guid id)) return true;
+            return id == CurrentId || IsSharedDesktopId(id, ReadExistingDesktopIds());
+        }
+
+        /// <summary>
+        /// Brings a window of the program to the desktop the user is on. The user is never taken to the window's desktop:
+        /// activating a window of another desktop would switch to it.
+        /// </summary>
+        public bool BringWindowToCurrentDesktop(IntPtr hwnd) => IsWindowOnCurrentDesktop(hwnd) || TryMoveWindowToDesktop(hwnd, CurrentId);
 
         public bool TryMoveWindowToDesktop(IntPtr hwnd, Guid destination)
         {
@@ -279,7 +323,7 @@ namespace UltraWinBar.Utilities
             {
                 if (current != null && manager.Check(current.MoveWindowToDesktop(hwnd, ref destination)) >= 0)
                 {
-                    desktopForWindowCache.Remove(hwnd);
+                    ForgetWindowDesktop(hwnd);
                     return true;
                 }
             }
@@ -294,7 +338,7 @@ namespace UltraWinBar.Utilities
             {
                 using var actions = new DesktopActions();
                 actions.MoveWindow(hwnd, destination);
-                desktopForWindowCache.Remove(hwnd);
+                ForgetWindowDesktop(hwnd);
                 return true;
             }
             catch (Exception error)

@@ -5,6 +5,8 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
+using System.Windows.Media;
 using UltraWinBar.Utilities;
 
 namespace UltraWinBar
@@ -22,18 +24,86 @@ namespace UltraWinBar
         private DateTime chosen = DateTime.Today;
         private bool rebuilding;
 
-        /// <summary>Opens the calendar, or brings the open one forward: there is only one.</summary>
-        public static void ShowSingle()
+        /// <summary>
+        /// Opens the calendar, or brings the open one forward: there is only one. It stands in the corner of the clock
+        /// it was opened from, on the side of the panel that faces the desktop.
+        /// </summary>
+        public static void ShowSingle(FrameworkElement clock = null)
         {
-            if (shown == null)
+            if (shown != null)
+            {
+                IntPtr handle = new WindowInteropHelper(shown).Handle;
+                bool here = VirtualDesktopContext.Instance?.IsWindowOnCurrentDesktop(handle) ?? true;
+                // A second click on the date closes the calendar that is open on this desktop.
+                if (clock != null && here && shown.IsVisible && shown.WindowState != WindowState.Minimized)
+                {
+                    shown.Close();
+                    return;
+                }
+
+                // One open on another desktop comes to this one: the user is never taken to it. When it cannot be moved,
+                // it is closed and opened anew here.
+                if (!here && VirtualDesktopContext.Instance?.BringWindowToCurrentDesktop(handle) != true)
+                {
+                    shown.Close();
+                }
+            }
+
+            bool created = shown == null;
+            if (created)
             {
                 shown = new CalendarWindow();
                 shown.Closed += (_, _) => shown = null;
-                shown.Show();
             }
+            if (clock != null) shown.PlaceAtCorner(clock);
+            if (created) shown.Show();
             if (shown.WindowState == WindowState.Minimized) shown.WindowState = WindowState.Normal;
             shown.Activate();
         }
+
+        // The corner of the calendar that is nearest to the clock meets the clock's corner: above a bottom panel,
+        // under a top one, beside a side one, always inside the work area of the clock's screen.
+        private void PlaceAtCorner(FrameworkElement clock)
+        {
+            if (PresentationSource.FromVisual(clock) == null) return;
+            DpiScale dpi = VisualTreeHelper.GetDpi(clock);
+            Point topLeft = clock.PointToScreen(new Point(0, 0));
+            Point bottomRight = clock.PointToScreen(new Point(clock.ActualWidth, clock.ActualHeight));
+            System.Drawing.Rectangle workPixels = System.Windows.Forms.Screen.FromPoint(new System.Drawing.Point((int)topLeft.X, (int)topLeft.Y)).WorkingArea;
+            Rect area = new Rect(workPixels.Left / dpi.DpiScaleX, workPixels.Top / dpi.DpiScaleY, workPixels.Width / dpi.DpiScaleX, workPixels.Height / dpi.DpiScaleY);
+            Rect at = new Rect(new Point(topLeft.X / dpi.DpiScaleX, topLeft.Y / dpi.DpiScaleY), new Point(bottomRight.X / dpi.DpiScaleX, bottomRight.Y / dpi.DpiScaleY));
+
+            const double gap = 8;
+            double width = Math.Min(Width, area.Width - 2 * gap), height = Math.Min(Height, area.Height - 2 * gap);
+            Width = width;
+            Height = height;
+            ManagedShell.AppBar.AppBarEdge edge = (GetWindow(clock) as ManagedShell.AppBar.AppBarWindow)?.AppBarEdge ?? ManagedShell.AppBar.AppBarEdge.Bottom;
+            bool lowerHalf = (at.Top + at.Bottom) / 2 > (area.Top + area.Bottom) / 2;
+            double left, top;
+            switch (edge)
+            {
+                case ManagedShell.AppBar.AppBarEdge.Left:
+                    left = area.Left + gap;
+                    top = lowerHalf ? at.Bottom - height : at.Top;
+                    break;
+                case ManagedShell.AppBar.AppBarEdge.Right:
+                    left = area.Right - width - gap;
+                    top = lowerHalf ? at.Bottom - height : at.Top;
+                    break;
+                case ManagedShell.AppBar.AppBarEdge.Top:
+                    left = at.Right - width;
+                    top = area.Top + gap;
+                    break;
+                default:
+                    left = at.Right - width;
+                    top = area.Bottom - height - gap;
+                    break;
+            }
+            Left = Math.Max(area.Left + gap, Math.Min(left, area.Right - width - gap));
+            Top = Math.Max(area.Top + gap, Math.Min(top, area.Bottom - height - gap));
+        }
+
+        private void Close_Click(object sender, RoutedEventArgs e) => Close();
 
         public CalendarWindow()
         {
@@ -50,7 +120,9 @@ namespace UltraWinBar
 
         private void Settings_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(Settings.HebrewPlace) || e.PropertyName == nameof(Settings.HiddenYahrzeits) || e.PropertyName == nameof(Settings.Language))
+            if (e.PropertyName == nameof(Settings.HebrewPlace) || e.PropertyName == nameof(Settings.HiddenYahrzeits) || e.PropertyName == nameof(Settings.Language) ||
+                e.PropertyName == nameof(Settings.CalendarZone) || e.PropertyName == nameof(Settings.SecondTimeZone) || e.PropertyName == nameof(Settings.ThirdTimeZone) ||
+                e.PropertyName == nameof(Settings.SecondPlace) || e.PropertyName == nameof(Settings.ThirdPlace))
                 Rebuild();
         }
 
@@ -64,9 +136,9 @@ namespace UltraWinBar
                 MonthTitle.Text = month.ToString("Y", culture) + Environment.NewLine + DayDetailsBuilder.HebrewMonths(month, AppLanguage);
                 WeekdayHeader.Children.Clear();
                 foreach (string name in culture.DateTimeFormat.AbbreviatedDayNames)
-                    WeekdayHeader.Children.Add(new TextBlock { Text = name, TextAlignment = TextAlignment.Center, Opacity = 0.7, Margin = new Thickness(0, 0, 0, 2) });
+                    WeekdayHeader.Children.Add(new TextBlock { Text = name, TextAlignment = TextAlignment.Center, FontSize = 14, Opacity = 0.7, Margin = new Thickness(0, 0, 0, 4) });
 
-                bool israel = DayDetailsBuilder.IsLandOfIsrael(Settings.Instance.HebrewPlace);
+                bool israel = DayDetailsBuilder.IsLandOfIsrael(ClockZones.CalendarPlace());
                 DateTime start = month.AddDays(-(int)month.DayOfWeek);
                 var cells = Enumerable.Range(0, 42)
                     .Select(i => DayDetailsBuilder.Cell(start.AddDays(i), month, DateTime.Today, israel, AppLanguage, Settings.Instance.HiddenYahrzeits, Text)).ToList();
@@ -136,11 +208,11 @@ namespace UltraWinBar
 
         private void ShowDetails()
         {
-            HebrewPlace place = Settings.Instance.HebrewPlace;
+            HebrewPlace place = ClockZones.CalendarPlace();
             DayDetails details = DayDetailsBuilder.Describe(chosen, place, AppLanguage, Settings.Instance.HiddenYahrzeits, Text);
             Details.Children.Clear();
-            Line(details.Heading, bold: true, size: 15);
-            Line(details.HebrewDate, bold: true, size: 14, flow: FlowDirection.LeftToRight);
+            Line(details.Heading, bold: true, size: 19);
+            Line(details.HebrewDate, bold: true, size: 17, flow: FlowDirection.LeftToRight);
             if (details.Portion != null) Line(details.Portion, top: 8);
             foreach (string name in details.Events) Line(name, bold: true, top: 4);
             if (details.RestStarts != null) Line(details.RestStarts, top: 4);
@@ -160,12 +232,13 @@ namespace UltraWinBar
                 Line(details.Place, opacity: 0.7);
                 foreach (TimeLine time in details.Times)
                 {
-                    var row = new DockPanel { Margin = new Thickness(0, 1, 0, 0) };
-                    var when = new TextBlock { Text = time.Time, Margin = new Thickness(8, 0, 0, 0), FlowDirection = FlowDirection.LeftToRight };
+                    // The whole row lights up under the pointer (the style takes the colors of the theme).
+                    var row = new DockPanel();
+                    var when = new TextBlock { Text = time.Time, Margin = new Thickness(12, 0, 0, 0), FontWeight = FontWeights.SemiBold, FlowDirection = FlowDirection.LeftToRight };
                     DockPanel.SetDock(when, Dock.Right);
                     row.Children.Add(when);
                     row.Children.Add(new TextBlock { Text = time.Name, TextTrimming = TextTrimming.CharacterEllipsis });
-                    Details.Children.Add(row);
+                    Details.Children.Add(new Border { Style = (Style)FindResource("DetailRow"), Child = row });
                 }
             }
             if (details.Molad != null) Line(details.Molad, top: 10, opacity: 0.7);

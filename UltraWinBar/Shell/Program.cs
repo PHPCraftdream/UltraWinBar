@@ -29,17 +29,47 @@ namespace UltraWinBar
 
             StartupTimeline.Mark("Main entered");
 
+            // Before waiting for the last instance to exit: the Restart menu starts this one while that one still lives.
+            Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
+            StartReservationBridge();
+
             if (!SingleInstanceCheck())
             {
                 return 1;
             }
 
-            Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
+            // SystemEvents starts its own thread on first use and waits for it (1.2 s at start); Screen.AllScreens
+            // is that first use, on the UI thread. Start it here, off the UI thread.
+            System.Threading.ThreadPool.QueueUserWorkItem(_ =>
+            {
+                try { Microsoft.Win32.SystemEvents.InvokeOnEventsThread(new Action(() => { })); }
+                catch (Exception e) { ManagedShell.Common.Logging.ShellLogger.Debug($"Program: SystemEvents warm-up failed: {e.Message}"); }
+            });
 
             App app = new App();
             app.InitializeComponent();
 
             return app.Run();
+        }
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern int GetSystemMetrics(int index);
+
+        // A restart on purpose: the strips of the last run are held until the new panels have published theirs.
+        private static void StartReservationBridge()
+        {
+            try
+            {
+                const int SM_CXSCREEN = 0, SM_CYSCREEN = 1, SM_CMONITORS = 80;
+                if (!RestartMarker.IsFresh() || Settings.Instance.AutoHide || GetSystemMetrics(SM_CMONITORS) != 1 ||
+                    !WorkAreaMemory.TryParse(Settings.Instance.LastWorkArea, out var area, out var screen) ||
+                    !screen.Equals(new NativeMethods.Rect(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN))))
+                {
+                    return;
+                }
+                ReservationBridge.Start(area, screen);
+            }
+            catch (Exception e) { ManagedShell.Common.Logging.ShellLogger.Debug($"Program: reservation bridge not started: {e.Message}"); }
         }
 
         internal static Process StartWorkAreaWatchdog(NativeMethods.Rect workArea)
@@ -103,6 +133,13 @@ namespace UltraWinBar
             }
             catch (ArgumentException)
             {
+            }
+
+            // A restart on purpose keeps the work area, so that the windows keep their limits while the panels are away; the
+            // next start takes it over. A crash leaves no such mark, and the original work area is given back at once.
+            if (RestartMarker.IsFresh())
+            {
+                return 0;
             }
 
             NativeMethods.Rect workArea = new NativeMethods.Rect

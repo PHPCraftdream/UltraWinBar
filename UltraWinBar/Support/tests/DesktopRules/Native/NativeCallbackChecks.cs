@@ -24,6 +24,7 @@ internal static class NativeCallbackChecks
         CheckInputHookHostSharesOneHookAcrossSubscribers();
         CheckInputHookHostMarshalsHookData();
         CheckInputHookHostDeliversOnSubscriberThread();
+        CheckInputHookHostDispatchDoesNotWaitOnGate(repositoryRoot);
         CheckRegistryValueWatchFiresReArmsAndDisposes();
     }
 
@@ -294,6 +295,37 @@ internal static class NativeCallbackChecks
             ownerThread.Join();
         }
         Console.WriteLine("PASS: InputHookHost delivers mouse events on the subscriber's Dispatcher; only onHookThread subscribers run inline.");
+    }
+
+    // The first subscriber installs the hook while holding Gate; mouse events then must not wait on it
+    // (they did: 1.5 s of frozen mouse and UI at start). Also: no Process.MainModule walk to install.
+    private static void CheckInputHookHostDispatchDoesNotWaitOnGate(System.IO.DirectoryInfo repositoryRoot)
+    {
+        object gate = typeof(InputHookHost).GetField("Gate", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
+        bool delivered = false;
+        var probe = new LowLevelMouseHook.LowLevelMouseEventArgs { Message = ManagedShell.Interop.NativeMethods.WM.MOUSEMOVE };
+        IDisposable sub = InputHookHost.SubscribeMouse("NativeCallbackChecks: gate subscriber",
+            (s, e) => { if (ReferenceEquals(e, probe)) delivered = true; }, onHookThread: true);
+        try
+        {
+            var held = new ManualResetEventSlim(false);
+            var release = new ManualResetEventSlim(false);
+            var holder = new Thread(() => { lock (gate) { held.Set(); release.Wait(); } });
+            holder.Start();
+            held.Wait();
+            var dispatch = new Thread(() => InputHookHost.Dispatch(null, probe));
+            dispatch.Start();
+            bool finished = dispatch.Join(2000);
+            bool deliveredWhileHeld = delivered;
+            release.Set();
+            holder.Join();
+            dispatch.Join();
+            if (!finished || !deliveredWhileHeld) throw new Exception("InputHookHost.Dispatch must deliver without waiting on Gate.");
+        }
+        finally { sub.Dispose(); }
+        string hook = File.ReadAllText(Path.Combine(repositoryRoot.FullName, "UltraWinBar", "Core", "Input", "LowLevelMouseHook.cs"));
+        if (hook.Contains("curProcess.MainModule")) throw new Exception("LowLevelMouseHook must not walk Process.MainModule to install.");
+        Console.WriteLine("PASS: InputHookHost dispatches mouse events without waiting on its Gate.");
     }
 
     // R9-L (K18, Н11): RegistryValueWatch replaces two copies that had drifted apart. Watches a

@@ -46,6 +46,26 @@ $running = @(Get-CimInstance Win32_Process -Filter "Name='UltraWinBar.exe'" |
 $main = @($running | Where-Object { $_.CommandLine -notmatch '--restore-work-area' })
 $watchdogs = @($running | Where-Object { $_.CommandLine -match '--restore-work-area' })
 
+# A planned restart: the work area is left as it is, so the windows keep their limits while the panels are away.
+if ($main.Count -gt 0) {
+    Run "Marking the restart (the work area stays)" {
+        $markerDir = Join-Path $env:LOCALAPPDATA 'UltraWinBar'
+        New-Item -ItemType Directory -Path $markerDir -Force | Out-Null
+        Set-Content -Path (Join-Path $markerDir 'restarting') -Value (Get-Date).ToUniversalTime().ToString('o')
+    }
+}
+# The strips are held while the panels are away (Hold-WorkAreaStrips.ps1), so maximized windows do not jump.
+if ($main.Count -gt 0) {
+    Run "Holding the work-area strips across the restart" {
+        $ready = New-Object System.Threading.EventWaitHandle($false, [System.Threading.EventResetMode]::ManualReset, 'Local\UltraWinBarRestartStripsReady')
+        try {
+            Start-Process powershell -WindowStyle Hidden -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
+                (Join-Path $PSScriptRoot 'Hold-WorkAreaStrips.ps1'))
+            if (-not $ready.WaitOne(10000)) { Write-Warning 'The strip holder did not get ready; restarting anyway.' }
+        }
+        finally { $ready.Dispose() }
+    }
+}
 foreach ($process in $main) {
     Run "Stopping UltraWinBar (PID $($process.ProcessId))" { Stop-Process -Id $process.ProcessId -Force }
 }

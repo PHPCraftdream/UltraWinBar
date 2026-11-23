@@ -23,6 +23,16 @@ internal static class ModernThemeChecks
     internal static void Run(string[] args, DirectoryInfo repositoryRoot)
     {
         string project = Path.Combine(repositoryRoot.FullName, "UltraWinBar");
+        // The brand dictionaries are compiled to BAML (default Page items): as Resource they were parsed as text
+        // at every start (over a second). A compiled page must not name its own assembly in a clr-namespace.
+        string csproj = File.ReadAllText(Path.Combine(project, "UltraWinBar.csproj"));
+        foreach (string brand in new[] { "FlatControls", "ModernControls", "ModernMenus" })
+        {
+            if (csproj.Contains($@"<Resource Include=""Assets\Resources\Brand\{brand}.xaml"""))
+                throw new Exception($"{brand}.xaml must be a compiled page, not a raw Resource.");
+            if (File.ReadAllText(Path.Combine(project, "Assets", "Resources", "Brand", brand + ".xaml")).Contains(";assembly=UltraWinBar\""))
+                throw new Exception($"{brand}.xaml: a compiled page cannot name its own assembly in a clr-namespace.");
+        }
         string[] files =
         {
             Path.Combine(project, "Assets", "Themes", "Other", "Modern Glass.xaml"),
@@ -48,7 +58,9 @@ internal static class ModernThemeChecks
             }
             if (File.ReadLines(file).Count() > 1000) throw new Exception(Path.GetFileName(file) + " is over 1000 lines.");
         }
-        Console.WriteLine("PASS: Modern Glass is plain brushes: no effects, animations, gradients, layered windows or animated popups.");
+        if (!File.ReadAllText(files[0]).Contains("<system:Boolean x:Key=\"AllowsTransparency\">True</system:Boolean>"))
+            throw new Exception("The panel of Modern Glass must be the layered window that the blur behind it needs.");
+        Console.WriteLine("PASS: Modern Glass is plain brushes: no effects, animations, gradients or animated popups; the only layered window is the panel's.");
 
         if (!ModernTheme.Accents.SequenceEqual(Tailwind.Select(color => color.Name)))
             throw new Exception("The accents are not the six Tailwind colors in order.");
@@ -64,6 +76,20 @@ internal static class ModernThemeChecks
         if (ModernTheme.IsAccent("pink") || ModernTheme.IsAccent("") || ModernTheme.IsAccent(null)) throw new Exception("An unknown accent is accepted.");
         string theme = File.ReadAllText(files[0]);
         if (!theme.Contains("x:Key=\"ModernAccent\" Color=\"#22D3EE\"")) throw new Exception("The theme's default accent is not cyan-400.");
+        if (!theme.Contains("x:Key=\"ListRowHover\" Color=\"#2622D3EE\"") || !theme.Contains("x:Key=\"ListRowHoverEdge\" Color=\"#6622D3EE\""))
+            throw new Exception("The rows of the calendar do not light up in the cyan accent by default.");
+        var cyan = ModernTheme.SurfacesOf("cyan");
+        foreach (var (key, color) in new[] { ("ModernBase", cyan.Base), ("ModernBaseDeep", cyan.Deep), ("ModernRaised", cyan.Raised), ("ButtonFace", cyan.Panel) })
+            if (!theme.Contains($"x:Key=\"{key}\" Color=\"#{Hex(color)}\"")) throw new Exception($"The theme's default {key} is not the cyan-tinted #{Hex(color)}.");
+        var bases = new System.Collections.Generic.HashSet<string>();
+        foreach (var (name, _, _) in Tailwind)
+        {
+            var surfaces = ModernTheme.SurfacesOf(name);
+            if (!bases.Add(Hex(surfaces.Base))) throw new Exception("The accents " + name + " and another give the same window color: the accent would not show.");
+            // Text on the tinted surfaces: normal text on the raised layer, muted text on the window.
+            if (Contrast(Color.FromRgb(0xE2, 0xE8, 0xF0), surfaces.Raised) < 7 || Contrast(Color.FromRgb(0x94, 0xA3, 0xB8), surfaces.Base) < 4.5)
+                throw new Exception($"Text on the {name}-tinted surfaces is too faint.");
+        }
 
         var settings = new Settings();
         if (settings.Theme != ModernTheme.ThemeName || settings.AccentColor != "cyan")
@@ -91,6 +117,25 @@ internal static class ModernThemeChecks
                 CheckBrush(app, "ModernAccentStrong", strong);
                 if (app.Resources["ModernAccentGlow1"] is not SolidColorBrush { IsFrozen: true } glow || glow.Color.A != 0x40 || Hex(glow.Color) != light)
                     throw new Exception("The glow ring of " + name + " is not the accent at 25 percent.");
+                var surfaces = ModernTheme.SurfacesOf(name);
+                CheckBrush(app, "ModernBase", Hex(surfaces.Base));
+                CheckBrush(app, "ModernRaised", Hex(surfaces.Raised));
+                CheckBrush(app, "ButtonFace", Hex(surfaces.Panel));
+                if (app.Resources["ModernGlassBorder"] is not SolidColorBrush edge || edge.Color.A != 0x40 || Hex(edge.Color) != light)
+                    throw new Exception("The hairlines of " + name + " are not the accent at 25 percent.");
+                // The window is translucent over the blurred desktop when the blur is on and the system has it, and opaque otherwise.
+                if (app.Resources["ModernWindowFill"] is not SolidColorBrush fill || Hex(fill.Color) != Hex(surfaces.Base) ||
+                    fill.Color.A != (ModernBackdrop.Wanted ? ModernTheme.WindowGlassAlpha : 0xFF))
+                    throw new Exception("The window fill of " + name + " is not the tinted base at the right opacity.");
+                ModernTheme.ApplyPanel();
+                if (app.Resources["FlatPanelFill"] is not SolidColorBrush panelFill) throw new Exception("The panel has no fill brush.");
+                if (ModernBackdrop.PanelWanted ? panelFill.Color.A != ModernTheme.PanelGlassAlpha || Hex(panelFill.Color) != Hex(surfaces.Panel) : panelFill.Color.A != 0xFF)
+                    throw new Exception("The panel fill of " + name + " is not the tinted panel at the right opacity.");
+                if (ModernBackdrop.PanelWanted && (app.Resources["FlatRest"] is not SolidColorBrush { Color.A: 0 } || app.Resources["FlatTask"] is not SolidColorBrush { Color.A: 0x2E }))
+                    throw new Exception("With the blur on the panel's buttons are not layers of the accent.");
+                if (app.Resources["ListRowHover"] is not SolidColorBrush rowFill || rowFill.Color.A != 0x26 || Hex(rowFill.Color) != light ||
+                    app.Resources["ListRowHoverEdge"] is not SolidColorBrush rowEdge || rowEdge.Color.A != 0x66 || Hex(rowEdge.Color) != light)
+                    throw new Exception("The row under the pointer is not the accent " + name + ".");
                 var box = new CheckBox { IsChecked = true, Content = "Box" };
                 var pixel = Render(box, out double height, 8, (int)((Math.Ceiling(Layout(box).Height) - 16) / 2) + 2);
                 if (Math.Abs(pixel.R - Convert.ToInt32(light.Substring(0, 2), 16)) > 3 || Math.Abs(pixel.G - Convert.ToInt32(light.Substring(2, 2), 16)) > 3 ||
@@ -99,7 +144,7 @@ internal static class ModernThemeChecks
             }
             settings.Theme = "Windows XP Royale Noir";
             ModernTheme.Apply();
-            if (app.Resources.Contains("ModernAccent") || app.Resources.Contains(SystemColors.HighlightBrushKey))
+            if (app.Resources.Contains("ModernAccent") || app.Resources.Contains("ModernBase") || app.Resources.Contains("ButtonFace") || app.Resources.Contains(SystemColors.HighlightBrushKey))
                 throw new Exception("The accent stays in the application's resources after another theme is chosen.");
         }
         finally

@@ -64,6 +64,20 @@ namespace UltraWinBar.Utilities
             return last.Replace('_', ' ');
         }
 
+        /// <summary>
+        /// The computer's own zone as Windows names it, by its first place: "Amsterdam" for "(UTC+01:00) Amsterdam, Berlin,
+        /// Bern, ..." (in the language of Windows).
+        /// </summary>
+        public static string LocalName()
+        {
+            string display = TimeZoneInfo.Local.DisplayName ?? "";
+            int close = display.StartsWith("(", StringComparison.Ordinal) ? display.IndexOf(')') : -1;
+            string rest = (close >= 0 ? display.Substring(close + 1) : display).Trim();
+            int comma = rest.IndexOf(',');
+            string name = (comma > 0 ? rest.Substring(0, comma) : rest).Trim();
+            return name.Length > 0 ? name : TimeZoneInfo.Local.StandardName;
+        }
+
         /// <summary>"Asia/Jerusalem (UTC+02:00)" at the moment; the id alone for an unknown zone.</summary>
         public static string Describe(string id, DateTime utcNow)
         {

@@ -176,6 +176,10 @@ namespace UltraWinBar
             ShellLogger.Debug($"Taskbar {AppBarEdge}: reservation published");
         }
 
+        // Manual layout: the first position (on Show) is already the final one, not the whole screen side.
+        protected override NativeMethods.Rect GetDesiredRect() =>
+            _standaloneBounds ?? windowManager?.PlannedStandaloneRect(this) ?? base.GetDesiredRect();
+
         public override bool UpdatePosition()
         {
             if (windowManager?.UsesManualWorkArea != true)

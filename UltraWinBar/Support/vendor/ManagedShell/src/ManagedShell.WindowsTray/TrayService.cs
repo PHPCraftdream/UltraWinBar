@@ -263,6 +263,22 @@ namespace ManagedShell.WindowsTray
                                     return abmResult;
                                 }
 
+                                // UltraWinBar: the program's own panels do not wait for Explorer's answer (see AppBarForwardQueue).
+                                if (AppBarForwardQueue.IsOwnReservation(amd.abd.uCallbackMessage) &&
+                                    (amd.dwMessage == (int)ABMsg.ABM_NEW || amd.dwMessage == (int)ABMsg.ABM_REMOVE) &&
+                                    TryForwardOwnAppBarMessage(wParam, copyData))
+                                {
+                                    return (IntPtr)1;
+                                }
+
+                                // UltraWinBar: our own ABM_SETSTATE (hiding Explorer's taskbar) needs no answer; it waited
+                                // behind the queued reservations for seconds at start.
+                                if (amd.dwMessage == (int)ABMsg.ABM_SETSTATE && amd.dwSourceProcessId == Environment.ProcessId &&
+                                    TryForwardOwnAppBarMessage(wParam, copyData))
+                                {
+                                    return (IntPtr)1;
+                                }
+
                                 ShellLogger.Debug($"TrayService: Forwarding AppBar message {(ABMsg)amd.dwMessage}");
                             }
                             else
@@ -281,10 +297,13 @@ namespace ManagedShell.WindowsTray
                             {
                                 if (trayDelegate(trayData.dwMessage, new SafeNotifyIconData(trayData.nid)))
                                 {
+                                    // UltraWinBar: Explorer gets a copy (without the balloon), so its list stays current. Its
+                                    // stale list gave dead or reused HICONs to the import at the next start.
+                                    TryForwardOwnAppBarMessage(wParam, copyData, ClearBalloonFlag);
                                     return (IntPtr)1;
                                 }
 
-                                ShellLogger.Debug("TrayService: Ignored notify icon message");
+                                ShellLogger.Debug($"TrayService: Ignored notify icon message {(NIM)trayData.dwMessage} from hWnd {trayData.nid.hWnd}");
                             }
                             else
                             {
@@ -343,6 +362,57 @@ namespace ManagedShell.WindowsTray
         }
 
         #region Event handling
+        // UltraWinBar: sends a copy of the message to Explorer's tray from the forward queue, after the sender has been answered.
+        // SHELLTRAYDATA: dwUnknown, dwMessage, then NOTIFYICONDATA (cbSize, hWnd, uID, uFlags).
+        internal const int NotifyIconFlagsOffset = 20;
+
+        internal static void ClearBalloonFlag(byte[] payload)
+        {
+            if (payload.Length < NotifyIconFlagsOffset + 4) return;
+            uint flags = BitConverter.ToUInt32(payload, NotifyIconFlagsOffset) & ~(uint)NIF.INFO;
+            BitConverter.GetBytes(flags).CopyTo(payload, NotifyIconFlagsOffset);
+        }
+
+        private bool TryForwardOwnAppBarMessage(IntPtr wParam, COPYDATASTRUCT copyData, Action<byte[]> transform = null)
+        {
+            if (copyData.lpData == IntPtr.Zero || copyData.cbData <= 0 || copyData.cbData > 4096)
+            {
+                return false;
+            }
+
+            byte[] payload = new byte[copyData.cbData];
+            Marshal.Copy(copyData.lpData, payload, 0, payload.Length);
+            transform?.Invoke(payload);
+            IntPtr kind = copyData.dwData;
+            IntPtr ownTray = HwndTray;
+
+            return AppBarForwardQueue.Post(() =>
+            {
+                IntPtr target = WindowHelper.FindWindowsTray(ownTray);
+                if (target == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                IntPtr data = Marshal.AllocHGlobal(payload.Length);
+                IntPtr copy = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(COPYDATASTRUCT)));
+                try
+                {
+                    Marshal.Copy(payload, 0, data, payload.Length);
+                    Marshal.StructureToPtr(new COPYDATASTRUCT { dwData = kind, cbData = payload.Length, lpData = data }, copy, false);
+                    if (!TrySendMessageTimeout(target, (uint)WM.COPYDATA, wParam, copy, ForwardTimeoutMs, out _))
+                    {
+                        ShellLogger.Debug("TrayService: Forward to Explorer tray timed out or failed for a panel's AppBar message");
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(data);
+                    Marshal.FreeHGlobal(copy);
+                }
+            });
+        }
+
         private IntPtr ForwardMsg(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam)
         {
             if (HwndFwd == IntPtr.Zero || !IsWindow(HwndFwd))

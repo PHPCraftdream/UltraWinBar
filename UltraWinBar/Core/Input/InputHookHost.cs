@@ -19,6 +19,9 @@ namespace UltraWinBar.Utilities
         private static readonly object Gate = new object();
         private static readonly List<(string Name, EventHandler<LowLevelMouseHook.LowLevelMouseEventArgs> Handler, Dispatcher Target)> Subscribers =
             new List<(string, EventHandler<LowLevelMouseHook.LowLevelMouseEventArgs>, Dispatcher)>();
+        // Read by the hook thread without Gate: the UI thread holds Gate while the hook is installed.
+        private static volatile (string Name, EventHandler<LowLevelMouseHook.LowLevelMouseEventArgs> Handler, Dispatcher Target)[] Snapshot =
+            Array.Empty<(string, EventHandler<LowLevelMouseHook.LowLevelMouseEventArgs>, Dispatcher)>();
         private static LowLevelMouseHook mouseHook;
         private static DesktopActivationHookThread hookThread;
 
@@ -36,6 +39,7 @@ namespace UltraWinBar.Utilities
             {
                 if (mouseHook == null) Start();
                 Subscribers.Add((subscriberName, handler, target));
+                Snapshot = Subscribers.ToArray();
             }
             return new Subscription(subscriberName, handler);
         }
@@ -66,9 +70,7 @@ namespace UltraWinBar.Utilities
         // Hook thread: never waits on another thread. LowLevelMouseEventArgs is a fresh by-value copy per event.
         internal static void Dispatch(object sender, LowLevelMouseHook.LowLevelMouseEventArgs e)
         {
-            (string Name, EventHandler<LowLevelMouseHook.LowLevelMouseEventArgs> Handler, Dispatcher Target)[] snapshot;
-            lock (Gate) snapshot = Subscribers.ToArray();
-            foreach (var (name, handler, target) in snapshot)
+            foreach (var (name, handler, target) in Snapshot)
             {
                 if (target == null) Invoke(name, handler, sender, e);
                 else if (!target.HasShutdownStarted) target.BeginInvoke(new Action(() => Invoke(name, handler, sender, e)));
@@ -78,7 +80,7 @@ namespace UltraWinBar.Utilities
         private static void Invoke(string name, EventHandler<LowLevelMouseHook.LowLevelMouseEventArgs> handler, object sender, LowLevelMouseHook.LowLevelMouseEventArgs e)
         {
             // Unsubscribed while the event was queued: drop it.
-            lock (Gate) { if (!Subscribers.Exists(s => s.Handler == handler)) return; }
+            if (!Array.Exists(Snapshot, s => s.Handler == handler)) return;
             try { handler(sender, e); }
             catch (Exception error) { CallbackGuard.Report(name, error); }
         }
@@ -89,6 +91,7 @@ namespace UltraWinBar.Utilities
             lock (Gate)
             {
                 Subscribers.RemoveAll(s => s.Name == subscriberName && s.Handler == handler);
+                Snapshot = Subscribers.ToArray();
                 if (Subscribers.Count == 0 && hookThread != null)
                 {
                     toDispose = hookThread;

@@ -115,6 +115,9 @@ namespace ManagedShell.AppBar
                 return IntPtr.Zero;
             }
 
+            // UltraWinBar: the program's own panels do not wait for Explorer's answer (see AppBarForwardQueue).
+            bool ownReservation = AppBarForwardQueue.IsOwnReservation(amd.abd.uCallbackMessage);
+
             // Get Explorer tray handle and PID
             IntPtr ignoreHwnd = IntPtr.Zero;
             IntPtr explorerTray;
@@ -187,6 +190,38 @@ namespace ManagedShell.AppBar
                 hCopyData = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(COPYDATASTRUCT)));
                 Marshal.StructureToPtr(copyData, hCopyData, false);
 
+                if (ownReservation)
+                {
+                    // The sender's shared memory is already copied and is not read back (its caller is gone by the time
+                    // Explorer answers); the copies sent to Explorer are freed by the queue once it has answered.
+                    IntPtr sharedForExplorer = hSharedNew, messageBuffer = hAmd, copyBuffer = hCopyData;
+                    IntPtr target = explorerTray, sender = (IntPtr)amd.abd.hWnd;
+                    uint targetPid = explorerPid;
+                    if (AppBarForwardQueue.Post(() =>
+                    {
+                        try
+                        {
+                            if (!TrySendMessageTimeout(target, (uint)WM.COPYDATA, sender, copyBuffer, ForwardTimeoutMs, out _))
+                            {
+                                ShellLogger.Debug("AppBarManager: Forward to Explorer tray timed out or failed for a panel's ABM_QUERYPOS/SETPOS");
+                            }
+                        }
+                        finally
+                        {
+                            SHFreeShared(sharedForExplorer, targetPid);
+                            Marshal.FreeHGlobal(messageBuffer);
+                            Marshal.FreeHGlobal(copyBuffer);
+                        }
+                    }))
+                    {
+                        hSharedNew = IntPtr.Zero;
+                        hAmd = IntPtr.Zero;
+                        hCopyData = IntPtr.Zero;
+                        handled = true;
+                        return (IntPtr)1;
+                    }
+                }
+
                 // UltraWinBar: don't let a hung Explorer hang our AppBar message handling.
                 if (!TrySendMessageTimeout(explorerTray, (uint)WM.COPYDATA, (IntPtr)amd.abd.hWnd, hCopyData, ForwardTimeoutMs, out IntPtr result))
                 {
@@ -224,10 +259,26 @@ namespace ManagedShell.AppBar
             }
         }
 
+        // UltraWinBar: Explorer's tray is the other Shell_TrayWnd; known from the window itself, without FindWindow.
+        internal static bool IsExplorerTray(IntPtr hwnd, IntPtr ownTray)
+        {
+            if (hwnd == IntPtr.Zero || hwnd == ownTray) return false;
+            var className = new System.Text.StringBuilder(64);
+            return GetClassName(hwnd, className, className.Capacity) > 0 && className.ToString() == WindowHelper.TrayWndClass;
+        }
+
         private IntPtr appBarMessage_GetState(APPBARMSGDATAV3 amd, ref bool handled)
         {
-            if (_explorerHelper._notificationArea != null && amd.abd.hWnd == (uint)WindowHelper.FindWindowsTray(_explorerHelper._notificationArea.Handle))
+            if (_explorerHelper._notificationArea != null && IsExplorerTray((IntPtr)amd.abd.hWnd, _explorerHelper._notificationArea.Handle))
             {
+                // UltraWinBar: answered from Explorer's stored state; forwarding waited on a busy Explorer for seconds
+                // at start (the queries come from system code, ours included). Unreadable: forwarded as before.
+                if (ExplorerHelper.ReadStoredTaskbarState() is ABState stored)
+                {
+                    handled = true;
+                    return (IntPtr)stored;
+                }
+
                 // If the Explorer AppBar is being queried specifically, forward the request on to it.
                 // ExplorerHelper queries this to get the pre-existing taskbar state before hiding.
                 return IntPtr.Zero;

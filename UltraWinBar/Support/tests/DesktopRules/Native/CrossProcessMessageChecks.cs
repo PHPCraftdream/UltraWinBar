@@ -1,5 +1,9 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
+using ManagedShell.Common.Helpers;
 using ManagedShell.Interop;
 
 // R9-M / К16/К20: garbage-input coverage for the trust-boundary parsers in
@@ -30,6 +34,50 @@ internal static class CrossProcessMessageChecks
         CheckAppBarMessage();
         CheckShellHookInfo();
         CheckSharedAppBarData();
+        CheckAppBarForwardQueue();
+        CheckStoredTaskbarState();
+    }
+
+    // The start reads Explorer's auto-hide flag from StuckRects3 instead of waiting on ABM_GETSTATE.
+    private static void CheckStoredTaskbarState()
+    {
+        byte[] Settings(byte flags) => new byte[] { 0x30, 0, 0, 0, 0xFE, 0xFF, 0xFF, 0xFF, flags, 0x90, 0, 0 };
+        if (ManagedShell.AppBar.ExplorerHelper.StateFromStuckRects(Settings(0x03)) != NativeMethods.ABState.AutoHide)
+            throw new Exception("StuckRects3 with bit 0 of byte 8 set is auto-hide.");
+        if (ManagedShell.AppBar.ExplorerHelper.StateFromStuckRects(Settings(0x02)) != NativeMethods.ABState.OnTop)
+            throw new Exception("StuckRects3 without the auto-hide bit is always on top (ABM_GETSTATE's answer).");
+        if (ManagedShell.AppBar.ExplorerHelper.StateFromStuckRects(null) != null ||
+            ManagedShell.AppBar.ExplorerHelper.StateFromStuckRects(new byte[8]) != null)
+            throw new Exception("A missing or short StuckRects3 value must fall back to ABM_GETSTATE.");
+
+        // ABM_GETSTATE for Explorer's tray is recognized by the window's class, not by a FindWindow search.
+        using var form = new System.Windows.Forms.Form();
+        IntPtr other = form.Handle;
+        IntPtr explorer = ManagedShell.Common.Helpers.WindowHelper.FindWindowsTray(IntPtr.Zero);
+        if (ManagedShell.AppBar.AppBarManager.IsExplorerTray(IntPtr.Zero, IntPtr.Zero) ||
+            ManagedShell.AppBar.AppBarManager.IsExplorerTray(other, IntPtr.Zero) ||
+            (explorer != IntPtr.Zero && (!ManagedShell.AppBar.AppBarManager.IsExplorerTray(explorer, IntPtr.Zero) ||
+                                         ManagedShell.AppBar.AppBarManager.IsExplorerTray(explorer, explorer))))
+            throw new Exception("IsExplorerTray: only a Shell_TrayWnd that is not our own.");
+
+        // The copy of a notify icon message sent on to Explorer has no balloon (Explorer would show it a second time).
+        var tray = new NativeMethods.SHELLTRAYDATA { dwMessage = 1 };
+        tray.nid.uFlags = NativeMethods.NIF.ICON | NativeMethods.NIF.TIP | NativeMethods.NIF.INFO | NativeMethods.NIF.GUID;
+        int size = Marshal.SizeOf<NativeMethods.SHELLTRAYDATA>();
+        IntPtr raw = Marshal.AllocHGlobal(size);
+        try
+        {
+            Marshal.StructureToPtr(tray, raw, false);
+            byte[] payload = new byte[size];
+            Marshal.Copy(raw, payload, 0, size);
+            ManagedShell.WindowsTray.TrayService.ClearBalloonFlag(payload);
+            Marshal.Copy(payload, 0, raw, size);
+            var back = Marshal.PtrToStructure<NativeMethods.SHELLTRAYDATA>(raw);
+            if (back.nid.uFlags != (NativeMethods.NIF.ICON | NativeMethods.NIF.TIP | NativeMethods.NIF.GUID) || back.dwMessage != 1)
+                throw new Exception("ClearBalloonFlag must clear only NIF_INFO of the notify icon data.");
+        }
+        finally { Marshal.FreeHGlobal(raw); }
+        ManagedShell.WindowsTray.TrayService.ClearBalloonFlag(new byte[3]);
     }
 
     private static void CheckNotifyIconMessage()
@@ -211,5 +259,42 @@ internal static class CrossProcessMessageChecks
         }
 
         Console.WriteLine("PASS: CrossProcessMessages.TryReadSharedAppBarData/TryWriteSharedAppBarData reject null/read-only shared memory and round-trip on a valid region.");
+    }
+
+    // The panels' own AppBar messages go to Explorer from a queue, in order, and a slow or failing send never blocks the caller.
+    private static void CheckAppBarForwardQueue()
+    {
+        uint previous = AppBarForwardQueue.OwnCallbackMessage;
+        try
+        {
+            AppBarForwardQueue.OwnCallbackMessage = 0;
+            if (AppBarForwardQueue.IsOwnReservation(0) || AppBarForwardQueue.IsOwnReservation(0xC123))
+                throw new Exception("With no marker set no message is the program's own.");
+            AppBarForwardQueue.OwnCallbackMessage = 0xC123;
+            if (!AppBarForwardQueue.IsOwnReservation(0xC123) || AppBarForwardQueue.IsOwnReservation(0xC124))
+                throw new Exception("Only the marked callback message is the program's own.");
+
+            var order = new List<int>();
+            var started = new ManualResetEventSlim(false);
+            var release = new ManualResetEventSlim(false);
+            var posted = System.Diagnostics.Stopwatch.StartNew();
+            AppBarForwardQueue.Post(() => { lock (order) order.Add(1); started.Set(); release.Wait(); });
+            AppBarForwardQueue.Post(() => throw new InvalidOperationException("a failing send"));
+            AppBarForwardQueue.Post(() => { lock (order) order.Add(3); });
+            if (posted.ElapsedMilliseconds > 500) throw new Exception("Posting waited for the send.");
+            started.Wait(5000);
+            if (AppBarForwardQueue.Flush(TimeSpan.FromMilliseconds(150)))
+                throw new Exception("Flush claimed that a send still running had finished.");
+            release.Set();
+            if (!AppBarForwardQueue.Flush(TimeSpan.FromSeconds(5)))
+                throw new Exception("Flush did not see the queue empty.");
+            lock (order)
+                if (!order.SequenceEqual(new[] { 1, 3 })) throw new Exception("The sends did not run in order, or a failing one stopped the queue: " + string.Join(",", order));
+        }
+        finally
+        {
+            AppBarForwardQueue.OwnCallbackMessage = previous;
+        }
+        Console.WriteLine("PASS: the panels' AppBar messages are forwarded in order from a queue; posting does not wait, a failing send does not stop it, Flush waits for what is queued.");
     }
 }

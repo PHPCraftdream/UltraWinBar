@@ -136,6 +136,27 @@ namespace ManagedShell.AppBar
             return (ABState)uState;
         }
 
+        // UltraWinBar: Explorer keeps the auto-hide flag in StuckRects3\Settings, byte 8 bit 0; null if unreadable.
+        public static ABState? ReadStoredTaskbarState()
+        {
+            try
+            {
+                using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3", false);
+                return StateFromStuckRects(key?.GetValue("Settings") as byte[]);
+            }
+            catch (Exception e)
+            {
+                ShellLogger.Debug($"ExplorerHelper: taskbar state not read from the registry: {e.Message}");
+                return null;
+            }
+        }
+
+        public static ABState? StateFromStuckRects(byte[] settings)
+        {
+            if (settings == null || settings.Length < 9) return null;
+            return (settings[8] & 1) != 0 ? ABState.AutoHide : ABState.OnTop;
+        }
+
         private IntPtr getNotifyAreaHandle()
         {
             if (_notificationArea == null) return IntPtr.Zero;
@@ -147,7 +168,8 @@ namespace ManagedShell.AppBar
         {
             if (startupTaskbarState == null)
             {
-                startupTaskbarState = GetTaskbarState();
+                // UltraWinBar: the registry first; ABM_GETSTATE waits on Explorer (seconds at start).
+                startupTaskbarState = ReadStoredTaskbarState() ?? GetTaskbarState();
             }
 
             if (HideExplorerTaskbar)

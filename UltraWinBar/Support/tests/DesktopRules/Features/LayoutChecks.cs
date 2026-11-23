@@ -180,6 +180,122 @@ internal static class LayoutChecks
         if (PanelReservation.Build(IntPtr.Zero, AppBarEdge.Bottom, R(0, 1039, 1920, 1080)).uEdge != 3)
             throw new Exception("Panel reservation edge must match the shell ABE_* values.");
         Console.WriteLine("PASS: manual panels reserve their exact rects with the shell under a dedicated callback message.");
+        // The work area of the last run is remembered with its screen, and read back only when it is sane.
+        var rememberedScreen = R(0, 0, 1920, 1080);
+        string remembered = WorkAreaMemory.Format(R(148, 34, 1772, 1046), rememberedScreen);
+        if (remembered != "148,34,1772,1046;0,0,1920,1080" || !WorkAreaMemory.TryParse(remembered, out var rememberedArea, out var rememberedOn) ||
+            !rememberedArea.Equals(R(148, 34, 1772, 1046)) || !rememberedOn.Equals(rememberedScreen))
+            throw new Exception("The remembered work area does not make the round trip: " + remembered);
+        foreach (string bad in new[] { null, "", "148,34,1772,1046", "1,2,3;0,0,1920,1080", "a,b,c,d;0,0,1920,1080", "0,0,0,0;0,0,1920,1080",
+            "-10,0,100,100;0,0,1920,1080", "0,0,1921,1080;0,0,1920,1080", "100,100,50,50;0,0,1920,1080", "0,0,100,100;0,0,0,0", "1,2,3,4;5,6,7,8;9" })
+            if (WorkAreaMemory.TryParse(bad, out _, out _)) throw new Exception("A work area that cannot be right was accepted: " + bad);
+        Console.WriteLine("PASS: the work area of the last run is remembered with its screen and read back only when it is non-empty and within that screen.");
+        // After a restart that kept the panels' work area the original is the remembered one; in every other case the live one.
+        var live = R(148, 34, 1772, 1046);
+        string layoutText = WorkAreaMemory.Format(live, rememberedScreen), originalText = WorkAreaMemory.Format(R(0, 0, 1920, 1040), rememberedScreen);
+        if (!WorkAreaMemory.ResolveOriginal(live, rememberedScreen, layoutText, originalText).Equals(R(0, 0, 1920, 1040)))
+            throw new Exception("After a kept work area the original is the remembered one.");
+        if (!WorkAreaMemory.ResolveOriginal(R(0, 0, 1920, 1040), rememberedScreen, layoutText, originalText).Equals(R(0, 0, 1920, 1040)) ||
+            !WorkAreaMemory.ResolveOriginal(live, rememberedScreen, "", originalText).Equals(live) ||
+            !WorkAreaMemory.ResolveOriginal(live, rememberedScreen, layoutText, "").Equals(live) ||
+            !WorkAreaMemory.ResolveOriginal(live, R(0, 0, 2560, 1440), layoutText, originalText).Equals(live) ||
+            !WorkAreaMemory.ResolveOriginal(live, rememberedScreen, layoutText, layoutText).Equals(live))
+            throw new Exception("Without a kept work area, or on another screen, the live work area is the original.");
+        string markerFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "UltraWinBar-test-restarting-" + Guid.NewGuid().ToString("N"));
+        RestartMarker.PathOverride = markerFile;
+        try
+        {
+            if (RestartMarker.IsFresh()) throw new Exception("No mark, no restart.");
+            RestartMarker.Create();
+            if (!RestartMarker.IsFresh()) throw new Exception("A mark just made is fresh.");
+            System.IO.File.SetLastWriteTimeUtc(markerFile, DateTime.UtcNow.AddMinutes(-3));
+            if (RestartMarker.IsFresh()) throw new Exception("A mark older than two minutes means nothing: a crash must not be taken for a restart.");
+            RestartMarker.Create();
+            RestartMarker.Clear();
+            if (RestartMarker.IsFresh() || System.IO.File.Exists(markerFile)) throw new Exception("A cleared mark is gone.");
+        }
+        finally
+        {
+            RestartMarker.PathOverride = null;
+            System.IO.File.Delete(markerFile);
+        }
+        string sources = System.IO.Path.Combine(repositoryRoot.FullName, "UltraWinBar");
+        string program = System.IO.File.ReadAllText(System.IO.Path.Combine(sources, "Shell", "Program.cs"));
+        int watchdog = program.IndexOf("private static int RunWorkAreaWatchdog", StringComparison.Ordinal);
+        if (watchdog < 0 || program.IndexOf("RestartMarker.IsFresh()", watchdog, StringComparison.Ordinal) < 0 ||
+            program.IndexOf("RestartMarker.IsFresh()", watchdog, StringComparison.Ordinal) > program.IndexOf("WorkAreaManager.Apply(", watchdog, StringComparison.Ordinal))
+            throw new Exception("The watchdog must look for the restart mark before it gives the work area back.");
+        string windowManager = System.IO.File.ReadAllText(System.IO.Path.Combine(sources, "Core", "Desktop", "WindowManager.cs"));
+        string app = System.IO.File.ReadAllText(System.IO.Path.Combine(sources, "Shell", "App.xaml.cs"));
+        string script = System.IO.File.ReadAllText(System.IO.Path.Combine(sources, "Support", "BuildTools", "scripts", "Reinstall-UltraWinBar.ps1"));
+        int restartApp = app.IndexOf("public void RestartApp()", StringComparison.Ordinal);
+        if (!windowManager.Contains("_manualWorkArea && !RestartMarker.IsFresh()") || !windowManager.Contains("RestartMarker.Clear();") ||
+            restartApp < 0 || app.IndexOf("RestartMarker.Create();", restartApp, StringComparison.Ordinal) < 0 ||
+            app.IndexOf("RestartMarker.Clear();", restartApp, StringComparison.Ordinal) < 0 ||
+            script.IndexOf("'restarting'", StringComparison.Ordinal) < 0 || script.IndexOf("'restarting'", StringComparison.Ordinal) > script.IndexOf("Stop-Process", StringComparison.Ordinal))
+            throw new Exception("A restart on purpose must leave the work area, and the next start must clear the mark.");
+        Console.WriteLine("PASS: a restart on purpose (the Restart menu, the deploy script) leaves the work area in place and the next start takes it over with the remembered original; a crash, with no fresh mark, gives the work area back at once.");
+        // Shown panels of a manual layout start at their final rect: Show used to place each across its whole side first.
+        string appBarWindow = System.IO.File.ReadAllText(System.IO.Path.Combine(sources, "Support", "vendor", "ManagedShell", "src", "ManagedShell.AppBar", "AppBarWindow.cs"));
+        string taskbarCode = System.IO.File.ReadAllText(System.IO.Path.Combine(sources, "Shell", "Panels", "Taskbar.xaml.cs"));
+        int opening = windowManager.IndexOf("_openingTaskbars = pendingTaskbars;", StringComparison.Ordinal);
+        if (!appBarWindow.Contains("protected internal virtual NativeMethods.Rect GetDesiredRect()") ||
+            !taskbarCode.Contains("protected override NativeMethods.Rect GetDesiredRect() =>") || !taskbarCode.Contains("windowManager?.PlannedStandaloneRect(this)") ||
+            opening < 0 || opening > windowManager.IndexOf("taskbar.Show();", StringComparison.Ordinal) || !windowManager.Contains("_openingTaskbars = null;"))
+            throw new Exception("A panel of the manual layout must be shown at its planned rect, not across its whole side.");
+        Console.WriteLine("PASS: panels of the manual layout are shown at their final rect.");
+        // Our own ABM_SETSTATE goes through the forward queue: waiting on Explorer held the start for seconds.
+        string trayService = System.IO.File.ReadAllText(System.IO.Path.Combine(sources, "Support", "vendor", "ManagedShell", "src", "ManagedShell.WindowsTray", "TrayService.cs"));
+        if (!trayService.Contains("amd.dwMessage == (int)ABMsg.ABM_SETSTATE && amd.dwSourceProcessId == Environment.ProcessId"))
+            throw new Exception("The program's own ABM_SETSTATE must not wait for Explorer.");
+        // Modern Glass panels are a little taller than the base 28 (they looked cut off).
+        string modernGlass = System.IO.File.ReadAllText(System.IO.Path.Combine(sources, "Assets", "Themes", "Other", "Modern Glass.xaml"));
+        if (!modernGlass.Contains("<system:Double x:Key=\"TaskbarHeight\">33.34</system:Double>"))
+            throw new Exception("Modern Glass sets its own panel height (40 px at scale 1.2).");
+        Console.WriteLine("PASS: the own ABM_SETSTATE is queued; Modern Glass panels are 40 px high at scale 1.2.");
+        // Explorer's imported tray icons must not overwrite an image the application already gave us: its HICON may be
+        // destroyed and reused by then (black or dashed squares after a start).
+        string notificationArea = System.IO.File.ReadAllText(System.IO.Path.Combine(sources, "Support", "vendor", "ManagedShell", "src", "ManagedShell.WindowsTray", "NotificationArea.cs"));
+        if (!notificationArea.Contains("_explorerTrayService.SetSystrayCallback(ImportFromExplorer);") ||
+            !notificationArea.Contains("FindIcon(nicData)?.HasOwnImage == true") ||
+            !notificationArea.Contains("trayIcon.HasOwnImage |= !_importingFromExplorer;"))
+            throw new Exception("Explorer's tray import must skip icons that already have their application's image.");
+        Console.WriteLine("PASS: Explorer's tray import keeps the image an application already gave.");
+        // The windows' desktops are asked off the UI thread at start; a forgotten window drops its prefetched answer too.
+        string desktops = System.IO.File.ReadAllText(System.IO.Path.Combine(sources, "Core", "Desktop", "VirtualDesktopContext.cs"));
+        int forget = desktops.IndexOf("internal void ForgetWindowDesktop(IntPtr hwnd)", StringComparison.Ordinal);
+        if (!app.Contains("VirtualDesktopContext.Prefetch(") || app.IndexOf("VirtualDesktopContext.Prefetch(", StringComparison.Ordinal) > app.IndexOf("loadTheme();", StringComparison.Ordinal) ||
+            !desktops.Contains("Prefetched.TryRemove(hwnd, out Guid id)") || forget < 0 ||
+            desktops.IndexOf("Prefetched.TryRemove(hwnd, out _);", forget, StringComparison.Ordinal) < 0 ||
+            desktops.Contains("desktopForWindowCache.Remove(hwnd);\n                    return true;"))
+            throw new Exception("Window desktops are prefetched before the theme loads, and forgetting a window forgets its prefetched desktop.");
+        Console.WriteLine("PASS: window desktops are prefetched off the UI thread at start.");
+        // Across a restart on purpose, the strips of the last run are held from Main until the new panels published theirs.
+        var strips = ReservationBridge.StripsFor(new ManagedShell.Interop.NativeMethods.Rect(148, 40, 1772, 1040), new ManagedShell.Interop.NativeMethods.Rect(0, 0, 1920, 1080));
+        if (strips.Length != 4 ||
+            !strips[0].Rect.Equals(new ManagedShell.Interop.NativeMethods.Rect(0, 0, 148, 1080)) ||
+            !strips[1].Rect.Equals(new ManagedShell.Interop.NativeMethods.Rect(0, 0, 1920, 40)) ||
+            !strips[2].Rect.Equals(new ManagedShell.Interop.NativeMethods.Rect(1772, 0, 1920, 1080)) ||
+            !strips[3].Rect.Equals(new ManagedShell.Interop.NativeMethods.Rect(0, 1040, 1920, 1080)))
+            throw new Exception("The held strips are the bands between the screen's edges and the work area.");
+        if (ReservationBridge.StripsFor(new ManagedShell.Interop.NativeMethods.Rect(0, 0, 1920, 1040), new ManagedShell.Interop.NativeMethods.Rect(0, 0, 1920, 1080)).Length != 1)
+            throw new Exception("An edge without a strip holds nothing.");
+        int bridgeStart = program.IndexOf("StartReservationBridge();", StringComparison.Ordinal);
+        if (bridgeStart < 0 || bridgeStart > program.IndexOf("new App()", StringComparison.Ordinal) ||
+            !program.Contains("RestartMarker.IsFresh() || Settings.Instance.AutoHide") ||
+            windowManager.IndexOf("ReservationBridge.Release();", StringComparison.Ordinal) < windowManager.IndexOf("ApplyManualLayout(pendingTaskbars, true);", StringComparison.Ordinal))
+            throw new Exception("The bridge starts in Main on a restart on purpose and is released after the panels published their reservations.");
+        // The deploy script holds the strips while the old instance dies; the new one tells it when it holds them itself.
+        string holder = System.IO.File.ReadAllText(System.IO.Path.Combine(sources, "Support", "BuildTools", "scripts", "Hold-WorkAreaStrips.ps1"));
+        if (!holder.Contains(@"Local\UltraWinBarStripsHeld") || ReservationBridge.HeldEventName != @"Local\UltraWinBarStripsHeld" ||
+            script.IndexOf("Hold-WorkAreaStrips.ps1", StringComparison.Ordinal) < 0 ||
+            script.IndexOf("Hold-WorkAreaStrips.ps1", StringComparison.Ordinal) > script.IndexOf("Stop-Process", StringComparison.Ordinal) ||
+            program.IndexOf("StartReservationBridge();", StringComparison.Ordinal) > program.IndexOf("SingleInstanceCheck()", StringComparison.Ordinal))
+            throw new Exception("The strips are held before the old instance stops (deploy) or exits (Restart menu).");
+        string taskbarAppBar = System.IO.File.ReadAllText(System.IO.Path.Combine(sources, "Shell", "Panels", "Taskbar.AppBar.cs"));
+        if (!taskbarAppBar.Contains("if (_reserved && !RestartMarker.IsFresh())"))
+            throw new Exception("Closing for a restart on purpose must not release the panel's strip.");
+        Console.WriteLine("PASS: a restart on purpose holds the last run's strips until the new panels have theirs.");
         var workAreaManager = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.WorkAreaManager");
         var isCurrentWorkArea = workAreaManager?.GetMethod("IsCurrent");
         var liveWorkArea = new ManagedShell.Interop.NativeMethods.Rect();

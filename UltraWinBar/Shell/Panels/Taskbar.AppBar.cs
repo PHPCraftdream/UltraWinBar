@@ -110,7 +110,9 @@ namespace UltraWinBar
             if (AllowClose)
             {
                 _reservationTimer?.Stop();
-                if (_reserved)
+                // A restart on purpose keeps the strip: each release made Explorer recompute the work area (windows
+                // jumped) before the next run could hold it (ReservationBridge); the dead entry goes with the window.
+                if (_reserved && !RestartMarker.IsFresh())
                 {
                     PanelReservation.Release(Handle);
                     _reserved = false;

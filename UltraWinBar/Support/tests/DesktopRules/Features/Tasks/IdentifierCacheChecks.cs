@@ -45,6 +45,18 @@ internal static class IdentifierCacheChecks
             foreach (var window in created) window.DestroyHandle();
             created.Clear();
         }
+        CheckProcessStartTicks();
+    }
+
+    // The identity's start time is Process.StartTime's, read with one OpenProcess (no process walk).
+    private static void CheckProcessStartTicks()
+    {
+        using var self = System.Diagnostics.Process.GetCurrentProcess();
+        long expected = self.StartTime.ToUniversalTime().Ticks;
+        long actual = TaskOrderIdentifier.ProcessStartTicks((uint)self.Id);
+        if (actual != expected) throw new Exception($"ProcessStartTicks gave {actual}, Process.StartTime {expected}.");
+        if (TaskOrderIdentifier.ProcessStartTicks(0xFFFFFFF0) != 0) throw new Exception("A process that does not exist has no start time.");
+        Console.WriteLine("PASS: the task identity reads a process's start time like Process.StartTime, without walking every process.");
     }
 
     private static void RunChecks()

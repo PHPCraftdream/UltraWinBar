@@ -184,6 +184,102 @@ namespace UltraWinBar.Utilities
         }
     }
 
+    /// <summary>
+    /// The work area of the last layout and the screen it was laid out for, as text. The next start puts it back at once,
+    /// when the screen is the same: the windows keep their place while the panels start, instead of growing over the strips
+    /// the panels will take and shrinking again.
+    /// </summary>
+    internal static class WorkAreaMemory
+    {
+        internal static string Format(NativeMethods.Rect area, NativeMethods.Rect screen) =>
+            $"{area.Left},{area.Top},{area.Right},{area.Bottom};{screen.Left},{screen.Top},{screen.Right},{screen.Bottom}";
+
+        /// <summary>False for anything but a non-empty work area that lies within the screen.</summary>
+        internal static bool TryParse(string text, out NativeMethods.Rect area, out NativeMethods.Rect screen)
+        {
+            area = default;
+            screen = default;
+            string[] parts = (text ?? "").Split(';');
+            if (parts.Length != 2 || !TryRect(parts[0], out area) || !TryRect(parts[1], out screen)) return false;
+            return area.Width > 0 && area.Height > 0 && screen.Width > 0 && screen.Height > 0 &&
+                area.Left >= screen.Left && area.Top >= screen.Top && area.Right <= screen.Right && area.Bottom <= screen.Bottom;
+        }
+
+        /// <summary>
+        /// The original work area (the one before the panels took their strips) when the screen still holds the panels' own,
+        /// left there by a restart that kept it: the live value then is the panels' layout, not the original. Otherwise the
+        /// live value is the original.
+        /// </summary>
+        internal static NativeMethods.Rect ResolveOriginal(NativeMethods.Rect current, NativeMethods.Rect screen, string last, string original)
+        {
+            if (TryParse(last, out var lastArea, out var lastScreen) && lastScreen.Equals(screen) && lastArea.Equals(current) &&
+                TryParse(original, out var originalArea, out var originalScreen) && originalScreen.Equals(screen) && !originalArea.Equals(current))
+            {
+                return originalArea;
+            }
+            return current;
+        }
+
+        private static bool TryRect(string text, out NativeMethods.Rect rect)
+        {
+            rect = default;
+            string[] numbers = text.Split(',');
+            if (numbers.Length != 4) return false;
+            var values = new int[4];
+            for (int i = 0; i < 4; i++)
+                if (!int.TryParse(numbers[i], System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out values[i])) return false;
+            rect = new NativeMethods.Rect { Left = values[0], Top = values[1], Right = values[2], Bottom = values[3] };
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// A file that says the program is being restarted on purpose (the Restart menu, the deploy script): the work area is then
+    /// left as it is, instead of being given back, so that the windows keep their limits while the panels are away, and the
+    /// next start takes it over. A stale file (older than two minutes) means nothing, so a crash is never mistaken for it.
+    /// </summary>
+    internal static class RestartMarker
+    {
+        private static readonly TimeSpan Freshness = TimeSpan.FromMinutes(2);
+
+        /// <summary>For the tests: another place for the file.</summary>
+        internal static string PathOverride { get; set; }
+
+        internal static string FilePath => PathOverride ?? System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "UltraWinBar", "restarting");
+
+        internal static void Create()
+        {
+            try
+            {
+                System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(FilePath));
+                System.IO.File.WriteAllText(FilePath, DateTime.UtcNow.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
+            }
+            catch (Exception error) when (error is System.IO.IOException || error is UnauthorizedAccessException)
+            {
+                ManagedShell.Common.Logging.ShellLogger.Debug($"RestartMarker: could not write: {error.Message}");
+            }
+        }
+
+        internal static bool IsFresh()
+        {
+            try
+            {
+                return System.IO.File.Exists(FilePath) && DateTime.UtcNow - System.IO.File.GetLastWriteTimeUtc(FilePath) < Freshness;
+            }
+            catch (Exception error) when (error is System.IO.IOException || error is UnauthorizedAccessException)
+            {
+                return false;
+            }
+        }
+
+        internal static void Clear()
+        {
+            try { System.IO.File.Delete(FilePath); }
+            catch (Exception error) when (error is System.IO.IOException || error is UnauthorizedAccessException) { }
+        }
+    }
+
     internal enum WorkAreaRecoveryResult { Unchanged, Deferred, Applied, Suspended }
 
     internal sealed class WorkAreaRecovery

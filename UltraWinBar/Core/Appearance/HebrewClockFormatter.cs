@@ -61,6 +61,18 @@ namespace UltraWinBar.Utilities
             return DayName(day) + "[" + civil + "]";
         }
 
+        /// <summary>The month and the day of the Hebrew date for a cell of the calendar: "Kislev, 13".</summary>
+        public static string FormatMonthDay(DateTime date, string language = "English", CultureInfo systemCulture = null)
+        {
+            var calendar = new HebrewCalendar();
+            if (date < calendar.MinSupportedDateTime || date > calendar.MaxSupportedDateTime) return string.Empty;
+            int year = calendar.GetYear(date);
+            int month = calendar.GetMonth(date);
+            bool leap = calendar.IsLeapYear(year);
+            if (!leap && month >= 6) month++;
+            return MonthName(month, leap, language, systemCulture) + ", " + calendar.GetDayOfMonth(date).ToString(CultureInfo.InvariantCulture);
+        }
+
         /// <summary>
         /// The Hebrew date as "01 Kislev 5777". For a Hebrew day that began at sunset the number of the day is followed by
         /// the number the civil day that is still on has, in brackets: "02[01] Kislev 5777" until midnight.

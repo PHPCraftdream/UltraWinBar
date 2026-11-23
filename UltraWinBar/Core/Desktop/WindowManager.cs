@@ -70,6 +70,16 @@ namespace UltraWinBar.Utilities
             NativeMethods.SystemParametersInfo((int)NativeMethods.SPI.GETWORKAREA, 0, ref _originalWorkArea, 0);
             _originalMonitorBounds = ToRect(AppBarScreen.FromPrimaryScreen().Bounds);
 
+            // The panels' own reservations are sent to Explorer in the background (see AppBarForwardQueue).
+            ManagedShell.Common.Helpers.AppBarForwardQueue.OwnCallbackMessage = (uint)PanelReservation.CallbackMessage;
+
+            // After a restart that kept the panels' work area, the live one is theirs, and the original is the one remembered.
+            _originalWorkArea = WorkAreaMemory.ResolveOriginal(_originalWorkArea, _originalMonitorBounds, Settings.Instance.LastWorkArea, Settings.Instance.OriginalWorkArea);
+            Settings.Instance.OriginalWorkArea = WorkAreaMemory.Format(_originalWorkArea, _originalMonitorBounds);
+
+            ApplyRememberedWorkArea();
+            RestartMarker.Clear();
+
             // Explorer's taskbar is hidden inside openTaskbars, once our panels are there to replace it.
 
             openTaskbars();
@@ -313,6 +323,7 @@ namespace UltraWinBar.Utilities
             try
             {
                 List<Taskbar> pendingTaskbars = new List<Taskbar>();
+                _openingTaskbars = pendingTaskbars;
 
                 if (Settings.Instance.ShowMultiMon)
                 {
@@ -380,6 +391,9 @@ namespace UltraWinBar.Utilities
             finally
             {
                 _isOpeningTaskbars = false;
+                _openingTaskbars = null;
+                // The panels' own reservations are queued now; the strips held across the restart go after them.
+                ReservationBridge.Release();
                 _shellManager.ExplorerHelper.HideExplorerTaskbar = true;
                 QueueManualWorkAreaRecovery();
                 _panelGuard?.Restart();
@@ -388,6 +402,28 @@ namespace UltraWinBar.Utilities
 
         internal static bool HidesExplorerTaskbarBeforePanels(bool manualWorkArea) => !manualWorkArea;
 
+        // The panels being opened: their manual layout is known before they are shown.
+        private List<Taskbar> _openingTaskbars;
+
+        internal NativeMethods.Rect? PlannedStandaloneRect(Taskbar taskbar)
+        {
+            if (!_manualWorkArea || _screenState.Count != 1 || _openingTaskbars == null || !_openingTaskbars.Contains(taskbar))
+            {
+                return null;
+            }
+
+            foreach (var (edge, rect) in CalculateManualLayout(_openingTaskbars).Panels)
+            {
+                if (edge == taskbar.AppBarEdge) return rect;
+            }
+            return null;
+        }
+
+        private (List<(AppBarEdge Edge, NativeMethods.Rect Bounds)> Panels, NativeMethods.Rect WorkArea) CalculateManualLayout(List<Taskbar> taskbars) =>
+            PanelLayout.Calculate(ToRect(_screenState[0].Bounds),
+                Settings.Instance.ResolvedEdgeOrder.FindAll(edge => taskbars.Exists(candidate => candidate.AppBarEdge == edge)),
+                edge => taskbars.Find(candidate => candidate.AppBarEdge == edge).DesiredThicknessPixels);
+
         private void ApplyManualLayout(List<Taskbar> taskbars, bool completeDeferredLayout)
         {
             if (!_manualWorkArea || _screenState.Count != 1)
@@ -395,12 +431,7 @@ namespace UltraWinBar.Utilities
                 return;
             }
 
-            AppBarScreen screen = _screenState[0];
-            NativeMethods.Rect screenRect = ToRect(screen.Bounds);
-
-            var layout = PanelLayout.Calculate(screenRect,
-                Settings.Instance.ResolvedEdgeOrder.FindAll(edge => taskbars.Exists(candidate => candidate.AppBarEdge == edge)),
-                edge => taskbars.Find(candidate => candidate.AppBarEdge == edge).DesiredThicknessPixels);
+            var layout = CalculateManualLayout(taskbars);
 
             foreach (var (edge, taskbarRect) in layout.Panels)
             {
@@ -428,7 +459,33 @@ namespace UltraWinBar.Utilities
                 WorkAreaManager.Apply(layout.WorkArea, (uint)Process.GetCurrentProcess().Id);
             }
             else QueueManualWorkAreaRecovery();
+            Settings.Instance.LastWorkArea = WorkAreaMemory.Format(layout.WorkArea, ToRect(_screenState[0].Bounds));
             ShellLogger.Debug($"WindowManager: Applied manual work area {FormatRect(layout.WorkArea)}");
+        }
+
+        // The work area of the last run is put back before the panels are made: the windows stay where they were instead
+        // of growing over the strips and shrinking again when the panels are ready (which took seconds). The layout that
+        // follows applies what the panels really need, which is the same unless the settings changed.
+        private void ApplyRememberedWorkArea()
+        {
+            var screens = AppBarScreen.FromAllScreens();
+            if (screens.Count != 1 || Settings.Instance.AutoHide ||
+                !WorkAreaMemory.TryParse(Settings.Instance.LastWorkArea, out var area, out var screen) ||
+                !screen.Equals(ToRect(screens[0].Bounds)))
+            {
+                return;
+            }
+
+            // The watchdog that gives the original work area back if the program dies is there before the work area is changed.
+            if (!_workAreaWatchdogStarted)
+            {
+                _workAreaWatchdogProcess = Program.StartWorkAreaWatchdog(_originalWorkArea);
+                _workAreaWatchdogStarted = true;
+            }
+
+            _expectedWorkArea = area;
+            WorkAreaManager.Apply(area, (uint)Process.GetCurrentProcess().Id);
+            ShellLogger.Debug($"WindowManager: Put back the work area of the last run {FormatRect(area)}");
         }
 
         private void ResetWorkAreaRecovery()
@@ -552,6 +609,7 @@ namespace UltraWinBar.Utilities
 
             _originalWorkArea = recomputed;
             _originalMonitorBounds = newBounds;
+            Settings.Instance.OriginalWorkArea = WorkAreaMemory.Format(_originalWorkArea, _originalMonitorBounds);
 
             RestartWorkAreaWatchdogIfNeeded();
         }
@@ -614,7 +672,8 @@ namespace UltraWinBar.Utilities
             _lockedWorkAreaTimer.Tick -= CheckLockedWorkArea;
             _placementGuard?.Dispose();
             _panelGuard?.Dispose();
-            if (_manualWorkArea)
+            // A restart on purpose leaves the work area as it is: the next start takes it over (see RestartMarker).
+            if (_manualWorkArea && !RestartMarker.IsFresh())
             {
                 WorkAreaManager.Apply(_originalWorkArea, (uint)Process.GetCurrentProcess().Id);
                 // Shutting down: wait for the broadcast so other apps see the restored work area before we exit.

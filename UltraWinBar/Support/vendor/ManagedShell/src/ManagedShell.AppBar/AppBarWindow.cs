@@ -663,7 +663,8 @@ namespace ManagedShell.AppBar
             _appBarManager.RegisterBar(this);
         }
 
-        protected internal NativeMethods.Rect GetDesiredRect()
+        // UltraWinBar: virtual so a panel laid out by its host is placed at its final rect when first shown.
+        protected internal virtual NativeMethods.Rect GetDesiredRect()
         {
             NativeMethods.Rect rect = new NativeMethods.Rect();
             int edgeOffset = 0;

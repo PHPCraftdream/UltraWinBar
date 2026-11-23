@@ -64,8 +64,16 @@ namespace UltraWinBar.Utilities
             {
                 SetTheme(Settings.Instance.Theme);
             }
-            FlatTheme.Apply();
+            ApplyDerivedBrushes();
+        }
+
+        // The accent of Modern Glass first (it sets the surfaces the panel's colors come from), then the flat
+        // panel's brushes, then the accent on them.
+        private static void ApplyDerivedBrushes()
+        {
             ModernTheme.Apply();
+            FlatTheme.Apply();
+            ModernTheme.ApplyPanel();
         }
 
         private void SetSystemThemeParams()
@@ -235,9 +243,9 @@ namespace UltraWinBar.Utilities
             {
                 SetThemeFromSettings();
             }
-            if (e.PropertyName == nameof(Settings.AccentColor))
+            if (e.PropertyName == nameof(Settings.AccentColor) || e.PropertyName == nameof(Settings.AllowBlurBehind))
             {
-                ModernTheme.Apply();
+                ApplyDerivedBrushes();
             }
         }
 

@@ -104,6 +104,11 @@ internal static class CalendarWindowChecks
         var pesach = DayDetailsBuilder.Cell(Day("2026-04-02"), month, Day("2026-04-02"), false, "English", null, text);
         Check(pesach.GregorianNumber == "2" && pesach.HebrewNumber == "15" && pesach.Marker == "Pesach, day 1 of 8" && !pesach.OutsideMonth && pesach.IsToday && pesach.IsRest && !pesach.HasYahrzeit,
             $"The cell of the first day of Pesach: {pesach}.");
+        Check(pesach.HebrewLabel == "Nisan, 15" && pesach.GregorianLabel == "2, April", $"The labels of the cell: {pesach.HebrewLabel} / {pesach.GregorianLabel}.");
+        var kislev = DayDetailsBuilder.Cell(Day("2026-11-23"), Day("2026-11-01"), Day("2026-11-23"), false, "English", null, text);
+        Check(kislev.HebrewLabel == "Kislev, 13" && kislev.GregorianLabel == "23, November", $"The labels of the cell: {kislev.HebrewLabel} / {kislev.GregorianLabel}.");
+        var russian = DayDetailsBuilder.Cell(Day("2026-11-23"), Day("2026-11-01"), Day("2026-11-23"), false, "русский", null, text);
+        Check(russian.GregorianLabel == "23, ноября" && russian.HebrewLabel.EndsWith(", 13"), $"In Russian the civil month is in the genitive: {russian.GregorianLabel} / {russian.HebrewLabel}.");
         Check(pesach.Tooltip.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries).Length == 3 && pesach.Tooltip.Contains("15 Nisan 5786"), $"The tooltip: {pesach.Tooltip}.");
         var shabbat = DayDetailsBuilder.Cell(Day("2026-04-04"), month, Day("2026-04-02"), false, "English", null, text);
         Check(shabbat.Marker == "Chol HaMoed Pesach, day 3 of 8" && shabbat.IsRest && !shabbat.IsToday, "A Shabbat of Chol HaMoed carries the festival, not a portion.");
@@ -199,7 +204,7 @@ internal static class CalendarWindowChecks
 
         // The clock: a click on the Hebrew date opens the calendar; the setting of the yahrzeits is kept as given.
         string clock = File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "UI", "Clock", "Clock.xaml.cs"));
-        Check(clock.Contains("CalendarWindow.ShowSingle()") && clock.Contains("\"HebrewDateHost\"") && clock.IndexOf("CalendarWindow.ShowSingle()", StringComparison.Ordinal) < clock.IndexOf("ClockClickOption.DoNothing", StringComparison.Ordinal),
+        Check(clock.Contains("CalendarWindow.ShowSingle(") && clock.Contains("\"HebrewDateHost\"") && clock.IndexOf("CalendarWindow.ShowSingle(", StringComparison.Ordinal) < clock.IndexOf("ClockClickOption.DoNothing", StringComparison.Ordinal),
             "A click on the Hebrew date opens the calendar before the clock's own action is considered.");
         var settingsType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Utilities.Settings");
         var property = settingsType.GetProperty("HiddenYahrzeits") ?? throw new Exception("Settings.HiddenYahrzeits is missing.");

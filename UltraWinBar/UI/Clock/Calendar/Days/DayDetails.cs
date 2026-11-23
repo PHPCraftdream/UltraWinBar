@@ -14,7 +14,7 @@ namespace UltraWinBar.Utilities
 
     /// <summary>A day of the month grid: its numbers, the one thing worth showing in the cell, and what it says when pointed at.</summary>
     public sealed record DayCell(DateTime Date, string GregorianNumber, string HebrewNumber, string Marker, bool OutsideMonth,
-        bool IsToday, bool IsRest, bool HasYahrzeit, string Tooltip);
+        bool IsToday, bool IsRest, bool HasYahrzeit, string Tooltip, string HebrewLabel = "", string GregorianLabel = "");
 
     /// <summary>
     /// Puts together what the calendar window shows: from the date, the place (or none) and the settings it makes the texts of
@@ -55,8 +55,13 @@ namespace UltraWinBar.Utilities
             string hebrew = HebrewClockFormatter.FormatDate(date, language);
             string tooltip = string.Join(Environment.NewLine, new[] { date.ToString("D", CultureOf(language)), hebrew }.Concat(lines));
             string number = hebrew.Length >= 2 ? hebrew.Substring(0, 2) : "";
+            // The cell shows the Hebrew date at its top right ("Kislev, 13") and the civil date at its bottom left ("23, November").
+            CultureInfo culture = CultureOf(language);
+            string civilMonth = culture.DateTimeFormat.MonthGenitiveNames[date.Month - 1];
+            string civil = date.Day.ToString(CultureInfo.InvariantCulture) + ", " + (string.IsNullOrEmpty(civilMonth) ? culture.DateTimeFormat.GetMonthName(date.Month) : civilMonth);
             return new DayCell(date.Date, date.Day.ToString(CultureInfo.InvariantCulture), number, marker,
-                date.Month != month.Month, date.Date == today.Date, Zmanim.IsRestDay(date, israel), people.Count > 0, tooltip);
+                date.Month != month.Month, date.Date == today.Date, Zmanim.IsRestDay(date, israel), people.Count > 0, tooltip,
+                HebrewClockFormatter.FormatMonthDay(date, language), civil);
         }
 
         // The time as the clocks of the place show it: in its zone, or the computer's when none was chosen.

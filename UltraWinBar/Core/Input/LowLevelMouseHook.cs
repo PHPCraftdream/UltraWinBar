@@ -64,19 +64,16 @@ namespace UltraWinBar.Utilities
 
         public bool Initialize()
         {
-            using (Process curProcess = Process.GetCurrentProcess())
-            using (ProcessModule curModule = curProcess.MainModule)
+            // The exe's own handle: Process.MainModule walks every module of the process (over a second at start).
+            _hook = SetWindowsHookEx(WH_MOUSE_LL, _hookDelegate, GetModuleHandle(null), 0);
+
+            if (_hook == IntPtr.Zero)
             {
-                _hook = SetWindowsHookEx(WH_MOUSE_LL, _hookDelegate, GetModuleHandle(curModule.ModuleName), 0);
-
-                if (_hook == IntPtr.Zero)
-                {
-                    return false;
-                }
-
-                lock (_installed) _installed.Add(this);
-                return true;
+                return false;
             }
+
+            lock (_installed) _installed.Add(this);
+            return true;
         }
 
         // Test seam: exercises the exact marshaling/dispatch path a real hook call uses, without

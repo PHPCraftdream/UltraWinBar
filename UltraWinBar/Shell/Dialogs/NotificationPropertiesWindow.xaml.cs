@@ -47,6 +47,8 @@ namespace UltraWinBar
             }
             else
             {
+                // On another desktop it is brought here: activating it there would take the user to it.
+                VirtualDesktopContext.Instance?.BringWindowToCurrentDesktop(new System.Windows.Interop.WindowInteropHelper(_instance).Handle);
                 _instance.Activate();
             }
         }

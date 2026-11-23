@@ -133,7 +133,9 @@ namespace UltraWinBar.Controls
                 isLoaded = true;
                 WeakSubscriptions.SubscribeDesktopChanged(DesktopChanged);
                 TaskModelHost.Instance.Register(this);
-                QueueTaskRebuild();
+                // The first pass of a new panel is not left until the start-up work is done (Background waited for
+                // seconds): the panel's tasks show as soon as its layout is.
+                TaskModelHost.Instance.RequestPass(Dispatcher, System.Windows.Threading.DispatcherPriority.Loaded);
             }
         }
 

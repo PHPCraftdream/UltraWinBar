@@ -4,13 +4,17 @@
 
 ### Added
 
-- A modern look, the theme "Modern Glass", now the default for new installations: slate surfaces with matte glass
-  (flat translucent layers and hairlines over the base) and a neon accent, on the panel, the settings, the calendar,
-  the place chooser, the menus, the drop-downs and the tool tips. The accent is one of six Tailwind colors (cyan,
-  violet, fuchsia, emerald, amber, rose), chosen in the settings under the theme and applied at once. The active task
-  has a bar of the accent, the window title bars are dark. Made for speed: plain brushes only, with no effects, no
-  transparent windows, no gradients and no animations (see `modern-theme.md`). The older themes remain in the list.
-
+- Long drop-down lists (the time zones of the clock, the countries of the place window) have a search line at the top
+  of the list in the Modern Glass theme: what is typed keeps the items that contain it, in any case; the chosen item
+  stays; Enter takes the first one left, Escape closes.
+- A modern look, the theme "Modern Glass", now the default for new installations: slate surfaces tinted with a neon
+  accent, matte glass (translucent accent layers and hairlines) and the desktop blurred behind the panel and behind
+  the windows (the "blur behind" setting turns the blur off), on the panel, the settings, the calendar, the place
+  chooser, the menus, the drop-downs and the tool tips. The accent is one of six Tailwind colors (cyan, violet,
+  fuchsia, emerald, amber, rose), chosen in the settings under the theme and applied at once; it colors the whole
+  look. The active task has a bar of the accent, the window title bars are dark. Made for speed: plain brushes
+  only, with no effects, no gradients and no animations; the only layered window is the panel, which the blur needs
+  (see `modern-theme.md`). The older themes remain in the list.
 - A place for the Hebrew date in the clock settings, under the Hebrew date checkbox: a city of the world with
   10 000 inhabitants or more, found by its English name (typing a start of its words, in any order, accents
   ignored; the region and the country count too, "paris texas"), or coordinates typed in with their country, and
@@ -31,7 +35,7 @@
 - With a place chosen, the Hebrew day changes at the sunset of the place: from sunset until midnight the date
   reads "02[01]" (the new day, and the day that is still on in brackets) and the weekday "Day-2[1]"; after midnight
   only the new one. With no place the date still changes at midnight.
-- A second time under the clock's own, in a time zone of your choice (in the calendar's settings): "15:05
+- A second time under the clock's own, in a time zone of your choice (in the general settings, with a third one: see Changed): "15:05
   Jerusalem", with "+1" or "-1" when it is already the next or still the previous day there. The first time stays as
   on the computer. The zone's rules (summer time and the laws that change it) are the ones Windows has, read
   again every few hours and whenever the computer's time changes.
@@ -47,9 +51,55 @@
   redraws a few dozen dots about ten times a second (no WPF animation clock);
   with animations switched off in Windows, or in a remote session, the lights
   stand still.
+- The Jewish calendar has a title bar of its own in the look of the theme (a bar of the accent, the title, a close
+  button) instead of the system one, which took long to take the theme's dark color, and it opens in the corner of
+  the clock it was clicked on: above a bottom panel, under a top one, beside a side one, always inside the work area.
 
 ### Changed
 
+- A restart on purpose (the Restart menu, the deploy script) no longer makes maximized windows jump: the new process
+  holds the panels' strips of the last run as hidden shell AppBars from its first moment until its own panels have
+  published theirs (Explorer recomputed the work area several times while it dropped the dead panels), and panels
+  closing for such a restart keep their strips instead of releasing them one by one.
+  The deploy script holds the strips itself (Hold-WorkAreaStrips.ps1) while the old instance dies, and the Restart menu's
+  new instance takes them before it waits for the old one to exit; each lets go once the new instance holds them.
+- Tray icons no longer turn into black or dashed squares after a start. Explorer's own copy of the icons was never
+  updated while the program's tray ran, so the icons read from it at the next start held handles the applications had
+  since destroyed (or that were reused for other icons). Each notify icon message the tray takes is now also sent on to
+  Explorer (without the balloon, which it would show again), from the forward queue; and an icon that already has its
+  application's own image keeps it when Explorer's copy is read.
+- A faster start (panels shown in about 6 s instead of 9-11): Explorer's taskbar state is read from the registry
+  instead of asked from a busy Explorer (and other ABM_GETSTATE queries about it are answered the same way); the
+  program's own ABM_SETSTATE no longer waits for Explorer; the mouse hook installs without walking the process's
+  modules, and mouse events no longer wait on the lock the installing thread holds; the SystemEvents thread is started
+  off the UI thread; a window's process start time is read with one OpenProcess.
+- The brand dictionaries (ModernControls, ModernMenus, FlatControls) are compiled to BAML instead of being parsed as
+  XAML text at every start (the theme loads in a fraction of a second instead of 1-2 s). The windows' virtual desktops
+  are asked from Explorer on a thread of their own while the theme and panels load.
+- Panels of the manual layout are shown at their final size at once, not first across their whole screen side.
+- Modern Glass: horizontal panels are taller: 40 px at the panel scale 1.2.
+- The main time zone of the clock can be chosen too (the computer's by default), with its place, which is the place of
+  the Hebrew date. The notification area of the settings is split into sub-tabs: General, Clock, Time zones (the three
+  zones with their names and places) and Hebrew date.
+- The second and the third time zone each have a place, asked for under the zone in the settings (a place chosen for a
+  zone that is not chosen yet brings its own zone along). The calendar goes by the zone it is told to with the place of
+  that zone: the date on its clock, the Hebrew day turning at the sunset of that place, the times of the day of that place
+  on that zone's clock, and Israel or the diaspora by its country, not the main place's times shifted by an offset. A zone
+  with no place shows no times. The main zone's place is the place of the Hebrew date, as before.
+- The settings are easier on the eyes: the text of the settings window is a sixth larger, and the tabs of the Modern Glass
+  theme are bright (not gray) and larger, the chosen one bold.
+- The label of the active window's button on the panel is no longer bold, in any theme.
+- The time zones of the clock are in the general settings (the clock group), not in the calendar's: the computer's own
+  is the main one, and a second and a third can be chosen. Each has a check box for its name, the main one too: the
+  clock then shows "8:05 Amsterdam", "10:05 Moscow", "15:05 Tokyo +1" (the name of the computer's zone is the first place
+  of Windows' name for it, in the language of Windows). The calendar's settings choose which of the three the date, the
+  change of the day and the times of the day go by (the computer's by default); the place window no longer has a time
+  zone, only the place.
+- The Jewish calendar is bigger and easier on the eyes: the window is 1240 by 800, the text 15 points (the headings
+  19 to 20), the grid and the details column wider. A day's cell shows the Hebrew date at its very top right ("Kislev,
+  13"), the festival or the portion in the middle and the civil date at its very bottom left ("23, November"; in Russian
+  the month is in the genitive, "23, ноября"). The times of the day light up the whole row under the pointer, in the
+  accent of the Modern Glass theme or in gray under the others.
 - A newly opened window now always goes to the end of its panel's task list,
   and one of a pinned application goes right after that application's windows
   (the pin's own place when it has none), not to the end of the whole list. A
@@ -64,6 +114,18 @@
   Fixed).
 
 ### Fixed
+
+- A restart no longer lets the windows grow over the whole screen and shrink again when the panels are ready: the work
+  area of the last layout is remembered with its screen and put back at the start of the next run, before the panels are
+  made (with the watchdog that gives the original one back already running).
+- A second click on the Hebrew date closes the calendar. A calendar that is open on another virtual desktop is brought
+  to the desktop the user is on instead of taking the user to it (and so is the settings window, when it is open
+  elsewhere): the program never switches desktops to follow a window.
+- The clock no longer shows a tool tip with the date when the pointer is over it.
+- Starting the program, or changing the theme, no longer freezes the panels for seconds: the panels' reservation of
+  their strips of the screen is told to Explorer from a background queue, in order, instead of the UI thread waiting for
+  Explorer's answer (it waited up to half a second for each of about ten messages, and more on a busy desktop; the
+  answer is never used). Explorer is still told, and what is queued is sent before the program ends.
 
 - A window whose title bar the mouse cannot reach is moved into the work area.
   Proxifier's main window once stayed shown at (-32000,-32000) and its rules

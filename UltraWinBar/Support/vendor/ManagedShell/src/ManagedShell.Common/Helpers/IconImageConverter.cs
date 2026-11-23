@@ -91,8 +91,9 @@ namespace ManagedShell.Common.Helpers
                     bs = System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(hIcon, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
                     bs.Freeze();
                 }
-                catch
+                catch (Exception e)
                 {
+                    ManagedShell.Common.Logging.ShellLogger.Debug($"IconImageConverter: icon {hIcon} unreadable: {e.GetType().Name}: {e.Message}");
                     if (returnDefault)
                         bs = GetDefaultIcon();
                     else

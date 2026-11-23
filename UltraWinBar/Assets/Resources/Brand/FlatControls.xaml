@@ -8,7 +8,7 @@
     </DrawingImage>
     <ControlTemplate x:Key="FlatPanelTemplate" TargetType="ContentControl">
         <Grid>
-            <Border Background="{DynamicResource FlatPanel}" BorderThickness="0">
+            <Border Background="{DynamicResource FlatPanelFill}" BorderThickness="0">
                 <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
             </Border>
             <!-- A hairline on the side that faces the desktop; transparent unless the theme gives it a color. -->
@@ -33,7 +33,7 @@
         </ControlTemplate.Triggers>
     </ControlTemplate>
     <ControlTemplate x:Key="FlatTrayTemplate" TargetType="GroupBox">
-        <Border Background="{DynamicResource FlatPanel}" Padding="2,0">
+        <Border Background="{DynamicResource FlatRest}" Padding="2,0">
             <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center" />
         </Border>
     </ControlTemplate>
@@ -41,7 +41,7 @@
         <Grid>
             <Border x:Name="Surface" Background="{DynamicResource FlatTask}" BorderBrush="{DynamicResource FlatBorder}"
                     BorderThickness="1" CornerRadius="4" Margin="0,0,2,2" Padding="{TemplateBinding Padding}">
-                <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Stretch" />
+                <ContentPresenter x:Name="Content" VerticalAlignment="Center" HorizontalAlignment="Stretch" />
             </Border>
             <!-- A bar along the foot of the active task; transparent unless the theme gives it a color. -->
             <Border x:Name="ActiveBar" Background="{DynamicResource FlatActiveBar}" Height="2" CornerRadius="1" Margin="6,0,8,3"
@@ -55,6 +55,8 @@
                 <Setter TargetName="Surface" Property="Background" Value="{DynamicResource FlatActive}" />
                 <Setter TargetName="Surface" Property="BorderBrush" Value="{DynamicResource FlatActiveBorder}" />
                 <Setter TargetName="ActiveBar" Property="Visibility" Value="Visible" />
+                <!-- No bold label on the panel, in any theme. -->
+                <Setter TargetName="Content" Property="TextElement.FontWeight" Value="Normal" />
             </DataTrigger>
             <DataTrigger Binding="{Binding State}" Value="Flashing">
                 <Setter TargetName="Surface" Property="Background" Value="{DynamicResource ButtonFlashingFace}" />
@@ -80,7 +82,7 @@
         </ControlTemplate.Triggers>
     </ControlTemplate>
     <ControlTemplate x:Key="FlatToggleTemplate" TargetType="ToggleButton">
-        <Border x:Name="Surface" Background="{DynamicResource FlatPanel}" BorderBrush="Transparent" BorderThickness="1" CornerRadius="4" Padding="2">
+        <Border x:Name="Surface" Background="{DynamicResource FlatRest}" BorderBrush="Transparent" BorderThickness="1" CornerRadius="4" Padding="2">
             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
         </Border>
         <ControlTemplate.Triggers>
@@ -92,7 +94,7 @@
         </ControlTemplate.Triggers>
     </ControlTemplate>
     <ControlTemplate x:Key="FlatRepeatTemplate" TargetType="RepeatButton">
-        <Border x:Name="Surface" Background="{DynamicResource FlatPanel}" BorderBrush="{DynamicResource FlatBorder}" BorderThickness="1" CornerRadius="3">
+        <Border x:Name="Surface" Background="{DynamicResource FlatRest}" BorderBrush="{DynamicResource FlatBorder}" BorderThickness="1" CornerRadius="3">
             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
         </Border>
         <ControlTemplate.Triggers>
@@ -102,7 +104,7 @@
         </ControlTemplate.Triggers>
     </ControlTemplate>
     <ControlTemplate x:Key="FlatTrayToggleTemplate" TargetType="ToggleButton">
-        <Border x:Name="Surface" Background="{DynamicResource FlatPanel}" CornerRadius="4" Padding="3">
+        <Border x:Name="Surface" Background="{DynamicResource FlatRest}" CornerRadius="4" Padding="3">
             <Path x:Name="Arrow" Data="M8,0 L4,4 L8,8" Stroke="{DynamicResource FlatText}" StrokeThickness="1.5"
                   StrokeLineJoin="Round" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
             </Path>

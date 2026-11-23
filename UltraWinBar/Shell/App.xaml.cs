@@ -44,6 +44,8 @@ namespace UltraWinBar
         public App()
         {
             _shellManager = SetupManagedShell();
+            // Explorer is asked for the windows' desktops off the UI thread while the theme and panels load.
+            VirtualDesktopContext.Prefetch(_shellManager.Tasks.GroupedWindows.SourceCollection.OfType<ManagedShell.WindowsTasks.ApplicationWindow>().Select(window => window.Handle).ToArray());
 
             _explorerMonitor = new ExplorerMonitor();
             _startMenuMonitor = new StartMenuMonitor();
@@ -89,7 +91,8 @@ namespace UltraWinBar
             _windowManager = new WindowManager(_dictionaryManager, _explorerMonitor, _shellManager, _startMenuMonitor, _updater, _hotkeyManager);
             _taskRecovery = new TaskWindowRecovery(_shellManager.Tasks, _shellManager.TasksService, _virtualDesktops);
             _desktopPins = new PersistentDesktopPins(_shellManager.Tasks, _virtualDesktops);
-            UpdateDesktopActivationGuard();
+            // The guard installs a low-level mouse hook and waits for it (seconds on a busy start): after the panels are up.
+            Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(UpdateDesktopActivationGuard));
             StartupTimeline.Mark("Panels shown, Explorer taskbar hidden");
             Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() => StartupTimeline.Mark("UI idle")));
         }
@@ -191,6 +194,9 @@ namespace UltraWinBar
         {
             try
             {
+                // The work area stays as it is across this restart, so the windows keep their limits meanwhile.
+                RestartMarker.Create();
+
                 // run the program again
                 Process current = new Process();
                 current.StartInfo.FileName = ExePath.GetExecutablePath();
@@ -201,6 +207,8 @@ namespace UltraWinBar
             }
             catch (Exception ex)
             {
+                // Nothing restarts: the mark must not make a later crash keep the work area.
+                RestartMarker.Clear();
                 ShellLogger.Error($"App: Restart failed: {ex.Message}");
             }
         }
@@ -219,6 +227,8 @@ namespace UltraWinBar
             _taskRecovery?.Dispose();
             _desktopPins?.Dispose();
             _windowManager.Dispose();
+            // The panels' reservations are given back to Explorer in the background: let them reach it before the process ends.
+            ManagedShell.Common.Helpers.AppBarForwardQueue.Flush(TimeSpan.FromSeconds(3));
             _virtualDesktops?.Dispose();
             _dictionaryManager.Dispose();
             _shellManager.Dispose();

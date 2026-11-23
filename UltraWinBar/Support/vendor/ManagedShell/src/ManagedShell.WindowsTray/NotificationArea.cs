@@ -164,7 +164,7 @@ namespace ManagedShell.WindowsTray
                 // UltraWinBar: reading Explorer's icons waits on Explorer, so it runs beside startup. They are added
                 // first, as before, and only then is the tray announced to applications.
                 startup = new OneShot(AnnounceTray);
-                _explorerTrayService.SetSystrayCallback(trayDelegate);
+                _explorerTrayService.SetSystrayCallback(ImportFromExplorer);
                 bool reading = _explorerTrayService.BeginRun(Dispatcher, () => startup.Fire());
 
                 _trayService.SetSystrayCallback(trayDelegate);
@@ -339,6 +339,25 @@ namespace ManagedShell.WindowsTray
             return null;
         }
 
+        // UltraWinBar: an icon whose application already gave us its image keeps it. Explorer's copy may hold an
+        // HICON the application has since destroyed (and whose number is reused): black or dashed squares.
+        private bool _importingFromExplorer;
+
+        internal bool ImportFromExplorer(uint message, SafeNotifyIconData nicData)
+        {
+            lock (_lockObject)
+            {
+                if (FindIcon(nicData)?.HasOwnImage == true)
+                {
+                    ShellLogger.Debug($"NotificationArea: {nicData.szTip} already has its application's image; Explorer's copy skipped");
+                    return true;
+                }
+                _importingFromExplorer = true;
+                try { return SysTrayCallback(message, nicData); }
+                finally { _importingFromExplorer = false; }
+            }
+        }
+
         private bool SysTrayCallback(uint message, SafeNotifyIconData nicData)
         {
             // We always need hWnd for new icons, or for existing icons if no GUID is present
@@ -394,9 +413,11 @@ namespace ManagedShell.WindowsTray
                                 if (icon != null)
                                 {
                                     trayIcon.Icon = icon;
+                                    trayIcon.HasOwnImage |= !_importingFromExplorer;
                                 }
                                 else if (icon == null && trayIcon.Icon == null)
                                 {
+                                    ShellLogger.Debug($"NotificationArea: no image for {nicData.szTip} (hWnd {nicData.hWnd}, hIcon {nicData.hIcon}, {(NIM)message}); default icon shown");
                                     // Use default only if we don't have a valid icon already
                                     trayIcon.Icon = IconImageConverter.GetDefaultIcon();
                                 }
@@ -404,6 +425,7 @@ namespace ManagedShell.WindowsTray
                             else
                             {
                                 trayIcon.Icon = null;
+                                trayIcon.HasOwnImage = false;
                             }
                         }
 

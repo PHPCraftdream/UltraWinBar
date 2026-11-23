@@ -504,12 +504,107 @@ namespace UltraWinBar.Utilities
             }
         }
 
+        // The work area of the panels' last layout and the screen it was for ("148,34,1772,1046;0,0,1920,1080"): put back at
+        // the start of the next run, so that the windows stay where they were while the panels start.
+        private string _lastWorkArea = "";
+        public string LastWorkArea
+        {
+            get => _lastWorkArea;
+            set => Set(ref _lastWorkArea, value ?? "");
+        }
+
+        // The work area as it was before the panels took their strips, with its screen: kept, because a restart that leaves the
+        // panels' own work area in place would otherwise take that for the original.
+        private string _originalWorkArea = "";
+        public string OriginalWorkArea
+        {
+            get => _originalWorkArea;
+            set => Set(ref _originalWorkArea, value ?? "");
+        }
+
+        // The place of the second and of the third time zone (the place of the main one is HebrewPlace): the Hebrew date, the
+        // change of the day and the times of the day of the calendar are those of this place, on the clock of its zone.
+        private HebrewPlace _secondPlace;
+        public HebrewPlace SecondPlace
+        {
+            get => _secondPlace;
+            set
+            {
+                if (!Equals(_secondPlace, value))
+                {
+                    _secondPlace = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private HebrewPlace _thirdPlace;
+        public HebrewPlace ThirdPlace
+        {
+            get => _thirdPlace;
+            set
+            {
+                if (!Equals(_thirdPlace, value))
+                {
+                    _thirdPlace = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         // The time zone (IANA id, "Asia/Jerusalem") of a second time shown under the clock's own; empty shows none.
         private string _secondTimeZone = "";
         public string SecondTimeZone
         {
             get => _secondTimeZone;
             set => Set(ref _secondTimeZone, value ?? "");
+        }
+
+        // The main time zone of the clock (IANA id); empty is the computer's own.
+        private string _mainTimeZone = "";
+        public string MainTimeZone
+        {
+            get => _mainTimeZone;
+            set => Set(ref _mainTimeZone, value ?? "");
+        }
+
+        // The third time zone, the same way.
+        private string _thirdTimeZone = "";
+        public string ThirdTimeZone
+        {
+            get => _thirdTimeZone;
+            set => Set(ref _thirdTimeZone, value ?? "");
+        }
+
+        // Whether the clock names each of its time zones: the computer's own (the main one), the second and the third.
+        private bool _showMainZoneName;
+        public bool ShowMainZoneName
+        {
+            get => _showMainZoneName;
+            set => Set(ref _showMainZoneName, value);
+        }
+
+        private bool _showSecondZoneName = true;
+        public bool ShowSecondZoneName
+        {
+            get => _showSecondZoneName;
+            set => Set(ref _showSecondZoneName, value);
+        }
+
+        private bool _showThirdZoneName = true;
+        public bool ShowThirdZoneName
+        {
+            get => _showThirdZoneName;
+            set => Set(ref _showThirdZoneName, value);
+        }
+
+        // Which of the three time zones the calendar goes by for the date, the change of the day and the times of the
+        // day: 0 the main one (the computer's), 1 the second, 2 the third.
+        private int _calendarZone;
+        public int CalendarZone
+        {
+            get => _calendarZone;
+            set => Set(ref _calendarZone, value < 0 || value > 2 ? 0 : value);
         }
 
         // Keys of the yahrzeit figures (Yahrzeits.All) the user switched off in the calendar; everyone is on until then.

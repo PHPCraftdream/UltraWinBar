@@ -78,6 +78,8 @@ namespace UltraWinBar
 
             InitializeComponent();
             ModernTheme.Track(this);
+            // A little larger than the system's message font, so that the settings are easy on the eyes.
+            FontSize = Math.Round(SystemFonts.MessageFontSize * 7 / 6);
 
             LoadPreviewHeight();
             LoadAutoStart();
@@ -89,7 +91,6 @@ namespace UltraWinBar
             LoadWidth();
             LoadAppInfo();
             LoadClockActions();
-            LoadHebrewPlace();
 
             WeakSubscriptions.SubscribeSettings(Settings_PropertyChanged);
         }
@@ -111,12 +112,7 @@ namespace UltraWinBar
             {
                 LoadAppInfo();
                 LoadClockActions();
-                LoadHebrewPlace();
                 LoadAccent();
-            }
-            else if (e.PropertyName == nameof(Settings.HebrewPlace))
-            {
-                LoadHebrewPlace();
             }
             else if (e.PropertyName == nameof(Settings.Edge) || e.PropertyName == nameof(Settings.AdditionalEdges))
             {
@@ -134,6 +130,8 @@ namespace UltraWinBar
             }
             else
             {
+                // On another desktop it is brought here: activating it there would take the user to it.
+                VirtualDesktopContext.Instance?.BringWindowToCurrentDesktop(new System.Windows.Interop.WindowInteropHelper(_instance).Handle);
                 _instance.Activate();
             }
 
@@ -582,25 +580,6 @@ namespace UltraWinBar
         private void ClockFormatHelpButton_Click(object sender, RoutedEventArgs e)
         {
             ShellHelper.ExecuteProcess("https://learn.microsoft.com/dotnet/standard/base-types/custom-date-and-time-format-strings#table");
-        }
-
-        private void LoadHebrewPlace()
-        {
-            HebrewPlaceText.Text = Settings.Instance.HebrewPlace?.Display ?? (FindResource("hebrew_place_none") as string);
-        }
-
-        private void HebrewPlaceChoose_Click(object sender, RoutedEventArgs e)
-        {
-            var window = new PlaceWindow(Settings.Instance.HebrewPlace) { Owner = this };
-            if (window.ShowDialog() == true)
-            {
-                Settings.Instance.HebrewPlace = window.Result;
-            }
-        }
-
-        private void HebrewPlaceClear_Click(object sender, RoutedEventArgs e)
-        {
-            Settings.Instance.HebrewPlace = null;
         }
     }
 }

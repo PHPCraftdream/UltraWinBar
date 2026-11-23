@@ -39,6 +39,9 @@ namespace ManagedShell.WindowsTray
 
         private ImageSource _icon;
 
+        // UltraWinBar: the image came from the application's own HICON (not the default one).
+        internal bool HasOwnImage { get; set; }
+
         /// <summary>
         /// Gets or sets the Icon's image.
         /// </summary>

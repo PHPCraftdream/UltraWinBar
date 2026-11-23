@@ -24,17 +24,33 @@ namespace UltraWinBar.Utilities
         private static Identity CreateIdentity(ApplicationWindow window)
         {
             NativeMethods.GetWindowThreadProcessId(window.Handle, out uint processId);
-            long started = 0;
+            return new Identity { Key = CreateKey(processId, ProcessStartTicks(processId), window.Handle.ToInt64()) };
+        }
+
+        // Process.StartTime's value (UTC ticks), or 0. One OpenProcess: Process.GetProcessById opened it twice and
+        // walked every process of the system when access was refused (about a second at start).
+        internal static long ProcessStartTicks(uint processId)
+        {
+            IntPtr handle = OpenProcess(ProcessQueryLimitedInformation, false, processId);
+            if (handle == IntPtr.Zero) return 0;
             try
             {
-                using var process = Process.GetProcessById((int)processId);
-                started = process.StartTime.ToUniversalTime().Ticks;
+                return GetProcessTimes(handle, out long created, out _, out _, out _) && created != 0
+                    ? DateTime.FromFileTimeUtc(created).Ticks : 0;
             }
-            catch (System.ComponentModel.Win32Exception) { }
-            catch (ArgumentException) { }
-            catch (InvalidOperationException) { }
-            return new Identity { Key = CreateKey(processId, started, window.Handle.ToInt64()) };
+            finally { CloseHandle(handle); }
         }
+
+        private const uint ProcessQueryLimitedInformation = 0x1000;
+
+        [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
+        private static extern IntPtr OpenProcess(uint access, bool inherit, uint processId);
+
+        [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool GetProcessTimes(IntPtr process, out long creation, out long exit, out long kernel, out long user);
+
+        [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool CloseHandle(IntPtr handle);
 
         public static string CreateKey(uint processId, long processStartTicks, long handle) =>
             FormattableString.Invariant($"window:v2:{processId}:{processStartTicks}:{handle:X}");

@@ -9,11 +9,14 @@
              Unloaded="UserControl_Unloaded"
              Template="{DynamicResource ClockTemplateKey}">
     <UserControl.Resources>
-        <!-- The clock's own time and, under it, the time in the second time zone. -->
+        <!-- The clock's own time and, under it, the times in the second and the third time zone (those chosen). -->
         <ControlTemplate x:Key="TwoZoneClockTemplate" TargetType="UserControl">
             <StackPanel Orientation="Vertical">
                 <TextBlock Style="{DynamicResource Clock}" Text="{Binding TimeText}" />
-                <TextBlock Style="{DynamicResource Clock}" Text="{Binding SecondTimeText}" />
+                <TextBlock Style="{DynamicResource Clock}" Text="{Binding SecondTimeText}"
+                           Visibility="{Binding SecondTimeVisibility}" />
+                <TextBlock Style="{DynamicResource Clock}" Text="{Binding ThirdTimeText}"
+                           Visibility="{Binding ThirdTimeVisibility}" />
             </StackPanel>
         </ControlTemplate>
         <ControlTemplate x:Key="HebrewClockTemplate" TargetType="UserControl">
@@ -27,10 +30,13 @@
                     <StackPanel Grid.Row="0">
                         <TextBlock Style="{DynamicResource Clock}" Margin="4,1"
                                    Text="{Binding TimeText}" />
-                        <!-- The time in the second time zone, when one is chosen. -->
+                        <!-- The times in the second and the third time zone, when chosen. -->
                         <TextBlock Style="{DynamicResource Clock}" Margin="4,1"
                                    Text="{Binding SecondTimeText}"
                                    Visibility="{Binding SecondTimeVisibility}" />
+                        <TextBlock Style="{DynamicResource Clock}" Margin="4,1"
+                                   Text="{Binding ThirdTimeText}"
+                                   Visibility="{Binding ThirdTimeVisibility}" />
                     </StackPanel>
                     <TextBlock Grid.Row="1" Style="{DynamicResource Clock}" Margin="4,1"
                                Text="{Binding WeekdayText}" />
@@ -58,8 +64,4 @@
             </ControlTemplate.Triggers>
         </ControlTemplate>
     </UserControl.Resources>
-    <UserControl.ToolTip>
-        <TextBlock Text="{Binding Path=Now, StringFormat=D, Mode=OneWay}"
-                   Name="ClockTip" />
-    </UserControl.ToolTip>
 </UserControl>

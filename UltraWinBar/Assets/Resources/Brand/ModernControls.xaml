@@ -209,8 +209,8 @@
         <Setter Property="OverridesDefaultStyle" Value="True" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
-        <Setter Property="Foreground" Value="{DynamicResource ModernTextMuted}" />
-        <Setter Property="Padding" Value="12,5" />
+        <Setter Property="Foreground" Value="{DynamicResource ModernText}" />
+        <Setter Property="Padding" Value="14,6" />
         <Setter Property="Margin" Value="0,0,2,0" />
         <Setter Property="Template">
             <Setter.Value>
@@ -225,13 +225,14 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Surface" Property="Background" Value="{DynamicResource ModernGlass}" />
-                            <Setter Property="Foreground" Value="{DynamicResource ModernText}" />
+                            <Setter Property="Foreground" Value="{DynamicResource ModernTextStrong}" />
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter TargetName="Surface" Property="Background" Value="{DynamicResource ModernGlass}" />
                             <Setter TargetName="Underline" Property="Background" Value="{DynamicResource ModernAccent}" />
                             <Setter TargetName="Glow" Property="Background" Value="{DynamicResource ModernAccentGlow2}" />
                             <Setter Property="Foreground" Value="{DynamicResource ModernTextStrong}" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
                             <Setter Property="Panel.ZIndex" Value="2" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">

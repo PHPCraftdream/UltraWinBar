@@ -95,6 +95,7 @@ internal static class PlaceChecks
         CheckHebrewPlace(places);
         CheckTimeZones(places);
         CheckSecondTimeZone(repositoryRoot);
+        CheckClockZones(repositoryRoot);
         CheckWindowsAndStrings(repositoryRoot);
     }
 
@@ -352,6 +353,107 @@ internal static class PlaceChecks
         Console.WriteLine("PASS: the second time zone is a setting (none by default, announced when it changes, kept in the settings file), shown by the name of its place under the clock's own time.");
     }
 
+    // The three time zones of the clock: the settings, the names, which one the calendar goes by, and the window that sets them.
+    private static void CheckClockZones(DirectoryInfo root)
+    {
+        var fresh = new Settings();
+        if (fresh.MainTimeZone != "" || fresh.SecondPlace != null || fresh.ThirdPlace != null)
+            throw new Exception("No place is chosen for the second and the third zone by default.");
+        if (fresh.ThirdTimeZone != "" || fresh.ShowMainZoneName || !fresh.ShowSecondZoneName || !fresh.ShowThirdZoneName || fresh.CalendarZone != 0)
+            throw new Exception("By default: no third zone, the main zone not named, the others named, the calendar by the main zone.");
+        fresh.CalendarZone = 7;
+        if (fresh.CalendarZone != 0) throw new Exception("A calendar zone that is none of the three is the main one.");
+        fresh.CalendarZone = 2;
+        if (fresh.CalendarZone != 2) throw new Exception("The calendar zone is kept.");
+        fresh.ThirdTimeZone = null;
+        if (fresh.ThirdTimeZone != "") throw new Exception("No third zone is an empty one.");
+        var options = new JsonSerializerOptions { IgnoreReadOnlyProperties = true };
+        var tokyo = HebrewPlace.FromCoordinates(35.6762, 139.6503, null, "Asia/Tokyo");
+        var back = JsonSerializer.Deserialize<Settings>(JsonSerializer.Serialize(new Settings { ThirdTimeZone = "Asia/Tokyo", ThirdPlace = tokyo, ShowMainZoneName = true, ShowSecondZoneName = false, CalendarZone = 1 }, options), options);
+        if (back.ThirdTimeZone != "Asia/Tokyo" || back.ThirdPlace != tokyo || back.SecondPlace != null || !back.ShowMainZoneName || back.ShowSecondZoneName || back.CalendarZone != 1)
+            throw new Exception("The zones, their places and their names are kept in the settings file.");
+
+        var settings = Settings.Instance;
+        string second = settings.SecondTimeZone, third = settings.ThirdTimeZone;
+        int calendar = settings.CalendarZone;
+        HebrewPlace place = settings.HebrewPlace, secondPlace = settings.SecondPlace, thirdPlace = settings.ThirdPlace;
+        try
+        {
+            settings.SecondTimeZone = "Europe/Moscow";
+            settings.ThirdTimeZone = "Nowhere/Land";
+            settings.HebrewPlace = HebrewPlace.FromCoordinates(52.374, 4.8897, null, "Europe/Amsterdam");
+            settings.SecondPlace = HebrewPlace.FromCoordinates(55.7558, 37.6173, null, "Europe/Moscow");
+            settings.ThirdPlace = null;
+            if (ClockZones.IdOf(ClockZones.Main) != "" || ClockZones.IdOf(ClockZones.Second) != "Europe/Moscow" || !ClockZones.IsSet(ClockZones.Main) ||
+                !ClockZones.IsSet(ClockZones.Second) || ClockZones.IsSet(ClockZones.Third))
+                throw new Exception("The main zone always is, a chosen one is when this computer knows it, an unknown one is not.");
+            if (ClockZones.NameOf(ClockZones.Second) != "Moscow" || string.IsNullOrWhiteSpace(ClockZones.NameOf(ClockZones.Main)))
+                throw new Exception($"The names of the zones: {ClockZones.NameOf(ClockZones.Main)} / {ClockZones.NameOf(ClockZones.Second)}.");
+            settings.CalendarZone = ClockZones.Second;
+            if (ClockZones.CalendarZone() != ClockZones.Second || ClockZones.CalendarPlace().TimeZoneId != "Europe/Moscow" || ClockZones.CalendarPlace().Latitude != 55.7558)
+                throw new Exception("The calendar goes by the zone chosen, at the place of that zone, not at the main place with a shifted clock.");
+            settings.CalendarZone = ClockZones.Main;
+            if (ClockZones.CalendarPlace().TimeZoneId != "" || ClockZones.CalendarPlace().Latitude != 52.374)
+                throw new Exception("By the main zone the calendar is at the main place, on the computer's clock.");
+            settings.ThirdTimeZone = "Asia/Tokyo";
+            settings.CalendarZone = ClockZones.Third;
+            if (ClockZones.CalendarZone() != ClockZones.Third || ClockZones.CalendarPlace() != null)
+                throw new Exception("A zone with no place has no place for the calendar: it shows no times rather than those of another place.");
+            settings.ThirdTimeZone = "Nowhere/Land";
+            settings.CalendarZone = ClockZones.Third;
+            if (ClockZones.CalendarZone() != ClockZones.Main || ClockZones.CalendarPlace().TimeZoneId != "")
+                throw new Exception("A zone that is not set is not followed: the calendar goes by the computer's clock.");
+            settings.HebrewPlace = null;
+            if (ClockZones.CalendarPlace() != null) throw new Exception("With no place there is no place for the calendar.");
+        }
+        finally
+        {
+            settings.SecondTimeZone = second;
+            settings.ThirdTimeZone = third;
+            settings.CalendarZone = calendar;
+            settings.HebrewPlace = place;
+            settings.SecondPlace = secondPlace;
+            settings.ThirdPlace = thirdPlace;
+        }
+        if (string.IsNullOrWhiteSpace(ZoneClock.LocalName())) throw new Exception("The computer's zone has no name.");
+
+        var clockType = typeof(TaskAssignmentManager).Assembly.GetType("UltraWinBar.Controls.Clock");
+        if (clockType.GetProperty("ThirdTimeText")?.PropertyType != typeof(string) || clockType.GetProperty("ThirdTimeVisibility")?.PropertyType != typeof(System.Windows.Visibility))
+            throw new Exception("The clock carries the third time and whether it shows.");
+        string clock = File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "UI", "Clock", "Clock.xaml"));
+        string clockCode = File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "UI", "Clock", "Clock.xaml.cs"));
+        if (Regex.Matches(clock, @"\{Binding ThirdTimeText\}").Count != 2 || Regex.Matches(clock, @"\{Binding ThirdTimeVisibility\}").Count != 2)
+            throw new Exception("Both templates of several times show the third one.");
+        foreach (string needed in new[] { "nameof(Settings.ThirdTimeZone)", "nameof(Settings.ShowMainZoneName)", "nameof(Settings.ShowSecondZoneName)", "nameof(Settings.ShowThirdZoneName)", "nameof(Settings.CalendarZone)", "ClockZones.CalendarPlace()" })
+            if (!clockCode.Contains(needed)) throw new Exception("The clock does not follow " + needed + ".");
+        if (clock.Contains("ClockTip") || clock.Contains("<UserControl.ToolTip>") || clockCode.Contains("ClockTip"))
+            throw new Exception("The clock shows no tool tip with the date.");
+
+        string panel = File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "UI", "Clock", "Zones", "ClockZonesPanel.xaml"));
+        string panelCode = File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "UI", "Clock", "Zones", "ClockZonesPanel.xaml.cs"));
+        string properties = File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "Shell", "Dialogs", "PropertiesWindow.xaml"));
+        foreach (string checkBox in new[] { "ShowMainZoneName", "ShowSecondZoneName", "ShowThirdZoneName" })
+            if (!panel.Contains("{Binding " + checkBox + ",")) throw new Exception("The zones panel has no check box for " + checkBox + ".");
+        foreach (Match handler in Regex.Matches(panel, @"(?:SelectionChanged|Click)=""([A-Za-z0-9_]+)"""))
+            if (!Regex.IsMatch(panelCode, @"void\s+" + handler.Groups[1].Value + @"\s*\(")) throw new Exception("The zones panel names a handler it has not: " + handler.Groups[1].Value);
+        if (!properties.Contains("<controls:ClockZonesPanel />"))
+            throw new Exception("The time zones are in the settings.");
+        string calendarSettings = File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "UI", "Clock", "Calendar", "Window", "CalendarSettingsWindow.xaml.cs"));
+        if (calendarSettings.Contains("SecondTimeZone") || !calendarSettings.Contains("Settings.Instance.CalendarZone"))
+            throw new Exception("The calendar's settings choose among the clock's zones and do not set the second one.");
+        string placeWindow = File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "Shell", "Dialogs", "PlaceWindow.xaml"));
+        if (placeWindow.Contains("ZoneBox")) throw new Exception("The place window has no time zone to choose: the zone is one of the clock's three.");
+
+        string languages = Path.Combine(root.FullName, "UltraWinBar", "Assets", "Languages");
+        foreach (string file in new[] { Path.Combine("Group01", "English.xaml"), Path.Combine("Group06", "русский.xaml"), Path.Combine("Group05", "беларуская.xaml") })
+        {
+            string text = File.ReadAllText(Path.Combine(languages, file));
+            foreach (string key in new[] { "zones_heading", "zone_main", "zone_second", "zone_third", "zone_show_name", "zone_none", "calendar_settings_zone", "calendar_zone_main", "zone_place", "zone_computer", "zones_tab", "hebrew_date_tab", "hebrew_place_in_zones" })
+                if (!text.Contains("x:Key=\"" + key + "\"")) throw new Exception($"{file} lacks {key}.");
+        }
+        Console.WriteLine("PASS: three time zones (the computer's, a second and a third, each named or not), the calendar goes by the one chosen and falls back to the computer's, the settings carry them, and the clock shows no date tip.");
+    }
+
     private static void CheckWindowsAndStrings(DirectoryInfo root)
     {
         string dialogs = Path.Combine(root.FullName, "UltraWinBar", "Shell", "Dialogs");
@@ -366,20 +468,16 @@ internal static class PlaceChecks
                 if (!Regex.IsMatch(code, @"void\s+" + handler.Groups[1].Value + @"\s*\("))
                     throw new Exception($"{name}.xaml names the handler {handler.Groups[1].Value}, which {name}.xaml.cs does not have.");
 
-        // The settings window: the place is for the Hebrew date, so it is off while that is off; Choose and Clear exist.
-        // The block is what lies between the Hebrew date checkbox and the next control, whatever the line breaks and indentation.
-        int blockStart = properties.IndexOf("x:Name=\"cbShowHebrewDate\"", StringComparison.Ordinal);
-        int blockEnd = blockStart < 0 ? -1 : properties.IndexOf("x:Name=\"cbShowDesktopButton\"", blockStart, StringComparison.Ordinal);
-        if (blockEnd < 0) throw new Exception("The Hebrew date checkbox and the control after it are not in the settings window.");
-        string block = properties.Substring(blockStart, blockEnd - blockStart);
-        if (!block.Contains("IsEnabled=\"{Binding ElementName=cbShowHebrewDate, Path=IsChecked}\"") || !block.Contains("HebrewPlaceChoose_Click") ||
-            !block.Contains("HebrewPlaceClear_Click") || !block.Contains("x:Name=\"HebrewPlaceText\""))
-            throw new Exception("The Hebrew place block of the settings is not as designed.");
-        if (properties.IndexOf("x:Name=\"cbShowHebrewDate\"", StringComparison.Ordinal) > properties.IndexOf("x:Name=\"HebrewPlaceText\"", StringComparison.Ordinal))
-            throw new Exception("The place comes under the Hebrew date checkbox.");
-        if (!propertiesCode.Contains("Settings.Instance.HebrewPlace = window.Result") || !propertiesCode.Contains("Settings.Instance.HebrewPlace = null") ||
-            !propertiesCode.Contains("nameof(Settings.HebrewPlace)"))
-            throw new Exception("The settings window must store the choice, clear it and follow changes of it.");
+        // The settings window: the notification area has its sub-tabs; the place of the Hebrew date is the place of the main
+        // time zone, chosen (and cleared, and followed) in the zones panel of the Time zones tab.
+        string zonesPanelCode = File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "UI", "Clock", "Zones", "ClockZonesPanel.xaml.cs"));
+        foreach (string tab in new[] { "general_heading", "clock_heading", "zones_tab", "hebrew_date_tab" })
+            if (!properties.Contains("<TabItem Header=\"{DynamicResource " + tab + "}\">")) throw new Exception("The notification area has no sub-tab " + tab + ".");
+        if (!properties.Contains("x:Name=\"cbShowHebrewDate\"") || !properties.Contains("<controls:ClockZonesPanel />") || properties.Contains("HebrewPlaceText"))
+            throw new Exception("The Hebrew date has its tab, and its place is chosen only in the zones panel.");
+        if (!zonesPanelCode.Contains("Settings.Instance.HebrewPlace = place") || !zonesPanelCode.Contains("nameof(Settings.HebrewPlace)") ||
+            !zonesPanelCode.Contains("MainPlaceChoose_Click") || !zonesPanelCode.Contains("MainPlaceClear_Click"))
+            throw new Exception("The zones panel must store the main place, clear it and follow changes of it.");
 
         // The strings: those the windows use are in English, and Russian and Belarusian have all of the new ones.
         var used = new HashSet<string>();

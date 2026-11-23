@@ -1,8 +1,9 @@
 <Window x:Class="UltraWinBar.PlaceWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:utilities="clr-namespace:UltraWinBar.Utilities"
         Title="{DynamicResource hebrew_place_title}"
-        Height="540"
+        Height="440"
         Width="400"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
@@ -26,7 +27,6 @@
     <Grid Margin="9,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <TabControl x:Name="Tabs"
@@ -66,6 +66,7 @@
                     <Label Content="{DynamicResource hebrew_place_country}"
                            Target="{Binding ElementName=CountryBox}" />
                     <ComboBox x:Name="CountryBox"
+                              utilities:ComboSearch.IsEnabled="True"
                               DisplayMemberPath="Name"
                               IsTextSearchEnabled="True"
                               TextSearch.TextPath="Name"
@@ -86,19 +87,6 @@
             </TabItem>
         </TabControl>
         <StackPanel Grid.Row="1"
-                    Margin="0,8,0,0">
-            <Label Content="{DynamicResource hebrew_place_zone}"
-                   Target="{Binding ElementName=ZoneBox}" />
-            <ComboBox x:Name="ZoneBox"
-                      DisplayMemberPath="Display"
-                      IsTextSearchEnabled="True"
-                      TextSearch.TextPath="Id"
-                      SelectionChanged="Zone_SelectionChanged" />
-            <TextBlock Text="{DynamicResource hebrew_place_zone_hint}"
-                       TextWrapping="Wrap"
-                       Margin="0,6,0,0" />
-        </StackPanel>
-        <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     Margin="0,12,0,0">

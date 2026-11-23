@@ -38,6 +38,10 @@
         <Setter Property="Control.FlowDirection" Value="LeftToRight" />
     </Style>
 
+    <!-- The fill and the edge of a row of a list under the pointer (the calendar's times of the day). -->
+    <SolidColorBrush x:Key="ListRowHover" Color="#26808080" />
+    <SolidColorBrush x:Key="ListRowHoverEdge" Color="#59808080" />
+
     <!-- Empty base styles of the controls that the windows' own styles extend with BasedOn: a theme such as
          Modern Glass fills them in, and where it does not they change nothing. -->
     <Style TargetType="Button" />
@@ -145,7 +149,6 @@
         </Style.Triggers></Style>
 
     <Style TargetType="Button" x:Key="TaskButtonActive" BasedOn="{StaticResource TaskButton}">
-        <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Template" Value="{DynamicResource FlatTaskTemplate}"></Setter>
     <Setter Property="Margin" Value="0" /><Setter Property="Padding" Value="6,2" /><Setter Property="Foreground" Value="{DynamicResource FlatTaskText}" /></Style>
 

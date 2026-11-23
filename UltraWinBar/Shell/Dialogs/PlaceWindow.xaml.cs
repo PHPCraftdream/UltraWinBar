@@ -8,13 +8,13 @@ using UltraWinBar.Utilities;
 
 namespace UltraWinBar
 {
-    /// <summary>A time zone in the list of the window: its IANA id and how it reads now ("Asia/Jerusalem (UTC+02:00)").</summary>
+    /// <summary>A time zone in a list of the settings: its IANA id and how it reads now ("Asia/Jerusalem (UTC+02:00)").</summary>
     public sealed record ZoneChoice(string Id, string Display);
 
     /// <summary>
-    /// Chooses the place the Hebrew date and the halachic times are kept for, and its time zone: a city found by its
-    /// English name, or coordinates typed in with their country. A city brings its time zone along and typed-in
-    /// coordinates the zone of the nearest city of the country; the user may change it, and must have one chosen.
+    /// Chooses the place the Hebrew date and the halachic times are kept for: a city found by its English name, or
+    /// coordinates typed in with their country. The time zone the calendar goes by is not the place's: it is one of the
+    /// clock's three, chosen in the calendar's settings.
     /// </summary>
     public partial class PlaceWindow : Window
     {
@@ -24,7 +24,6 @@ namespace UltraWinBar
         private readonly PlaceDatabase places = PlaceDatabase.Shared;
         private readonly bool ready;
         private CoordinateParseResult coordinates;
-        private string suggestedZone = "";
 
         /// <summary>What the user chose; set when the window closes with OK.</summary>
         public HebrewPlace Result { get; private set; }
@@ -33,10 +32,8 @@ namespace UltraWinBar
         {
             InitializeComponent();
             ModernTheme.Track(this);
-            CountryBox.ItemsSource = places.Countries;
-            DateTime now = DateTime.UtcNow;
-            ZoneBox.ItemsSource = places.TimeZones.Where(id => ZoneClock.Find(id) != null)
-                .Select(id => new ZoneChoice(id, ZoneClock.Describe(id, now))).ToArray();
+            // Its own list: the search line filters the list's view.
+            CountryBox.ItemsSource = places.Countries.ToList();
             if (current != null) Restore(current);
             ready = true;
             UpdateState();
@@ -49,24 +46,11 @@ namespace UltraWinBar
                 Tabs.SelectedIndex = CoordinatesTab;
                 CountryBox.SelectedItem = places.FindCountry(current.CountryCode);
                 CoordinatesBox.Text = CoordinateParser.Format(current.Latitude, current.Longitude);
-                suggestedZone = places.NearestTimeZone(current.CountryCode, current.Latitude, current.Longitude);
-                SelectZone(!string.IsNullOrEmpty(current.TimeZoneId) ? current.TimeZoneId : suggestedZone);
                 return;
             }
             SearchBox.Text = current.Name;
             ResultList.SelectedItem = ResultList.Items.OfType<Place>().FirstOrDefault(place =>
                 place.Name == current.Name && place.CountryCode == current.CountryCode && place.Region == current.Region);
-            SelectZone(!string.IsNullOrEmpty(current.TimeZoneId) ? current.TimeZoneId : (ResultList.SelectedItem as Place)?.TimeZoneId);
-        }
-
-        private void SelectZone(string id) =>
-            ZoneBox.SelectedItem = string.IsNullOrEmpty(id) ? null : ZoneBox.Items.OfType<ZoneChoice>().FirstOrDefault(zone => zone.Id == id);
-
-        private string ChosenZone => (ZoneBox.SelectedItem as ZoneChoice)?.Id;
-
-        private void Zone_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (ready) UpdateState();
         }
 
         private void Tabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -86,7 +70,6 @@ namespace UltraWinBar
         private void ResultList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (!ready) return;
-            if (ResultList.SelectedItem is Place place) SelectZone(place.TimeZoneId);
             UpdateState();
         }
 
@@ -108,7 +91,7 @@ namespace UltraWinBar
         {
             if (Tabs.SelectedIndex == CityTab)
             {
-                OkButton.IsEnabled = ResultList.SelectedItem is Place && ChosenZone != null;
+                OkButton.IsEnabled = ResultList.SelectedItem is Place;
                 return;
             }
             string text = CoordinatesBox.Text;
@@ -116,26 +99,16 @@ namespace UltraWinBar
             if (ChosenCountry == null) CoordinatesResult.Text = Text("hebrew_place_need_country");
             else if (string.IsNullOrWhiteSpace(text)) CoordinatesResult.Text = "";
             else CoordinatesResult.Text = Describe(coordinates);
-            if (ChosenCountry != null && coordinates.Success)
-            {
-                // The zone follows the point while the point changes it; once the user picks another it stays.
-                string suggestion = places.NearestTimeZone(ChosenCountry.Code, coordinates.Latitude, coordinates.Longitude);
-                if (suggestion != suggestedZone)
-                {
-                    suggestedZone = suggestion;
-                    SelectZone(suggestion);
-                }
-            }
-            OkButton.IsEnabled = ChosenCountry != null && coordinates.Success && ChosenZone != null;
+            OkButton.IsEnabled = ChosenCountry != null && coordinates.Success;
         }
 
         private void Accept()
         {
-            if (ChosenZone == null) return;
             if (Tabs.SelectedIndex == CityTab && ResultList.SelectedItem is Place place)
-                Result = HebrewPlace.FromPlace(place) with { TimeZoneId = ChosenZone };
+                Result = HebrewPlace.FromPlace(place);
             else if (Tabs.SelectedIndex == CoordinatesTab && coordinates is { Success: true } && ChosenCountry != null)
-                Result = HebrewPlace.FromCoordinates(coordinates.Latitude, coordinates.Longitude, ChosenCountry, ChosenZone);
+                Result = HebrewPlace.FromCoordinates(coordinates.Latitude, coordinates.Longitude, ChosenCountry,
+                    places.NearestTimeZone(ChosenCountry.Code, coordinates.Latitude, coordinates.Longitude));
             else
                 return;
             DialogResult = true;

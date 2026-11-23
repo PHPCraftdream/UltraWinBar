@@ -577,10 +577,9 @@
                                 </DockPanel>
                             </ContentControl>
                         </Border>
-                        <GroupBox
-                            Header="{DynamicResource general_heading}">
-                            <StackPanel
-                                Orientation="Vertical">
+                        <TabControl Margin="0,4,0,0">
+                        <TabItem Header="{DynamicResource general_heading}">
+                            <StackPanel Orientation="Vertical" Margin="6">
                                 <CheckBox
                                     x:Name="cbShowInputLanguage"
                                     IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=ShowInputLanguage, UpdateSourceTrigger=PropertyChanged}">
@@ -620,11 +619,9 @@
                                         SelectionChanged="CboInvertIconsMode_SelectionChanged" />
                                 </Grid>
                             </StackPanel>
-                        </GroupBox>
-                        <GroupBox
-                            Header="{DynamicResource clock_heading}">
-                            <StackPanel
-                                Orientation="Vertical">
+                        </TabItem>
+                        <TabItem Header="{DynamicResource clock_heading}">
+                            <StackPanel Orientation="Vertical" Margin="6">
                                 <CheckBox
                                     x:Name="cbShowClock"
                                     IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=ShowClock, UpdateSourceTrigger=PropertyChanged}">
@@ -638,43 +635,6 @@
                                     <Label
                                         Content="{DynamicResource show_clock_seconds}" />
                                 </CheckBox>
-                                <CheckBox
-                                    x:Name="cbShowHebrewDate"
-                                    IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=ShowHebrewDate, UpdateSourceTrigger=PropertyChanged}">
-                                    <Label
-                                        Content="{DynamicResource show_hebrew_date}"
-                                        ToolTip="{DynamicResource hebrew_date_midnight}" />
-                                </CheckBox>
-                                <Grid
-                                    IsEnabled="{Binding ElementName=cbShowHebrewDate, Path=IsChecked}"
-                                    ToolTip="{DynamicResource hebrew_place_hint}">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition
-                                            Width="Auto" />
-                                        <ColumnDefinition
-                                            Width="*" />
-                                        <ColumnDefinition
-                                            Width="Auto" />
-                                        <ColumnDefinition
-                                            Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <Label
-                                        VerticalAlignment="Center"
-                                        Content="{DynamicResource hebrew_place}" />
-                                    <TextBlock
-                                        x:Name="HebrewPlaceText"
-                                        Grid.Column="1"
-                                        VerticalAlignment="Center"
-                                        TextTrimming="CharacterEllipsis" />
-                                    <Button
-                                        Grid.Column="2"
-                                        Content="{DynamicResource hebrew_place_choose}"
-                                        Click="HebrewPlaceChoose_Click" />
-                                    <Button
-                                        Grid.Column="3"
-                                        Content="{DynamicResource hebrew_place_clear}"
-                                        Click="HebrewPlaceClear_Click" />
-                                </Grid>
                                 <CheckBox
                                     x:Name="cbShowDesktopButton"
                                     IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=ShowDesktopButton, UpdateSourceTrigger=PropertyChanged}">
@@ -762,7 +722,25 @@
                                     Width="300"
                                     Margin="0,3" />
                             </StackPanel>
-                        </GroupBox>
+                        </TabItem>
+                        <TabItem Header="{DynamicResource zones_tab}">
+                            <StackPanel Orientation="Vertical" Margin="6">
+                                <controls:ClockZonesPanel />
+                            </StackPanel>
+                        </TabItem>
+                        <TabItem Header="{DynamicResource hebrew_date_tab}">
+                            <StackPanel Orientation="Vertical" Margin="6">
+                                <CheckBox
+                                    x:Name="cbShowHebrewDate"
+                                    IsChecked="{Binding Source={x:Static Settings:Settings.Instance}, Path=ShowHebrewDate, UpdateSourceTrigger=PropertyChanged}">
+                                    <Label
+                                        Content="{DynamicResource show_hebrew_date}"
+                                        ToolTip="{DynamicResource hebrew_date_midnight}" />
+                                </CheckBox>
+                                <TextBlock Text="{DynamicResource hebrew_place_in_zones}" TextWrapping="Wrap" Margin="0,6,0,0" />
+                            </StackPanel>
+                        </TabItem>
+                        </TabControl>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

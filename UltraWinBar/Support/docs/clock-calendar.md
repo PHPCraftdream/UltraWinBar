@@ -40,7 +40,10 @@ two orders lands nearer to the cities of the country.
 the ones Windows has: it brings them up to date with its updates, and a zone applies its changes (summer time, a country
 moving its clocks) on the date asked about. The program forgets what it read (`ZoneClock.Refresh`) when the computer's
 time changes and every six hours, so a changed rule is taken up without a restart. A zone that this computer does not
-know is not offered and shows nothing. `Settings.SecondTimeZone` makes the clock show a second time under its own.
+know is not offered and shows nothing. The clock has three time zones (`ClockZones`): the computer's own, `Settings.SecondTimeZone` and `Settings.ThirdTimeZone`; each shows its time
+under the clock's own and, with its check box set (`ShowMainZoneName`, `ShowSecondZoneName`, `ShowThirdZoneName`), its name.
+`Settings.CalendarZone` (0, 1 or 2) is the zone the calendar goes by: its clock decides the date, where the Hebrew day turns
+and the times of the day are shown; the place gives only the coordinates and the country.
 
 Regression tests cover known date conversions, leap and ordinary Adar, every
 month in all bundled locales, weekday labels, and Belarusian translation coverage.
