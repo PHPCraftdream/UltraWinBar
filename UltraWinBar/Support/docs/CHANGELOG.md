@@ -68,6 +68,8 @@
 - Jewish calendar: the week's portion is a solid accent badge (readable on the selected, accent-tinted day too); the
   dates, the special days and the weekday numbers in the grid are darker and bolder. The details on the right start
   on the line of the first week's cards.
+- A language change no longer leaves the open windows with empty labels: the new language's strings come in before
+  the previous ones go (as the themes do), and the log names the dictionaries loaded.
 - A theme change no longer fails with "'ShowDesktopIconImageLarge' resource not found": the new base dictionary is
   added before the old themes are removed (no moment without the theme's resources), and the show-desktop icon is a
   resource reference instead of a lookup.

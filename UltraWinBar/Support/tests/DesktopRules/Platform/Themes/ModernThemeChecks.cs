@@ -83,6 +83,14 @@ internal static class ModernThemeChecks
         if (added < 0 || removed < added || manager.Contains("ClearPreviousThemes()") ||
             showDesktop.Contains("FindResource(\"ShowDesktopIconImage") || !showDesktop.Contains("SetResourceReference(Image.SourceProperty"))
             throw new Exception("A theme change adds the new base before removing the old themes; the show-desktop icon is a resource reference.");
+        // Regression: a language switch removed every language dictionary before adding the new ones, and windows open at
+        // that moment were left with empty labels. The new language now comes in before the previous one goes.
+        int setLanguage = manager.IndexOf("public void SetLanguageFromSettings()", StringComparison.Ordinal);
+        int keepPrevious = manager.IndexOf("var previous = GetMergedDictionaries().Where(IsLanguageDictionary).ToArray();", setLanguage, StringComparison.Ordinal);
+        int loadNew = manager.IndexOf("LoadLanguageFromSettings();", setLanguage, StringComparison.Ordinal);
+        int removeOld = manager.IndexOf("foreach (var old in previous) GetMergedDictionaries().Remove(old);", setLanguage, StringComparison.Ordinal);
+        if (setLanguage < 0 || keepPrevious < setLanguage || loadNew < keepPrevious || removeOld < loadNew || manager.Contains("ClearPreviousLanguages"))
+            throw new Exception("A language switch adds the new language before removing the previous one.");
         // On a vertical panel each zone of the clock and its dates are framed in the accent; the tray, Start and the language are not.
         string ui = Path.Combine(project, "UI");
         string clockXaml = File.ReadAllText(Path.Combine(ui, "Clock", "Clock.xaml"));

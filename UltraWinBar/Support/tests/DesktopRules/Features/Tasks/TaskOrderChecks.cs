@@ -159,8 +159,8 @@ internal static class TaskOrderChecks
         var languageProbeDictionaries = new System.Collections.ObjectModel.Collection<System.Windows.ResourceDictionary>();
         var themeProbeDictionary = MakeProbeDictionary(@"Themes\Core\System.xaml");
         languageProbeDictionaries.Add(themeProbeDictionary);
-        // Simulate repeated language switches: each one removes the previous language
-        // dictionaries before adding the next, mirroring SetLanguageFromSettings.
+        // Simulate repeated language switches with the helper that drops language dictionaries: each switch leaves
+        // exactly one language set (SetLanguageFromSettings itself adds the new one first, then drops the previous).
         foreach (string languageProbeFile in new[] { @"Languages\English.xaml", @"Languages\Group02\Russian.xaml", @"Languages\Group01\German.xaml" })
         {
             removeLanguageDictionariesMethod.Invoke(null, new object[] { languageProbeDictionaries });

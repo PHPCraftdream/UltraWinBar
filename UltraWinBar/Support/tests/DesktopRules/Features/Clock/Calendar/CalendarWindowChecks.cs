@@ -119,7 +119,8 @@ internal static class CalendarWindowChecks
         var portion = DayDetailsBuilder.Cell(Day("2026-04-18"), month, Day("2026-04-02"), false, "English", null, text);
         Check(portion.Marker.Length > 0 && portion.IsRest && DayDetailsBuilder.Cell(Day("2026-04-15"), month, Day("2026-04-02"), false, "English", null, text).Marker == "", "A Shabbat carries its portion, an ordinary day nothing.");
         // The blocks of a cell: the portion of a Shabbat (not on a festival's), and the special days with their kinds.
-        Check(portion.Portion != null && portion.Events.Count == 0 && shabbat.Portion == null && shabbat.Events.Count == 1 && shabbat.Events[0].Kind == DayKind.CholHamoed &&
+        // 18 April 2026 is 1 Iyar: the portion stays, with Rosh Chodesh as its only day.
+        Check(portion.Portion != null && portion.Events.All(day => day.Kind == DayKind.RoshChodesh) && shabbat.Portion == null && shabbat.Events.Count == 1 && shabbat.Events[0].Kind == DayKind.CholHamoed &&
               pesach.Events.Count == 1 && pesach.Events[0].Kind == DayKind.YomTov && pesach.Events[0].Name == pesach.Marker,
             $"The blocks of the cells: {portion.Portion} / {shabbat.Events.Count} / {pesach.Events.Count}.");
         // The names as they are usually written (a search engine does not correct them).

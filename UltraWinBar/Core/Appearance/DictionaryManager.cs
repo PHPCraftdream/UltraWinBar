@@ -115,21 +115,35 @@ namespace UltraWinBar.Utilities
         private static bool IsThemeDictionary(ResourceDictionary item) =>
             item.Source?.ToString().Replace('\\', '/').IndexOf(THEME_FOLDER + "/", StringComparison.OrdinalIgnoreCase) >= 0;
 
-        private void ClearPreviousLanguages()
-        {
-            RemoveLanguageDictionaries(GetMergedDictionaries());
-        }
-
         internal static void RemoveLanguageDictionaries(Collection<ResourceDictionary> dictionaries)
         {
-            foreach (var dictionary in dictionaries.Where(item =>
-                item.Source?.ToString().Replace('\\', '/').IndexOf(LANG_FOLDER + "/", StringComparison.OrdinalIgnoreCase) >= 0).ToArray())
+            foreach (var dictionary in dictionaries.Where(IsLanguageDictionary).ToArray())
                 dictionaries.Remove(dictionary);
         }
 
         public void SetLanguageFromSettings()
         {
-            ClearPreviousLanguages();
+            // The new language is added before the previous one goes: no moment without the strings (a lookup in that gap
+            // left windows with empty labels).
+            var previous = GetMergedDictionaries().Where(IsLanguageDictionary).ToArray();
+            try
+            {
+                LoadLanguageFromSettings();
+            }
+            finally
+            {
+                foreach (var old in previous) GetMergedDictionaries().Remove(old);
+                ManagedShell.Common.Logging.ShellLogger.Info($"DictionaryManager: language {Settings.Instance.Language}: " +
+                    $"{string.Join(" | ", GetMergedDictionaries().Where(IsLanguageDictionary).Select(d => Path.GetFileName(d.Source.ToString())))}, " +
+                    $"taskbar_tab \"{Application.Current.TryFindResource("taskbar_tab")}\"");
+            }
+        }
+
+        private static bool IsLanguageDictionary(ResourceDictionary item) =>
+            item.Source?.ToString().Replace('\\', '/').IndexOf(LANG_FOLDER + "/", StringComparison.OrdinalIgnoreCase) >= 0;
+
+        private void LoadLanguageFromSettings()
+        {
             SetLanguage(LANG_FALLBACK);
             if (Settings.Instance.Language == LANG_DEFAULT)
             {

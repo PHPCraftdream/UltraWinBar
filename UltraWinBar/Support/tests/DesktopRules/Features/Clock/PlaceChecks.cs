@@ -499,7 +499,9 @@ internal static class PlaceChecks
             if (!properties.Contains("<TabItem Header=\"{DynamicResource " + tab + "}\">")) throw new Exception("The notification area has no sub-tab " + tab + ".");
         if (!properties.Contains("x:Name=\"cbShowHebrewDate\"") || !properties.Contains("<controls:ClockZonesPanel />") || properties.Contains("HebrewPlaceText"))
             throw new Exception("The Hebrew date has its tab, and its place is chosen only in the zones panel.");
-        if (!zonesPanelCode.Contains("Settings.Instance.HebrewPlace = place") || !zonesPanelCode.Contains("nameof(Settings.HebrewPlace)") ||
+        // The panel stores a place through ClockZones.SetPlace, which keeps the main zone's in HebrewPlace.
+        string clockZonesCode = File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "UI", "Clock", "Zones", "ClockZones.cs"));
+        if (!zonesPanelCode.Contains("ClockZones.SetPlace(zone, place)") || !clockZonesCode.Contains("Settings.Instance.HebrewPlace = place") || !zonesPanelCode.Contains("nameof(Settings.HebrewPlace)") ||
             !zonesPanelCode.Contains("MainPlaceChoose_Click") || !zonesPanelCode.Contains("MainPlaceClear_Click"))
             throw new Exception("The zones panel must store the main place, clear it and follow changes of it.");
 
