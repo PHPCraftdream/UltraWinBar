@@ -152,8 +152,9 @@ internal static class CalendarWindowChecks
             "Civil months of the grid, a shorter month ending on its last day.");
         var outside = DayDetailsBuilder.Cell(Day("2026-03-30"), month, Day("2026-04-02"), false, "English", null, text);
         Check(outside.OutsideMonth && outside.GregorianNumber == "30", "A day of another month is marked.");
+        // 20 Tevet is the Rambam's and the Abir Yaakov's: with both hidden the day has no candle.
         var rambam = DayDetailsBuilder.Cell(Day("2026-01-09"), Day("2026-01-01"), Day("2026-01-01"), false, "English", null, text);
-        Check(rambam.HasYahrzeit && rambam.Tooltip.Contains("Rambam") && !DayDetailsBuilder.Cell(Day("2026-01-09"), Day("2026-01-01"), Day("2026-01-01"), false, "English", new[] { "rambam" }, text).HasYahrzeit,
+        Check(rambam.HasYahrzeit && rambam.Tooltip.Contains("Rambam") && !DayDetailsBuilder.Cell(Day("2026-01-09"), Day("2026-01-01"), Day("2026-01-01"), false, "English", new[] { "rambam", "abir_yaakov" }, text).HasYahrzeit,
             "A day with a yahrzeit is marked, unless it is hidden.");
         Check(DayDetailsBuilder.HebrewMonths(Day("2026-11-01"), "English") == "Heshvan – Kislev 5787" && DayDetailsBuilder.HebrewMonths(Day("2026-09-01"), "English") == "Elul 5786 – Tishri 5787" &&
             DayDetailsBuilder.HebrewMonths(Day("2026-03-01"), "русский") == "адар – нисан 5786", "The Hebrew months of a Gregorian month, with the turn of the year.");
