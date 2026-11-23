@@ -227,6 +227,7 @@
     <s:String x:Key="hebrew_place_zone_hint">Подставляется вместе с городом; смените, если он неверен. Правила пояса (летнее время и его изменения) берутся из Windows.</s:String>
     <s:String x:Key="calendar_title">Еврейский календарь</s:String>
     <s:String x:Key="calendar_today">Сегодня</s:String>
+    <s:String x:Key="calendar_shabbat">Шаббат</s:String>
     <s:String x:Key="calendar_previous_month">Предыдущий месяц</s:String>
     <s:String x:Key="calendar_next_month">Следующий месяц</s:String>
     <s:String x:Key="calendar_settings">Настройки...</s:String>

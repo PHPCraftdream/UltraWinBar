@@ -28,14 +28,58 @@ namespace UltraWinBar
         /// Opens the calendar, or brings the open one forward: there is only one. It stands in the corner of the clock
         /// it was opened from, on the side of the panel that faces the desktop.
         /// </summary>
-        public static void ShowSingle(FrameworkElement clock = null)
+        // True when a visible window of another program lies over the calendar (higher in the z-order and overlapping).
+        internal static bool IsCovered(IntPtr handle)
+        {
+            if (!ManagedShell.Interop.NativeMethods.GetWindowRect(handle, out var mine)) return false;
+            uint own = (uint)Environment.ProcessId;
+            for (IntPtr above = ManagedShell.Interop.NativeMethods.GetWindow(handle, ManagedShell.Interop.NativeMethods.GetWindow_Cmd.GW_HWNDPREV);
+                 above != IntPtr.Zero;
+                 above = ManagedShell.Interop.NativeMethods.GetWindow(above, ManagedShell.Interop.NativeMethods.GetWindow_Cmd.GW_HWNDPREV))
+            {
+                if (!ManagedShell.Interop.NativeMethods.IsWindowVisible(above) || ManagedShell.Interop.NativeMethods.IsIconic(above)) continue;
+                ManagedShell.Interop.NativeMethods.GetWindowThreadProcessId(above, out uint process);
+                if (process == own) continue;
+                if (ManagedShell.Interop.NativeMethods.DwmGetWindowAttribute(above, ManagedShell.Interop.NativeMethods.DWMWINDOWATTRIBUTE.DWMWA_CLOAKED, out uint cloaked, sizeof(uint)) == 0 && cloaked != 0) continue;
+                if (!ManagedShell.Interop.NativeMethods.GetWindowRect(above, out var other)) continue;
+                if (other.Left < mine.Right && other.Right > mine.Left && other.Top < mine.Bottom && other.Bottom > mine.Top) return true;
+            }
+            return false;
+        }
+
+        // A calendar made ahead (on a hover over the clock, and once when the program is idle after its start), so a click
+        // only has to show it: making one (its markup, the month's cells, the times of the day) is what took the time.
+        private static CalendarWindow prepared;
+
+        public static void Prepare()
+        {
+            if (shown != null || (prepared != null && prepared.madeOn == DateTime.Today)) return;
+            prepared?.Close();
+            try
+            {
+                prepared = new CalendarWindow();
+                // The month's cells are laid out now too, not on the click.
+                prepared.Measure(new Size(prepared.Width, prepared.Height));
+                prepared.Arrange(new Rect(0, 0, prepared.Width, prepared.Height));
+            }
+            catch (Exception error)
+            {
+                ManagedShell.Common.Logging.ShellLogger.Debug($"CalendarWindow: not prepared: {error.Message}");
+                prepared = null;
+            }
+        }
+
+        private readonly DateTime madeOn = DateTime.Today;
+
+        public static void ShowSingle(FrameworkElement clock = null, bool toggle = true)
         {
             if (shown != null)
             {
                 IntPtr handle = new WindowInteropHelper(shown).Handle;
                 bool here = VirtualDesktopContext.Instance?.IsWindowOnCurrentDesktop(handle) ?? true;
-                // A second click on the date closes the calendar that is open on this desktop.
-                if (clock != null && here && shown.IsVisible && shown.WindowState != WindowState.Minimized)
+                // A second click on the date closes the calendar that is open and in sight on this desktop; one under
+                // other windows is brought up over them instead.
+                if (clock != null && toggle && here && shown.IsVisible && shown.WindowState != WindowState.Minimized && !IsCovered(handle))
                 {
                     shown.Close();
                     return;
@@ -52,12 +96,21 @@ namespace UltraWinBar
             bool created = shown == null;
             if (created)
             {
-                shown = new CalendarWindow();
+                if (prepared != null && prepared.madeOn != DateTime.Today)
+                {
+                    prepared.Close();
+                    prepared = null;
+                }
+                shown = prepared ?? new CalendarWindow();
+                prepared = null;
                 shown.Closed += (_, _) => shown = null;
             }
             if (clock != null) shown.PlaceAtCorner(clock);
             if (created) shown.Show();
             if (shown.WindowState == WindowState.Minimized) shown.WindowState = WindowState.Normal;
+            // Up over the other windows even when Windows refuses the activation (a click on the panel).
+            shown.Topmost = true;
+            shown.Topmost = false;
             shown.Activate();
         }
 
@@ -114,6 +167,8 @@ namespace UltraWinBar
             Rebuild();
         }
 
+        internal static string[] WeekdayHeaders(string shabbat) => new[] { "1", "2", "3", "4", "5", "6", shabbat };
+
         private static string Text(string key) => Application.Current.TryFindResource(key) as string ?? key;
 
         private static string AppLanguage => Settings.Instance.Language;
@@ -132,10 +187,9 @@ namespace UltraWinBar
             rebuilding = true;
             try
             {
-                CultureInfo culture = DayDetailsBuilder.CultureOf(AppLanguage);
-                MonthTitle.Text = month.ToString("Y", culture) + Environment.NewLine + DayDetailsBuilder.HebrewMonths(month, AppLanguage);
                 WeekdayHeader.Children.Clear();
-                foreach (string name in culture.DateTimeFormat.AbbreviatedDayNames)
+                // The days of the week as the Jewish count has them: 1 (Sunday) to 6 (Friday), then Shabbat; no names of a language.
+                foreach (string name in WeekdayHeaders(Text("calendar_shabbat")))
                     WeekdayHeader.Children.Add(new TextBlock { Text = name, TextAlignment = TextAlignment.Center, FontSize = 14, Opacity = 0.7, Margin = new Thickness(0, 0, 0, 4) });
 
                 bool israel = DayDetailsBuilder.IsLandOfIsrael(ClockZones.CalendarPlace());
@@ -211,25 +265,38 @@ namespace UltraWinBar
             HebrewPlace place = ClockZones.CalendarPlace();
             DayDetails details = DayDetailsBuilder.Describe(chosen, place, AppLanguage, Settings.Instance.HiddenYahrzeits, Text);
             Details.Children.Clear();
-            Line(details.Heading, bold: true, size: 19);
-            Line(details.HebrewDate, bold: true, size: 17, flow: FlowDirection.LeftToRight);
-            if (details.Portion != null) Line(details.Portion, top: 8);
+            // The chosen day's dates are in its cell (and its tooltip); its week's portion is above the month.
+            // The chosen day over the month: its civil date at the left, its Hebrew date at the right, its week's portion between.
+            MonthTitle.Text = chosen.ToString("d MMMM yyyy", DayDetailsBuilder.CultureOf(AppLanguage));
+            HebrewMonthTitle.Text = details.HebrewDate;
+            PortionTitle.Text = details.Portion ?? "";
             foreach (string name in details.Events) Line(name, bold: true, top: 4);
             if (details.RestStarts != null) Line(details.RestStarts, top: 4);
             if (details.RestEnds != null) Line(details.RestEnds);
             if (details.Yahrzeits.Count > 0)
             {
                 Line(Text("calendar_yahrzeits"), bold: true, top: 10);
-                foreach (string name in details.Yahrzeits) Line(name);
+                // Each name after a memorial candle; the eldest first (the list comes in order of birth).
+                foreach (string name in details.Yahrzeits)
+                {
+                    var row = new DockPanel { Margin = new Thickness(0, 3, 0, 0) };
+                    var candle = (FrameworkElement)FindResource("YahrzeitCandleIcon");
+                    candle.LayoutTransform = new ScaleTransform(0.8, 0.8);
+                    candle.Margin = new Thickness(0, 0, 6, 0);
+                    candle.VerticalAlignment = VerticalAlignment.Center;
+                    DockPanel.SetDock(candle, Dock.Left);
+                    row.Children.Add(candle);
+                    row.Children.Add(new TextBlock { Text = name, TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center });
+                    Details.Children.Add(row);
+                }
             }
-            Line(Text("calendar_times"), bold: true, top: 10);
+            TimesHeading(details.Place);
             if (details.Place == null)
             {
                 Line(Text("calendar_no_place"));
             }
             else
             {
-                Line(details.Place, opacity: 0.7);
                 foreach (TimeLine time in details.Times)
                 {
                     // The whole row lights up under the pointer (the style takes the colors of the theme).
@@ -242,6 +309,61 @@ namespace UltraWinBar
                 }
             }
             if (details.Molad != null) Line(details.Molad, top: 10, opacity: 0.7);
+        }
+
+        // "Times of the day", with a globe at the right whose popup tells the place they are for. The popup stands above the
+        // globe, right-aligned to it (so over the calendar, not beyond its edge); it shows while the pointer is on the globe,
+        // and a click pins it until the next click.
+        private void TimesHeading(string place)
+        {
+            var heading = new DockPanel { Margin = new Thickness(0, 10, 0, 0) };
+            if (place != null)
+            {
+                var text = new TextBlock { Text = place, TextWrapping = TextWrapping.Wrap, MaxWidth = 360, Margin = new Thickness(10, 6, 10, 6) };
+                var popup = new System.Windows.Controls.Primitives.Popup
+                {
+                    StaysOpen = true,
+                    AllowsTransparency = true,
+                    Placement = System.Windows.Controls.Primitives.PlacementMode.Custom,
+                    Child = new Border
+                    {
+                        Child = text,
+                        CornerRadius = new CornerRadius(6),
+                        BorderThickness = new Thickness(1),
+                        Background = (Brush)(TryFindResource("ModernBase") ?? SystemColors.WindowBrush),
+                        BorderBrush = (Brush)(TryFindResource("ModernGlassBorderStrong") ?? SystemColors.ActiveBorderBrush),
+                    },
+                };
+                popup.CustomPopupPlacementCallback = (popupSize, targetSize, offset) => new[]
+                {
+                    new System.Windows.Controls.Primitives.CustomPopupPlacement(new Point(targetSize.Width - popupSize.Width, -popupSize.Height - 4),
+                        System.Windows.Controls.Primitives.PopupPrimaryAxis.Horizontal),
+                };
+                var globe = new Button
+                {
+                    Content = "\uE774",
+                    FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                    Padding = new Thickness(6, 2, 6, 2),
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
+                popup.PlacementTarget = globe;
+                bool pinned = false;
+                globe.MouseEnter += (_, _) => popup.IsOpen = true;
+                globe.MouseLeave += (_, _) => { if (!pinned) popup.IsOpen = false; };
+                globe.Click += (_, _) =>
+                {
+                    pinned = !pinned;
+                    popup.IsOpen = pinned;
+                };
+                EventHandler away = (_, _) => { pinned = false; popup.IsOpen = false; };
+                Deactivated += away;
+                globe.Unloaded += (_, _) => { Deactivated -= away; popup.IsOpen = false; };
+                DockPanel.SetDock(globe, Dock.Right);
+                heading.Children.Add(globe);
+                heading.Children.Add(popup);
+            }
+            heading.Children.Add(new TextBlock { Text = Text("calendar_times"), FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center });
+            Details.Children.Add(heading);
         }
 
         private void Line(string text, bool bold = false, double size = 0, double top = 0, double opacity = 1, FlowDirection? flow = null)

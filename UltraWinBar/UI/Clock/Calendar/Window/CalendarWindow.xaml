@@ -95,6 +95,55 @@
                 <Setter Property="VerticalAlignment"
                         Value="Center" />
             </Style>
+            <!-- A memorial candle with its flame and glow (a yahrzeit): in the cells and before each name of the day. -->
+            <Canvas x:Key="YahrzeitCandleIcon"
+                    x:Shared="False"
+                    Width="18"
+                    Height="26"
+                    IsHitTestVisible="False">
+                    <Ellipse Canvas.Left="0"
+                             Canvas.Top="0"
+                             Width="18"
+                             Height="18">
+                        <Ellipse.Fill>
+                            <RadialGradientBrush>
+                                <GradientStop Color="#AAFDE68A" Offset="0" />
+                                <GradientStop Color="#40FBBF24" Offset="0.45" />
+                                <GradientStop Color="#00FBBF24" Offset="1" />
+                            </RadialGradientBrush>
+                        </Ellipse.Fill>
+                    </Ellipse>
+                    <Path Canvas.Left="6"
+                          Canvas.Top="3"
+                          Data="M3,0 C4.6,2.6 6,4.4 6,6.6 C6,8.6 4.6,10 3,10 C1.4,10 0,8.6 0,6.6 C0,4.4 1.4,2.6 3,0 Z">
+                        <Path.Fill>
+                            <RadialGradientBrush GradientOrigin="0.5,0.75" Center="0.5,0.7" RadiusX="0.6" RadiusY="0.6">
+                                <GradientStop Color="#FFFFFBEB" Offset="0" />
+                                <GradientStop Color="#FFFDE047" Offset="0.4" />
+                                <GradientStop Color="#FFF97316" Offset="1" />
+                            </RadialGradientBrush>
+                        </Path.Fill>
+                    </Path>
+                    <Rectangle Canvas.Left="8.6"
+                               Canvas.Top="12.5"
+                               Width="0.8"
+                               Height="2"
+                               Fill="#FF57534E" />
+                    <Rectangle Canvas.Left="5"
+                               Canvas.Top="14.5"
+                               Width="8"
+                               Height="11"
+                               RadiusX="1.2"
+                               RadiusY="1.2">
+                        <Rectangle.Fill>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#FFE7E5E4" Offset="0" />
+                                <GradientStop Color="#FFFFFFFF" Offset="0.45" />
+                                <GradientStop Color="#FFD6D3D1" Offset="1" />
+                            </LinearGradientBrush>
+                        </Rectangle.Fill>
+                    </Rectangle>
+            </Canvas>
         </ResourceDictionary>
     </Window.Resources>
     <Grid>
@@ -113,6 +162,14 @@
                     ToolTip="{DynamicResource calendar_close}"
                     shell:WindowChrome.IsHitTestVisibleInChrome="True"
                     Click="Close_Click" />
+            <!-- The settings: a gear beside the close button (Segoe MDL2 Assets, the Windows icon font). -->
+            <Button DockPanel.Dock="Right"
+                    Style="{StaticResource CaptionButton}"
+                    Content="&#xE713;"
+                    FontFamily="Segoe MDL2 Assets"
+                    ToolTip="{DynamicResource calendar_settings}"
+                    shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                    Click="Settings_Click" />
             <Border DockPanel.Dock="Left"
                     Width="3"
                     Height="14"
@@ -128,45 +185,73 @@
     <Grid Grid.Row="1"
           Margin="9,12">
         <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"
                               MinWidth="520" />
             <ColumnDefinition Width="440" />
         </Grid.ColumnDefinitions>
-        <Grid Grid.Row="0"
+        <!-- The month row, over the whole width: the civil month by the left arrow, the Hebrew ones by the right,
+             the chosen day's Hebrew date and its week's portion in the middle. -->
+        <DockPanel Grid.Row="0"
+                   Grid.Column="0"
+                   Grid.ColumnSpan="2"
+                   Margin="0,0,0,10">
+            <Button x:Name="PreviousButton"
+                    DockPanel.Dock="Left"
+                    Content="&#x25C0;"
+                    ToolTip="{DynamicResource calendar_previous_month}"
+                    Click="Previous_Click" />
+            <Button x:Name="NextButton"
+                    DockPanel.Dock="Right"
+                    Content="&#x25B6;"
+                    ToolTip="{DynamicResource calendar_next_month}"
+                    Click="Next_Click" />
+            <Button DockPanel.Dock="Right"
+                    Content="{DynamicResource calendar_today}"
+                    Margin="0,0,6,0"
+                    Click="Today_Click" />
+            <Grid Margin="10,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="MonthTitle"
+                           Grid.Column="0"
+                           HorizontalAlignment="Left"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"
+                           FontSize="20"
+                           FontWeight="Bold" />
+                <StackPanel Grid.Column="1"
+                            Margin="12,0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                    <TextBlock x:Name="PortionTitle"
+                               HorizontalAlignment="Center"
+                               FontSize="17"
+                               FontWeight="SemiBold" />
+                </StackPanel>
+                <TextBlock x:Name="HebrewMonthTitle"
+                           Grid.Column="2"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"
+                           FlowDirection="LeftToRight"
+                           FontSize="20"
+                           FontWeight="Bold" />
+            </Grid>
+        </DockPanel>
+        <Grid Grid.Row="1"
               Grid.Column="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <DockPanel Grid.Row="0"
-                       Margin="0,0,0,6">
-                <Button x:Name="PreviousButton"
-                        DockPanel.Dock="Left"
-                        Content="&#x25C0;"
-                        ToolTip="{DynamicResource calendar_previous_month}"
-                        Click="Previous_Click" />
-                <Button x:Name="NextButton"
-                        DockPanel.Dock="Right"
-                        Content="&#x25B6;"
-                        ToolTip="{DynamicResource calendar_next_month}"
-                        Click="Next_Click" />
-                <Button DockPanel.Dock="Right"
-                        Content="{DynamicResource calendar_today}"
-                        Margin="0,0,6,0"
-                        Click="Today_Click" />
-                <TextBlock x:Name="MonthTitle"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"
-                           TextAlignment="Center"
-                           TextWrapping="Wrap"
-                           FontSize="20"
-                           FontWeight="Bold" />
-            </DockPanel>
             <UniformGrid x:Name="WeekdayHeader"
                          Grid.Row="1"
                          Columns="7" />
@@ -209,22 +294,88 @@
                                     <RowDefinition Height="*" />
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
+                                <!-- The Hebrew date at the top right, the civil one at the bottom left (muted); between them the
+                                     week's portion as an accent badge and the special days as blocks colored by their kind. -->
+                                <!-- A yahrzeit on the day: a memorial candle with its flame and glow, at the top left. -->
+                                <ContentControl x:Name="YahrzeitCandle"
+                                                Grid.Row="0"
+                                                Grid.RowSpan="2"
+                                                HorizontalAlignment="Left"
+                                                VerticalAlignment="Top"
+                                                Margin="-2,-2,0,0"
+                                                Focusable="False"
+                                                IsHitTestVisible="False"
+                                                Content="{StaticResource YahrzeitCandleIcon}"
+                                                Visibility="Collapsed" />
                                 <TextBlock Grid.Row="0"
                                            HorizontalAlignment="Right"
                                            Text="{Binding HebrewLabel}"
+                                           Foreground="{DynamicResource ModernTextStrong}"
                                            FontSize="14"
                                            FontWeight="SemiBold" />
-                                <TextBlock x:Name="Marker"
-                                           Grid.Row="1"
-                                           Margin="0,2"
-                                           Text="{Binding Marker}"
-                                           FontSize="13"
-                                           TextWrapping="Wrap"
-                                           TextTrimming="CharacterEllipsis" />
-                                <TextBlock Grid.Row="2"
-                                           HorizontalAlignment="Left"
-                                           Text="{Binding GregorianLabel}"
-                                           FontSize="14" />
+                                <StackPanel Grid.Row="1"
+                                            Margin="0,3"
+                                            VerticalAlignment="Top">
+                                    <Border x:Name="PortionBadge"
+                                            HorizontalAlignment="Left"
+                                            Margin="0,0,0,2"
+                                            Padding="6,1"
+                                            CornerRadius="4"
+                                            Background="{DynamicResource ModernAccentSoft}"
+                                            BorderBrush="{DynamicResource ModernAccent}"
+                                            BorderThickness="2,0,0,0">
+                                        <TextBlock Text="{Binding Portion}"
+                                                   Foreground="{DynamicResource ModernAccent}"
+                                                   FontSize="12.5"
+                                                   FontWeight="Bold"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </Border>
+                                    <ItemsControl ItemsSource="{Binding Events}"
+                                                  Focusable="False">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border x:Name="Chip"
+                                                        Margin="0,0,0,2"
+                                                        Padding="6,1"
+                                                        CornerRadius="4"
+                                                        Background="#2E38BDF8"
+                                                        BorderBrush="#9938BDF8"
+                                                        BorderThickness="2,0,0,0">
+                                                    <TextBlock x:Name="ChipText"
+                                                               Text="{Binding Name}"
+                                                               FontSize="12"
+                                                               TextWrapping="Wrap"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                </Border>
+                                                <DataTemplate.Triggers>
+                                                    <DataTrigger Binding="{Binding Kind}" Value="YomTov">
+                                                        <Setter TargetName="Chip" Property="Background" Value="#38FB7185" />
+                                                        <Setter TargetName="Chip" Property="BorderBrush" Value="#CCFB7185" />
+                                                        <Setter TargetName="ChipText" Property="FontWeight" Value="Bold" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Kind}" Value="CholHamoed">
+                                                        <Setter TargetName="Chip" Property="Background" Value="#26FB7185" />
+                                                        <Setter TargetName="Chip" Property="BorderBrush" Value="#99FB7185" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Kind}" Value="Fast">
+                                                        <Setter TargetName="Chip" Property="Background" Value="#2694A3B8" />
+                                                        <Setter TargetName="Chip" Property="BorderBrush" Value="#9994A3B8" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Kind}" Value="Minor">
+                                                        <Setter TargetName="Chip" Property="Background" Value="#2EFBBF24" />
+                                                        <Setter TargetName="Chip" Property="BorderBrush" Value="#B3FBBF24" />
+                                                    </DataTrigger>
+                                                </DataTemplate.Triggers>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                                <DockPanel Grid.Row="2">
+                                    <TextBlock HorizontalAlignment="Left"
+                                               Text="{Binding GregorianLabel}"
+                                               Foreground="{DynamicResource ModernTextMuted}"
+                                               FontSize="13" />
+                                </DockPanel>
                             </Grid>
                         </Border>
                         <DataTemplate.Triggers>
@@ -240,36 +391,29 @@
                                         Property="BorderBrush"
                                         Value="{DynamicResource {x:Static SystemColors.HotTrackBrushKey}}" />
                             </DataTrigger>
-                            <DataTrigger Binding="{Binding IsRest}"
+                            <DataTrigger Binding="{Binding Portion}"
+                                         Value="{x:Null}">
+                                <Setter TargetName="PortionBadge"
+                                        Property="Visibility"
+                                        Value="Collapsed" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding HasYahrzeit}"
                                          Value="True">
-                                <Setter TargetName="Marker"
-                                        Property="FontWeight"
-                                        Value="Bold" />
+                                <Setter TargetName="YahrzeitCandle"
+                                        Property="Visibility"
+                                        Value="Visible" />
                             </DataTrigger>
                         </DataTemplate.Triggers>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
         </Grid>
-        <ScrollViewer Grid.Row="0"
+        <ScrollViewer Grid.Row="1"
                       Grid.Column="1"
                       Margin="10,0,0,0"
                       VerticalScrollBarVisibility="Auto">
             <StackPanel x:Name="Details" />
         </ScrollViewer>
-        <StackPanel Grid.Row="1"
-                    Grid.Column="0"
-                    Grid.ColumnSpan="2"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    Margin="0,12,0,0">
-            <Button Content="{DynamicResource calendar_settings}"
-                    Margin="0,0,6,0"
-                    Click="Settings_Click" />
-            <Button Content="{DynamicResource calendar_close}"
-                    IsCancel="True"
-                    IsDefault="False" />
-        </StackPanel>
     </Grid>
     </Grid>
 </Window>

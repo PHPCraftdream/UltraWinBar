@@ -86,6 +86,25 @@ namespace UltraWinBar.Controls
             SystemEvents.UserPreferenceChanged += UserPreferenceChanged;
             SystemEvents.PowerModeChanged += PowerModeChanged;
             IsVisibleChanged += OnIsVisibleChanged;
+
+            // The Jewish calendar is made ahead, so a click on the Hebrew date only shows it: when the pointer comes to
+            // the clock, and once a while after the start.
+            MouseEnter += (_, _) => PrepareCalendar();
+            if (!_calendarWarmupQueued)
+            {
+                _calendarWarmupQueued = true;
+                var warmup = new System.Windows.Threading.DispatcherTimer(System.Windows.Threading.DispatcherPriority.ApplicationIdle) { Interval = TimeSpan.FromSeconds(10) };
+                warmup.Tick += (_, _) => { warmup.Stop(); PrepareCalendar(); };
+                warmup.Start();
+            }
+        }
+
+        private static bool _calendarWarmupQueued;
+
+        private void PrepareCalendar()
+        {
+            if (Settings.Instance.ShowHebrewDate)
+                Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, new Action(CalendarWindow.Prepare));
         }
 
         private void StartClock()
@@ -407,9 +426,15 @@ namespace UltraWinBar.Controls
         private Point? _pressPosition;
         private bool _shellFlyoutWasForegroundAtPress;
 
+        private int _pressClickCount;
+
+        private bool IsOverHebrewDate() =>
+            Settings.Instance.ShowHebrewDate && Template?.FindName("HebrewDateHost", this) is FrameworkElement hebrewDateHost && hebrewDateHost.IsMouseOver;
+
         private void Clock_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             _pressPosition = e.GetPosition(this);
+            _pressClickCount = e.ClickCount;
 
             // Capture this before the click itself can steal focus away from an already-open
             // flyout (real shell flyouts like Action Center dismiss themselves on focus loss).
@@ -438,11 +463,12 @@ namespace UltraWinBar.Controls
                 return;
             }
 
-            // A click on the Hebrew date opens the Jewish calendar, whatever the clock does on a click elsewhere.
-            if (Settings.Instance.ShowHebrewDate && Template?.FindName("HebrewDateHost", this) is FrameworkElement hebrewDateHost && hebrewDateHost.IsMouseOver)
+            // A click on the Hebrew date opens the Jewish calendar, whatever the clock does on a click elsewhere. The second
+            // click of a double click shows it too (it does not close what the first one opened).
+            if (IsOverHebrewDate())
             {
                 e.Handled = true;
-                CalendarWindow.ShowSingle(this);
+                CalendarWindow.ShowSingle(this, toggle: _pressClickCount < 2);
                 return;
             }
 
@@ -491,6 +517,13 @@ namespace UltraWinBar.Controls
 
         private void Clock_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
+            // On the Hebrew date a double click is a click: the calendar, not the system's date and time settings.
+            if (IsOverHebrewDate())
+            {
+                e.Handled = true;
+                return;
+            }
+
             ShellHelper.StartProcess("timedate.cpl");
 
             e.Handled = true;

@@ -114,6 +114,14 @@ internal static class CalendarWindowChecks
         Check(shabbat.Marker == "Chol HaMoed Pesach, day 3 of 8" && shabbat.IsRest && !shabbat.IsToday, "A Shabbat of Chol HaMoed carries the festival, not a portion.");
         var portion = DayDetailsBuilder.Cell(Day("2026-04-18"), month, Day("2026-04-02"), false, "English", null, text);
         Check(portion.Marker.Length > 0 && portion.IsRest && DayDetailsBuilder.Cell(Day("2026-04-15"), month, Day("2026-04-02"), false, "English", null, text).Marker == "", "A Shabbat carries its portion, an ordinary day nothing.");
+        // The blocks of a cell: the portion of a Shabbat (not on a festival's), and the special days with their kinds.
+        Check(portion.Portion != null && portion.Events.Count == 0 && shabbat.Portion == null && shabbat.Events.Count == 1 && shabbat.Events[0].Kind == DayKind.CholHamoed &&
+              pesach.Events.Count == 1 && pesach.Events[0].Kind == DayKind.YomTov && pesach.Events[0].Name == pesach.Marker,
+            $"The blocks of the cells: {portion.Portion} / {shabbat.Events.Count} / {pesach.Events.Count}.");
+        // The yahrzeits of a day come eldest first: on 6 Sivan King David (born 2854) before the Baal Shem Tov (5458).
+        Check(Yahrzeits.All.All(person => person.Born > 2000 && person.Born < 5800), "Every figure has a year of birth (anno mundi).");
+        var sivan6 = Yahrzeits.On(Day("2026-05-22"));
+        Check(sivan6.Select(person => person.Key).SequenceEqual(new[] { "david", "baal_shem_tov" }), $"6 Sivan, eldest first: {string.Join(", ", sivan6.Select(person => person.Key))}.");
         var outside = DayDetailsBuilder.Cell(Day("2026-03-30"), month, Day("2026-04-02"), false, "English", null, text);
         Check(outside.OutsideMonth && outside.GregorianNumber == "30", "A day of another month is marked.");
         var rambam = DayDetailsBuilder.Cell(Day("2026-01-09"), Day("2026-01-01"), Day("2026-01-01"), false, "English", null, text);
@@ -187,6 +195,58 @@ internal static class CalendarWindowChecks
             foreach (Match key in Regex.Matches(code, @"Text\(""((?:calendar_|hebrew_place)[a-z_]*)""\)")) used.Add(key.Groups[1].Value);
             Check(xaml.Contains($"x:Class=\"UltraWinBar.{name}\"") && Regex.IsMatch(code, @"public partial class " + name + @"\s*:\s*Window"), $"{name}: the class of the window is declared both ways.");
         }
+        // Above the month: the civil month at the left, the week's portion in the middle, the Hebrew months at the right; the
+        // day's dates are not repeated in the details; the settings are a gear in the title bar, there is no Close button.
+        string calendarXaml = windows[0].Xaml, calendarCode = windows[0].Code;
+        int civil = calendarXaml.IndexOf("x:Name=\"MonthTitle\"", StringComparison.Ordinal), portion = calendarXaml.IndexOf("x:Name=\"PortionTitle\"", StringComparison.Ordinal),
+            hebrew = calendarXaml.IndexOf("x:Name=\"HebrewMonthTitle\"", StringComparison.Ordinal);
+        Check(civil > 0 && civil < portion && portion < hebrew && calendarCode.Contains("PortionTitle.Text = details.Portion") &&
+              !calendarCode.Contains("Line(details.Heading") && !calendarCode.Contains("Line(details.HebrewDate") && !calendarCode.Contains("Line(details.Portion"),
+            "The month row holds the civil month, the portion and the Hebrew months; the details do not repeat the day's dates.");
+        // The month row is over the whole width and holds the chosen day's Hebrew date; the place is behind a globe.
+        Check(calendarCode.Contains("MonthTitle.Text = chosen.ToString(\"d MMMM yyyy\"") && calendarCode.Contains("HebrewMonthTitle.Text = details.HebrewDate") &&
+              calendarXaml.IndexOf("Grid.ColumnSpan=\"2\"", StringComparison.Ordinal) < civil &&
+              calendarCode.Contains("TimesHeading(details.Place)") && calendarCode.Contains("\"\uE774\"") && !calendarCode.Contains("Line(details.Place"),
+            "The month row spans the window with the chosen day's civil and Hebrew dates, and the place of the times is in the globe's popup.");
+        Check(calendarXaml.Contains("Content=\"&#xE713;\"") && !calendarXaml.Contains("Content=\"{DynamicResource calendar_close}\"") && !calendarXaml.Contains("IsCancel=\"True\""),
+            "The calendar's settings are a gear in the title bar and it has no Close button below.");
+        // A click on the date closes only a calendar in sight; one under other windows is brought up over them.
+        Check(calendarCode.Contains("&& !IsCovered(handle))") && calendarCode.Contains("shown.Topmost = true;") && calendarCode.Contains("shown.Topmost = false;"),
+            "A calendar under other windows is raised by a click on the date, not closed.");
+        // A double click on the Hebrew date is a click: no system date and time settings, and its second click does not close.
+        string clockCode = File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "UI", "Clock", "Clock.xaml.cs"));
+        int doubleClick = clockCode.IndexOf("private void Clock_OnMouseDoubleClick", StringComparison.Ordinal);
+        Check(doubleClick > 0 && clockCode.IndexOf("IsOverHebrewDate()", doubleClick, StringComparison.Ordinal) > 0 &&
+              clockCode.IndexOf("IsOverHebrewDate()", doubleClick, StringComparison.Ordinal) < clockCode.IndexOf("timedate.cpl", doubleClick, StringComparison.Ordinal) &&
+              clockCode.Contains("CalendarWindow.ShowSingle(this, toggle: _pressClickCount < 2)") && calendarCode.Contains("clock != null && toggle && here"),
+            "A double click on the Hebrew date shows the calendar like a click and never opens the system's date and time settings.");
+        // The calendar is made ahead (hover over the clock, idle after the start); a click takes the prepared one.
+        Check(calendarCode.Contains("public static void Prepare()") && calendarCode.Contains("shown = prepared ?? new CalendarWindow();") &&
+              calendarCode.Contains("prepared.madeOn != DateTime.Today") && clockCode.Contains("MouseEnter += (_, _) => PrepareCalendar();") &&
+              clockCode.Contains("new Action(CalendarWindow.Prepare)"),
+            "The calendar is prepared before the click and a stale one (made on another day) is not shown.");
+        // The place: a popup above the globe, right-aligned to it; shown on hover, hidden on leave, pinned and unpinned by clicks.
+        Check(calendarCode.Contains("PlacementMode.Custom") && calendarCode.Contains("new Point(targetSize.Width - popupSize.Width, -popupSize.Height - 4)") &&
+              calendarCode.Contains("globe.MouseEnter += (_, _) => popup.IsOpen = true;") && calendarCode.Contains("if (!pinned) popup.IsOpen = false;") &&
+              calendarCode.Contains("popup.IsOpen = pinned;") && calendarCode.Contains("Deactivated -= away;"),
+            "The place's popup stands over the globe inside the calendar, follows the pointer, and a second click hides it.");
+        // The cells: the portion as an accent badge, the special days as blocks by kind, the civil date muted.
+        Check(calendarXaml.Contains("x:Name=\"PortionBadge\"") && calendarXaml.Contains("ItemsSource=\"{Binding Events}\"") &&
+              calendarXaml.Contains("<DataTrigger Binding=\"{Binding Kind}\" Value=\"YomTov\">") && calendarXaml.Contains("x:Name=\"YahrzeitCandle\"") && calendarXaml.Contains("<RadialGradientBrush"),
+            "The cells show the portion, the special days and the yahrzeits as blocks, not plain text.");
+        Check(calendarXaml.Contains("x:Key=\"YahrzeitCandleIcon\"") && calendarXaml.Contains("x:Shared=\"False\"") && calendarCode.Contains("FindResource(\"YahrzeitCandleIcon\")"),
+            "Each yahrzeit of the day is listed after a memorial candle.");
+        // The days of the week over the grid: 1 (Sunday) to 6 (Friday) and Shabbat, no day names of a language.
+        Check(CalendarWindow.WeekdayHeaders("Shabbat").SequenceEqual(new[] { "1", "2", "3", "4", "5", "6", "Shabbat" }) &&
+              calendarCode.Contains("WeekdayHeaders(Text(\"calendar_shabbat\"))") && !calendarCode.Contains("AbbreviatedDayNames"),
+            "The days of the week are numbered 1 to 6, then Shabbat.");
+        // Window.Resources holds one dictionary: a resource after it set Resources twice and the window failed to load.
+        int resourcesEnd = calendarXaml.IndexOf("</Window.Resources>", StringComparison.Ordinal);
+        int dictionaryEnd = calendarXaml.LastIndexOf("</ResourceDictionary>", resourcesEnd, StringComparison.Ordinal);
+        Check(dictionaryEnd > 0 && calendarXaml.Substring(dictionaryEnd + "</ResourceDictionary>".Length, resourcesEnd - dictionaryEnd - "</ResourceDictionary>".Length).Trim().Length == 0,
+            "Every resource of the calendar window is inside its one ResourceDictionary.");
+        Check(File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "UI", "Clock", "Clock.xaml")).Contains("x:Name=\"HebrewDateHost\" Grid.Row=\"2\" Background=\"Transparent\" Cursor=\"Hand\""),
+            "The Hebrew date of the clock shows the hand cursor: it is a link to the calendar.");
         foreach (string key in new[] { "calendar_day_of", "calendar_portion", "calendar_festival_reading", "calendar_molad", "calendar_place", "calendar_candles_after_dark", "calendar_havdalah", "calendar_rest_begins", "calendar_rest_ends" }) used.Add(key);
         var missing = used.Where(key => !english.ContainsKey(key)).ToArray();
         Check(missing.Length == 0, $"English lacks strings the calendar uses: {string.Join(", ", missing)}.");

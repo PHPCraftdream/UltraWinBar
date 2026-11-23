@@ -14,7 +14,11 @@ namespace UltraWinBar.Utilities
 
     /// <summary>A day of the month grid: its numbers, the one thing worth showing in the cell, and what it says when pointed at.</summary>
     public sealed record DayCell(DateTime Date, string GregorianNumber, string HebrewNumber, string Marker, bool OutsideMonth,
-        bool IsToday, bool IsRest, bool HasYahrzeit, string Tooltip, string HebrewLabel = "", string GregorianLabel = "");
+        bool IsToday, bool IsRest, bool HasYahrzeit, string Tooltip, string HebrewLabel = "", string GregorianLabel = "",
+        string Portion = null, IReadOnlyList<CellEvent> Events = null);
+
+    /// <summary>A festival, fast, minor day or Rosh Chodesh in a cell, with its kind (the color of its block).</summary>
+    public sealed record CellEvent(string Name, DayKind Kind);
 
     /// <summary>
     /// Puts together what the calendar window shows: from the date, the place (or none) and the settings it makes the texts of
@@ -61,7 +65,10 @@ namespace UltraWinBar.Utilities
             string civil = date.Day.ToString(CultureInfo.InvariantCulture) + ", " + (string.IsNullOrEmpty(civilMonth) ? culture.DateTimeFormat.GetMonthName(date.Month) : civilMonth);
             return new DayCell(date.Date, date.Day.ToString(CultureInfo.InvariantCulture), number, marker,
                 date.Month != month.Month, date.Date == today.Date, Zmanim.IsRestDay(date, israel), people.Count > 0, tooltip,
-                HebrewClockFormatter.FormatMonthDay(date, language), civil);
+                HebrewClockFormatter.FormatMonthDay(date, language), civil,
+                // The portion of a Shabbat, unless a festival's day is read instead; the days, festivals first.
+                reading != null && !events.Any(day => day.Kind == DayKind.YomTov || day.Kind == DayKind.CholHamoed) ? reading.Name(language) : null,
+                events.OrderBy(day => day.Kind == DayKind.RoshChodesh ? 1 : 0).Select(day => new CellEvent(EventName(day, language, text), day.Kind)).ToList());
         }
 
         // The time as the clocks of the place show it: in its zone, or the computer's when none was chosen.

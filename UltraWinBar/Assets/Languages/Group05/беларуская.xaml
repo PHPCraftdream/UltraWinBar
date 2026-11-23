@@ -238,6 +238,7 @@
     <s:String x:Key="hebrew_place_zone_hint">Падстаўляецца разам з горадам; змяніце, калі ён няправільны. Правілы пояса (летні час і яго змены) бяруцца з Windows.</s:String>
     <s:String x:Key="calendar_title">Габрэйскі каляндар</s:String>
     <s:String x:Key="calendar_today">Сёння</s:String>
+    <s:String x:Key="calendar_shabbat">Шабат</s:String>
     <s:String x:Key="calendar_previous_month">Папярэдні месяц</s:String>
     <s:String x:Key="calendar_next_month">Наступны месяц</s:String>
     <s:String x:Key="calendar_settings">Налады...</s:String>

@@ -245,6 +245,7 @@
     <s:String x:Key="hebrew_place_zone_hint">Chosen with the city; change it if it is wrong. The rules of the zone (summer time and its changes) are the ones Windows has.</s:String>
     <s:String x:Key="calendar_title">Jewish calendar</s:String>
     <s:String x:Key="calendar_today">Today</s:String>
+    <s:String x:Key="calendar_shabbat">Shabbat</s:String>
     <s:String x:Key="calendar_previous_month">Previous month</s:String>
     <s:String x:Key="calendar_next_month">Next month</s:String>
     <s:String x:Key="calendar_settings">Settings...</s:String>

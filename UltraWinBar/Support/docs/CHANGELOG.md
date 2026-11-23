@@ -57,6 +57,22 @@
 
 ### Changed
 
+- Jewish calendar: the days of the week over the grid are numbered 1 (Sunday) to 6 (Friday), then Shabbat, with no
+  day names of a language. The yahrzeits of the chosen day, above the times of the day, each follow a memorial candle,
+  the eldest (born first) first; every figure has its year of birth.
+- Jewish calendar cells: the Hebrew date stands out, the civil date is muted, the week's portion is an accent badge,
+  the special days are blocks colored by kind (festival, Chol HaMoed, fast, minor day, Rosh Chodesh) and a memorial candle
+  with its flame and glow, at the top left, marks a yahrzeit. The place's popup stands over the globe inside the window, shows on hover and a click pins or hides it.
+  The Hebrew date of the clock shows the hand cursor.
+- A double click on the Hebrew date is a click: it shows the Jewish calendar (its second click no longer closes what
+  the first opened) and never opens the system's date and time settings.
+- The Jewish calendar opens at once: it is made ahead, without being shown, when the pointer comes to the clock and
+  once while the program is idle after its start; a click only shows it (one made on another day is made anew).
+- Jewish calendar: the row above the month spans the window: the chosen day's civil date at the left, its week's
+  portion in the middle and its Hebrew date at the right; the details no longer repeat them, and the place of the times
+  of the day is in a popup under a globe beside their heading; the settings are a gear in the title bar and
+  the Close button is gone (the title bar's cross and Escape close it). A click on the Hebrew date brings a calendar that
+  lies under other windows up over them; only one in sight is closed by it.
 - A restart on purpose (the Restart menu, the deploy script) no longer makes maximized windows jump: the new process
   holds the panels' strips of the last run as hidden shell AppBars from its first moment until its own panels have
   published theirs (Explorer recomputed the work area several times while it dropped the dead panels), and panels

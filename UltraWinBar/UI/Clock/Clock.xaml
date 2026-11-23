@@ -41,7 +41,7 @@
                     <TextBlock Grid.Row="1" Style="{DynamicResource Clock}" Margin="4,1"
                                Text="{Binding WeekdayText}" />
                     <!-- The pointer over the Hebrew date lights up a frame of running lights around it. -->
-                    <Grid x:Name="HebrewDateHost" Grid.Row="2" Background="Transparent">
+                    <Grid x:Name="HebrewDateHost" Grid.Row="2" Background="Transparent" Cursor="Hand">
                         <TextBlock x:Name="HebrewDate" Style="{DynamicResource Clock}" Margin="4,1"
                                    FlowDirection="LeftToRight" Text="{Binding HebrewDateText}" />
                         <local:MarqueeFrame x:Name="HebrewDateLights" IsHitTestVisible="False"
