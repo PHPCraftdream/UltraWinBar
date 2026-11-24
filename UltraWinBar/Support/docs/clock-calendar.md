@@ -59,9 +59,13 @@ The code is in `../../UI/Clock/Calendar/`; the tests are in `../tests/DesktopRul
 - `Days/JewishDays.cs`: festivals and their days, fasts (moved off Shabbat), Rosh Chodesh, Hanukkah, Purim, and the modern
   days (Yom HaShoah, Yom HaZikaron, Yom HaAtzmaut, Yom Yerushalayim, by the law of Israel), in Israel or the diaspora.
 - `Days/Molad.cs`: the molad of any month, by the arithmetic of the calendar (29 days 12 hours 793 chalakim a month).
-- `Days/Yahrzeits.cs`: 46 figures in 8 categories with their traditional days. The list is compiled for this program; the
-  days of those who lived after 1582 were checked against documented dates of death (see `YahrzeitChecks`), the older
-  ones are the days tradition gives.
+- `Days/Yahrzeits.cs`: 365 figures in 13 categories, from the biblical figures, the sages of the Mishnah and Talmud, the
+  Geonim and the Rishonim to the recent generations, with their traditional days. The list is compiled for this program;
+  the days of those who lived after 1582 were checked against documented dates of death (see `YahrzeitChecks`), the older
+  ones are the days the sources give (Shulchan Aruch OC 580, the Iggeret of Rav Sherira Gaon, the Sefer HaKabbalah, the
+  chronicles), each confirmed by a second source. A death in Adar I (month 6) is kept in Adar I of a leap year and in
+  Adar of a common year; a death on 30 Cheshvan or 30 Kislev is kept on the 1st of the next month in a year without that day.
+  When the list grows, go through it era by era, not only by community.
 - `Days/HebrewDay.cs`: the Hebrew day of a moment, with the day change at sunset; `Days/DayDetails.cs`: what the calendar
   window says about a day and a month.
 - `Zmanim/Sun.cs`: the moment the sun is at a given angle, from the solar coordinates (Meeus' series), UTC, for the solar

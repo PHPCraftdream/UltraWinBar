@@ -26,11 +26,14 @@ internal static class YahrzeitChecks
     private static void CheckList()
     {
         var all = Yahrzeits.All;
-        Check(all.Count == 142, $"The list has 142 figures, has {all.Count}.");
+        Check(all.Count == 365, $"The list has 365 figures, has {all.Count}.");
         Check(all.Select(person => person.Key).Distinct().Count() == all.Count, "Every figure has a key of its own.");
-        Check(Yahrzeits.Categories.Count == 12 && Yahrzeits.Categories.Distinct().Count() == 12, "Twelve categories.");
-        // A month has at most this many days (Cheshvan and Kislev vary); the month numbering has no 6 in a plain year, and Adar I has no yahrzeits.
-        var monthLength = new Dictionary<int, int> { [1] = 30, [2] = 30, [3] = 30, [4] = 29, [5] = 30, [7] = 29, [8] = 30, [9] = 29, [10] = 30, [11] = 29, [12] = 30, [13] = 29 };
+        Check(Yahrzeits.Categories.Count == 13 && Yahrzeits.Categories.Distinct().Count() == 13, "Thirteen categories.");
+        // Every era has its figures: the sages of the Mishnah and Talmud, the Geonim and the Rishonim are not left thin.
+        Check(Yahrzeits.OfCategory("Sages").Count() >= 14 && Yahrzeits.OfCategory("Geonim").Count() >= 3 && Yahrzeits.OfCategory("Rishonim").Count() >= 37,
+            "The early eras are covered.");
+        // A month has at most this many days (Cheshvan and Kislev vary); 6 is Adar I, for a death in Adar I of a leap year.
+        var monthLength = new Dictionary<int, int> { [1] = 30, [2] = 30, [3] = 30, [4] = 29, [5] = 30, [6] = 30, [7] = 29, [8] = 30, [9] = 29, [10] = 30, [11] = 29, [12] = 30, [13] = 29 };
         foreach (var person in all)
         {
             Check(Yahrzeits.Categories.Contains(person.Category), $"{person.Key}: unknown category {person.Category}.");
@@ -111,6 +114,17 @@ internal static class YahrzeitChecks
             ("uri_strelisk", "1826-09-25", 0), ("yismach_moshe", "1841-07-17", 0), ("tiferes_shlomo", "1866-03-16", 0), ("yehoshua_belz", "1894-01-30", 0),
             ("meir_simcha", "1926-08-14", 0), ("novardok", "1919-12-09", 0), ("rogatchover", "1936-03-05", 0), ("elya_lopian", "1970-09-21", 0),
             ("yitzchak_nissim", "1981-08-09", 0),
+            // The sixth set; the earlier ones of it (before 1583) were checked against the day the sources give in the Hebrew calendar.
+            ("elchanan_wasserman", "1941-07-06", 0),
+            // The heads of the great yeshivas; two died in Adar I of a leap year.
+            ("berel_soloveitchik", "1981-02-06", 0), ("shlomo_zalman_auerbach", "1995-02-20", 0), ("kahaneman", "1969-09-03", 0), ("hutner", "1980-11-28", 0),
+            // The authors of the great books (Rav Wosner passed on the night of the Seder).
+            ("chavos_yair", "1702-01-01", 0), ("mishneh_lamelech", "1727-04-13", 0), ("shaagas_aryeh", "1785-06-23", 0), ("tiferes_yisrael", "1860-09-19", 0),
+            ("peleh_yoetz", "1827-10-11", 0), ("rashash_strashun", "1872-03-21", 0), ("minchas_yitzchak", "1989-06-14", 0), ("shevet_halevi", "2015-04-03", 1),
+            ("alei_shur", "2005-04-25", 0), ("tzitz_eliezer", "2006-11-21", 0), ("shemiras_shabbos", "2013-06-11", 0),
+            // Twelve more of the greatest; three died at night, three in Adar I of a leap year.
+            ("aruch_laner", "1871-12-07", 1), ("maharsham", "1911-02-14", 0), ("maharil_diskin", "1898-01-22", 1), ("maharatz_chajes", "1855-10-12", 0),
+            ("yaakov_kamenetsky", "1986-03-10", 0), ("shoel_umeishiv", "1875-03-03", 1), ("shlomo_kluger", "1869-06-09", 0), ("avnei_nezer", "1910-02-20", 0),
         };
         foreach (var (key, death, evening) in documented)
         {
@@ -127,6 +141,20 @@ internal static class YahrzeitChecks
         Check(Yahrzeits.On(Day("2026-02-24")).Any(person => person.Key == "moshe"), "Moshe is kept on 7 Adar.");
         Check(Yahrzeits.On(Day("2024-03-17")).Any(person => person.Key == "moshe") && Yahrzeits.On(Day("2024-02-16")).All(person => person.Key != "moshe"),
             "In a leap year Moshe is kept on 7 Adar II, not on 7 Adar I.");
+        // A death in Adar I (the Shach, Ibn Ezra) is kept in Adar I of a leap year and in Adar of a common year, once.
+        foreach (string key in new[] { "shach_kohen", "ibn_ezra" })
+            Check(Yahrzeits.On(Day("2027-02-08")).Any(person => person.Key == key) && Yahrzeits.On(Day("2027-03-10")).All(person => person.Key != key) &&
+                Yahrzeits.On(Day("2026-02-18")).Any(person => person.Key == key), $"{key}: 1 Adar I in a leap year, 1 Adar in a common one.");
+        // The early sages on the days the sources give: Ravina on 13 Kislev (Iggeret of Rav Sherira), Rav Hai Gaon on 20 Nisan,
+        // the Rema with Rashbi on Lag BaOmer.
+        Check(Yahrzeits.On(Day("2026-11-23")).Any(person => person.Key == "ravina") && Yahrzeits.On(Day("2025-12-03")).Any(person => person.Key == "ravina"),
+            "Ravina is kept on 13 Kislev.");
+        Check(Yahrzeits.On(Day("2026-04-07")).Any(person => person.Key == "hai_gaon"), "Rav Hai Gaon is kept on 20 Nisan.");
+        // A death on 30 Cheshvan (the Tzitz Eliezer) is kept on 1 Kislev when Cheshvan has 29 days (5786), on 30 Cheshvan when it has 30 (5787).
+        Check(Yahrzeits.On(Day("2025-11-21")).Any(person => person.Key == "tzitz_eliezer") && Yahrzeits.On(Day("2025-11-20")).All(person => person.Key != "tzitz_eliezer") &&
+            Yahrzeits.On(Day("2026-11-10")).Any(person => person.Key == "tzitz_eliezer") && Yahrzeits.On(Day("2026-11-11")).All(person => person.Key != "tzitz_eliezer"),
+            "30 Cheshvan is kept on 1 Kislev in a year without it.");
+        Check(new[] { "rashbi", "rema" }.All(key => Yahrzeits.On(Day("2026-05-05")).Any(person => person.Key == key)), "The Rema is kept on Lag BaOmer with Rashbi.");
 
         // In every year from 5780 to 5800, plain and leap, each figure has a day, once.
         for (int year = 5780; year <= 5800; year++)

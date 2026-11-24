@@ -106,7 +106,7 @@ internal static class CalendarWindowChecks
         Func<string, string> text = key => english[key];
         DateTime month = Day("2026-04-01");
         var pesach = DayDetailsBuilder.Cell(Day("2026-04-02"), month, Day("2026-04-02"), false, "English", null, text);
-        Check(pesach.GregorianNumber == "2" && pesach.HebrewNumber == "15" && pesach.Marker == "Pesach, day 1 of 8" && !pesach.OutsideMonth && pesach.IsToday && pesach.IsRest && !pesach.HasYahrzeit,
+        Check(pesach.GregorianNumber == "2" && pesach.HebrewNumber == "15" && pesach.Marker == "Pesach, day 1 of 8" && !pesach.OutsideMonth && pesach.IsToday && pesach.IsRest && pesach.HasYahrzeit == Yahrzeits.On(Day("2026-04-02")).Count > 0,
             $"The cell of the first day of Pesach: {pesach}.");
         Check(pesach.HebrewLabel == "Nisan, 15" && pesach.GregorianLabel == "2, April", $"The labels of the cell: {pesach.HebrewLabel} / {pesach.GregorianLabel}.");
         var kislev = DayDetailsBuilder.Cell(Day("2026-11-23"), Day("2026-11-01"), Day("2026-11-23"), false, "English", null, text);
@@ -286,7 +286,8 @@ internal static class CalendarWindowChecks
         // The marks by the clock's weekday: a candle for a yahrzeit that is shown, the Omer's day; after sunset the next day's.
         var lag = DayDetailsBuilder.MarksOf(Day("2026-05-05"), new List<string>());
         var lagHidden = DayDetailsBuilder.MarksOf(Day("2026-05-05"), Yahrzeits.On(Day("2026-05-05")).Select(person => person.Key).ToList());
-        var plain = DayDetailsBuilder.MarksOf(Day("2026-11-24"), null);
+        // 11 Kislev has no yahrzeit (14 Kislev, the earlier choice, has Reuven's).
+        var plain = DayDetailsBuilder.MarksOf(Day("2026-11-21"), null);
         Check(lag.Yahrzeit && lag.Omer == 33 && !lagHidden.Yahrzeit && lagHidden.Omer == 33 && !plain.Yahrzeit && plain.Omer == 0,
             "The clock's marks: a candle unless every yahrzeit of the day is hidden, the Omer's day apart from it.");
         // Jerusalem, 2 April 2026 (15 Nisan): by day no count yet; after its sunset the Hebrew day is 16 Nisan, day 1.
