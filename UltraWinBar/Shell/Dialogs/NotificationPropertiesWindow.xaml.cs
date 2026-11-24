@@ -21,6 +21,7 @@ namespace UltraWinBar
 
             InitializeComponent();
             ModernTheme.Track(this);
+            FontSize = ModernTheme.DialogFontSize(SystemFonts.MessageFontSize);
 
             DataContext = _notificationArea;
             WeakSubscriptions.SubscribeSettings(Settings_PropertyChanged);

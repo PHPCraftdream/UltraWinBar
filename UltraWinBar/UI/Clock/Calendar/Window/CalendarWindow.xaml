@@ -206,7 +206,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"
                               MinWidth="520" />
-            <ColumnDefinition Width="440" />
+            <ColumnDefinition Width="500" />
         </Grid.ColumnDefinitions>
         <!-- The month row, over the whole width: the civil month by the left arrow, the Hebrew ones by the right,
              the chosen day's Hebrew date and its week's portion in the middle. -->
@@ -518,7 +518,9 @@
                       Grid.Column="1"
                       Margin="10,6,0,0"
                       VerticalScrollBarVisibility="Auto">
-            <StackPanel x:Name="Details" />
+            <!-- The day's details (the times of the day, yahrzeits, Omer) in a larger font than the grid's. -->
+            <StackPanel x:Name="Details"
+                        TextElement.FontSize="17" />
         </ScrollViewer>
     </Grid>
     </Grid>

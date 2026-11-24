@@ -78,8 +78,7 @@ namespace UltraWinBar
 
             InitializeComponent();
             ModernTheme.Track(this);
-            // A little larger than the system's message font, so that the settings are easy on the eyes.
-            FontSize = Math.Round(SystemFonts.MessageFontSize * 7 / 6);
+            FontSize = ModernTheme.DialogFontSize(SystemFonts.MessageFontSize);
 
             LoadPreviewHeight();
             LoadAutoStart();

@@ -24,6 +24,7 @@ namespace UltraWinBar
         {
             InitializeComponent();
             ModernTheme.Track(this);
+            FontSize = ModernTheme.DialogFontSize(SystemFonts.MessageFontSize);
             ShowPlace();
 
             // The zones the clock has: the computer's own, and the second and the third when they are chosen.

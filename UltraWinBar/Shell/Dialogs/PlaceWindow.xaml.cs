@@ -32,6 +32,7 @@ namespace UltraWinBar
         {
             InitializeComponent();
             ModernTheme.Track(this);
+            FontSize = ModernTheme.DialogFontSize(SystemFonts.MessageFontSize);
             // Its own list: the search line filters the list's view.
             CountryBox.ItemsSource = places.Countries.ToList();
             if (current != null) Restore(current);

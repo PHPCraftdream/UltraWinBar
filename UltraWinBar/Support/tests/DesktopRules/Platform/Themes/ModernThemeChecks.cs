@@ -31,6 +31,7 @@ internal static class ModernThemeChecks
     internal static void Run(string[] args, DirectoryInfo repositoryRoot)
     {
         string project = Path.Combine(repositoryRoot.FullName, "UltraWinBar");
+        CheckDialogFonts(project);
         // The brand dictionaries are compiled to BAML (default Page items): as Resource they were parsed as text
         // at every start (over a second). A compiled page must not name its own assembly in a clr-namespace.
         string csproj = File.ReadAllText(Path.Combine(project, "UltraWinBar.csproj"));
@@ -310,6 +311,25 @@ internal static class ModernThemeChecks
         var pixel = new byte[4];
         bitmap.CopyPixels(new Int32Rect(x, y, 1, 1), pixel, 4, 0);
         return (pixel[2], pixel[1], pixel[0]);
+    }
+
+    // The settings dialogs read a step above the taskbar's text (its theme font + 2), and the calendar's day details
+    // larger than its grid.
+    private static void CheckDialogFonts(string project)
+    {
+        if (ModernTheme.DialogFontSize(12) != 15 || ModernTheme.DialogFontSize(16) != 20 || ModernTheme.DialogFontSize(9) != 11)
+            throw new Exception("The dialogs' font is a quarter above the system's message font, rounded.");
+        foreach (double message in new[] { 11.0, 12.0, 14.0 })
+            if (ModernTheme.DialogFontSize(message) < message + 2)
+                throw new Exception($"The dialogs' font ({ModernTheme.DialogFontSize(message)}) is not below the taskbar's text ({message + 2}).");
+        foreach (string dialog in new[] { @"Shell\Dialogs\PropertiesWindow.xaml.cs", @"Shell\Dialogs\PlaceWindow.xaml.cs",
+                     @"Shell\Dialogs\NotificationPropertiesWindow.xaml.cs", @"UI\Clock\Calendar\Window\CalendarSettingsWindow.xaml.cs" })
+            if (!File.ReadAllText(Path.Combine(project, dialog)).Contains("FontSize = ModernTheme.DialogFontSize(SystemFonts.MessageFontSize);"))
+                throw new Exception(dialog + " does not take the dialogs' font.");
+        string calendar = File.ReadAllText(Path.Combine(project, @"UI\Clock\Calendar\Window\CalendarWindow.xaml"));
+        if (!System.Text.RegularExpressions.Regex.IsMatch(calendar, @"x:Name=""Details""\s+TextElement\.FontSize=""17"""))
+            throw new Exception("The calendar's day details (the times of the day) are in the larger font.");
+        Console.WriteLine("PASS: the settings dialogs and the calendar's day details use the larger fonts.");
     }
 
     private static void CheckBrush(Application app, string key, string hex)

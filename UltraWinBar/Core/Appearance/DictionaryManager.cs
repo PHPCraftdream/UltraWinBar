@@ -83,7 +83,6 @@ namespace UltraWinBar.Utilities
             ModernTheme.Apply();
             FlatTheme.Apply();
             ModernTheme.ApplyPanel();
-            ManagedShell.Common.Logging.ShellLogger.Debug($"DictionaryManager: theme {Settings.Instance.Theme} (light {ModernTheme.IsLight}): clock {Application.Current.TryFindResource("ClockForeground")}, text {Application.Current.TryFindResource("ModernText")}, task text {Application.Current.TryFindResource("FlatTaskText")}, dictionaries {string.Join(" | ", GetMergedDictionaries().Select(d => d.Source?.ToString() ?? "-"))}");
         }
 
         private void SetSystemThemeParams()

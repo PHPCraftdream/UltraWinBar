@@ -190,6 +190,10 @@ namespace UltraWinBar.Utilities
         [DllImport("dwmapi.dll")]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
 
+        // The font of the settings dialogs: a quarter larger than the system's message font (15 for 12), a step above
+        // the taskbar's text, so the settings read easily.
+        internal static double DialogFontSize(double messageFont) => Math.Round(messageFont * 5 / 4);
+
         // A window of the theme gets a dark title bar and the blurred desktop behind it (a light title bar and none
         // of the blur under any other theme), also when the theme or the blur setting is changed while the window
         // is open. DWM draws both, so they cost the program nothing.
