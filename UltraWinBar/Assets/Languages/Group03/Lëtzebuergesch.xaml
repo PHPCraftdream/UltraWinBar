@@ -1,5 +1,6 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib"
                     xmlns:s="clr-namespace:System;assembly=mscorlib">
 
     <s:String x:Key="ultrawinbar_properties">UltraWinBar Properties</s:String>
@@ -7,11 +8,23 @@
     <s:String x:Key="advanced_tab">Fortgeschratt</s:String>
     <s:String x:Key="taskbar_appearance">Taskbar Erscheinung</s:String>
     <s:String x:Key="notification_area">Notifikatioun Beräich</s:String>
+    <s:String x:Key="general_heading">Allgemeng</s:String>
+    <s:String x:Key="clock_heading">Auer</s:String>
     <s:String x:Key="autostart">_Start automatesch beim Login</s:String>
     <s:String x:Key="language_text">Sprooch:</s:String>
     <s:String x:Key="language_tip">Wielt d'Sprooch fir ze benotzen.</s:String>
     <s:String x:Key="theme_text">_ Thema:</s:String>
     <s:String x:Key="theme_tip">Installéiert Themen am Dossier Themen.</s:String>
+    <s:String x:Key="accent_text">_Akzentfaarf:</s:String>
+    <s:String x:Key="accent_tip">D'Neonfaarf vum Modern Glass-Thema.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>Cyan</s:String>
+        <s:String>Violett</s:String>
+        <s:String>Fuchsia</s:String>
+        <s:String>Smaragdgréng</s:String>
+        <s:String>Bernsteengiel</s:String>
+        <s:String>Rosa</s:String>
+    </x:Array>
     <s:String x:Key="location_text">Positioun:</s:String>
     <s:String x:Key="location_tip">Ännert de Standuert vun der Taskbar um Bildschierm.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -20,6 +33,9 @@
         <s:String>Riets</s:String>
         <s:String>Ënnen</s:String>
     </x:Array>
+    <s:String x:Key="rowcount_text">Zuel vun de _Reien:</s:String>
+    <s:String x:Key="rowcount_tip">D'Zuel vun de Reien op der Taskbar, wann dës uewen oder ënne steet.</s:String>
+    <s:String x:Key="taskbar_width">Taskbarbreet:</s:String>
     <s:String x:Key="allow_font_smoothing">_Erlaabt Schrëftglättung</s:String>
     <s:String x:Key="allow_font_smoothing_menu">Schrëftglättung _an de Menüen erlaben</s:String>
     <s:String x:Key="collapse_tray_icons">_Minimiséieren Notifikatiounsberäich Ikonen</s:String>
@@ -27,9 +43,11 @@
     <s:String x:Key="show_input_language">Weist d'Input _Sprooch</s:String>
     <s:String x:Key="show_clock">Show Auer</s:String>
     <s:String x:Key="show_multi_mon">Display op verschidde Schiirme</s:String>
+    <s:String x:Key="show_start_button_multi_mon">_Start-Knäppchen op allen Taskbaren weisen</s:String>
     <s:String x:Key="show_quick_launch">Show Quick Launch Beräich</s:String>
     <s:String x:Key="select_location">_Dossier änneren ...</s:String>
     <s:String x:Key="quick_launch_folder">Quick Launch - Wielt Dossier</s:String>
+    <s:String x:Key="show_badges">_Badgen weisen</s:String>
     <s:String x:Key="show_window_previews">Show _fënster virschau (Miniaturbiller)</s:String>
     <s:String x:Key="use_software_rendering">_Benotzt Software Rendering</s:String>
     <s:String x:Key="add_show_desktop_button">Füügt de Vue Büro Knäppchen derbäi</s:String>
@@ -42,27 +60,88 @@
         <s:String>Selwecht Taskbar wéi Fënster</s:String>
         <s:String>Selwecht Taskbar wéi Fënster a primär Taskbar</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_Groostufen ëmkéieren:</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>Wann néideg vum Thema</s:String>
         <s:String>Ëmmer</s:String>
         <s:String>Ni</s:String>
     </x:Array>
+    <s:String x:Key="middle_mouse_task_action">_Aktioun mam mëttlere Mausklick:</s:String>
+    <x:Array x:Key="middle_mouse_task_action_values" Type="s:String">
+        <s:String>Näischt maachen</s:String>
+        <s:String>Eng nei Instanz opmaachen</s:String>
+        <s:String>Aufgab zoumaachen</s:String>
+    </x:Array>
+    <s:String x:Key="clock_click_action">_Aktioun beim Klick op d'Auer:</s:String>
+    <x:Array x:Key="clock_click_action_values" Type="s:String">
+        <s:String>Näischt maachen</s:String>
+        <s:String>Aero-Kalenner opmaachen</s:String>
+        <s:String>Modern-Kalenner opmaachen</s:String>
+        <s:String>Notifikatiounszentrum opmaachen</s:String>
+    </x:Array>
+    <s:String x:Key="task_wheel_action">_Aktioun mam Mausrad:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>Näischt maachen</s:String>
+        <s:String>Fënster weisen/verstoppen</s:String>
+    </x:Array>
+    <s:String x:Key="auto_hide_transparent">Taskbarlinn verstoppen, wann d'Taskbar automatesch verstoppt ass</s:String>
     <s:String x:Key="version">Versioun {0}</s:String>
     <s:String x:Key="visit_on_github">Besicht UltraWinBar op GitHub</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Méi Taskbaren</s:String>
+    <s:String x:Key="additional_taskbars_text">Eng Taskbar un dëse Kante weisen. Riets-klickt op eng Taskbar, fir se iwwer déi ganz Kant ze strecken an déi aner ze verdrängen.</s:String>
+    <s:String x:Key="location_left">Lénks</s:String>
+    <s:String x:Key="location_top">Uewen</s:String>
+    <s:String x:Key="location_right">Riets</s:String>
+    <s:String x:Key="location_bottom">Ënnen</s:String>
+    <s:String x:Key="tray_location_text">_Notifikatiounsberäich op:</s:String>
+    <s:String x:Key="clock_location_text">_Auer op:</s:String>
+    <s:String x:Key="start_button_location_text">_Start-Knäppchen op:</s:String>
+    <s:String x:Key="language_location_text">_Sproochindikator op:</s:String>
+    <s:String x:Key="task_assignment_hint">Zitt e Knäppchen vun enger Aufgab op eng aner Taskbar, fir déi ganz Applikatioun ze réckelen; haalt Ctrl gedréckt, fir nëmmen déi Fënster ze réckelen. Riets-klickt op en Aufgabenknäppchen, fir seng Zouweisung zréckzesetzen.</s:String>
+    <s:String x:Key="reset_task_assignments">All Taskbarzouweisungen zrécksetzen</s:String>
+    <s:String x:Key="stretch">_Strecken</s:String>
+    <s:String x:Key="make_main">Als _Haapt-Taskbar festleeën</s:String>
+    <s:String x:Key="reset_task_assignment">Taskbarzouweisung zrécksetzen</s:String>
     <s:String x:Key="taskbar_scale">Taskbar Skala</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">Aktuell Astellung: {0}%</s:String>
     <s:String x:Key="debug_logging">Aktivéiert Debug Logging</s:String>
+    <s:String x:Key="window_activity_logging">Omaachen a Schléisse vu Fënstere protokolléieren</s:String>
+    <s:String x:Key="check_for_updates">Op _Aktualiséierunge préiwen</s:String>
+    <s:String x:Key="show_exit_menu_item">Optioun _Verloossen am Riets-Klick-Menü weisen</s:String>
+    <s:String x:Key="show_end_task_button">Optioun _Aufgab beendegen am Riets-Klick-Menü weisen</s:String>
+    <s:String x:Key="slide_taskbar_buttons">Taskbarknäppche _gleetend beweegen</s:String>
+    <s:String x:Key="show_clock_seconds">_Sekonnen an der Auer weisen</s:String>
+    <s:String x:Key="open_custom_themes_folder">Dossier mat personaliséierten Themen opmaachen</s:String>
+    <s:String x:Key="win_num_hotkeys_action">Aktioun vun de Win+[0-9]-_Tastaturkierzelen:</s:String>
+    <x:Array x:Key="win_num_hotkeys_action_values" Type="s:String">
+        <s:String>Windows-Standard</s:String>
+        <s:String>Aufgabe wiesselen</s:String>
+        <s:String>Quick Launch-Element opmaachen</s:String>
+    </x:Array>
+    <s:String x:Key="hotkey_warning_title">UltraWinBar-Tastaturkierzelen</s:String>
+    <s:String x:Key="hotkey_warning_text">UltraWinBar iwwerhëlt d'Tastaturkierzelen vun der Windows-Taskbar. Och wann UltraWinBar zou ass, ginn dës eréischt nom Ofmellen an neiem Umellen nees u Windows zeréckginn.</s:String>
+    <s:String x:Key="allow_blur_behind">_Onschäerft hannert der transparenter Taskbar erlaben</s:String>
     <s:String x:Key="ok_dialog">OK</s:String>
+
+    <s:String x:Key="clock_format_help">Verfügbar Formatéierungsoptioune weisen</s:String>
+    <s:String x:Key="clock_format_warning">Opgepasst: Eng personaliséiert Auerformatéierung funktionéiert eventuell net wéi erwaart, wann dat ausgewieltent Thema en eegent Format festleet.</s:String>
+    <s:String x:Key="override_clock_format">Personaliséiert Auer-_Format:</s:String>
+    <s:String x:Key="override_ampm_designators">Personaliséiert _Zäitindikatoren:</s:String>
+    <s:String x:Key="am_designator">AM:</s:String>
+    <s:String x:Key="pm_designator">PM:</s:String>
 
     <s:String x:Key="customize_notifications">Personaliséiere Notifikatiounen</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar weist Symboler fir aktiv an dréngend Notifikatiounen, a verstoppt inaktiv. Dir kënnt dëst Verhalen fir Elementer an der Lëscht hei ënnen änneren.</s:String>
     <s:String x:Key="customize_notifications_instruction">Wielt en Element, wielt dann säin Notifikatiounsverhalen:</s:String>
     <s:String x:Key="hide_when_inactive">Verstoppen wann inaktiv</s:String>
     <s:String x:Key="always_show">Ëmmer weisen</s:String>
+    <s:String x:Key="always_hide">Ëmmer verstoppen</s:String>
+    <s:String x:Key="remove">Ewechhuelen</s:String>
     <s:String x:Key="name_heading">Numm</s:String>
     <s:String x:Key="behavior_heading">Verhalen</s:String>
+    <s:String x:Key="invert_heading">Ëmdréinen</s:String>
 
     <s:String x:Key="start_text">Unzefänken</s:String>
     <s:String x:Key="start_text_xp">unzefänken</s:String>
@@ -88,6 +167,7 @@
     <s:String x:Key="tray_properties">Eegeschaften</s:String>
     <s:String x:Key="update_available">_Update verfügbar ...</s:String>
     <s:String x:Key="exit_ultrawinbar">_Sortie UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">UltraWinBar _nei starten</s:String>
     <s:String x:Key="customize_notifications_menu">_Benotzerdefinéiert Notifikatiounen...</s:String>
     <s:String x:Key="lock_taskbar_menu">_Spär d'Taskbar</s:String>
 
@@ -103,9 +183,134 @@
     <s:String x:Key="minimize">Reduzéieren</s:String>
     <s:String x:Key="maximize">Vergréisseren</s:String>
     <s:String x:Key="close">_Zoumaachen</s:String>
+    <s:String x:Key="end_task">_Aufgab beendegen</s:String>
 
     <s:String x:Key="show_hidden">Weist verstoppte Symboler</s:String>
     <s:String x:Key="hide">Verstoppen</s:String>
 
     <s:String x:Key="open_folder">&amp;Öffnen den Dossier</s:String>
+    <s:String x:Key="move_to_taskbar_format">Op d'Taskbar {0} réckelen</s:String>
+
+    <s:String x:Key="ime_input_tip_enabled">Riets-klickt, fir d'IME-Optiounen opzemaachen.</s:String>
+    <s:String x:Key="ime_input_tip_disabled">IME deaktivéiert</s:String>
+    <s:String x:Key="ime_input_full_shape_hiragana">_Hiragana</s:String>
+    <s:String x:Key="ime_input_full_shape_katakana">Katakana a _Vollbreet</s:String>
+    <s:String x:Key="ime_input_full_shape_alphanumeric">Alphanumeresch Zeechen a _Vollbreet</s:String>
+    <s:String x:Key="ime_input_katakana">Katakana a _Halbbreet</s:String>
+    <s:String x:Key="ime_input_alphanumeric">Alphanumeresch Zeechen a _Halbbreet</s:String>
+    <s:String x:Key="ime_input_direct">_Direkt-Input</s:String>
+    <s:String x:Key="ime_open_pad">IME-_Pad</s:String>
+    <s:String x:Key="ime_open_add_word_dictionary">_Wuert derbäisetzen</s:String>
+    <s:String x:Key="ime_open_dictionary_tool">Benotzerwörterbuch-_Tool</s:String>
+    <s:String x:Key="ime_open_properties">Eegeschaften</s:String>
+    <s:String x:Key="ime_input_key">Input-_Method</s:String>
+    <s:String x:Key="ime_input_key_roma">_Romaji-Input</s:String>
+    <s:String x:Key="ime_input_key_kana">Kana-Input</s:String>
+    <s:String x:Key="ime_conversion">_Konversiounsmodus</s:String>
+    <s:String x:Key="ime_conversion_general">_Allgemeng</s:String>
+    <s:String x:Key="ime_conversion_none">K_eng Konversioun</s:String>
+    <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+
+    <s:String x:Key="pin_to_taskbar">Op dës Taskbar pinnen</s:String>
+    <s:String x:Key="pinned_app_windows">Oppe Fënsteren</s:String>
+    <s:String x:Key="unpin_from_taskbar">Vun dëser Taskbar lassmaachen</s:String>
+    <s:String x:Key="copy_executable_path">Wee vum Programm kopéieren</s:String>
+    <s:String x:Key="copy_executable_directory">Dossier vum Programm kopéieren</s:String>
+
+    <!-- Items below are settings, and should always be in English -->
+    <FlowDirection x:Key="flow_direction">LeftToRight</FlowDirection>
+    <FontFamily x:Key="start_text_xp_font_family">Franklin Gothic</FontFamily>
+    <sys:String x:Key="app_all_desktops">Fënstere vun dëser Applikatioun op alle Desktops weisen</sys:String>
+    <sys:String x:Key="move_window_desktop">Dës Fënster op den Desktop réckelen</sys:String>
+    <sys:String x:Key="move_app_desktop">All Fënstere vun der Applikatioun op den Desktop réckelen</sys:String>
+    <sys:String x:Key="desktop_number">Desktop {0}</sys:String>
+    <sys:String x:Key="desktop_action_failed">Windows konnt d'Operatioun net fir all Fënster ausféieren. E puer Fënstere sinn eventuell scho geréckelt ginn. Kuckt am Protokoll no Detailer.</sys:String>
+    <s:String x:Key="show_hebrew_date">Hebräeschen Datum an nummeréiert Wochendeeg weisen</s:String>
+    <s:String x:Key="hebrew_date_midnight">Benotzt de lokale Kalennerdatum; wiesselt ëm Mëtternuecht, net beim Sonnenënnergang.</s:String>
+    <s:String x:Key="hebrew_place">Uertschaft fir den hebräeschen Datum:</s:String>
+    <s:String x:Key="hebrew_place_none">net ausgewielt</s:String>
+    <s:String x:Key="hebrew_place_choose">Auswielen...</s:String>
+    <s:String x:Key="hebrew_place_clear">Eidel maachen</s:String>
+    <s:String x:Key="zone_clear">Ewechhuelen</s:String>
+    <s:String x:Key="hebrew_place_hint">D'Uertschaft, där hire Sonnenënnergang den hebräeschen Dag ofschléisst an där hir halachesch Zäiten de Kalenner weist.</s:String>
+    <s:String x:Key="hebrew_place_title">Uertschaft fir den hebräeschen Datum</s:String>
+    <s:String x:Key="hebrew_place_city_tab">Stad</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">Koordinaten</s:String>
+    <s:String x:Key="hebrew_place_search">Stadnumm (op Englesch):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">Gitt op d'mannst zwee Buschtawen an, zum Beispill: jerus, new york, paris texas. Stied mat 10 000 oder méi Awunner ginn opgelëscht.</s:String>
+    <s:String x:Key="hebrew_place_country">Land:</s:String>
+    <s:String x:Key="hebrew_place_need_country">Wielt d'Land: doduerch gëtt festgeluecht, wéi eng vun den zwou Zuelen d'Breet ass.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">Breete- a Längtegrad:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">All Format ass méiglech: 32.0853, 34.7818 oder 34,7818 32,0853 oder 32°05'07&quot;N 34°46'54&quot;E. Punkt oder Komma an der Dezimalzuel; Komma, Duebelpunkt oder Leerzeechen tëscht den Zuelen.</s:String>
+    <s:String x:Key="hebrew_place_zone">Zäitzon:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">Wäert mat der Stad ausgewielt; ännert en, wann en net stëmmt. D'Reegelen vun der Zäitzon (Summerzäit an hir Ännerungen) sinn déi, déi Windows benotzt.</s:String>
+    <s:String x:Key="calendar_title">Jiddesche Kalenner</s:String>
+    <s:String x:Key="calendar_today">Haut</s:String>
+    <s:String x:Key="calendar_copy_name">Numm kopéieren</s:String>
+    <s:String x:Key="calendar_search_name">Den Numm op Google sichen</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Hebräesche Mount</s:String>
+    <s:String x:Key="calendar_grid_civil">Biergerleche Mount</s:String>
+    <s:String x:Key="calendar_shabbat">Shabbat</s:String>
+    <s:String x:Key="calendar_previous_month">Virëge Mount</s:String>
+    <s:String x:Key="calendar_next_month">Nächste Mount</s:String>
+    <s:String x:Key="calendar_settings">Astellungen...</s:String>
+    <s:String x:Key="calendar_close">Zoumaachen</s:String>
+    <s:String x:Key="calendar_portion">Paraschah vun der Woch: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">Op dësem Shabbat gëtt eng Festliesung virgelies</s:String>
+    <s:String x:Key="calendar_day_of">{0}, Dag {1} vun {2}</s:String>
+    <s:String x:Key="calendar_molad">Molad vu(n) {0}: {1}, {2} an {3} chalakim</s:String>
+    <s:String x:Key="calendar_omer">Zielen vum Omer</s:String>
+    <s:String x:Key="calendar_omer_day">Dag {0} vum Omer</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} Woch(en) an {1} Dag(e)</s:String>
+    <s:String x:Key="calendar_place">Uertschaft: {0}</s:String>
+    <s:String x:Key="calendar_israel">Land Israel</s:String>
+    <s:String x:Key="calendar_diaspora">Diaspora</s:String>
+    <s:String x:Key="calendar_no_place">Wielt an de Kalennerastellungen eng Uertschaft aus, fir d'Zäite vum Dag ze gesinn.</s:String>
+    <s:String x:Key="calendar_times">Zäite vum Dag</s:String>
+    <s:String x:Key="calendar_yahrzeits">Yahrzeits</s:String>
+    <s:String x:Key="calendar_candles_after_dark">Käerzen uschalten (nom Antriede vun der Nuecht)</s:String>
+    <s:String x:Key="calendar_havdalah">Enn vum Roudag (Havdalah)</s:String>
+    <s:String x:Key="calendar_rest_begins">Fänkt un: {0} (Käerzen uschalten)</s:String>
+    <s:String x:Key="calendar_rest_ends">Ennt: {0} (Antriede vun der Nuecht)</s:String>
+    <s:String x:Key="calendar_settings_title">Kalennerastellungen</s:String>
+    <s:String x:Key="calendar_settings_place">Uertschaft vun der Zäitzon:</s:String>
+    <s:String x:Key="calendar_settings_zone">Zäitzon fir den Datum, den Dagwiessel an d'Zäite vum Dag:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (déi vum Computer)</s:String>
+    <s:String x:Key="zones_heading">Zäitzone vun der Auer</s:String>
+    <s:String x:Key="zone_main">Haaptzäitzon:</s:String>
+    <s:String x:Key="zone_second">Zweet Zäitzon:</s:String>
+    <s:String x:Key="zone_third">Drëtt Zäitzon:</s:String>
+    <s:String x:Key="zone_show_name">Numm weisen</s:String>
+    <s:String x:Key="zone_label">Numm op der Auer:</s:String>
+    <s:String x:Key="zone_label_hint">En Numm, deen d'Auer fir dës Zäitzon amplaz vun hirer Uertschaft weist (zum Beispill Heart fir Jerusalem). Wann den Numm eidel ass, bleift d'Uertschaft stoen.</s:String>
+    <s:String x:Key="zone_place">Uertschaft:</s:String>
+    <s:String x:Key="zones_tab">Zäitzonen</s:String>
+    <s:String x:Key="hebrew_date_tab">Hebräeschen Datum</s:String>
+    <s:String x:Key="zone_computer">Dem Computer seng ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">Den hebräeschen Datum ass deen vun der Uertschaft vun der Haaptzäitzon, déi am Tab „Zäitzonen“ ausgewielt gouf.</s:String>
+    <s:String x:Key="zone_none">(net ugewisen)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">Yahrzeits fir ze weisen (all, no Kategorie, eenzel):</s:String>
+    <s:String x:Key="calendar_all_figures">All</s:String>
+    <s:String x:Key="cancel_dialog">Ofbriechen</s:String>
+    <s:String x:Key="coordinate_result">Breete- a Längtegrad: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">D'Reiefolleg ass am Text markéiert.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">Nëmmen eng Reiefolleg ass méiglech: e Breetegrad ass héchstens 90 Grad.</s:String>
+    <s:String x:Key="coordinate_basis_country">D'Reiefolleg gëtt vum Land ofgeleet: déi aner Zuel läit wäit dovun ewech.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">Et gëtt ugeholl, datt de Breetegrad als éischt kënnt.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">Et gëtt ugeholl, datt de Breetegrad als éischt kënnt; wann de Längtegrad als éischt kënnt, wier d'Land bal grad esou plausibel.</s:String>
+    <s:String x:Key="coordinate_warning_far">De Punkt läit {0:N0} km vun der nooste Stad am Land ewech. Kontrolléiert d'Land an d'Zuelen.</s:String>
+    <s:String x:Key="coordinate_problem_empty">Gitt d'Koordinaten an.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">Et ginn zwou Zuele gebraucht: de Breetegrad an de Längtegrad.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">Méi wéi zwou Zuelen. Gitt nëmmen de Breetegrad an de Längtegrad an.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">Béid Zuele sinn als Breetegrad markéiert.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">Béid Zuele sinn als Längtegrad markéiert.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">De Breetegrad muss tëscht -90 an 90 Grad leien.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">De Längtegrad muss tëscht -180 an 180 Grad leien.</s:String>
+    <s:String x:Key="coordinate_problem_neither">A kengem vun deenen zwee Formater erginn dës Zuelen e Breetegrad (bis 90) an e Längtegrad (bis 180).</s:String>
+    <s:String x:Key="open_system_settings">Systemastellungen opmaachen</s:String>
+    <s:String x:Key="open_computer_management">Computerverwaltung</s:String>
+    <s:String x:Key="open_drives">Laufwierker opmaachen</s:String>
+    <s:String x:Key="this_pc">Dëse PC</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">Probéieren, oppe Fënsteren op dësem Desktop ze loossen (experimentell)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Fënsteren, déi op allen Desktops ugewise ginn, nees benotzen, ouni se ze réckelen. Soss maachen Desktop-Ikonen a festgepinnt Starter Browser, Explorer-Dossieren an Notepad++ lokal op; bei aneren Applikatiounen an der Aktivéierung iwwer den Notifikatiounsberäich ginn d'Fënstere weiderhi geréckelt.</s:String>
 </ResourceDictionary>

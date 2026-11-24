@@ -60,6 +60,7 @@
         <s:String>На панели задач, в которой открыто окно</s:String>
         <s:String>На главной панели задач и панели задач, в которой открыто окно</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">Инвертировать оттенки _серого:</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>Когда требуется теме</s:String>
         <s:String>Всегда</s:String>
@@ -77,6 +78,11 @@
         <s:String>Открыть Aero-календарь</s:String>
         <s:String>Открыть Modern-календарь</s:String>
         <s:String>Открыть центр уведомлений</s:String>
+    </x:Array>
+    <s:String x:Key="task_wheel_action">Действие колёсика _мыши:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>Ничего не делать</s:String>
+        <s:String>Показать или скрыть окно</s:String>
     </x:Array>
     <s:String x:Key="auto_hide_transparent">Не показывать _линию панели задач, когда она скрыта автоматически</s:String>
     <s:String x:Key="version">Версия {0}</s:String>
@@ -118,6 +124,13 @@
     <s:String x:Key="hotkey_warning_text">UltraWinBar перезапишет сочетания клавиш панели задач Windows. Они не будут восстановлены даже после закрытия UltraWinBar, пока вы не перезайдёте в систему.</s:String>
     <s:String x:Key="allow_blur_behind">Размывать фон за прозрачной панелью задач</s:String>
     <s:String x:Key="ok_dialog">ОК</s:String>
+
+    <s:String x:Key="clock_format_help">Посмотреть доступные варианты форматирования</s:String>
+    <s:String x:Key="clock_format_warning">Примечание: собственный формат часов может работать не так, как ожидалось, если выбранная тема задаёт свой формат.</s:String>
+    <s:String x:Key="override_clock_format">Свой _формат часов:</s:String>
+    <s:String x:Key="override_ampm_designators">Собственные _обозначения:</s:String>
+    <s:String x:Key="am_designator">До полудня:</s:String>
+    <s:String x:Key="pm_designator">После полудня:</s:String>
 
     <s:String x:Key="customize_notifications">Настройка уведомлений</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar отображает значки для активных и срочных уведомлений, скрывая неактивные. Можно изменить такое поведение для элементов следующего списка.</s:String>
@@ -263,6 +276,8 @@
     <s:String x:Key="zone_second">Второй часовой пояс:</s:String>
     <s:String x:Key="zone_third">Третий часовой пояс:</s:String>
     <s:String x:Key="zone_show_name">Показывать название</s:String>
+    <s:String x:Key="zone_label">Имя на часах</s:String>
+    <s:String x:Key="zone_label_hint">Имя, которое часы показывают для этого пояса вместо названия места (например, Heart вместо Jerusalem). Пусто — название места.</s:String>
     <s:String x:Key="zone_place">Место:</s:String>
     <s:String x:Key="zones_tab">Часовые пояса</s:String>
     <s:String x:Key="hebrew_date_tab">Еврейская дата</s:String>
@@ -287,6 +302,10 @@
     <s:String x:Key="coordinate_problem_lat_range">Широта должна быть от -90 до 90 градусов.</s:String>
     <s:String x:Key="coordinate_problem_lng_range">Долгота должна быть от -180 до 180 градусов.</s:String>
     <s:String x:Key="coordinate_problem_neither">Ни в каком порядке эти числа не дают широту (до 90) и долготу (до 180).</s:String>
+    <s:String x:Key="open_system_settings">Открыть параметры системы</s:String>
+    <s:String x:Key="open_computer_management">Управление компьютером</s:String>
+    <s:String x:Key="open_drives">Открыть диски</s:String>
+    <s:String x:Key="this_pc">Этот компьютер</s:String>
     <s:String x:Key="move_activated_windows_to_current_desktop">Пробовать оставлять открываемые окна на этом столе (экспериментально)</s:String>
     <s:String x:Key="desktop_activation_experiment_hint">Окна, показанные на всех столах, активируются без переноса. Иначе значки рабочего стола и закрепления открывают браузеры, папки Проводника и Notepad++ на этом столе; для остальных программ и трея сохраняется перенос.</s:String>
 </ResourceDictionary>

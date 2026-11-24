@@ -368,6 +368,10 @@ internal static class PlaceChecks
             throw new Exception("No place is chosen for the second and the third zone by default.");
         if (fresh.ThirdTimeZone != "" || fresh.ShowMainZoneName || !fresh.ShowSecondZoneName || !fresh.ShowThirdZoneName || fresh.CalendarZone != 0)
             throw new Exception("By default: no third zone, the main zone not named, the others named, the calendar by the main zone.");
+        if (fresh.MainZoneLabel != "" || fresh.SecondZoneLabel != "" || fresh.ThirdZoneLabel != "")
+            throw new Exception("No zone has a name of its own by default.");
+        fresh.SecondZoneLabel = null;
+        if (fresh.SecondZoneLabel != "") throw new Exception("No name of its own is an empty one.");
         fresh.CalendarZone = 7;
         if (fresh.CalendarZone != 0) throw new Exception("A calendar zone that is none of the three is the main one.");
         fresh.CalendarZone = 2;
@@ -376,18 +380,21 @@ internal static class PlaceChecks
         if (fresh.ThirdTimeZone != "") throw new Exception("No third zone is an empty one.");
         var options = new JsonSerializerOptions { IgnoreReadOnlyProperties = true };
         var tokyo = HebrewPlace.FromCoordinates(35.6762, 139.6503, null, "Asia/Tokyo");
-        var back = JsonSerializer.Deserialize<Settings>(JsonSerializer.Serialize(new Settings { ThirdTimeZone = "Asia/Tokyo", ThirdPlace = tokyo, ShowMainZoneName = true, ShowSecondZoneName = false, CalendarZone = 1 }, options), options);
-        if (back.ThirdTimeZone != "Asia/Tokyo" || back.ThirdPlace != tokyo || back.SecondPlace != null || !back.ShowMainZoneName || back.ShowSecondZoneName || back.CalendarZone != 1)
+        var back = JsonSerializer.Deserialize<Settings>(JsonSerializer.Serialize(new Settings { ThirdTimeZone = "Asia/Tokyo", ThirdPlace = tokyo, ShowMainZoneName = true, ShowSecondZoneName = false, CalendarZone = 1, SecondZoneLabel = "Heart" }, options), options);
+        if (back.ThirdTimeZone != "Asia/Tokyo" || back.ThirdPlace != tokyo || back.SecondPlace != null || !back.ShowMainZoneName || back.ShowSecondZoneName || back.CalendarZone != 1 ||
+            back.SecondZoneLabel != "Heart" || back.MainZoneLabel != "" || back.ThirdZoneLabel != "")
             throw new Exception("The zones, their places and their names are kept in the settings file.");
 
         var settings = Settings.Instance;
         string second = settings.SecondTimeZone, third = settings.ThirdTimeZone;
+        string mainLabel = settings.MainZoneLabel, secondLabel = settings.SecondZoneLabel, thirdLabel = settings.ThirdZoneLabel;
         int calendar = settings.CalendarZone;
         HebrewPlace place = settings.HebrewPlace, secondPlace = settings.SecondPlace, thirdPlace = settings.ThirdPlace;
         try
         {
             settings.SecondTimeZone = "Europe/Moscow";
             settings.ThirdTimeZone = "Nowhere/Land";
+            settings.MainZoneLabel = settings.SecondZoneLabel = settings.ThirdZoneLabel = "";
             settings.HebrewPlace = HebrewPlace.FromCoordinates(52.374, 4.8897, null, "Europe/Amsterdam");
             settings.SecondPlace = HebrewPlace.FromCoordinates(55.7558, 37.6173, null, "Europe/Moscow");
             settings.ThirdPlace = null;
@@ -396,6 +403,20 @@ internal static class PlaceChecks
                 throw new Exception("The main zone always is, a chosen one is when this computer knows it, an unknown one is not.");
             if (ClockZones.NameOf(ClockZones.Second) != "Moscow" || string.IsNullOrWhiteSpace(ClockZones.NameOf(ClockZones.Main)))
                 throw new Exception($"The names of the zones: {ClockZones.NameOf(ClockZones.Main)} / {ClockZones.NameOf(ClockZones.Second)}.");
+            // A name given to a zone is shown instead of its place's; blank keeps the place's.
+            string computer = ClockZones.NameOf(ClockZones.Main);
+            settings.SecondZoneLabel = "  Heart ";
+            settings.MainZoneLabel = "Home";
+            if (ClockZones.NameOf(ClockZones.Second) != "Heart" || ClockZones.NameOf(ClockZones.Main) != "Home" || ClockZones.LabelOf(ClockZones.Third) != "")
+                throw new Exception($"A zone's own name is shown instead of its place's: {ClockZones.NameOf(ClockZones.Main)} / {ClockZones.NameOf(ClockZones.Second)}.");
+            settings.SecondZoneLabel = "   ";
+            settings.MainZoneLabel = "";
+            if (ClockZones.NameOf(ClockZones.Second) != "Moscow" || ClockZones.NameOf(ClockZones.Main) != computer)
+                throw new Exception("A blank name of its own keeps the name of the zone's place.");
+            if (ClockZones.DisplayName("Heart", "Jerusalem") != "Heart" || ClockZones.DisplayName(" Heart ", "Jerusalem") != "Heart" ||
+                ClockZones.DisplayName("", "Jerusalem") != "Jerusalem" || ClockZones.DisplayName(null, "Jerusalem") != "Jerusalem" || ClockZones.DisplayName(" 	", "Jerusalem") != "Jerusalem")
+                throw new Exception("The shown name: the given one trimmed, else the zone's own.");
+            settings.SecondZoneLabel = "";
             settings.CalendarZone = ClockZones.Second;
             if (ClockZones.CalendarZone() != ClockZones.Second || ClockZones.CalendarPlace().TimeZoneId != "Europe/Moscow" || ClockZones.CalendarPlace().Latitude != 55.7558)
                 throw new Exception("The calendar goes by the zone chosen, at the place of that zone, not at the main place with a shifted clock.");
@@ -433,6 +454,9 @@ internal static class PlaceChecks
         {
             settings.SecondTimeZone = second;
             settings.ThirdTimeZone = third;
+            settings.MainZoneLabel = mainLabel;
+            settings.SecondZoneLabel = secondLabel;
+            settings.ThirdZoneLabel = thirdLabel;
             settings.CalendarZone = calendar;
             settings.HebrewPlace = place;
             settings.SecondPlace = secondPlace;
@@ -448,7 +472,7 @@ internal static class PlaceChecks
         // The two-zone template, the Hebrew one and the vertical Hebrew one.
         if (Regex.Matches(clock, @"\{Binding ThirdTimeText\}").Count != 3 || Regex.Matches(clock, @"\{Binding ThirdTimeVisibility\}").Count != 3)
             throw new Exception("All three templates of several times show the third one.");
-        foreach (string needed in new[] { "nameof(Settings.ThirdTimeZone)", "nameof(Settings.ShowMainZoneName)", "nameof(Settings.ShowSecondZoneName)", "nameof(Settings.ShowThirdZoneName)", "nameof(Settings.CalendarZone)", "ClockZones.CalendarPlace()" })
+        foreach (string needed in new[] { "nameof(Settings.ThirdTimeZone)", "nameof(Settings.ShowMainZoneName)", "nameof(Settings.ShowSecondZoneName)", "nameof(Settings.ShowThirdZoneName)", "nameof(Settings.MainZoneLabel)", "nameof(Settings.SecondZoneLabel)", "nameof(Settings.ThirdZoneLabel)", "nameof(Settings.CalendarZone)", "ClockZones.CalendarPlace()" })
             if (!clockCode.Contains(needed)) throw new Exception("The clock does not follow " + needed + ".");
         if (clock.Contains("ClockTip") || clock.Contains("<UserControl.ToolTip>") || clockCode.Contains("ClockTip"))
             throw new Exception("The clock shows no tool tip with the date.");
@@ -458,6 +482,8 @@ internal static class PlaceChecks
         string properties = File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "Shell", "Dialogs", "PropertiesWindow.xaml"));
         foreach (string checkBox in new[] { "ShowMainZoneName", "ShowSecondZoneName", "ShowThirdZoneName" })
             if (!panel.Contains("{Binding " + checkBox + ",")) throw new Exception("The zones panel has no check box for " + checkBox + ".");
+        foreach (string label in new[] { "MainZoneLabel", "SecondZoneLabel", "ThirdZoneLabel" })
+            if (!panel.Contains("Text=\"{Binding " + label + ", UpdateSourceTrigger=PropertyChanged}\"")) throw new Exception("The zones panel has no box for " + label + ".");
         foreach (Match handler in Regex.Matches(panel, @"(?:SelectionChanged|Click)=""([A-Za-z0-9_]+)"""))
             if (!Regex.IsMatch(panelCode, @"void\s+" + handler.Groups[1].Value + @"\s*\(")) throw new Exception("The zones panel names a handler it has not: " + handler.Groups[1].Value);
         if (!properties.Contains("<controls:ClockZonesPanel />"))
@@ -472,7 +498,7 @@ internal static class PlaceChecks
         foreach (string file in new[] { Path.Combine("Group01", "English.xaml"), Path.Combine("Group06", "русский.xaml"), Path.Combine("Group05", "беларуская.xaml") })
         {
             string text = File.ReadAllText(Path.Combine(languages, file));
-            foreach (string key in new[] { "zones_heading", "zone_main", "zone_second", "zone_third", "zone_show_name", "zone_none", "calendar_settings_zone", "calendar_zone_main", "zone_place", "zone_computer", "zones_tab", "hebrew_date_tab", "hebrew_place_in_zones" })
+            foreach (string key in new[] { "zones_heading", "zone_main", "zone_second", "zone_third", "zone_show_name", "zone_label", "zone_label_hint", "zone_none", "calendar_settings_zone", "calendar_zone_main", "zone_place", "zone_computer", "zones_tab", "hebrew_date_tab", "hebrew_place_in_zones" })
                 if (!text.Contains("x:Key=\"" + key + "\"")) throw new Exception($"{file} lacks {key}.");
         }
         Console.WriteLine("PASS: three time zones (the computer's, a second and a third, each named or not), the calendar goes by the one chosen and falls back to the computer's, the settings carry them, and the clock shows no date tip.");

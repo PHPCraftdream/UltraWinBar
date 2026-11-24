@@ -59,6 +59,7 @@
         <s:String>Той жа панэлі што і вакно</s:String>
         <s:String>Той жа панэлі што і вакно + асноўная панэль</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_Інвертаваць адценні шэрага:</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>Калі патрабуецца тэме</s:String>
         <s:String>Заўсёды</s:String>
@@ -77,9 +78,29 @@
         <s:String>Адкрыць сучасны каляндар</s:String>
         <s:String>Адкрыць Цэнтр апавяшчэньняў</s:String>
     </x:Array>
+    <s:String x:Key="task_wheel_action">Дзеянне колца _мышы:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>Нічога не рабіць</s:String>
+        <s:String>Паказаць або схаваць акно</s:String>
+    </x:Array>
     <s:String x:Key="auto_hide_transparent">Схаваць лінію панэлі задач пры аўтасхоўваньні</s:String>
     <s:String x:Key="version">Версія {0}</s:String>
     <s:String x:Key="visit_on_github">Наведаць UltraWinBar на GitHub</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Некалькі панэляў задач</s:String>
+    <s:String x:Key="additional_taskbars_text">Паказваць панэлі задач на выбраных краях экрана. Каб расцягнуць панэль уздоўж усяго краю і пасунуць астатнія, націсніце на яе правай кнопкай мышы.</s:String>
+    <s:String x:Key="location_left">Злева</s:String>
+    <s:String x:Key="location_top">Зверху</s:String>
+    <s:String x:Key="location_right">Справа</s:String>
+    <s:String x:Key="location_bottom">Знізу</s:String>
+    <s:String x:Key="tray_location_text">_Вобласць апавяшчэнняў на панэлі:</s:String>
+    <s:String x:Key="clock_location_text">_Гадзіннік на панэлі:</s:String>
+    <s:String x:Key="start_button_location_text">Кнопка _Пуск на панэлі:</s:String>
+    <s:String x:Key="language_location_text">Індыкатар _мовы на панэлі:</s:String>
+    <s:String x:Key="task_assignment_hint">Перацягніце кнопку задачы на іншую панэль, каб перамясціць усю праграму. Утрымлівайце Ctrl, каб перамясціць толькі выбранае акно. Каб скінуць прывязку, націсніце на кнопку правай кнопкай мышы.</s:String>
+    <s:String x:Key="reset_task_assignments">Скінуць усе прывязкі да панэляў задач</s:String>
+    <s:String x:Key="stretch">_Расцягнуць</s:String>
+    <s:String x:Key="make_main">Зрабіць _асноўнай</s:String>
+    <s:String x:Key="reset_task_assignment">Скінуць _прывязку да панэлі задач</s:String>
     <s:String x:Key="taskbar_scale">Маштаб панэлі</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
@@ -102,7 +123,12 @@
     <s:String x:Key="hotkey_warning_text">UltraWinBar перавызначыць спалучэньні гарачых клавіш панэлі задач Windows. Яны не будуць адноўлены нават пасля зачыненьня UltraWinBar, пакуль вы не выйдзеце з сістэмы і не ўвойдзеце зноў.</s:String>
     <s:String x:Key="allow_blur_behind">Затуманьванне фона за празрыстай панэллю задач</s:String>
     <s:String x:Key="ok_dialog">Добра</s:String>
-
+    <s:String x:Key="clock_format_help">Паказаць даступныя параметры фарматавання</s:String>
+    <s:String x:Key="clock_format_warning">Заўвага: карыстальніцкі фармат гадзінніка можа працаваць інакш, калі выбраная тэма задае ўласны фармат.</s:String>
+    <s:String x:Key="override_clock_format">Уласны _фармат гадзінніка:</s:String>
+    <s:String x:Key="override_ampm_designators">Уласныя _абазначэнні:</s:String>
+    <s:String x:Key="am_designator">Да поўдня:</s:String>
+    <s:String x:Key="pm_designator">Пасля поўдня:</s:String>
     <s:String x:Key="customize_notifications">Налады апавяшчэньняў</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar адлюстроўвае значкі для актыўных і тэрміновых апавяшчэньняў і хавае неактыўныя. Вы можаце змяніць гэтую паводзіну для элементаў у спісе ніжэй.</s:String>
     <s:String x:Key="customize_notifications_instruction">Выберыце элемент, а затым выберыце яго паводзіны:</s:String>
@@ -113,13 +139,11 @@
     <s:String x:Key="name_heading">Назва</s:String>
     <s:String x:Key="behavior_heading">Паводзіны</s:String>
     <s:String x:Key="invert_heading">Інвертаваць</s:String>
-
     <s:String x:Key="start_text">Пуск</s:String>
     <s:String x:Key="start_text_xp">пуск</s:String>
     <s:String x:Key="start_button_tip_98">Націсніце тут, каб пачаць.</s:String>
     <s:String x:Key="start_button_tip">Націсніце тут, каб пачаць</s:String>
     <s:String x:Key="start_button_tip_vista">Пуск</s:String>
-
     <s:String x:Key="ultrawinbar_title">Панэль задач UltraWinBar</s:String>
     <s:String x:Key="toolbars">Панэль інструментаў</s:String>
     <s:String x:Key="quick_launch">Хуткі запуск</s:String>
@@ -138,15 +162,14 @@
     <s:String x:Key="tray_properties">Уласьцівасьці</s:String>
     <s:String x:Key="update_available">Даступна абнаўленьне...</s:String>
     <s:String x:Key="exit_ultrawinbar">Выйсьці з UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">_Перазапусціць UltraWinBar</s:String>
     <s:String x:Key="customize_notifications_menu">Наладзіць апавяшчэньня...</s:String>
     <s:String x:Key="lock_taskbar_menu">_Замацаваць панэль задач</s:String>
-
     <s:String x:Key="show_desktop_tip_95">Паказаць працоўны стол</s:String>
     <s:String x:Key="show_desktop_tip">Паказаць працоўны стол</s:String>
     <s:String x:Key="show_desktop_95">Працоўны стол</s:String>
     <s:String x:Key="show_desktop">Паказаць працоўны стол</s:String>
     <s:String x:Key="peek_at_desktop">Паказаць працоўны стол пры навядзеньні</s:String>
-
     <s:String x:Key="restore">Аднавіць</s:String>
     <s:String x:Key="move">Перамясціць</s:String>
     <s:String x:Key="size">Памер</s:String>
@@ -154,12 +177,10 @@
     <s:String x:Key="maximize">Разгарнуць</s:String>
     <s:String x:Key="close">Закрыць</s:String>
     <s:String x:Key="end_task">Завяршыць задачу</s:String>
-
     <s:String x:Key="show_hidden">Паказаць схаваныя значкі</s:String>
     <s:String x:Key="hide">Схаваць</s:String>
-
     <s:String x:Key="open_folder">&amp;Адкрыць папку</s:String>
-
+    <s:String x:Key="move_to_taskbar_format">Перамясціць на панэль: {0}</s:String>
     <s:String x:Key="ime_input_tip_enabled">Націсніце правай кнопкай мышы для наладкі IME</s:String>
     <s:String x:Key="ime_input_tip_disabled">IME адключаны</s:String>
     <s:String x:Key="ime_input_full_shape_hiragana">Хірагана</s:String>
@@ -179,35 +200,6 @@
     <s:String x:Key="ime_conversion_general">Стандартны</s:String>
     <s:String x:Key="ime_conversion_none">Без пераўтварэньня</s:String>
     <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
-    <s:String x:Key="invert_grayscale_colors">_Інвертаваць адценні шэрага:</s:String>
-    <s:String x:Key="task_wheel_action">Дзеянне колца _мышы:</s:String>
-    <x:Array x:Key="task_wheel_action_values" Type="s:String">
-        <s:String>Нічога не рабіць</s:String>
-        <s:String>Паказаць або схаваць акно</s:String>
-    </x:Array>
-    <s:String x:Key="multiple_taskbars_heading">Некалькі панэляў задач</s:String>
-    <s:String x:Key="additional_taskbars_text">Паказваць панэлі задач на выбраных краях экрана. Каб расцягнуць панэль уздоўж усяго краю і пасунуць астатнія, націсніце на яе правай кнопкай мышы.</s:String>
-    <s:String x:Key="location_left">Злева</s:String>
-    <s:String x:Key="location_top">Зверху</s:String>
-    <s:String x:Key="location_right">Справа</s:String>
-    <s:String x:Key="location_bottom">Знізу</s:String>
-    <s:String x:Key="tray_location_text">_Вобласць апавяшчэнняў на панэлі:</s:String>
-    <s:String x:Key="clock_location_text">_Гадзіннік на панэлі:</s:String>
-    <s:String x:Key="start_button_location_text">Кнопка _Пуск на панэлі:</s:String>
-    <s:String x:Key="language_location_text">Індыкатар _мовы на панэлі:</s:String>
-    <s:String x:Key="task_assignment_hint">Перацягніце кнопку задачы на іншую панэль, каб перамясціць усю праграму. Утрымлівайце Ctrl, каб перамясціць толькі выбранае акно. Каб скінуць прывязку, націсніце на кнопку правай кнопкай мышы.</s:String>
-    <s:String x:Key="reset_task_assignments">Скінуць усе прывязкі да панэляў задач</s:String>
-    <s:String x:Key="stretch">_Расцягнуць</s:String>
-    <s:String x:Key="make_main">Зрабіць _асноўнай</s:String>
-    <s:String x:Key="reset_task_assignment">Скінуць _прывязку да панэлі задач</s:String>
-    <s:String x:Key="clock_format_help">Паказаць даступныя параметры фарматавання</s:String>
-    <s:String x:Key="clock_format_warning">Заўвага: карыстальніцкі фармат гадзінніка можа працаваць інакш, калі выбраная тэма задае ўласны фармат.</s:String>
-    <s:String x:Key="override_clock_format">Уласны _фармат гадзінніка:</s:String>
-    <s:String x:Key="override_ampm_designators">Уласныя _абазначэнні:</s:String>
-    <s:String x:Key="am_designator">Да поўдня:</s:String>
-    <s:String x:Key="pm_designator">Пасля поўдня:</s:String>
-    <s:String x:Key="restart_ultrawinbar">_Перазапусціць UltraWinBar</s:String>
-    <s:String x:Key="move_to_taskbar_format">Перамясціць на панэль: {0}</s:String>
     <s:String x:Key="pin_to_taskbar">Замацаваць на гэтай панэлі задач</s:String>
     <s:String x:Key="pinned_app_windows">Адкрытыя вокны</s:String>
     <s:String x:Key="unpin_from_taskbar">Адмацаваць ад гэтай панэлі задач</s:String>
@@ -274,6 +266,8 @@
     <s:String x:Key="zone_second">Другі гадзінны пояс:</s:String>
     <s:String x:Key="zone_third">Трэці гадзінны пояс:</s:String>
     <s:String x:Key="zone_show_name">Паказваць назву</s:String>
+    <s:String x:Key="zone_label">Імя на гадзінніку</s:String>
+    <s:String x:Key="zone_label_hint">Імя, якое гадзіннік паказвае для гэтага пояса замест назвы месца (напрыклад, Heart замест Jerusalem). Пуста — назва месца.</s:String>
     <s:String x:Key="zone_place">Месца:</s:String>
     <s:String x:Key="zones_tab">Гадзінныя паясы</s:String>
     <s:String x:Key="hebrew_date_tab">Габрэйская дата</s:String>

@@ -14,6 +14,16 @@
     <s:String x:Key="language_tip">Velg språk som skal brukes.</s:String>
     <s:String x:Key="theme_text">_Tema:</s:String>
     <s:String x:Key="theme_tip">Installer temaer i mappen Temaer.</s:String>
+    <s:String x:Key="accent_text">Aksent_farge:</s:String>
+    <s:String x:Key="accent_tip">Neonfargen i Modern Glass-temaet.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>Turkis</s:String>
+        <s:String>Fiolett</s:String>
+        <s:String>Fuksia</s:String>
+        <s:String>Smaragd</s:String>
+        <s:String>Rav</s:String>
+        <s:String>Rose</s:String>
+    </x:Array>
     <s:String x:Key="location_text">Plass_ering:</s:String>
     <s:String x:Key="location_tip">Endre plasseringen av oppgavelinjen på skjermen.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -49,6 +59,7 @@
         <s:String>Samme oppgavelinje som vinduet</s:String>
         <s:String>Samme oppgavelinje som vindu og primær oppgavelinje</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_Inverter gråtoner:</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>Når det er nødvendig etter tema</s:String>
         <s:String>Alltid</s:String>
@@ -67,14 +78,35 @@
         <s:String>Åpne Modern-kalenderen</s:String>
         <s:String>Åpne varslingssenteret</s:String>
     </x:Array>
+    <s:String x:Key="task_wheel_action">_Musehjulhandling:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>Ikke gjør noe</s:String>
+        <s:String>Vis/skjul vindu</s:String>
+    </x:Array>
     <s:String x:Key="auto_hide_transparent">Skjul _oppgavelinjen når den er skjult med automatisk skjuling</s:String>
     <s:String x:Key="version">Versjon {0}</s:String>
     <s:String x:Key="visit_on_github">Besøk UltraWinBar på GitHub</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Flere oppgavelinjer</s:String>
+    <s:String x:Key="additional_taskbars_text">Vis en oppgavelinje langs disse kantene. Høyreklikk på en oppgavelinje for å la den fylle hele kanten og skyve de andre til side.</s:String>
+    <s:String x:Key="location_left">Venstre</s:String>
+    <s:String x:Key="location_top">Øverst</s:String>
+    <s:String x:Key="location_right">Høyre</s:String>
+    <s:String x:Key="location_bottom">Nederst</s:String>
+    <s:String x:Key="tray_location_text">_Systemstatusfelt på:</s:String>
+    <s:String x:Key="clock_location_text">_Klokke på:</s:String>
+    <s:String x:Key="start_button_location_text">Sta_rt-knapp på:</s:String>
+    <s:String x:Key="language_location_text">_Språkindikator på:</s:String>
+    <s:String x:Key="task_assignment_hint">Dra en oppgaveknapp til en annen oppgavelinje for å flytte hele programmet. Hold Ctrl mens du drar for bare å flytte vinduet. Høyreklikk på en oppgaveknapp for å tilbakestille tilordningen.</s:String>
+    <s:String x:Key="reset_task_assignments">Tilbakestill alle oppgavelinjetilordninger</s:String>
+    <s:String x:Key="stretch">_Strekk</s:String>
+    <s:String x:Key="make_main">_Gjør til hovedoppgavelinje</s:String>
+    <s:String x:Key="reset_task_assignment">Tilbakestill oppgavelinje_tilordning</s:String>
     <s:String x:Key="taskbar_scale">Oppgavelinjens skala</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">Gjeldende innstilling: {0}%</s:String>
     <s:String x:Key="debug_logging">Aktiver _feilsøkingslogging</s:String>
+    <s:String x:Key="window_activity_logging">Loggfør når vinduer åpnes og lukkes</s:String>
     <s:String x:Key="check_for_updates">Sjekk etter o_ppdateringer</s:String>
     <s:String x:Key="show_exit_menu_item">Vis alternativet «Lukk» i høyreklikkmenyen</s:String>
     <s:String x:Key="show_end_task_button">Vis alternativet «Avslutt oppgave» i høyreklikkmenyen</s:String>
@@ -91,7 +123,12 @@
     <s:String x:Key="hotkey_warning_text">UltraWinBar vil overstyre hurtigtastene i Windows-oppgavelinjen. Selv om UltraWinBar er lukket, vil de ikke bli gjenopprettet i Windows før du logger ut og logger inn igjen.</s:String>
     <s:String x:Key="allow_blur_behind">Tillat _uskarphet bak gjennomsiktig oppgavelinje</s:String>
     <s:String x:Key="ok_dialog">OK</s:String>
-
+    <s:String x:Key="clock_format_help">Vis tilgjengelige formateringsalternativer</s:String>
+    <s:String x:Key="clock_format_warning">Merk: Egendefinert klokkeformat fungerer kanskje ikke som forventet hvis det valgte temaet angir sitt eget format.</s:String>
+    <s:String x:Key="override_clock_format">Egendefinert klokke_format:</s:String>
+    <s:String x:Key="override_ampm_designators">Egendefinerte _betegnelser:</s:String>
+    <s:String x:Key="am_designator">AM:</s:String>
+    <s:String x:Key="pm_designator">PM:</s:String>
     <s:String x:Key="customize_notifications">Tilpass varslinger</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar viser ikoner for aktive og viktige varsler, og skjuler de som er inaktive. Du kan endre denne virkemåten for elementer i listen nedenfor.</s:String>
     <s:String x:Key="customize_notifications_instruction">Velg et element, og velg hva som skal skje ved varsling:</s:String>
@@ -102,13 +139,11 @@
     <s:String x:Key="name_heading">Navn</s:String>
     <s:String x:Key="behavior_heading">Virkemåte</s:String>
     <s:String x:Key="invert_heading">Omvendt</s:String>
-
     <s:String x:Key="start_text">Start</s:String>
     <s:String x:Key="start_text_xp">start</s:String>
     <s:String x:Key="start_button_tip_98">Klikk her når du vil begynne.</s:String>
     <s:String x:Key="start_button_tip">Klikk her når du vil begynne</s:String>
     <s:String x:Key="start_button_tip_vista">Start</s:String>
-
     <s:String x:Key="ultrawinbar_title">UltraWinBar Oppgavelinje</s:String>
     <s:String x:Key="toolbars">_Verktøylinjer</s:String>
     <s:String x:Key="quick_launch">_Hurtigstart</s:String>
@@ -127,15 +162,14 @@
     <s:String x:Key="tray_properties">Egenskaper</s:String>
     <s:String x:Key="update_available">_Oppdatering tilgjengelig...</s:String>
     <s:String x:Key="exit_ultrawinbar">_Avslutt UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">Star_t UltraWinBar på nytt</s:String>
     <s:String x:Key="customize_notifications_menu">_Tilpass varslinger...</s:String>
     <s:String x:Key="lock_taskbar_menu">_Lås oppgavelinjen</s:String>
-
     <s:String x:Key="show_desktop_tip_95">Overflate/Gjenopprett skrivebord</s:String>
     <s:String x:Key="show_desktop_tip">Vis skrivebord</s:String>
     <s:String x:Key="show_desktop_95">_Skrivebord</s:String>
     <s:String x:Key="show_desktop">_Vis skrivebord</s:String>
     <s:String x:Key="peek_at_desktop">_Titt på skrivebordet</s:String>
-
     <s:String x:Key="restore">_Gjenopprett</s:String>
     <s:String x:Key="move">_Flytt</s:String>
     <s:String x:Key="size">_Størrelse</s:String>
@@ -143,12 +177,10 @@
     <s:String x:Key="maximize">Ma_ksimere</s:String>
     <s:String x:Key="close">_Lukk</s:String>
     <s:String x:Key="end_task">_Avslutt oppgave</s:String>
-
     <s:String x:Key="show_hidden">Vis skjulte ikoner</s:String>
     <s:String x:Key="hide">Skjul</s:String>
-
     <s:String x:Key="open_folder">&amp;Åpne mappe</s:String>
-
+    <s:String x:Key="move_to_taskbar_format">Flytt til oppgavelinjen {0}</s:String>
     <s:String x:Key="ime_input_tip_enabled">Høyreklikk for IME-alternativer</s:String>
     <s:String x:Key="ime_input_tip_disabled">IME deaktivert</s:String>
     <s:String x:Key="ime_input_full_shape_hiragana">Hiragana</s:String>
@@ -168,4 +200,102 @@
     <s:String x:Key="ime_conversion_general">Generelt</s:String>
     <s:String x:Key="ime_conversion_none">Ingen konvertering</s:String>
     <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+    <s:String x:Key="pin_to_taskbar">Fest til denne oppgavelinjen</s:String>
+    <s:String x:Key="pinned_app_windows">Åpne vinduer</s:String>
+    <s:String x:Key="unpin_from_taskbar">Løsne fra denne oppgavelinjen</s:String>
+    <s:String x:Key="copy_executable_path">Kopier banen til programfilen</s:String>
+    <s:String x:Key="copy_executable_directory">Kopier mappen til programfilen</s:String>
+    <s:String x:Key="app_all_desktops">Vis denne appens vinduer på alle skrivebord</s:String>
+    <s:String x:Key="move_window_desktop">Flytt dette vinduet til skrivebordet</s:String>
+    <s:String x:Key="move_app_desktop">Flytt alle appens vinduer til skrivebordet</s:String>
+    <s:String x:Key="desktop_number">Skrivebord {0}</s:String>
+    <s:String x:Key="desktop_action_failed">Windows kunne ikke fullføre operasjonen for alle vinduene. Noen vinduer kan allerede være flyttet. Se loggen for detaljer.</s:String>
+    <s:String x:Key="show_hebrew_date">Vis hebraisk dato og nummererte ukedager</s:String>
+    <s:String x:Key="hebrew_date_midnight">Bruker den lokale kalenderdatoen; datoen endres ved midnatt, ikke ved solnedgang.</s:String>
+    <s:String x:Key="hebrew_place">Sted for hebraisk dato:</s:String>
+    <s:String x:Key="hebrew_place_none">ikke valgt</s:String>
+    <s:String x:Key="hebrew_place_choose">Velg...</s:String>
+    <s:String x:Key="hebrew_place_clear">Tøm</s:String>
+    <s:String x:Key="zone_clear">Fjern</s:String>
+    <s:String x:Key="hebrew_place_hint">Stedet der solnedgangen avslutter den hebraiske dagen, og hvis halakiske tider kalenderen viser.</s:String>
+    <s:String x:Key="hebrew_place_title">Sted for hebraisk dato</s:String>
+    <s:String x:Key="hebrew_place_city_tab">By</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">Koordinater</s:String>
+    <s:String x:Key="hebrew_place_search">Bynavn (på engelsk):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">Skriv minst to bokstaver, for eksempel: jerus, new york, paris texas. Byer med minst 10 000 innbyggere vises.</s:String>
+    <s:String x:Key="hebrew_place_country">Land:</s:String>
+    <s:String x:Key="hebrew_place_need_country">Velg landet: Det avgjør hvilket av de to tallene som er breddegrad.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">Breddegrad og lengdegrad:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">Alle disse formatene fungerer: 32.0853, 34.7818 eller 34,7818 32,0853 eller 32°05'07&quot;N 34°46'54&quot;E. Punktum eller komma i desimaldelen; komma, kolon eller mellomrom mellom tallene.</s:String>
+    <s:String x:Key="hebrew_place_zone">Tidssone:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">Velges sammen med byen; endre den hvis den er feil. Windows bestemmer reglene for tidssonen (sommertid og endringer i den).</s:String>
+    <s:String x:Key="calendar_title">Jødisk kalender</s:String>
+    <s:String x:Key="calendar_today">I dag</s:String>
+    <s:String x:Key="calendar_copy_name">Kopier navnet</s:String>
+    <s:String x:Key="calendar_search_name">Søk etter navnet på Google</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Hebraisk måned</s:String>
+    <s:String x:Key="calendar_grid_civil">Borgerlig måned</s:String>
+    <s:String x:Key="calendar_shabbat">Shabbat</s:String>
+    <s:String x:Key="calendar_previous_month">Forrige måned</s:String>
+    <s:String x:Key="calendar_next_month">Neste måned</s:String>
+    <s:String x:Key="calendar_settings">Innstillinger...</s:String>
+    <s:String x:Key="calendar_close">Lukk</s:String>
+    <s:String x:Key="calendar_portion">Ukens parsja: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">Denne shabbaten leses en høytidstekst</s:String>
+    <s:String x:Key="calendar_day_of">{0}, dag {1} i {2}</s:String>
+    <s:String x:Key="calendar_molad">Molad for {0}: {1}, {2} og {3} chalakim</s:String>
+    <s:String x:Key="calendar_omer">Omer-telling</s:String>
+    <s:String x:Key="calendar_omer_day">Dag {0} av Omer</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} uke(r) og {1} dag(er)</s:String>
+    <s:String x:Key="calendar_place">Sted: {0}</s:String>
+    <s:String x:Key="calendar_israel">Israels land</s:String>
+    <s:String x:Key="calendar_diaspora">diaspora</s:String>
+    <s:String x:Key="calendar_no_place">Velg et sted i kalenderinnstillingene for å se dagens tider.</s:String>
+    <s:String x:Key="calendar_times">Dagens tider</s:String>
+    <s:String x:Key="calendar_yahrzeits">Jahrzeiter</s:String>
+    <s:String x:Key="calendar_candles_after_dark">Lystenning (etter mørkets frembrudd)</s:String>
+    <s:String x:Key="calendar_havdalah">Hviledagens slutt (havdalah)</s:String>
+    <s:String x:Key="calendar_rest_begins">Begynner: {0} (lystenning)</s:String>
+    <s:String x:Key="calendar_rest_ends">Slutter: {0} (mørkets frembrudd)</s:String>
+    <s:String x:Key="calendar_settings_title">Kalenderinnstillinger</s:String>
+    <s:String x:Key="calendar_settings_place">Sted for tidssonen:</s:String>
+    <s:String x:Key="calendar_settings_zone">Tidssone for datoen, døgnskiftet og dagens tider:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (datamaskinens)</s:String>
+    <s:String x:Key="zones_heading">Klokkens tidssoner</s:String>
+    <s:String x:Key="zone_main">Hovedtidssone:</s:String>
+    <s:String x:Key="zone_second">Andre tidssone:</s:String>
+    <s:String x:Key="zone_third">Tredje tidssone:</s:String>
+    <s:String x:Key="zone_show_name">Vis navnet</s:String>
+    <s:String x:Key="zone_label">Navn på klokken</s:String>
+    <s:String x:Key="zone_label_hint">Et navn klokken viser for denne tidssonen i stedet for stedet (for eksempel Heart for Jerusalem). Et tomt felt beholder stedet.</s:String>
+    <s:String x:Key="zone_place">Sted:</s:String>
+    <s:String x:Key="zones_tab">Tidssoner</s:String>
+    <s:String x:Key="hebrew_date_tab">Hebraisk dato</s:String>
+    <s:String x:Key="zone_computer">Datamaskinens ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">Den hebraiske datoen gjelder stedet for hovedtidssonen, valgt under fanen Tidssoner.</s:String>
+    <s:String x:Key="zone_none">(vises ikke)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">Jahrzeiter som skal vises (alle, etter kategori, én etter én):</s:String>
+    <s:String x:Key="calendar_all_figures">Alle</s:String>
+    <s:String x:Key="cancel_dialog">Avbryt</s:String>
+    <s:String x:Key="coordinate_result">Breddegrad og lengdegrad: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">Rekkefølgen er som angitt i teksten.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">Bare én rekkefølge passer: breddegrad er høyst 90 grader.</s:String>
+    <s:String x:Key="coordinate_basis_country">Rekkefølgen fastsettes ut fra landet: Den andre plasseringen er langt unna.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">Breddegrad først er lagt til grunn.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">Breddegrad først er lagt til grunn; lengdegrad først ville passet omtrent like godt med landet.</s:String>
+    <s:String x:Key="coordinate_warning_far">Punktet ligger {0:N0} km fra nærmeste by i landet. Kontroller landet og tallene.</s:String>
+    <s:String x:Key="coordinate_problem_empty">Skriv inn koordinatene.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">Det trengs to tall: breddegraden og lengdegraden.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">Mer enn to tall. Skriv bare inn breddegrad og lengdegrad.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">Begge tallene er angitt som breddegrad.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">Begge tallene er angitt som lengdegrad.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">Breddegraden må være mellom -90 og 90 grader.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">Lengdegraden må være mellom -180 og 180 grader.</s:String>
+    <s:String x:Key="coordinate_problem_neither">Ingen av rekkefølgene gir en breddegrad (høyst 90) og en lengdegrad (høyst 180).</s:String>
+    <s:String x:Key="open_system_settings">Åpne Systeminnstillinger</s:String>
+    <s:String x:Key="open_computer_management">Datamaskinbehandling</s:String>
+    <s:String x:Key="open_drives">Åpne stasjoner</s:String>
+    <s:String x:Key="this_pc">Denne PC-en</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">Prøv å beholde åpne vinduer på dette skrivebordet (eksperimentelt)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Bruk vinduer som vises på alle skrivebord, uten å flytte dem. Ellers åpnes nettlesere, Explorer-mapper og Notepad++ lokalt fra skrivebordsikoner og festede snarveier; andre programmer og aktivering fra systemstatusfeltet beholder overføring av vinduer.</s:String>
 </ResourceDictionary>

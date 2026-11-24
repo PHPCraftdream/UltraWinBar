@@ -7,11 +7,23 @@
     <s:String x:Key="advanced_tab">ขั้นสูง</s:String>
     <s:String x:Key="taskbar_appearance">ลักษณะของแถบงาน</s:String>
     <s:String x:Key="notification_area">พื้นที่แจ้งเตือน</s:String>
+    <s:String x:Key="general_heading">ทั่วไป</s:String>
+    <s:String x:Key="clock_heading">นาฬิกา</s:String>
     <s:String x:Key="autostart">เริ่มทำงานอัตโนมัติเมื่อ_เข้าระบบ</s:String>
     <s:String x:Key="language_text">_ภาษา:</s:String>
     <s:String x:Key="language_tip">เลือกภาษาที่จะใช้</s:String>
     <s:String x:Key="theme_text">ชุด_รูปแบบ:</s:String>
     <s:String x:Key="theme_tip">ติดตั้งชุดรูปแบบในโฟลเดอร์ Themes</s:String>
+    <s:String x:Key="accent_text">_สีเน้น:</s:String>
+    <s:String x:Key="accent_tip">สีเรืองแสงของชุดรูปแบบ Modern Glass</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>ฟ้าอมเขียว</s:String>
+        <s:String>ม่วง</s:String>
+        <s:String>บานเย็น</s:String>
+        <s:String>เขียวมรกต</s:String>
+        <s:String>อำพัน</s:String>
+        <s:String>กุหลาบ</s:String>
+    </x:Array>
     <s:String x:Key="location_text">_ตำแหน่ง:</s:String>
     <s:String x:Key="location_tip">เปลี่ยนตำแหน่งของแถบงานบนหน้าจอ</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -20,15 +32,21 @@
         <s:String>ขวา</s:String>
         <s:String>ล่าง</s:String>
     </x:Array>
+    <s:String x:Key="rowcount_text">จำนวน_แถว:</s:String>
+    <s:String x:Key="rowcount_tip">จำนวนแถวบนแถบงานเมื่อวางไว้ด้านบนหรือด้านล่าง</s:String>
+    <s:String x:Key="taskbar_width">ความ_กว้างแถบงาน:</s:String>
     <s:String x:Key="allow_font_smoothing">_ใช้การปรับตัวอักษรให้คมชัด</s:String>
     <s:String x:Key="allow_font_smoothing_menu">_ใช้การปรับตัวอักษรให้คมชัดในเมนู</s:String>
     <s:String x:Key="collapse_tray_icons">ยุบไอคอนใน_พื้นที่แจ้งเตือน</s:String>
     <s:String x:Key="customize">_ปรับแต่ง...</s:String>
+    <s:String x:Key="show_input_language">แสดง_ภาษาอินพุต</s:String>
     <s:String x:Key="show_clock">แสดง_นาฬิกา</s:String>
     <s:String x:Key="show_multi_mon">แสดงบนจอภาพ_หลายจอ</s:String>
+    <s:String x:Key="show_start_button_multi_mon">แสดงปุ่ม_เริ่มบนแถบงานทั้งหมด</s:String>
     <s:String x:Key="show_quick_launch">แสดงการเปิดใช้งาน_ด่วน</s:String>
     <s:String x:Key="select_location">เ_ลือกตำแหน่ง...</s:String>
     <s:String x:Key="quick_launch_folder">การเปิดใช้งานด่วน - เลือกโฟลเดอร์</s:String>
+    <s:String x:Key="show_badges">แสดง_ป้าย</s:String>
     <s:String x:Key="show_window_previews">แสดงภาพ_ตัวอย่าง (ภาพย่อ) ของหน้าต่าง</s:String>
     <s:String x:Key="use_software_rendering">ใ_ช้การเรนเดอร์ด้วยซอฟต์แวร์</s:String>
     <s:String x:Key="add_show_desktop_button">เพิ่มปุ่ม แ_สดงเดสก์ท็อป</s:String>
@@ -41,28 +59,88 @@
         <s:String>แถบงานเดียวกับหน้าต่าง</s:String>
         <s:String>แถบงานเดียวกับหน้าต่างและแถบงานหลัก</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_กลับสีระดับเทา:</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>เมื่อชุดรูปแบบต้องการ</s:String>
         <s:String>เสมอ</s:String>
         <s:String>ไม่ต้อง</s:String>
     </x:Array>
+    <s:String x:Key="middle_mouse_task_action">การคลิก_ปุ่มกลาง:</s:String>
+    <x:Array x:Key="middle_mouse_task_action_values" Type="s:String">
+        <s:String>ไม่ทำอะไร</s:String>
+        <s:String>เปิดอินสแตนซ์ใหม่</s:String>
+        <s:String>ปิดงาน</s:String>
+    </x:Array>
+    <s:String x:Key="clock_click_action">การคลิก_นาฬิกา:</s:String>
+    <x:Array x:Key="clock_click_action_values" Type="s:String">
+        <s:String>ไม่ทำอะไร</s:String>
+        <s:String>เปิดปฏิทิน Aero</s:String>
+        <s:String>เปิดปฏิทิน Modern</s:String>
+        <s:String>เปิดศูนย์การแจ้งเตือน</s:String>
+    </x:Array>
+    <s:String x:Key="task_wheel_action">การเลื่อน_ล้อเมาส์:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>ไม่ทำอะไร</s:String>
+        <s:String>แสดง/ซ่อนหน้าต่าง</s:String>
+    </x:Array>
+    <s:String x:Key="auto_hide_transparent">ซ่อนเส้น_แถบงานเมื่อซ่อนด้วยการซ่อนอัตโนมัติ</s:String>
     <s:String x:Key="version">เวอร์ชัน {0}</s:String>
     <s:String x:Key="visit_on_github">เยี่ยมชม UltraWinBar บน GitHub</s:String>
+    <s:String x:Key="multiple_taskbars_heading">แถบงานหลายแถบ</s:String>
+    <s:String x:Key="additional_taskbars_text">แสดงแถบงานที่ขอบเหล่านี้ คลิกขวาที่แถบงานเพื่อขยายให้เต็มขอบและดันแถบอื่นออกไป</s:String>
+    <s:String x:Key="location_left">ซ้าย</s:String>
+    <s:String x:Key="location_top">บน</s:String>
+    <s:String x:Key="location_right">ขวา</s:String>
+    <s:String x:Key="location_bottom">ล่าง</s:String>
+    <s:String x:Key="tray_location_text">_พื้นที่แจ้งเตือนอยู่ที่:</s:String>
+    <s:String x:Key="clock_location_text">_นาฬิกาอยู่ที่:</s:String>
+    <s:String x:Key="start_button_location_text">ปุ่มเ_ริ่มอยู่ที่:</s:String>
+    <s:String x:Key="language_location_text">ตัวบ่งชี้_ภาษาอยู่ที่:</s:String>
+    <s:String x:Key="task_assignment_hint">ลากปุ่มงานไปยังแถบงานอื่นเพื่อย้ายทั้งแอปพลิเคชัน กด Ctrl ค้างไว้ขณะลากเพื่อย้ายเฉพาะหน้าต่างนั้น คลิกขวาที่ปุ่มงานเพื่อรีเซ็ตการกำหนดแถบงาน</s:String>
+    <s:String x:Key="reset_task_assignments">รีเซ็ตการกำหนดแถบงานทั้งหมด</s:String>
+    <s:String x:Key="stretch">_ขยายเต็ม</s:String>
+    <s:String x:Key="make_main">_ตั้งเป็นหลัก</s:String>
+    <s:String x:Key="reset_task_assignment">รีเซ็ตการกำหนดแถบงาน</s:String>
     <s:String x:Key="taskbar_scale">สัดส่วนของแถบงาน</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">ค่าปัจจุบัน: {0}%</s:String>
     <s:String x:Key="debug_logging">เปิดใช้การบันทึกการแก้จุดบกพร่อง</s:String>
+    <s:String x:Key="window_activity_logging">บันทึกการเปิดและปิดหน้าต่าง</s:String>
+    <s:String x:Key="check_for_updates">ตรวจหา_อัปเดต</s:String>
+    <s:String x:Key="show_exit_menu_item">แสดงตัวเลือก_ออกในเมนูคลิกขวา</s:String>
+    <s:String x:Key="show_end_task_button">แสดงตัวเลือก_สิ้นสุดงานในเมนูคลิกขวา</s:String>
+    <s:String x:Key="slide_taskbar_buttons">เ_ลื่อนปุ่มแถบงาน</s:String>
+    <s:String x:Key="show_clock_seconds">แ_สดงวินาทีในนาฬิกา</s:String>
+    <s:String x:Key="open_custom_themes_folder">เปิดโฟลเดอร์ชุดรูปแบบแบบกำหนดเอง</s:String>
+    <s:String x:Key="win_num_hotkeys_action">การทำงานของ_ปุ่มลัด Win+[0-9]:</s:String>
+    <x:Array x:Key="win_num_hotkeys_action_values" Type="s:String">
+        <s:String>ค่าเริ่มต้นของ Windows</s:String>
+        <s:String>สลับงาน</s:String>
+        <s:String>เปิดรายการการเปิดใช้งานด่วน</s:String>
+    </x:Array>
+    <s:String x:Key="hotkey_warning_title">ปุ่มลัด UltraWinBar</s:String>
+    <s:String x:Key="hotkey_warning_text">UltraWinBar จะใช้ปุ่มลัดของแถบงาน Windows แทน แม้ปิด UltraWinBar แล้ว ปุ่มลัดจะไม่กลับไปใช้กับ Windows จนกว่าคุณจะออกจากระบบแล้วเข้าสู่ระบบอีกครั้ง</s:String>
+    <s:String x:Key="allow_blur_behind">อนุญาตให้_เบลอด้านหลังแถบงานโปร่งใส</s:String>
     <s:String x:Key="ok_dialog">ตกลง</s:String>
 
+    <s:String x:Key="clock_format_help">ดูตัวเลือกการจัดรูปแบบที่ใช้ได้</s:String>
+    <s:String x:Key="clock_format_warning">หมายเหตุ: การจัดรูปแบบนาฬิกาแบบกำหนดเองอาจไม่ทำงานตามที่คาด หากชุดรูปแบบที่เลือกกำหนดรูปแบบของตนเอง</s:String>
+    <s:String x:Key="override_clock_format">_รูปแบบนาฬิกาแบบกำหนดเอง:</s:String>
+    <s:String x:Key="override_ampm_designators">_คำระบุช่วงเวลาแบบกำหนดเอง:</s:String>
+    <s:String x:Key="am_designator">ก่อนเที่ยง:</s:String>
+    <s:String x:Key="pm_designator">หลังเที่ยง:</s:String>
     <s:String x:Key="customize_notifications">ปรับแต่งการแจ้งเตือน</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar จะแสดงไอคอนสำหรับการแจ้งเตือนที่เรียกใช้อยู่และการแจ้งเตือนแบบเร่งด่วน และซ่อนไอคอนที่ไม่ได้เรียกใช้ คุณสามารถเปลี่ยนลักษณะการทำงานนี้สำหรับรายการด้านล่าง</s:String>
     <s:String x:Key="customize_notifications_instruction">เลือกรายการ จากนั้นเลือกลักษณะการทำงานการแจ้งเตือนของรายการ:</s:String>
     <s:String x:Key="hide_when_inactive">ซ่อนเมื่อไม่ใช้งาน</s:String>
     <s:String x:Key="always_show">แสดงเสมอ</s:String>
+    <s:String x:Key="always_hide">ซ่อนเสมอ</s:String>
+    <s:String x:Key="remove">เอาออก</s:String>
     <s:String x:Key="name_heading">ชื่อ</s:String>
     <s:String x:Key="behavior_heading">ลักษณะการทำงาน</s:String>
 
+    <s:String x:Key="invert_heading">กลับด้าน</s:String>
     <s:String x:Key="start_text">เริ่ม</s:String>
     <s:String x:Key="start_text_xp">เริ่ม</s:String>
     <s:String x:Key="start_button_tip_98">คลิกที่นี่เพื่อเริ่มต้น</s:String>
@@ -87,6 +165,7 @@
     <s:String x:Key="tray_properties">คุณ_สมบัติ</s:String>
     <s:String x:Key="update_available">_มีอัปเดต...</s:String>
     <s:String x:Key="exit_ultrawinbar">_ออกจาก UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">เ_ริ่ม UltraWinBar ใหม่</s:String>
     <s:String x:Key="customize_notifications_menu">ป_รับแต่งการแจ้งเตือน...</s:String>
     <s:String x:Key="lock_taskbar_menu">_ล็อกแถบงาน</s:String>
 
@@ -103,10 +182,129 @@
     <s:String x:Key="maximize">ขย_ายใหญ่สุด</s:String>
     <s:String x:Key="close">_ปิด</s:String>
 
+    <s:String x:Key="end_task">_สิ้นสุดงาน</s:String>
     <s:String x:Key="show_hidden">แสดงไอคอนที่ซ่อน</s:String>
     <s:String x:Key="hide">ซ่อน</s:String>
 
     <s:String x:Key="open_folder">&amp;เปิดโฟลเดอร์</s:String>
 
+    <s:String x:Key="move_to_taskbar_format">ย้ายไปยังแถบงาน {0}</s:String>
+    <s:String x:Key="ime_input_tip_enabled">คลิกขวาเพื่อเปิดตัวเลือก IME</s:String>
+    <s:String x:Key="ime_input_tip_disabled">ปิดใช้ IME</s:String>
+    <s:String x:Key="ime_input_full_shape_hiragana">_ฮิรางานะ</s:String>
+    <s:String x:Key="ime_input_full_shape_katakana">_คาตาคานะแบบเต็มความกว้าง</s:String>
+    <s:String x:Key="ime_input_full_shape_alphanumeric">อักขระตัวเลขและตัวอักษรแบบเต็ม_ความกว้าง</s:String>
+    <s:String x:Key="ime_input_katakana">คาตาคานะแบบครึ่งความก_ว้าง</s:String>
+    <s:String x:Key="ime_input_alphanumeric">อักขระตัวเลขและตัวอักษรแบบครึ่_งความกว้าง</s:String>
+    <s:String x:Key="ime_input_direct">_ป้อนข้อมูลโดยตรง</s:String>
+    <s:String x:Key="ime_open_pad">_แป้น IME</s:String>
+    <s:String x:Key="ime_open_add_word_dictionary">เพิ่ม_คำ</s:String>
+    <s:String x:Key="ime_open_dictionary_tool">_เครื่องมือพจนานุกรมผู้ใช้</s:String>
+    <s:String x:Key="ime_open_properties">_คุณสมบัติ</s:String>
+    <s:String x:Key="ime_input_key">_วิธีป้อนข้อมูล</s:String>
+    <s:String x:Key="ime_input_key_roma">_ป้อนอักษรโรมาจิ</s:String>
+    <s:String x:Key="ime_input_key_kana">ป้อนคานะ_</s:String>
+    <s:String x:Key="ime_conversion">โหมด_การแปลง</s:String>
+    <s:String x:Key="ime_conversion_general">_ทั่วไป</s:String>
+    <s:String x:Key="ime_conversion_none">_ไม่แปลง</s:String>
+    <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+    <s:String x:Key="pin_to_taskbar">ปักหมุดไว้ที่แถบงานนี้</s:String>
+    <s:String x:Key="pinned_app_windows">หน้าต่างที่เปิดอยู่</s:String>
+    <s:String x:Key="unpin_from_taskbar">เลิกปักหมุดจากแถบงานนี้</s:String>
+    <s:String x:Key="copy_executable_path">คัดลอกพาธไฟล์ปฏิบัติการ</s:String>
+    <s:String x:Key="copy_executable_directory">คัดลอกโฟลเดอร์ไฟล์ปฏิบัติการ</s:String>
     <FontFamily x:Key="start_text_xp_font_family">Tahoma</FontFamily>
+    <s:String x:Key="app_all_desktops">แสดงหน้าต่างของแอปพลิเคชันนี้บนเดสก์ท็อปทั้งหมด</s:String>
+    <s:String x:Key="move_window_desktop">ย้ายหน้าต่างนี้ไปยังเดสก์ท็อป</s:String>
+    <s:String x:Key="move_app_desktop">ย้ายหน้าต่างทั้งหมดของแอปพลิเคชันไปยังเดสก์ท็อป</s:String>
+    <s:String x:Key="desktop_number">เดสก์ท็อป {0}</s:String>
+    <s:String x:Key="desktop_action_failed">Windows ไม่สามารถดำเนินการให้เสร็จสิ้นกับหน้าต่างทั้งหมดได้ หน้าต่างบางบานอาจถูกย้ายไปแล้ว ดูรายละเอียดในบันทึก</s:String>
+    <s:String x:Key="show_hebrew_date">แสดงวันที่ฮิบรูและวันในสัปดาห์แบบระบุตัวเลข</s:String>
+    <s:String x:Key="hebrew_date_midnight">ใช้วันที่ตามปฏิทินท้องถิ่น โดยเปลี่ยนวันตอนเที่ยงคืน ไม่ใช่ตอนพระอาทิตย์ตก</s:String>
+    <s:String x:Key="hebrew_place">สถานที่สำหรับวันที่ฮิบรู:</s:String>
+    <s:String x:Key="hebrew_place_none">ยังไม่ได้เลือก</s:String>
+    <s:String x:Key="hebrew_place_choose">เลือก...</s:String>
+    <s:String x:Key="hebrew_place_clear">ล้าง</s:String>
+    <s:String x:Key="zone_clear">เอาออก</s:String>
+    <s:String x:Key="hebrew_place_hint">สถานที่ซึ่งพระอาทิตย์ตกเป็นจุดสิ้นสุดของวันฮิบรู และใช้เวลาตามฮาลาคาที่ปฏิทินแสดง</s:String>
+    <s:String x:Key="hebrew_place_title">สถานที่สำหรับวันที่ฮิบรู</s:String>
+    <s:String x:Key="hebrew_place_city_tab">เมือง</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">พิกัด</s:String>
+    <s:String x:Key="hebrew_place_search">ชื่อเมือง (ภาษาอังกฤษ):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">พิมพ์อย่างน้อยสองตัวอักษร เช่น jerus, new york, paris texas รายชื่อจะแสดงเมืองที่มีประชากรตั้งแต่ 10 000 คนขึ้นไป</s:String>
+    <s:String x:Key="hebrew_place_country">ประเทศ:</s:String>
+    <s:String x:Key="hebrew_place_need_country">เลือกประเทศ เพื่อระบุว่าตัวเลขใดเป็นละติจูด</s:String>
+    <s:String x:Key="hebrew_place_coordinates">ละติจูดและลองจิจูด:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">ใส่รูปแบบใดก็ได้: 32.0853, 34.7818 หรือ 34,7818 32,0853 หรือ 32°05'07&quot;N 34°46'54&quot;E ใช้จุดหรือจุลภาคคั่นเศษส่วน และใช้จุลภาค ทวิภาค หรือเว้นวรรคคั่นตัวเลข</s:String>
+    <s:String x:Key="hebrew_place_zone">เขตเวลา:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">เลือกตามเมือง เปลี่ยนได้หากไม่ถูกต้อง กฎของเขตเวลา (เวลาออมแสงและการเปลี่ยนแปลง) เป็นไปตามที่ Windows มี</s:String>
+    <s:String x:Key="calendar_title">ปฏิทินยิว</s:String>
+    <s:String x:Key="calendar_today">วันนี้</s:String>
+    <s:String x:Key="calendar_copy_name">คัดลอกชื่อ</s:String>
+    <s:String x:Key="calendar_search_name">ค้นหาชื่อนี้ใน Google</s:String>
+    <s:String x:Key="calendar_grid_hebrew">เดือนฮิบรู</s:String>
+    <s:String x:Key="calendar_grid_civil">เดือนปฏิทินสากล</s:String>
+    <s:String x:Key="calendar_shabbat">ชาบัต</s:String>
+    <s:String x:Key="calendar_previous_month">เดือนก่อนหน้า</s:String>
+    <s:String x:Key="calendar_next_month">เดือนถัดไป</s:String>
+    <s:String x:Key="calendar_settings">การตั้งค่า...</s:String>
+    <s:String x:Key="calendar_close">ปิด</s:String>
+    <s:String x:Key="calendar_portion">ตอนโทราห์ประจำสัปดาห์: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">มีการอ่านบทสำหรับเทศกาลในชาบัตนี้</s:String>
+    <s:String x:Key="calendar_day_of">{0} วันที่ {1} ของ {2}</s:String>
+    <s:String x:Key="calendar_molad">โมลาดของ {0}: {1}, {2} และ {3} ชาลาคิม</s:String>
+    <s:String x:Key="calendar_omer">การนับโอเมอร์</s:String>
+    <s:String x:Key="calendar_omer_day">วันที่ {0} ของโอเมอร์</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} สัปดาห์ และ {1} วัน</s:String>
+    <s:String x:Key="calendar_place">สถานที่: {0}</s:String>
+    <s:String x:Key="calendar_israel">ดินแดนอิสราเอล</s:String>
+    <s:String x:Key="calendar_diaspora">ดินแดนนอกอิสราเอล</s:String>
+    <s:String x:Key="calendar_no_place">เลือกสถานที่ในการตั้งค่าปฏิทินเพื่อดูเวลาประจำวัน</s:String>
+    <s:String x:Key="calendar_times">เวลาประจำวัน</s:String>
+    <s:String x:Key="calendar_yahrzeits">วันยาห์รไซต์</s:String>
+    <s:String x:Key="calendar_candles_after_dark">จุดเทียน (หลังพลบค่ำ)</s:String>
+    <s:String x:Key="calendar_havdalah">สิ้นสุดวันพักผ่อน (ฮาฟดาลาห์)</s:String>
+    <s:String x:Key="calendar_rest_begins">เริ่ม: {0} (จุดเทียน)</s:String>
+    <s:String x:Key="calendar_rest_ends">สิ้นสุด: {0} (พลบค่ำ)</s:String>
+    <s:String x:Key="calendar_settings_title">การตั้งค่าปฏิทิน</s:String>
+    <s:String x:Key="calendar_settings_place">สถานที่ของเขตเวลา:</s:String>
+    <s:String x:Key="calendar_settings_zone">เขตเวลาสำหรับวันที่ การเปลี่ยนวัน และเวลาประจำวัน:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (ของคอมพิวเตอร์)</s:String>
+    <s:String x:Key="zones_heading">เขตเวลาของนาฬิกา</s:String>
+    <s:String x:Key="zone_main">เขตเวลาหลัก:</s:String>
+    <s:String x:Key="zone_second">เขตเวลาที่สอง:</s:String>
+    <s:String x:Key="zone_third">เขตเวลาที่สาม:</s:String>
+    <s:String x:Key="zone_show_name">แสดงชื่อ</s:String>
+    <s:String x:Key="zone_label">ชื่อที่แสดงบนนาฬิกา:</s:String>
+    <s:String x:Key="zone_label_hint">ชื่อที่นาฬิกาจะแสดงแทนชื่อสถานที่ของเขตนี้ (เช่น Heart แทน Jerusalem) หากเว้นว่าง จะแสดงชื่อสถานที่</s:String>
+    <s:String x:Key="zone_place">สถานที่:</s:String>
+    <s:String x:Key="zones_tab">เขตเวลา</s:String>
+    <s:String x:Key="hebrew_date_tab">วันที่ฮิบรู</s:String>
+    <s:String x:Key="zone_computer">ของคอมพิวเตอร์ ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">วันที่ฮิบรูจะอิงตามสถานที่ของเขตเวลาหลัก ซึ่งเลือกได้ในแท็บเขตเวลา</s:String>
+    <s:String x:Key="zone_none">(ไม่แสดง)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">วันยาห์รไซต์ที่จะแสดง (ทั้งหมด แยกตามหมวดหมู่ หรือเลือกทีละรายการ):</s:String>
+    <s:String x:Key="calendar_all_figures">ทั้งหมด</s:String>
+    <s:String x:Key="cancel_dialog">ยกเลิก</s:String>
+    <s:String x:Key="coordinate_result">ละติจูดและลองจิจูด: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">ลำดับเป็นไปตามที่ระบุไว้ในข้อความ</s:String>
+    <s:String x:Key="coordinate_basis_only_one">มีลำดับที่เป็นไปได้เพียงแบบเดียว: ละติจูดมีค่าได้ถึง 90 องศา</s:String>
+    <s:String x:Key="coordinate_basis_country">ใช้ประเทศเป็นตัวกำหนดลำดับ เพราะอีกลำดับหนึ่งทำให้จุดอยู่ห่างจากประเทศมาก</s:String>
+    <s:String x:Key="coordinate_basis_assumed">สมมติว่าละติจูดอยู่ก่อน</s:String>
+    <s:String x:Key="coordinate_warning_assumed">สมมติว่าละติจูดอยู่ก่อน แต่หากลองจิจูดอยู่ก่อนก็จะสอดคล้องกับประเทศได้ใกล้เคียงกัน</s:String>
+    <s:String x:Key="coordinate_warning_far">จุดนี้อยู่ห่างจากเมืองที่ใกล้ที่สุดในประเทศ {0:N0} กม. ตรวจสอบประเทศและตัวเลข</s:String>
+    <s:String x:Key="coordinate_problem_empty">ป้อนพิกัด</s:String>
+    <s:String x:Key="coordinate_problem_need_two">ต้องระบุตัวเลขสองค่า ได้แก่ ละติจูดและลองจิจูด</s:String>
+    <s:String x:Key="coordinate_problem_too_many">มีตัวเลขมากกว่าสองค่า โปรดป้อนเฉพาะละติจูดและลองจิจูด</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">ตัวเลขทั้งสองค่าถูกระบุเป็นละติจูด</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">ตัวเลขทั้งสองค่าถูกระบุเป็นลองจิจูด</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">ละติจูดต้องอยู่ระหว่าง -90 ถึง 90 องศา</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">ลองจิจูดต้องอยู่ระหว่าง -180 ถึง 180 องศา</s:String>
+    <s:String x:Key="coordinate_problem_neither">ไม่ว่าจัดลำดับแบบใด ตัวเลขเหล่านี้ก็ไม่สามารถเป็นละติจูด (ไม่เกิน 90) และลองจิจูด (ไม่เกิน 180) ได้</s:String>
+    <s:String x:Key="open_system_settings">เปิดการตั้งค่าระบบ</s:String>
+    <s:String x:Key="open_computer_management">การจัดการคอมพิวเตอร์</s:String>
+    <s:String x:Key="open_drives">เปิดไดรฟ์</s:String>
+    <s:String x:Key="this_pc">พีซีเครื่องนี้</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">พยายามคงหน้าต่างที่เปิดไว้บนเดสก์ท็อปนี้ (ทดลอง)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">ใช้หน้าต่างที่แสดงบนเดสก์ท็อปทั้งหมดซ้ำโดยไม่ย้ายหน้าต่าง มิฉะนั้น ไอคอนเดสก์ท็อปและตัวเรียกใช้ที่ปักหมุดจะเปิดเบราว์เซอร์ โฟลเดอร์ Explorer และ Notepad++ ไว้ในเครื่อง ส่วนแอปพลิเคชันอื่นและการเรียกใช้จากพื้นที่แจ้งเตือนยังคงโอนย้ายหน้าต่างตามเดิม</s:String>
 </ResourceDictionary>

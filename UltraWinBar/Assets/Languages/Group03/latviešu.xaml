@@ -7,11 +7,23 @@
     <s:String x:Key="advanced_tab">Papildu</s:String>
     <s:String x:Key="taskbar_appearance">Uzdevumjoslas izskats</s:String>
     <s:String x:Key="notification_area">Paziņojumu zona</s:String>
+    <s:String x:Key="general_heading">Vispārīgi</s:String>
+    <s:String x:Key="clock_heading">Pulkstenis</s:String>
     <s:String x:Key="autostart">Automātiski sākt ar pieteikšanos</s:String>
     <s:String x:Key="language_text">Latviski:</s:String>
     <s:String x:Key="language_tip">Izvēlieties lietojamo valodu.</s:String>
     <s:String x:Key="theme_text">_Tēma:</s:String>
     <s:String x:Key="theme_tip">Instalējiet motīvus mapē Motīvi.</s:String>
+    <s:String x:Key="accent_text">Akcenta _krāsa:</s:String>
+    <s:String x:Key="accent_tip">Modern Glass motīva neona krāsa.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>Ciāna</s:String>
+        <s:String>Violeta</s:String>
+        <s:String>Fuksīna</s:String>
+        <s:String>Smaragda</s:String>
+        <s:String>Dzintara</s:String>
+        <s:String>Rozā</s:String>
+    </x:Array>
     <s:String x:Key="location_text">Atrašanās vieta:</s:String>
     <s:String x:Key="location_tip">Mainiet uzdevumjoslas atrašanās vietu ekrānā.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -20,19 +32,26 @@
         <s:String>Pa labi</s:String>
         <s:String>Apakšā</s:String>
     </x:Array>
+    <s:String x:Key="rowcount_text">_Rindu skaits:</s:String>
+    <s:String x:Key="rowcount_tip">Uzdevumjoslas rindu skaits, ja tā atrodas augšā vai apakšā.</s:String>
+    <s:String x:Key="taskbar_width">Uzdevumjoslas pla_tums:</s:String>
     <s:String x:Key="allow_font_smoothing">_Atļaut fontu izlīdzināšanu</s:String>
     <s:String x:Key="allow_font_smoothing_menu">_Atļaut fontu izlīdzināšanu izvēlnēs</s:String>
     <s:String x:Key="collapse_tray_icons">Sakļaut pazi_ņojumu apgabala ikonas</s:String>
     <s:String x:Key="customize">_Pielāgot...</s:String>
+    <s:String x:Key="show_input_language">Rādīt ievades va_lodu</s:String>
     <s:String x:Key="show_clock">Parādiet pul_ksteni</s:String>
     <s:String x:Key="show_multi_mon">Rādīt vai_rākos displejos</s:String>
+    <s:String x:Key="show_start_button_multi_mon">Rādīt pogu _Sākt visās uzdevumjoslās</s:String>
     <s:String x:Key="show_quick_launch">Rādīt _Ātrā palaišana</s:String>
     <s:String x:Key="select_location">_Izvēlieties atrašanās vietu...</s:String>
     <s:String x:Key="quick_launch_folder">Ātrā palaišana — izvēlieties mapi</s:String>
+    <s:String x:Key="show_badges">Rādīt _emblēmas</s:String>
     <s:String x:Key="show_window_previews">Rādīt lo_gu priekšskatījumus (sīktēlus)</s:String>
     <s:String x:Key="use_software_rendering">_Izmantojiet programmatūras renderēšanu</s:String>
     <s:String x:Key="add_show_desktop_button">Pievienojiet pogu Rādīt _Darbvirsmu</s:String>
     <s:String x:Key="enable_auto_hide">A_utomātiski paslēpt uzdevumjoslu</s:String>
+    <s:String x:Key="lock_taskbar">_Bloķēt uzdevumjoslu</s:String>
     <s:String x:Key="multiple_displays">Vairāki displeji</s:String>
     <s:String x:Key="show_tasks_on">R_ādīt uzdevumus ieslēgts:</s:String>
     <x:Array x:Key="show_tasks_on_values" Type="s:String">
@@ -40,29 +59,91 @@
         <s:String>Tāda pati uzdevumjosla kā logs</s:String>
         <s:String>Tāda pati uzdevumjosla kā logs un primārā uzdevumjosla</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_Invertēt pelēktoņu krāsas:</s:String>
+    <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
+        <s:String>Ja to pieprasa motīvs</s:String>
+        <s:String>Vienmēr</s:String>
+        <s:String>Nekad</s:String>
+    </x:Array>
+    <s:String x:Key="middle_mouse_task_action">_Vidējās pogas klikšķa darbība:</s:String>
+    <x:Array x:Key="middle_mouse_task_action_values" Type="s:String">
+        <s:String>Nedarīt neko</s:String>
+        <s:String>Atvērt jaunu instanci</s:String>
+        <s:String>Aizvērt uzdevumu</s:String>
+    </x:Array>
+    <s:String x:Key="clock_click_action">_Pulksteņa klikšķa darbība:</s:String>
+    <x:Array x:Key="clock_click_action_values" Type="s:String">
+        <s:String>Nedarīt neko</s:String>
+        <s:String>Atvērt Aero kalendāru</s:String>
+        <s:String>Atvērt Modern kalendāru</s:String>
+        <s:String>Atvērt paziņojumu centru</s:String>
+    </x:Array>
+    <s:String x:Key="task_wheel_action">_Peles ritentiņa darbība:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>Nedarīt neko</s:String>
+        <s:String>Rādīt/paslēpt logu</s:String>
+    </x:Array>
+    <s:String x:Key="auto_hide_transparent">Paslēptās uzdevumjoslas _līniju paslēpt automātiskās paslēpšanas režīmā</s:String>
     <s:String x:Key="version">Versija {0}</s:String>
     <s:String x:Key="visit_on_github">Apmeklējiet UltraWinBar vietnē GitHub</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Vairākas uzdevumjoslas</s:String>
+    <s:String x:Key="additional_taskbars_text">Rādīt uzdevumjoslu pie šīm ekrāna malām. Ar peles labo pogu noklikšķiniet uz uzdevumjoslas, lai tā aizņemtu visu malu, pabīdot pārējās malā.</s:String>
+    <s:String x:Key="location_left">Pa kreisi</s:String>
+    <s:String x:Key="location_top">Augšā</s:String>
+    <s:String x:Key="location_right">Pa labi</s:String>
+    <s:String x:Key="location_bottom">Apakšā</s:String>
+    <s:String x:Key="tray_location_text">Paziņojumu _zona:</s:String>
+    <s:String x:Key="clock_location_text">_Pulkstenis:</s:String>
+    <s:String x:Key="start_button_location_text">_Sākšanas poga:</s:String>
+    <s:String x:Key="language_location_text">_Valodas indikators:</s:String>
+    <s:String x:Key="task_assignment_hint">Velciet uzdevuma pogu uz citu uzdevumjoslu, lai pārvietotu visu lietotni; velkot turiet nospiestu Ctrl, lai pārvietotu tikai šo logu. Ar peles labo pogu noklikšķiniet uz uzdevuma pogas, lai atiestatītu tās piešķīrumu.</s:String>
+    <s:String x:Key="reset_task_assignments">Atiestatīt visus uzdevumjoslu piešķīrumus</s:String>
+    <s:String x:Key="stretch">_Izstiept</s:String>
+    <s:String x:Key="make_main">_Iestatīt kā galveno</s:String>
+    <s:String x:Key="reset_task_assignment">Atiestatīt uzdevumjoslas piešķī_rumu</s:String>
     <s:String x:Key="taskbar_scale">Uzdevumjoslas mērogs</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">Pašreizējais iestatījums: {0}%</s:String>
     <s:String x:Key="debug_logging">Iespējot atkļūdošanas reģistrēšanu</s:String>
+    <s:String x:Key="window_activity_logging">Reģistrēt logu atvēršanu un aizvēršanu</s:String>
+    <s:String x:Key="check_for_updates">Meklēt _atjauninājumus</s:String>
+    <s:String x:Key="show_exit_menu_item">Rādīt _Iziet opciju labā klikšķa izvēlnē</s:String>
+    <s:String x:Key="show_end_task_button">Rādīt _Beigt uzdevumu opciju labā klikšķa izvēlnē</s:String>
+    <s:String x:Key="slide_taskbar_buttons">_Slidināt uzdevumjoslas pogas</s:String>
+    <s:String x:Key="show_clock_seconds">Rā_dīt sekundes pulkstenī</s:String>
+    <s:String x:Key="open_custom_themes_folder">Atvērt pielāgoto motīvu mapi</s:String>
+    <s:String x:Key="win_num_hotkeys_action">Win+[0-9] _īsinājumtaustiņu darbība:</s:String>
+    <x:Array x:Key="win_num_hotkeys_action_values" Type="s:String">
+        <s:String>Windows noklusējums</s:String>
+        <s:String>Pārslēgt uzdevumus</s:String>
+        <s:String>Atvērt ātrās palaišanas vienumu</s:String>
+    </x:Array>
+    <s:String x:Key="hotkey_warning_title">UltraWinBar īsinājumtaustiņi</s:String>
+    <s:String x:Key="hotkey_warning_text">UltraWinBar pārņems Windows uzdevumjoslas īsinājumtaustiņus. Pat aizverot UltraWinBar, tie netiks atjaunoti sistēmā Windows, kamēr neizrakstīsieties un nepierakstīsieties vēlreiz.</s:String>
+    <s:String x:Key="allow_blur_behind">Atļaut _izpludinājumu aiz caurspīdīgas uzdevumjoslas</s:String>
     <s:String x:Key="ok_dialog">labi</s:String>
-
+    <s:String x:Key="clock_format_help">Skatīt pieejamās formatēšanas opcijas</s:String>
+    <s:String x:Key="clock_format_warning">Piezīme. Pielāgotais pulksteņa formāts var nedarboties, kā paredzēts, ja izvēlētais motīvs nosaka savu formātu.</s:String>
+    <s:String x:Key="override_clock_format">Pielāgots pulksteņa _formāts:</s:String>
+    <s:String x:Key="override_ampm_designators">Pielāgoti _apzīmējumi:</s:String>
+    <s:String x:Key="am_designator">Priekšpusdienā:</s:String>
+    <s:String x:Key="pm_designator">Pēcpusdienā:</s:String>
     <s:String x:Key="customize_notifications">Pielāgojiet paziņojumus</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar parāda ikonas aktīviem un steidzamiem paziņojumiem un paslēpj neaktīvos paziņojumus. Varat mainīt šo darbību tālāk esošajā sarakstā esošajiem vienumiem.</s:String>
     <s:String x:Key="customize_notifications_instruction">Atlasiet vienumu un pēc tam izvēlieties tā paziņojumu darbību:</s:String>
     <s:String x:Key="hide_when_inactive">Slēpt, kad neaktīvs</s:String>
     <s:String x:Key="always_show">Vienmēr rādīt</s:String>
+    <s:String x:Key="always_hide">Vienmēr slēpt</s:String>
+    <s:String x:Key="remove">Noņemt</s:String>
     <s:String x:Key="name_heading">Vārds</s:String>
     <s:String x:Key="behavior_heading">Uzvedība</s:String>
-
+    <s:String x:Key="invert_heading">Invertēt</s:String>
     <s:String x:Key="start_text">Sākt</s:String>
     <s:String x:Key="start_text_xp">sākt</s:String>
     <s:String x:Key="start_button_tip_98">Noklikšķiniet šeit, lai sāktu.</s:String>
     <s:String x:Key="start_button_tip">Noklikšķiniet šeit, lai sāktu</s:String>
     <s:String x:Key="start_button_tip_vista">Sākt</s:String>
-
     <s:String x:Key="ultrawinbar_title">UltraWinBar uzdevumjosla</s:String>
     <s:String x:Key="toolbars">_Rīkjoslas</s:String>
     <s:String x:Key="quick_launch">_Ātrā palaišana</s:String>
@@ -81,23 +162,142 @@
     <s:String x:Key="tray_properties">Īp_ašības</s:String>
     <s:String x:Key="update_available">_Pieejams atjauninājums...</s:String>
     <s:String x:Key="exit_ultrawinbar">_Iziet no UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">_Restartēt UltraWinBar</s:String>
     <s:String x:Key="customize_notifications_menu">_Customize Notifications...</s:String>
-
+    <s:String x:Key="lock_taskbar_menu">_Bloķēt uzdevumjoslu</s:String>
     <s:String x:Key="show_desktop_tip_95">Virsma/atjaunot darbvirsmu</s:String>
     <s:String x:Key="show_desktop_tip">Rādīt darbvirsmu</s:String>
     <s:String x:Key="show_desktop_95">_Darbvirsma</s:String>
     <s:String x:Key="show_desktop">_Rādīt darbvirsmu</s:String>
     <s:String x:Key="peek_at_desktop">_Paskatieties uz darbvirsmu</s:String>
-
     <s:String x:Key="restore">_Atjaunot</s:String>
     <s:String x:Key="move">_Kustēties</s:String>
     <s:String x:Key="size">_Izmērs</s:String>
     <s:String x:Key="minimize">Mi_nimizēt</s:String>
     <s:String x:Key="maximize">Ma_ksimizēt</s:String>
     <s:String x:Key="close">_Aizvērt</s:String>
-
+    <s:String x:Key="end_task">_Beigt uzdevumu</s:String>
     <s:String x:Key="show_hidden">Rādīt slēptās ikonas</s:String>
     <s:String x:Key="hide">Slēpt</s:String>
-
     <s:String x:Key="open_folder">&amp;Atvērt mapi</s:String>
+    <s:String x:Key="move_to_taskbar_format">Pārvietot uz {0} uzdevumjoslu</s:String>
+    <s:String x:Key="ime_input_tip_enabled">Noklikšķiniet ar peles labo pogu, lai atvērtu IME opcijas.</s:String>
+    <s:String x:Key="ime_input_tip_disabled">IME atspējots</s:String>
+    <s:String x:Key="ime_input_full_shape_hiragana">_Hiragana</s:String>
+    <s:String x:Key="ime_input_full_shape_katakana">Pilna platuma _katakana</s:String>
+    <s:String x:Key="ime_input_full_shape_alphanumeric">Pilna _platuma burtciparu rakstzīmes</s:String>
+    <s:String x:Key="ime_input_katakana">Pusplatuma kataka_na</s:String>
+    <s:String x:Key="ime_input_alphanumeric">_Pusplatuma burtciparu rakstzīmes</s:String>
+    <s:String x:Key="ime_input_direct">_Tiešā ievade</s:String>
+    <s:String x:Key="ime_open_pad">IME _paliktnis</s:String>
+    <s:String x:Key="ime_open_add_word_dictionary">Pievienot _vārdu</s:String>
+    <s:String x:Key="ime_open_dictionary_tool">Lietotāja vārdnīcas _rīks</s:String>
+    <s:String x:Key="ime_open_properties">_Rekvizīti</s:String>
+    <s:String x:Key="ime_input_key">Ievades _metode</s:String>
+    <s:String x:Key="ime_input_key_roma">_Romaji ievade</s:String>
+    <s:String x:Key="ime_input_key_kana">Kana ievade</s:String>
+    <s:String x:Key="ime_conversion">_Konvertēšanas režīms</s:String>
+    <s:String x:Key="ime_conversion_general">_Vispārīgi</s:String>
+    <s:String x:Key="ime_conversion_none">_Bez konvertēšanas</s:String>
+    <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+    <s:String x:Key="pin_to_taskbar">Piespraust šai uzdevumjoslai</s:String>
+    <s:String x:Key="pinned_app_windows">Atvērtie logi</s:String>
+    <s:String x:Key="unpin_from_taskbar">Atspraust no šīs uzdevumjoslas</s:String>
+    <s:String x:Key="copy_executable_path">Kopēt izpildāmā faila ceļu</s:String>
+    <s:String x:Key="copy_executable_directory">Kopēt izpildāmā faila mapi</s:String>
+    <FlowDirection x:Key="flow_direction">LeftToRight</FlowDirection>
+    <FontFamily x:Key="start_text_xp_font_family">Franklin Gothic</FontFamily>
+    <s:String x:Key="app_all_desktops">Rādīt šīs lietotnes logus visās darbvirsmās</s:String>
+    <s:String x:Key="move_window_desktop">Pārvietot šo logu uz darbvirsmu</s:String>
+    <s:String x:Key="move_app_desktop">Pārvietot visus lietotnes logus uz darbvirsmu</s:String>
+    <s:String x:Key="desktop_number">Darbvirsma {0}</s:String>
+    <s:String x:Key="desktop_action_failed">Windows nevarēja pabeigt darbību visiem logiem. Daži logi, iespējams, jau ir pārvietoti. Plašāku informāciju skatiet žurnālā.</s:String>
+    <s:String x:Key="show_hebrew_date">Rādīt ebreju datumu un numurētas nedēļas dienas</s:String>
+    <s:String x:Key="hebrew_date_midnight">Izmanto vietējo kalendāra datumu; tas mainās pusnaktī, nevis saulrietā.</s:String>
+    <s:String x:Key="hebrew_place">Ebreju datuma vieta:</s:String>
+    <s:String x:Key="hebrew_place_none">nav izvēlēta</s:String>
+    <s:String x:Key="hebrew_place_choose">Izvēlēties...</s:String>
+    <s:String x:Key="hebrew_place_clear">Notīrīt</s:String>
+    <s:String x:Key="zone_clear">Noņemt</s:String>
+    <s:String x:Key="hebrew_place_hint">Vieta, kuras saulrietā beidzas ebreju diena un kuras halahiskos laikus rāda kalendārs.</s:String>
+    <s:String x:Key="hebrew_place_title">Ebreju datuma vieta</s:String>
+    <s:String x:Key="hebrew_place_city_tab">Pilsēta</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">Koordinātas</s:String>
+    <s:String x:Key="hebrew_place_search">Pilsētas nosaukums (angļu valodā):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">Ievadiet vismaz divus burtus, piemēram: jerus, new york, paris texas. Sarakstā ir pilsētas ar 10 000 vai vairāk iedzīvotājiem.</s:String>
+    <s:String x:Key="hebrew_place_country">Valsts:</s:String>
+    <s:String x:Key="hebrew_place_need_country">Izvēlieties valsti: tā nosaka, kurš no abiem skaitļiem ir platums.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">Platums un garums:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">Der jebkurš formāts: 32.0853, 34.7818 vai 34,7818 32,0853, vai 32°05'07&quot;N 34°46'54&quot;E. Daļskaitlim izmantojiet punktu vai komatu; skaitļus atdaliet ar komatu, kolu vai atstarpi.</s:String>
+    <s:String x:Key="hebrew_place_zone">Laika josla:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">Izvēlēta kopā ar pilsētu; mainiet, ja tā ir nepareiza. Tiek izmantoti Windows laika joslas noteikumi (vasaras laiks un tā pārejas).</s:String>
+    <s:String x:Key="calendar_title">Ebreju kalendārs</s:String>
+    <s:String x:Key="calendar_today">Šodien</s:String>
+    <s:String x:Key="calendar_copy_name">Kopēt nosaukumu</s:String>
+    <s:String x:Key="calendar_search_name">Meklēt nosaukumu Google</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Ebreju mēnesis</s:String>
+    <s:String x:Key="calendar_grid_civil">Civilais mēnesis</s:String>
+    <s:String x:Key="calendar_shabbat">Šabats</s:String>
+    <s:String x:Key="calendar_previous_month">Iepriekšējais mēnesis</s:String>
+    <s:String x:Key="calendar_next_month">Nākamais mēnesis</s:String>
+    <s:String x:Key="calendar_settings">Iestatījumi...</s:String>
+    <s:String x:Key="calendar_close">Aizvērt</s:String>
+    <s:String x:Key="calendar_portion">Nedēļas Toras daļa: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">Šajā šabatā tiek lasīts svētku teksts</s:String>
+    <s:String x:Key="calendar_day_of">{0}, {1}. diena no {2}</s:String>
+    <s:String x:Key="calendar_molad">{0} molads: {1}, {2} un {3} halakimi</s:String>
+    <s:String x:Key="calendar_omer">Omera skaitīšana</s:String>
+    <s:String x:Key="calendar_omer_day">Omera {0}. diena</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} nedēļas un {1} dienas</s:String>
+    <s:String x:Key="calendar_place">Vieta: {0}</s:String>
+    <s:String x:Key="calendar_israel">Izraēlas zeme</s:String>
+    <s:String x:Key="calendar_diaspora">diaspora</s:String>
+    <s:String x:Key="calendar_no_place">Lai skatītu dienas laikus, kalendāra iestatījumos izvēlieties vietu.</s:String>
+    <s:String x:Key="calendar_times">Dienas laiki</s:String>
+    <s:String x:Key="calendar_yahrzeits">Jahrzeiti</s:String>
+    <s:String x:Key="calendar_candles_after_dark">Sveču iedegšana (pēc nakts iestāšanās)</s:String>
+    <s:String x:Key="calendar_havdalah">Atpūtas dienas beigas (havdala)</s:String>
+    <s:String x:Key="calendar_rest_begins">Sākums: {0} (sveču iedegšana)</s:String>
+    <s:String x:Key="calendar_rest_ends">Beigas: {0} (nakts iestāšanās)</s:String>
+    <s:String x:Key="calendar_settings_title">Kalendāra iestatījumi</s:String>
+    <s:String x:Key="calendar_settings_place">Laika joslas vieta:</s:String>
+    <s:String x:Key="calendar_settings_zone">Laika josla datumam, dienas maiņai un dienas laikiem:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (datora)</s:String>
+    <s:String x:Key="zones_heading">Pulksteņa laika joslas</s:String>
+    <s:String x:Key="zone_main">Galvenā laika josla:</s:String>
+    <s:String x:Key="zone_second">Otrā laika josla:</s:String>
+    <s:String x:Key="zone_third">Trešā laika josla:</s:String>
+    <s:String x:Key="zone_show_name">Rādīt nosaukumu</s:String>
+    <s:String x:Key="zone_label">Nosaukums pulkstenī:</s:String>
+    <s:String x:Key="zone_label_hint">Nosaukums, ko pulkstenis rāda šai laika joslai vietas nosaukuma vietā (piemēram, Heart vietai Jerusalem). Ja lauks ir tukšs, tiek rādīta vieta.</s:String>
+    <s:String x:Key="zone_place">Vieta:</s:String>
+    <s:String x:Key="zones_tab">Laika joslas</s:String>
+    <s:String x:Key="hebrew_date_tab">Ebreju datums</s:String>
+    <s:String x:Key="zone_computer">Datora ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">Ebreju datums attiecas uz galvenās laika joslas vietu, kas izvēlēta cilnē “Laika joslas”.</s:String>
+    <s:String x:Key="zone_none">(netiek rādīta)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">Rādāmie jahrzeiti (visi, pēc kategorijas, pa vienam):</s:String>
+    <s:String x:Key="calendar_all_figures">Visi</s:String>
+    <s:String x:Key="cancel_dialog">Atcelt</s:String>
+    <s:String x:Key="coordinate_result">Platums un garums: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">Secība norādīta tekstā.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">Der tikai viena secība: platums nepārsniedz 90 grādus.</s:String>
+    <s:String x:Key="coordinate_basis_country">Secība noteikta pēc valsts: otrs variants atrodas tālu no tās.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">Pieņemts, ka vispirms ir platums.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">Pieņemts, ka vispirms ir platums; ja vispirms būtu garums, tas valstij atbilstu gandrīz tikpat labi.</s:String>
+    <s:String x:Key="coordinate_warning_far">Punkts atrodas {0:N0} km no tuvākās pilsētas šajā valstī. Pārbaudiet valsti un skaitļus.</s:String>
+    <s:String x:Key="coordinate_problem_empty">Ievadiet koordinātas.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">Nepieciešami divi skaitļi: platums un garums.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">Ievadīti vairāk nekā divi skaitļi. Ievadiet tikai platumu un garumu.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">Abi skaitļi ir atzīmēti kā platums.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">Abi skaitļi ir atzīmēti kā garums.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">Platuma vērtībai jābūt no -90 līdz 90 grādiem.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">Garuma vērtībai jābūt no -180 līdz 180 grādiem.</s:String>
+    <s:String x:Key="coordinate_problem_neither">Nevienā secībā šie skaitļi neveido platumu (līdz 90) un garumu (līdz 180).</s:String>
+    <s:String x:Key="open_system_settings">Atvērt sistēmas iestatījumus</s:String>
+    <s:String x:Key="open_computer_management">Datora pārvaldība</s:String>
+    <s:String x:Key="open_drives">Atvērt diskus</s:String>
+    <s:String x:Key="this_pc">Šis dators</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">Mēģināt paturēt atvērtos logus šajā darbvirsmā (eksperimentāli)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Atkārtoti izmantot visās darbvirsmās redzamos logus, tos nepārvietojot. Citādi darbvirsmas ikonas un piespraustās palaišanas saīsnes lokāli atver pārlūkprogrammas, Explorer mapes un Notepad++; citas lietotnes un paziņojumu apgabala aktivizēšana joprojām pārvieto logus.</s:String>
 </ResourceDictionary>

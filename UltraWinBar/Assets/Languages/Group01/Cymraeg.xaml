@@ -2,6 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:s="clr-namespace:System;assembly=mscorlib">
 
+
     <s:String x:Key="ultrawinbar_properties">Priodweddau UltraWinBar</s:String>
     <s:String x:Key="taskbar_tab">Bar Tasgau</s:String>
     <s:String x:Key="advanced_tab">Uwch</s:String>
@@ -14,11 +15,21 @@
     <s:String x:Key="language_tip">Dewiswch yr iaith I ddefnyddio.</s:String>
     <s:String x:Key="theme_text">_Thema:</s:String>
     <s:String x:Key="theme_tip">Gosod themau yn y ffolder themau.</s:String>
+    <s:String x:Key="accent_text">_Lliw acen:</s:String>
+    <s:String x:Key="accent_tip">Lliw neon y thema Gwydr Modern.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>Cyan</s:String>
+        <s:String>Fioled</s:String>
+        <s:String>Ffiwsia</s:String>
+        <s:String>Emrallt</s:String>
+        <s:String>Ambr</s:String>
+        <s:String>Rhosyn</s:String>
+    </x:Array>
     <s:String x:Key="location_text">Lleoliad:</s:String>
     <s:String x:Key="location_tip">Newid lleoliad y bar tasgau ar y sgrîn.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
         <s:String>Chwith</s:String>
-        <s:String>Top</s:String>
+        <s:String>Brig</s:String>
         <s:String>Dde</s:String>
         <s:String>Gwaelod</s:String>
     </x:Array>
@@ -49,6 +60,7 @@
         <s:String>Yr un bar tasgau a'r ffenestr</s:String>
         <s:String>Yr un bar tasgau a'r ffenestr a'r prif far tasgau</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_Gwrthdroi lliwiau graddlwyd:</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>Pan fo angen yn ol y thema</s:String>
         <s:String>Bob amser</s:String>
@@ -67,14 +79,35 @@
         <s:String>Agor y calendr Modern</s:String>
         <s:String>Agor y Ganolfan Hysbysiadau</s:String>
     </x:Array>
+    <s:String x:Key="task_wheel_action">_ Gweithred olwyn y llygoden:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>Gwneud dim</s:String>
+        <s:String>Dangos/cuddio ffenestr</s:String>
+    </x:Array>
     <s:String x:Key="auto_hide_transparent">Cuddio llinell y bar tasgau pan gaiff ei chuddio gydag awto-uchel</s:String>
     <s:String x:Key="version">Fersiwn {0}</s:String>
     <s:String x:Key="visit_on_github">Ewch i UltraWinBar ar GitHub</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Barrau tasgau lluosog</s:String>
+    <s:String x:Key="additional_taskbars_text">Dangoswch far tasgau ar yr ymylon hyn. De-gliciwch bar tasgau i'w wneud yn ymestyn i'r ymyl lawn, gan wthio eraill o'r neilltu.</s:String>
+    <s:String x:Key="location_left">Chwith</s:String>
+    <s:String x:Key="location_top">Brig</s:String>
+    <s:String x:Key="location_right">Iawn</s:String>
+    <s:String x:Key="location_bottom">Gwaelod</s:String>
+    <s:String x:Key="tray_location_text">_Ardal hysbysu ar:</s:String>
+    <s:String x:Key="clock_location_text">_Cloc ar:</s:String>
+    <s:String x:Key="start_button_location_text">Botwm _Cychwyn ar:</s:String>
+    <s:String x:Key="language_location_text">_Dangosydd iaith ar:</s:String>
+    <s:String x:Key="task_assignment_hint">Llusgwch fotwm tasg i far tasgau arall i symud y rhaglen gyfan; daliwch Ctrl wrth lusgo i symud y ffenestr honno yn unig. De-gliciwch fotwm tasg i ailosod ei aseiniad.</s:String>
+    <s:String x:Key="reset_task_assignments">Ailosod pob aseiniad bar tasgau</s:String>
+    <s:String x:Key="stretch">_Estyn</s:String>
+    <s:String x:Key="make_main">_Gwneud prif</s:String>
+    <s:String x:Key="reset_task_assignment">Ailosod asig_nment bar tasgau</s:String>
     <s:String x:Key="taskbar_scale">Graddfa'r bar tasgau</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">Gosodiad cyfredol: {0}%</s:String>
     <s:String x:Key="debug_logging">Galluogi _logio dadfygio</s:String>
+    <s:String x:Key="window_activity_logging">Cofnodi agor a chau ffenestri</s:String>
     <s:String x:Key="check_for_updates">Chwilio am ddiweddariadau</s:String>
     <s:String x:Key="show_exit_menu_item">Dangos yr opsiwn Ymadael yn y ddewislen clic dde</s:String>
     <s:String x:Key="show_end_task_button">Dangos yr opsiwn Diwedd Tasg yn y ddewislen clic dde</s:String>
@@ -91,7 +124,12 @@
     <s:String x:Key="hotkey_warning_text">Bydd UltraWinBar yn diystyru allweddi poeth bar tasgau Windows. Hyd yn oed os yw UltraWinBar ar gau, ni fyddant yn cael eu hadfer i Windows nes i chi allgofnodi ac yn ôl i mewn.</s:String>
     <s:String x:Key="allow_blur_behind">Caniatau _aneglurder y tu ôl i'r bar tasgau tryloyw</s:String>
     <s:String x:Key="ok_dialog">OK</s:String>
-
+    <s:String x:Key="clock_format_help">Gweld yr opsiynau fformatio sydd ar gael</s:String>
+    <s:String x:Key="clock_format_warning">Nodyn: Efallai na fydd fformatio cloc personol yn gweithio yn ôl y disgwyl os yw'r thema a ddewiswyd gennych yn nodi ei fformat ei hun.</s:String>
+    <s:String x:Key="override_clock_format">Fformat _ cloc personol:</s:String>
+    <s:String x:Key="override_ampm_designators">D_arwyddwyr personol:</s:String>
+    <s:String x:Key="am_designator">AC:</s:String>
+    <s:String x:Key="pm_designator">PM:</s:String>
     <s:String x:Key="customize_notifications">Addasu Hysbysiadau</s:String>
     <s:String x:Key="customize_notifications_info">Mae UltraWinBar yn dangos eiconau ar gyfer hysbysiadau gweithredol a brys, ac yn cuddio rhai anweithredol. Gallwch newid yr ymddygiad hwn ar gyfer eitemau yn y rhestr isod.</s:String>
     <s:String x:Key="customize_notifications_instruction">Dewisch eitem, yna dewiswch ei ymddygiad hysbysu:</s:String>
@@ -102,13 +140,11 @@
     <s:String x:Key="name_heading">Enw</s:String>
     <s:String x:Key="behavior_heading">Ymddygiad</s:String>
     <s:String x:Key="invert_heading">Gwrthdroi</s:String>
-
     <s:String x:Key="start_text">Dechrau</s:String>
     <s:String x:Key="start_text_xp">Dechrau</s:String>
     <s:String x:Key="start_button_tip_98">Clickiwch yma i ddechrau.</s:String>
     <s:String x:Key="start_button_tip">Clickiwch yma i ddechrau</s:String>
     <s:String x:Key="start_button_tip_vista">Dechrau</s:String>
-
     <s:String x:Key="ultrawinbar_title">Bar tasgiau UltraWinBar</s:String>
     <s:String x:Key="toolbars">_Bariau Offer</s:String>
     <s:String x:Key="quick_launch">_Lansio Cyflym</s:String>
@@ -127,15 +163,14 @@
     <s:String x:Key="tray_properties">P_riodweddau</s:String>
     <s:String x:Key="update_available">_Diweddariad ar gael...</s:String>
     <s:String x:Key="exit_ultrawinbar">_Gadael UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">Ail-ddechrau UltraWinBar</s:String>
     <s:String x:Key="customize_notifications_menu">_Addasu Hysbysiadau...</s:String>
     <s:String x:Key="lock_taskbar_menu">_Cloi'r Bar Tasgau</s:String>
-
     <s:String x:Key="show_desktop_tip_95">Arwyneb/Adfer Penbwrdd</s:String>
     <s:String x:Key="show_desktop_tip">Dangos Penbwrdd</s:String>
     <s:String x:Key="show_desktop_95">_Penbwrdd</s:String>
     <s:String x:Key="show_desktop">_Penbwrdd</s:String>
     <s:String x:Key="peek_at_desktop">_Cipolwg ar y bwrdd gwaith</s:String>
-
     <s:String x:Key="restore">_Adfer</s:String>
     <s:String x:Key="move">_Symud</s:String>
     <s:String x:Key="size">_Maint</s:String>
@@ -143,12 +178,10 @@
     <s:String x:Key="maximize">Uc_hafhau</s:String>
     <s:String x:Key="close">_Cau</s:String>
     <s:String x:Key="end_task">_Gorffen tasg</s:String>
-
     <s:String x:Key="show_hidden">Dangos eiconau cudd</s:String>
     <s:String x:Key="hide">Cuddio</s:String>
-
     <s:String x:Key="open_folder">&amp;Agor ffolder</s:String>
-
+    <s:String x:Key="move_to_taskbar_format">Symud i {0} bar tasgau</s:String>
     <s:String x:Key="ime_input_tip_enabled">De-gliciwch am opsiynau IME</s:String>
     <s:String x:Key="ime_input_tip_disabled">IME wedi'i analluogi</s:String>
     <s:String x:Key="ime_input_full_shape_hiragana">Hiragana</s:String>
@@ -168,4 +201,102 @@
     <s:String x:Key="ime_conversion_general">Cyffredinol</s:String>
     <s:String x:Key="ime_conversion_none">Dim Trosi</s:String>
     <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+    <s:String x:Key="pin_to_taskbar">Piniwch i'r bar tasgau hwn</s:String>
+    <s:String x:Key="pinned_app_windows">Ffenestri agored</s:String>
+    <s:String x:Key="unpin_from_taskbar">Dad-binio o'r bar tasgau hwn</s:String>
+    <s:String x:Key="copy_executable_path">Copïo llwybr y rhaglen</s:String>
+    <s:String x:Key="copy_executable_directory">Copïo cyfeiriadur gweithredadwy</s:String>
+    <s:String x:Key="app_all_desktops">Dangoswch ffenestri'r rhaglen hon ar bob bwrdd gwaith</s:String>
+    <s:String x:Key="move_window_desktop">Symudwch y ffenestr hon i'r bwrdd gwaith</s:String>
+    <s:String x:Key="move_app_desktop">Symudwch yr holl ffenestri cymhwysiad i'r bwrdd gwaith</s:String>
+    <s:String x:Key="desktop_number">Penbwrdd {0}</s:String>
+    <s:String x:Key="desktop_action_failed">Ni allai Windows gwblhau'r llawdriniaeth ar gyfer pob ffenestr. Efallai bod rhai ffenestri wedi symud yn barod. Gweler y log am fanylion.</s:String>
+    <s:String x:Key="show_hebrew_date">Dangos dyddiad Hebraeg a dyddiau'r wythnos wedi'u rhifo</s:String>
+    <s:String x:Key="hebrew_date_midnight">Yn defnyddio'r dyddiad calendr lleol; newidiadau ganol nos, nid ar fachlud haul.</s:String>
+    <s:String x:Key="hebrew_place">Lle ar gyfer y dyddiad Hebraeg:</s:String>
+    <s:String x:Key="hebrew_place_none">heb ei ddewis</s:String>
+    <s:String x:Key="hebrew_place_choose">Dewiswch...</s:String>
+    <s:String x:Key="hebrew_place_clear">Clir</s:String>
+    <s:String x:Key="zone_clear">Dileu</s:String>
+    <s:String x:Key="hebrew_place_hint">Y man y mae ei fachlud yn dod â'r diwrnod Hebraeg i ben, ac y mae ei amseroedd halachig yn y calendr yn ei ddangos.</s:String>
+    <s:String x:Key="hebrew_place_title">Lle ar gyfer y dyddiad Hebraeg</s:String>
+    <s:String x:Key="hebrew_place_city_tab">Dinas</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">Cyfesurynnau</s:String>
+    <s:String x:Key="hebrew_place_search">Enw'r ddinas (yn Saesneg):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">Teipiwch o leiaf ddwy lythyren, er enghraifft: jerus, new york, paris texas. Rhestrir dinasoedd o 10 000 a mwy o drigolion.</s:String>
+    <s:String x:Key="hebrew_place_country">Gwlad:</s:String>
+    <s:String x:Key="hebrew_place_need_country">Dewiswch y wlad: mae hyn yn pennu pa un o'r ddau rif yw'r lledred.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">Lledred a hydred:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">Bydd unrhyw ffurflen yn gwneud y canlynol: 32.0853, 34.7818 neu 34,7818 32,0853 neu 32°05'07"N 34°46'54"E. Dot neu goma yn y ffracsiwn; coma, colon neu ofod rhwng y rhifau.</s:String>
+    <s:String x:Key="hebrew_place_zone">Cylchfa amser:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">Wedi'i ddewis gyda'r ddinas; ei newid os yw'n anghywir. Rheolau'r parth (amser yr haf a'i newidiadau) yw'r rhai sydd gan Windows.</s:String>
+    <s:String x:Key="calendar_title">Calendr Iddewig</s:String>
+    <s:String x:Key="calendar_today">Heddiw</s:String>
+    <s:String x:Key="calendar_copy_name">Copïwch yr enw</s:String>
+    <s:String x:Key="calendar_search_name">Chwiliwch Google am yr enw</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Mis Hebraeg</s:String>
+    <s:String x:Key="calendar_grid_civil">Mis sifil</s:String>
+    <s:String x:Key="calendar_shabbat">Shabbat</s:String>
+    <s:String x:Key="calendar_previous_month">Mis blaenorol</s:String>
+    <s:String x:Key="calendar_next_month">Mis nesaf</s:String>
+    <s:String x:Key="calendar_settings">Gosodiadau...</s:String>
+    <s:String x:Key="calendar_close">Cau</s:String>
+    <s:String x:Key="calendar_portion">Cyfran wythnosol: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">Darllenir darlleniad gŵyl ar y Shabbat hwn</s:String>
+    <s:String x:Key="calendar_day_of">{0}, diwrnod {1} o {2}</s:String>
+    <s:String x:Key="calendar_molad">Molad o {0}: {1}, {2} a {3} chalacim</s:String>
+    <s:String x:Key="calendar_omer">Cyfrif yr Omer</s:String>
+    <s:String x:Key="calendar_omer_day">Diwrnod {0} yr Omer</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} wythnos a {1} diwrnod</s:String>
+    <s:String x:Key="calendar_place">Lle: {0}</s:String>
+    <s:String x:Key="calendar_israel">Gwlad Israel</s:String>
+    <s:String x:Key="calendar_diaspora">diaspora</s:String>
+    <s:String x:Key="calendar_no_place">Dewiswch le yng ngosodiadau'r calendr i weld amseroedd y dydd.</s:String>
+    <s:String x:Key="calendar_times">Amseroedd y dydd</s:String>
+    <s:String x:Key="calendar_yahrzeits">Yahrzeits</s:String>
+    <s:String x:Key="calendar_candles_after_dark">Cynnau canhwyllau (ar ôl iddi nosi)</s:String>
+    <s:String x:Key="calendar_havdalah">Diwedd y diwrnod o orffwys (havdalah)</s:String>
+    <s:String x:Key="calendar_rest_begins">Yn dechrau: {0} (cynnau canhwyllau)</s:String>
+    <s:String x:Key="calendar_rest_ends">Diwedd: {0} (cwymp y nos)</s:String>
+    <s:String x:Key="calendar_settings_title">Gosodiadau calendr</s:String>
+    <s:String x:Key="calendar_settings_place">Lleoliad y parth:</s:String>
+    <s:String x:Key="calendar_settings_zone">Cylchfa amser ar gyfer y dyddiad, newid y dydd ac amseroedd y dydd:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (cyfrifiadur)</s:String>
+    <s:String x:Key="zones_heading">Parthau amser y cloc</s:String>
+    <s:String x:Key="zone_main">Prif gylchfa amser:</s:String>
+    <s:String x:Key="zone_second">Cylchfa ail amser:</s:String>
+    <s:String x:Key="zone_third">Parth trydydd amser:</s:String>
+    <s:String x:Key="zone_show_name">Dangoswch yr enw</s:String>
+    <s:String x:Key="zone_label">Enw ar y cloc</s:String>
+    <s:String x:Key="zone_label_hint">Enw i'w ddangos ar y cloc ar gyfer y parth hwn yn lle'r lleoliad (er enghraifft, Heart ar gyfer Jerusalem). Gadewch yn wag i gadw'r lleoliad.</s:String>
+    <s:String x:Key="zone_place">Lle:</s:String>
+    <s:String x:Key="zones_tab">Parthau amser</s:String>
+    <s:String x:Key="hebrew_date_tab">Dyddiad Hebraeg</s:String>
+    <s:String x:Key="zone_computer">Mae'r cyfrifiadur ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">Y dyddiad Hebraeg yw lleoliad y prif gylchfa amser, a ddewiswyd ar y tab Parthau Amser.</s:String>
+    <s:String x:Key="zone_none">(heb ei ddangos)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">Yahrzeits i'w dangos (pob un, yn ôl categori, fesul un):</s:String>
+    <s:String x:Key="calendar_all_figures">Pawb</s:String>
+    <s:String x:Key="cancel_dialog">Canslo</s:String>
+    <s:String x:Key="coordinate_result">Lledred a hydred: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">Mae'r drefn fel y'i nodir yn y testun.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">Dim ond un gorchymyn sy'n cyd-fynd: mae lledred hyd at 90 gradd.</s:String>
+    <s:String x:Key="coordinate_basis_country">Dewiswyd y drefn ar sail y wlad: byddai'r drefn arall yn rhoi lleoliad ymhell y tu allan iddi.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">Tybir Lledred yn gyntaf.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">Tybir Lledred yn gyntaf; byddai hydred yn ffitio'r wlad yn gyntaf hefyd.</s:String>
+    <s:String x:Key="coordinate_warning_far">Mae'r pwynt {0:N0} km o ddinas agosaf y wlad. Gwiriwch y wlad a'r niferoedd.</s:String>
+    <s:String x:Key="coordinate_problem_empty">Teipiwch y cyfesurynnau.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">Mae angen dau rif: y lledred a'r hydred.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">Mwy na dau rif. Teipiwch y lledred a'r hydred yn unig.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">Mae'r ddau rif wedi'u marcio fel lledred.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">Mae'r ddau rif wedi'u marcio fel hydred.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">Rhaid i'r lledred fod rhwng -90 a 90 gradd.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">Rhaid i'r hydred fod rhwng -180 a 180 gradd.</s:String>
+    <s:String x:Key="coordinate_problem_neither">Nid yw'r rhifau hyn yn gwneud lledred (hyd at 90) a hydred (hyd at 180) yn y naill drefn na'r llall.</s:String>
+    <s:String x:Key="open_system_settings">Agor Gosodiadau System</s:String>
+    <s:String x:Key="open_computer_management">Rheoli Cyfrifiaduron</s:String>
+    <s:String x:Key="open_drives">Agor gyriannau</s:String>
+    <s:String x:Key="this_pc">Mae'r PC hwn</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">Ceisiwch gadw ffenestri ar agor ar y bwrdd gwaith hwn (arbrofol)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Ailddefnyddir ffenestri sy'n ymddangos ar bob bwrdd gwaith heb eu symud. Fel arall, mae eiconau'r bwrdd gwaith a rhaglenni sydd wedi'u pinio yn agor porwyr, ffolderi Explorer a Notepad++ ar y bwrdd gwaith hwn; mae rhaglenni eraill ac actifadu o'r ardal hysbysu yn parhau i drosglwyddo ffenestri.</s:String>
 </ResourceDictionary>

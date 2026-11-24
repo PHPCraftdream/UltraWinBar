@@ -14,6 +14,16 @@
     <s:String x:Key="language_tip">使用する言語を選択します。</s:String>
     <s:String x:Key="theme_text">テーマ(_T)：</s:String>
     <s:String x:Key="theme_tip">Themes フォルダーにテーマをインストールします。</s:String>
+    <s:String x:Key="accent_text">アクセントカラー(_C):</s:String>
+    <s:String x:Key="accent_tip">Modern Glass テーマのネオンカラーです。</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>シアン</s:String>
+        <s:String>バイオレット</s:String>
+        <s:String>フューシャ</s:String>
+        <s:String>エメラルド</s:String>
+        <s:String>アンバー</s:String>
+        <s:String>ローズ</s:String>
+    </x:Array>
     <s:String x:Key="location_text">位置(_I)：</s:String>
     <s:String x:Key="location_tip">画面上のタスクバーの位置を変更します。</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -49,6 +59,7 @@
         <s:String>ウィンドウと同じ画面のタスクバー</s:String>
         <s:String>ウィンドウと同じ画面とプライマリタスクバー</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">グレースケールの色を反転する(_I):</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>テーマによって必要な場合</s:String>
         <s:String>常に反転</s:String>
@@ -67,14 +78,35 @@
         <s:String>Modernカレンダーを開く</s:String>
         <s:String>通知センターを開く</s:String>
     </x:Array>
+    <s:String x:Key="task_wheel_action">マウスホイールの動作(_W):</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>何もしない</s:String>
+        <s:String>ウィンドウを表示/非表示にする</s:String>
+    </x:Array>
     <s:String x:Key="auto_hide_transparent">自動的に隠す時にタスクバーの線を隠す(_T)</s:String>
     <s:String x:Key="version">バージョン {0}</s:String>
     <s:String x:Key="visit_on_github">GitHubのUltraWinBarを見る</s:String>
+    <s:String x:Key="multiple_taskbars_heading">複数のタスクバー</s:String>
+    <s:String x:Key="additional_taskbars_text">次の画面端にタスクバーを表示します。タスクバーを右クリックすると、他のタスクバーを押しのけて画面端全体に広げられます。</s:String>
+    <s:String x:Key="location_left">左</s:String>
+    <s:String x:Key="location_top">上</s:String>
+    <s:String x:Key="location_right">右</s:String>
+    <s:String x:Key="location_bottom">下</s:String>
+    <s:String x:Key="tray_location_text">通知領域の表示位置(_N):</s:String>
+    <s:String x:Key="clock_location_text">時計の表示位置(_C):</s:String>
+    <s:String x:Key="start_button_location_text">スタートボタンの表示位置(_R):</s:String>
+    <s:String x:Key="language_location_text">言語インジケーターの表示位置(_L):</s:String>
+    <s:String x:Key="task_assignment_hint">タスクボタンを別のタスクバーにドラッグすると、アプリケーション全体を移動します。Ctrl キーを押しながらドラッグすると、そのウィンドウだけを移動します。タスクボタンを右クリックすると割り当てをリセットできます。</s:String>
+    <s:String x:Key="reset_task_assignments">すべてのタスクバーの割り当てをリセット</s:String>
+    <s:String x:Key="stretch">拡張(_S)</s:String>
+    <s:String x:Key="make_main">メインにする(_M)</s:String>
+    <s:String x:Key="reset_task_assignment">タスクバーの割り当てをリセット(_N)</s:String>
     <s:String x:Key="taskbar_scale">タスクバー表示倍率</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">現在の設定： {0}%</s:String>
     <s:String x:Key="debug_logging">デバッグログを有効にする(デバッグ)(_D)</s:String>
+    <s:String x:Key="window_activity_logging">ウィンドウの開閉を記録する</s:String>
     <s:String x:Key="check_for_updates">アップデートを確認する(_U)</s:String>
     <s:String x:Key="show_exit_menu_item">右クリックのメニューに終了オプションを表示する(_X)</s:String>
     <s:String x:Key="show_end_task_button">右クリック メニューに「タスクの終了」オプションを表示する(_E)</s:String>
@@ -92,6 +124,12 @@
     <s:String x:Key="allow_blur_behind">透明なタスクバーの背景のぼかしを許可する(_B)</s:String>
     <s:String x:Key="ok_dialog">OK</s:String>
 
+    <s:String x:Key="clock_format_help">使用できる書式設定オプションを表示</s:String>
+    <s:String x:Key="clock_format_warning">注意: 選択したテーマで独自の書式が指定されている場合、時計のカスタム書式が期待どおりに動作しないことがあります。</s:String>
+    <s:String x:Key="override_clock_format">時計のカスタム書式(_F):</s:String>
+    <s:String x:Key="override_ampm_designators">AM/PM のカスタム表記(_E):</s:String>
+    <s:String x:Key="am_designator">午前:</s:String>
+    <s:String x:Key="pm_designator">午後:</s:String>
     <s:String x:Key="customize_notifications">通知領域のカスタマイズ</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar は、アクティブな通知と緊急の通知のアイコンを表示し、非アクティブな通知は非表示にします。この動作は以下のリストで変更できます。</s:String>
     <s:String x:Key="customize_notifications_instruction">アイテムを選択し、通知の動作を選択します：</s:String>
@@ -127,6 +165,7 @@
     <s:String x:Key="tray_properties">プロパティ(_R)</s:String>
     <s:String x:Key="update_available">更新が可能です(_U)...</s:String>
     <s:String x:Key="exit_ultrawinbar">UltraWinBarを終了(_E)</s:String>
+    <s:String x:Key="restart_ultrawinbar">UltraWinBar を再起動(_T)</s:String>
     <s:String x:Key="customize_notifications_menu">通知領域のカスタマイズ(_C)...</s:String>
     <s:String x:Key="lock_taskbar_menu">タスクバーを固定する(_L)</s:String>
 
@@ -149,6 +188,7 @@
 
     <s:String x:Key="open_folder">&amp;フォルダーを開く</s:String>
 
+    <s:String x:Key="move_to_taskbar_format">{0} タスクバーに移動</s:String>
     <s:String x:Key="ime_input_tip_enabled">右クリックで IME のオプションを表示します。</s:String>
     <s:String x:Key="ime_input_tip_disabled">IME は無効です</s:String>
     <s:String x:Key="ime_input_full_shape_hiragana">ひらがな(_H)</s:String>
@@ -169,5 +209,103 @@
     <s:String x:Key="ime_conversion_none">無変換(_O)</s:String>
     <s:String x:Key="input_switcher_item_format">{0} - {1}</s:String>
 
+    <s:String x:Key="pin_to_taskbar">このタスクバーにピン留めする</s:String>
+    <s:String x:Key="pinned_app_windows">開いているウィンドウ</s:String>
+    <s:String x:Key="unpin_from_taskbar">このタスクバーからピン留めを外す</s:String>
+    <s:String x:Key="copy_executable_path">実行ファイルのパスをコピー</s:String>
+    <s:String x:Key="copy_executable_directory">実行ファイルのフォルダーをコピー</s:String>
     <FontFamily x:Key="start_text_xp_font_family">MS UI Gothic</FontFamily>
+    <s:String x:Key="app_all_desktops">このアプリのウィンドウをすべてのデスクトップに表示</s:String>
+    <s:String x:Key="move_window_desktop">このウィンドウをデスクトップに移動</s:String>
+    <s:String x:Key="move_app_desktop">このアプリのすべてのウィンドウをデスクトップに移動</s:String>
+    <s:String x:Key="desktop_number">デスクトップ {0}</s:String>
+    <s:String x:Key="desktop_action_failed">すべてのウィンドウに対する操作を完了できませんでした。一部のウィンドウはすでに移動している可能性があります。詳細はログを確認してください。</s:String>
+    <s:String x:Key="show_hebrew_date">ヘブライ暦の日付と曜日番号を表示する</s:String>
+    <s:String x:Key="hebrew_date_midnight">現地の暦日を使用します。日付は日没ではなく真夜中に切り替わります。</s:String>
+    <s:String x:Key="hebrew_place">ヘブライ暦の日付の場所:</s:String>
+    <s:String x:Key="hebrew_place_none">未選択</s:String>
+    <s:String x:Key="hebrew_place_choose">選択...</s:String>
+    <s:String x:Key="hebrew_place_clear">クリア</s:String>
+    <s:String x:Key="zone_clear">削除</s:String>
+    <s:String x:Key="hebrew_place_hint">ヘブライ暦の日が終わる日没時刻、およびカレンダーに表示するハラハー上の時刻の基準となる場所です。</s:String>
+    <s:String x:Key="hebrew_place_title">ヘブライ暦の日付の場所</s:String>
+    <s:String x:Key="hebrew_place_city_tab">都市</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">座標</s:String>
+    <s:String x:Key="hebrew_place_search">都市名（英語）:</s:String>
+    <s:String x:Key="hebrew_place_search_hint">例: jerus、new york、paris texas のように、2文字以上入力してください。人口 10,000 人以上の都市が表示されます。</s:String>
+    <s:String x:Key="hebrew_place_country">国:</s:String>
+    <s:String x:Key="hebrew_place_need_country">国を選択してください。2つの数値のどちらが緯度かを判定するために使用します。</s:String>
+    <s:String x:Key="hebrew_place_coordinates">緯度と経度:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">32.0853, 34.7818、34,7818 32,0853、32°05'07&quot;N 34°46'54&quot;E など、どの形式でも入力できます。小数点にはピリオドまたはカンマ、数値間にはカンマ、コロンまたは空白を使用できます。</s:String>
+    <s:String x:Key="hebrew_place_zone">タイムゾーン:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">都市に基づいて選択されています。誤っている場合は変更してください。夏時間とその変更を含むタイムゾーンの規則は、Windows の設定に従います。</s:String>
+    <s:String x:Key="calendar_title">ユダヤ暦</s:String>
+    <s:String x:Key="calendar_today">今日</s:String>
+    <s:String x:Key="calendar_copy_name">名称をコピー</s:String>
+    <s:String x:Key="calendar_search_name">名称を Google で検索</s:String>
+    <s:String x:Key="calendar_grid_hebrew">ヘブライ暦の月</s:String>
+    <s:String x:Key="calendar_grid_civil">西暦の月</s:String>
+    <s:String x:Key="calendar_shabbat">シャバット</s:String>
+    <s:String x:Key="calendar_previous_month">前の月</s:String>
+    <s:String x:Key="calendar_next_month">次の月</s:String>
+    <s:String x:Key="calendar_settings">設定...</s:String>
+    <s:String x:Key="calendar_close">閉じる</s:String>
+    <s:String x:Key="calendar_portion">今週のトーラーの朗読箇所: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">今週のシャバットには祭日の朗読箇所が読まれます</s:String>
+    <s:String x:Key="calendar_day_of">{0}、{2}の{1}日目</s:String>
+    <s:String x:Key="calendar_molad">{0}のモラド: {1}、{2}、{3}ハラキーム</s:String>
+    <s:String x:Key="calendar_omer">オメルの数え上げ</s:String>
+    <s:String x:Key="calendar_omer_day">オメルの{0}日目</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0}週と{1}日</s:String>
+    <s:String x:Key="calendar_place">場所: {0}</s:String>
+    <s:String x:Key="calendar_israel">イスラエルの地</s:String>
+    <s:String x:Key="calendar_diaspora">ディアスポラ</s:String>
+    <s:String x:Key="calendar_no_place">時刻を表示するには、カレンダーの設定で場所を選択してください。</s:String>
+    <s:String x:Key="calendar_times">一日の時刻</s:String>
+    <s:String x:Key="calendar_yahrzeits">ヤールツァイト</s:String>
+    <s:String x:Key="calendar_candles_after_dark">燭火の点灯（日没後）</s:String>
+    <s:String x:Key="calendar_havdalah">安息日の終わり（ハヴダラー）</s:String>
+    <s:String x:Key="calendar_rest_begins">開始: {0}（燭火の点灯）</s:String>
+    <s:String x:Key="calendar_rest_ends">終了: {0}（日没後）</s:String>
+    <s:String x:Key="calendar_settings_title">カレンダーの設定</s:String>
+    <s:String x:Key="calendar_settings_place">タイムゾーンの場所:</s:String>
+    <s:String x:Key="calendar_settings_zone">日付、日付の切り替わり、および一日の時刻に使用するタイムゾーン:</s:String>
+    <s:String x:Key="calendar_zone_main">{0}（コンピューターのタイムゾーン）</s:String>
+    <s:String x:Key="zones_heading">時計のタイムゾーン</s:String>
+    <s:String x:Key="zone_main">メインのタイムゾーン:</s:String>
+    <s:String x:Key="zone_second">2番目のタイムゾーン:</s:String>
+    <s:String x:Key="zone_third">3番目のタイムゾーン:</s:String>
+    <s:String x:Key="zone_show_name">名前を表示</s:String>
+    <s:String x:Key="zone_label">時計に表示する名前</s:String>
+    <s:String x:Key="zone_label_hint">このゾーンの場所の代わりに時計に表示する名前です（例：Jerusalem の代わりに Heart）。空欄にすると場所が表示されます。</s:String>
+    <s:String x:Key="zone_place">場所:</s:String>
+    <s:String x:Key="zones_tab">タイムゾーン</s:String>
+    <s:String x:Key="hebrew_date_tab">ヘブライ暦の日付</s:String>
+    <s:String x:Key="zone_computer">コンピューターのタイムゾーン（{0}）</s:String>
+    <s:String x:Key="hebrew_place_in_zones">ヘブライ暦の日付は、［タイムゾーン］タブで選択したメインのタイムゾーンの場所に基づきます。</s:String>
+    <s:String x:Key="zone_none">（非表示）</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">表示するヤールツァイト（すべて、カテゴリー別、個別）:</s:String>
+    <s:String x:Key="calendar_all_figures">すべて</s:String>
+    <s:String x:Key="cancel_dialog">キャンセル</s:String>
+    <s:String x:Key="coordinate_result">緯度と経度: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">順序は入力されたとおりです。</s:String>
+    <s:String x:Key="coordinate_basis_only_one">有効な順序は1つだけです。緯度は最大90度です。</s:String>
+    <s:String x:Key="coordinate_basis_country">国から順序を判定しました。逆の順序ではその国から遠く離れた位置になります。</s:String>
+    <s:String x:Key="coordinate_basis_assumed">緯度を先に指定したものとして扱います。</s:String>
+    <s:String x:Key="coordinate_warning_assumed">緯度を先に指定したものとして扱います。経度を先にしても、国との距離はほぼ同じです。</s:String>
+    <s:String x:Key="coordinate_warning_far">この地点は、国内で最も近い都市から {0:N0} km 離れています。国と数値を確認してください。</s:String>
+    <s:String x:Key="coordinate_problem_empty">座標を入力してください。</s:String>
+    <s:String x:Key="coordinate_problem_need_two">緯度と経度の2つの数値が必要です。</s:String>
+    <s:String x:Key="coordinate_problem_too_many">数値が2つを超えています。緯度と経度だけを入力してください。</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">両方の数値が緯度として指定されています。</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">両方の数値が経度として指定されています。</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">緯度は -90 度から 90 度の範囲で指定してください。</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">経度は -180 度から 180 度の範囲で指定してください。</s:String>
+    <s:String x:Key="coordinate_problem_neither">どちらの順序でも、緯度（最大90度）と経度（最大180度）として有効な値になりません。</s:String>
+    <s:String x:Key="open_system_settings">システム設定を開く</s:String>
+    <s:String x:Key="open_computer_management">コンピューターの管理</s:String>
+    <s:String x:Key="open_drives">ドライブを開く</s:String>
+    <s:String x:Key="this_pc">PC</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">開いているウィンドウをこのデスクトップに維持する（試験的）</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">すべてのデスクトップに表示されているウィンドウを、移動せずに再利用します。そうでない場合、デスクトップのアイコンやピン留めされたランチャーから開いたブラウザー、エクスプローラーのフォルダー、Notepad++ はこのデスクトップで開きます。その他のアプリや通知領域からの起動では、引き続きウィンドウが移動します。</s:String>
 </ResourceDictionary>

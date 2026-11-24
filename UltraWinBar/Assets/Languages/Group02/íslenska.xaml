@@ -14,6 +14,16 @@
     <s:String x:Key="language_tip">Veldu tungumálið sem á að nota.</s:String>
     <s:String x:Key="theme_text">_Þema:</s:String>
     <s:String x:Key="theme_tip">Settu þemu í möppuna "Themes".</s:String>
+    <s:String x:Key="accent_text">_Áherslulitur:</s:String>
+    <s:String x:Key="accent_tip">Neonlitur Modern Glass-þemans.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>Blágrænn</s:String>
+        <s:String>Fjólublár</s:String>
+        <s:String>Fúsía</s:String>
+        <s:String>Smaragðsgrænn</s:String>
+        <s:String>Rafgulur</s:String>
+        <s:String>Rósrauður</s:String>
+    </x:Array>
     <s:String x:Key="location_text">Staðse_tning:</s:String>
     <s:String x:Key="location_tip">Breyta staðsetningu verkstikunnar á skjánum.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -49,6 +59,7 @@
         <s:String>Sama verkstikla og glugginn</s:String>
         <s:String>Sama verkfærastikann og gluggann og aðalverkfærastikann</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_Snúa við grátónum:</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>Þegar þema krefst þess</s:String>
         <s:String>Alltaf</s:String>
@@ -67,14 +78,35 @@
         <s:String>Opna "Modern" dagatal</s:String>
         <s:String>Opna tilkynningamiðstöðina</s:String>
     </x:Array>
+    <s:String x:Key="task_wheel_action">_Aðgerð með músarhjóli:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>Gera ekkert</s:String>
+        <s:String>Sýna/fela glugga</s:String>
+    </x:Array>
     <s:String x:Key="auto_hide_transparent">Fela _verkstikuna þegar hún er falin með sjálfvirkri fellingu</s:String>
     <s:String x:Key="version">Útgáfa {0}</s:String>
     <s:String x:Key="visit_on_github">Heimsæktu UltraWinBar á GitHub</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Margar verkstikur</s:String>
+    <s:String x:Key="additional_taskbars_text">Sýna verkstiku á þessum brúnum. Hægrismelltu á verkstiku til að láta hana ná yfir alla brúnina og ýta hinum til hliðar.</s:String>
+    <s:String x:Key="location_left">Vinstri</s:String>
+    <s:String x:Key="location_top">Efri</s:String>
+    <s:String x:Key="location_right">Hægri</s:String>
+    <s:String x:Key="location_bottom">Neðri</s:String>
+    <s:String x:Key="tray_location_text">_Tilkynningarsvæði á:</s:String>
+    <s:String x:Key="clock_location_text">_Klukka á:</s:String>
+    <s:String x:Key="start_button_location_text">_Byrjunarhnappur á:</s:String>
+    <s:String x:Key="language_location_text">_Tungumálavísir á:</s:String>
+    <s:String x:Key="task_assignment_hint">Dragðu verkefnishnapp á aðra verkstiku til að færa allt forritið; haltu Ctrl inni meðan þú dregur til að færa aðeins þann glugga. Hægrismelltu á verkefnishnapp til að endurstilla úthlutun hans.</s:String>
+    <s:String x:Key="reset_task_assignments">Endurstilla allar úthlutanir verkstika</s:String>
+    <s:String x:Key="stretch">_Teygja</s:String>
+    <s:String x:Key="make_main">_Gera að aðalverkstiku</s:String>
+    <s:String x:Key="reset_task_assignment">Endurstilla úthlutun verkstiku</s:String>
     <s:String x:Key="taskbar_scale">Stærðarhlutfall verkstiklu</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">Núverandi stilling: {0}%</s:String>
     <s:String x:Key="debug_logging">Kveikja á _villuskráningu</s:String>
+    <s:String x:Key="window_activity_logging">Skrá þegar gluggar opnast og lokast</s:String>
     <s:String x:Key="check_for_updates">Athugaðu uppfærslur</s:String>
     <s:String x:Key="show_exit_menu_item">Sýna "Útskrift" valkost í hægri-smelliseðli</s:String>
     <s:String x:Key="show_end_task_button">Sýna "Ljúka verki" valkost í hægri-smelliseðli</s:String>
@@ -91,7 +123,12 @@
     <s:String x:Key="hotkey_warning_text">UltraWinBar mun yfirskrifa hnappasláttartakkana í verkefnislistanum í Windows. Jafnvel þótt UltraWinBar sé lokað verða takkarnir ekki endurheimtir í Windows fyrr en þú skráir þig út og skráir þig aftur inn.</s:String>
     <s:String x:Key="allow_blur_behind">Leyfa _óskýrleika á bak við gegnsæja verkstiku</s:String>
     <s:String x:Key="ok_dialog">Í lagi</s:String>
-
+    <s:String x:Key="clock_format_help">Skoða tiltæka sniðmöguleika</s:String>
+    <s:String x:Key="clock_format_warning">Athugið: Sérsniðið klukkusnið virkar hugsanlega ekki sem skyldi ef valið þema tilgreinir eigið snið.</s:String>
+    <s:String x:Key="override_clock_format">Sérsniðið klukku_snið:</s:String>
+    <s:String x:Key="override_ampm_designators">Sérsniðin _tímabilstákn:</s:String>
+    <s:String x:Key="am_designator">F.h.:</s:String>
+    <s:String x:Key="pm_designator">E.h.:</s:String>
     <s:String x:Key="customize_notifications">Aðlaga tilkynningar</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar sýnir táknin fyrir virk og brýn tilkynningar og felur óvirk. Þú getur breytt þessu háttarlagi fyrir atriði í listanum hér að neðan.</s:String>
     <s:String x:Key="customize_notifications_instruction">Veldu atriði, síðan veldu tilkynningahegðun þess:</s:String>
@@ -102,13 +139,11 @@
     <s:String x:Key="name_heading">Nafn</s:String>
     <s:String x:Key="behavior_heading">Hegðun</s:String>
     <s:String x:Key="invert_heading">Snúa</s:String>
-
     <s:String x:Key="start_text">Byrjaðu</s:String>
     <s:String x:Key="start_text_xp">Byrjaðu</s:String>
     <s:String x:Key="start_button_tip_98">Smelltu hér til að hefja.</s:String>
     <s:String x:Key="start_button_tip">Smelltu hér til að hefja</s:String>
     <s:String x:Key="start_button_tip_vista">Byrjaðu</s:String>
-
     <s:String x:Key="ultrawinbar_title">UltraWinBar verkstikla</s:String>
     <s:String x:Key="toolbars">_Tólarstikur</s:String>
     <s:String x:Key="quick_launch">_Hraðræsla</s:String>
@@ -127,15 +162,14 @@
     <s:String x:Key="tray_properties">E_iginleikar</s:String>
     <s:String x:Key="update_available">_Uppfærsla tiltæk...</s:String>
     <s:String x:Key="exit_ultrawinbar">_Hætta í UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">_Endurræsa UltraWinBar</s:String>
     <s:String x:Key="customize_notifications_menu">_Aðlaga tilkynningar...</s:String>
     <s:String x:Key="lock_taskbar_menu">_Læsa verkstikunni</s:String>
-
     <s:String x:Key="show_desktop_tip_95">Endurheimta skjáborðið</s:String>
     <s:String x:Key="show_desktop_tip">Sýna skjáborðið</s:String>
     <s:String x:Key="show_desktop_95">_Skjáborðið</s:String>
     <s:String x:Key="show_desktop">_Sýna skjáborðið</s:String>
     <s:String x:Key="peek_at_desktop">_Kíkja á skjáborðið</s:String>
-
     <s:String x:Key="restore">_Endurheimta</s:String>
     <s:String x:Key="move">_Hreyfa</s:String>
     <s:String x:Key="size">_Stærð</s:String>
@@ -143,12 +177,10 @@
     <s:String x:Key="maximize">Hámarka</s:String>
     <s:String x:Key="close">_Útskrift</s:String>
     <s:String x:Key="end_task">_Ljúka verki</s:String>
-
     <s:String x:Key="show_hidden">Sýna falin tákn</s:String>
     <s:String x:Key="hide">Fela</s:String>
-
     <s:String x:Key="open_folder">&amp;Opna möppu</s:String>
-
+    <s:String x:Key="move_to_taskbar_format">Færa á verkstiku {0}</s:String>
     <s:String x:Key="ime_input_tip_enabled">Hægri-smelltu til að fá IME-valkosti</s:String>
     <s:String x:Key="ime_input_tip_disabled">IME óvirkjað</s:String>
     <s:String x:Key="ime_input_full_shape_hiragana">Hiragana</s:String>
@@ -168,4 +200,102 @@
     <s:String x:Key="ime_conversion_general">Almennt</s:String>
     <s:String x:Key="ime_conversion_none">Engin umbreyting</s:String>
     <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+    <s:String x:Key="pin_to_taskbar">Festa á þessa verkstiku</s:String>
+    <s:String x:Key="pinned_app_windows">Opnir gluggar</s:String>
+    <s:String x:Key="unpin_from_taskbar">Taka af þessari verkstiku</s:String>
+    <s:String x:Key="copy_executable_path">Afrita slóð keyrsluskrár</s:String>
+    <s:String x:Key="copy_executable_directory">Afrita möppu keyrsluskrár</s:String>
+    <s:String x:Key="app_all_desktops">Sýna glugga þessa forrits á öllum skjáborðum</s:String>
+    <s:String x:Key="move_window_desktop">Færa þennan glugga á skjáborð</s:String>
+    <s:String x:Key="move_app_desktop">Færa alla glugga forritsins á skjáborð</s:String>
+    <s:String x:Key="desktop_number">Skjáborð {0}</s:String>
+    <s:String x:Key="desktop_action_failed">Windows tókst ekki að ljúka aðgerðinni fyrir alla glugga. Sumir gluggar gætu þegar hafa verið færðir. Sjá nánar í annál.</s:String>
+    <s:String x:Key="show_hebrew_date">Sýna hebreska dagsetningu og vikudaga með númerum</s:String>
+    <s:String x:Key="hebrew_date_midnight">Notar dagsetningu samkvæmt staðartíma; breytist á miðnætti, ekki við sólsetur.</s:String>
+    <s:String x:Key="hebrew_place">Staður fyrir hebreska dagsetningu:</s:String>
+    <s:String x:Key="hebrew_place_none">ekki valinn</s:String>
+    <s:String x:Key="hebrew_place_choose">Velja...</s:String>
+    <s:String x:Key="hebrew_place_clear">Hreinsa</s:String>
+    <s:String x:Key="zone_clear">Fjarlægja</s:String>
+    <s:String x:Key="hebrew_place_hint">Staðurinn þar sem sólsetur markar lok hebreska dagsins og þar sem dagatalið sýnir halakíska tíma.</s:String>
+    <s:String x:Key="hebrew_place_title">Staður fyrir hebresku dagsetninguna</s:String>
+    <s:String x:Key="hebrew_place_city_tab">Borg</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">Hnit</s:String>
+    <s:String x:Key="hebrew_place_search">Heiti borgar (á ensku):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">Sláðu inn að minnsta kosti tvo stafi, til dæmis: jerus, new york, paris texas. Borgir með 10 000 íbúa eða fleiri eru á listanum.</s:String>
+    <s:String x:Key="hebrew_place_country">Land:</s:String>
+    <s:String x:Key="hebrew_place_need_country">Veldu landið: það segir til um hvort talnanna tveggja sé breiddargráða.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">Breiddar- og lengdargráða:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">Hvaða snið sem er: 32.0853, 34.7818 eða 34,7818 32,0853 eða 32°05'07&quot;N 34°46'54&quot;E. Punktur eða komma í aukastöfum; komma, tvípunktur eða bil milli talnanna.</s:String>
+    <s:String x:Key="hebrew_place_zone">Tímabelti:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">Valið með borginni; breyttu því ef það er rangt. Reglur tímabeltisins (sumartími og breytingar hans) eru þær sem Windows notar.</s:String>
+    <s:String x:Key="calendar_title">Gyðingadagatal</s:String>
+    <s:String x:Key="calendar_today">Í dag</s:String>
+    <s:String x:Key="calendar_copy_name">Afrita heitið</s:String>
+    <s:String x:Key="calendar_search_name">Leita að heitinu á Google</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Hebreskur mánuður</s:String>
+    <s:String x:Key="calendar_grid_civil">Almanaksmánuður</s:String>
+    <s:String x:Key="calendar_shabbat">Shabbat</s:String>
+    <s:String x:Key="calendar_previous_month">Fyrri mánuður</s:String>
+    <s:String x:Key="calendar_next_month">Næsti mánuður</s:String>
+    <s:String x:Key="calendar_settings">Stillingar...</s:String>
+    <s:String x:Key="calendar_close">Loka</s:String>
+    <s:String x:Key="calendar_portion">Vikulegur Torah-lestrarhluti: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">Hátíðarlesning er lesin þennan Shabbat</s:String>
+    <s:String x:Key="calendar_day_of">{0}, dagur {1} í {2}</s:String>
+    <s:String x:Key="calendar_molad">Molad {0}: {1}, {2} og {3} chalakim</s:String>
+    <s:String x:Key="calendar_omer">Talning Ómers</s:String>
+    <s:String x:Key="calendar_omer_day">Dagur {0} í Ómertalningunni</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} vika/vikur og {1} dagur/dagar</s:String>
+    <s:String x:Key="calendar_place">Staður: {0}</s:String>
+    <s:String x:Key="calendar_israel">Ísraelsland</s:String>
+    <s:String x:Key="calendar_diaspora">útlegð</s:String>
+    <s:String x:Key="calendar_no_place">Veldu stað í stillingum dagatalsins til að sjá tíma dagsins.</s:String>
+    <s:String x:Key="calendar_times">Tímar dagsins</s:String>
+    <s:String x:Key="calendar_yahrzeits">Yahrzeit-afmæli</s:String>
+    <s:String x:Key="calendar_candles_after_dark">Kveikt á kertum (eftir myrkur)</s:String>
+    <s:String x:Key="calendar_havdalah">Lok hvíldardagsins (havdalah)</s:String>
+    <s:String x:Key="calendar_rest_begins">Hefst: {0} (kertakveiking)</s:String>
+    <s:String x:Key="calendar_rest_ends">Lýkur: {0} (að kvöldi)</s:String>
+    <s:String x:Key="calendar_settings_title">Stillingar dagatals</s:String>
+    <s:String x:Key="calendar_settings_place">Staður tímabeltis:</s:String>
+    <s:String x:Key="calendar_settings_zone">Tímabelti dagsetningar, dagskipta og tíma dagsins:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (tölvunnar)</s:String>
+    <s:String x:Key="zones_heading">Tímabelti klukkunnar</s:String>
+    <s:String x:Key="zone_main">Aðaltímabelti:</s:String>
+    <s:String x:Key="zone_second">Annað tímabelti:</s:String>
+    <s:String x:Key="zone_third">Þriðja tímabelti:</s:String>
+    <s:String x:Key="zone_show_name">Sýna heitið</s:String>
+    <s:String x:Key="zone_label">Heiti klukkunnar</s:String>
+    <s:String x:Key="zone_label_hint">Heiti sem klukkan sýnir fyrir þetta tímabelti í stað staðarins (til dæmis Heart fyrir Jerusalem). Hafðu auðið til að nota staðarheitið.</s:String>
+    <s:String x:Key="zone_place">Staður:</s:String>
+    <s:String x:Key="zones_tab">Tímabelti</s:String>
+    <s:String x:Key="hebrew_date_tab">Hebresk dagsetning</s:String>
+    <s:String x:Key="zone_computer">Tölvunnar ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">Hebreska dagsetningin miðast við stað aðaltímabeltisins, sem er valinn á flipanum Tímabelti.</s:String>
+    <s:String x:Key="zone_none">(ekki sýnt)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">Yahrzeit-afmæli sem á að sýna (öll, eftir flokki eða eitt í einu):</s:String>
+    <s:String x:Key="calendar_all_figures">Allir</s:String>
+    <s:String x:Key="cancel_dialog">Hætta við</s:String>
+    <s:String x:Key="coordinate_result">Breiddar- og lengdargráða: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">Röðin er merkt í textanum.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">Aðeins ein röð kemur til greina: breiddargráða er mest 90 gráður.</s:String>
+    <s:String x:Key="coordinate_basis_country">Röðin ræðst af landinu: hin röðin lendir langt frá því.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">Gert er ráð fyrir breiddargráðu fyrst.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">Gert er ráð fyrir breiddargráðu fyrst; lengdargráða fyrst myndi passa við landið álíka vel.</s:String>
+    <s:String x:Key="coordinate_warning_far">Punkturinn er {0:N0} km frá næstu borg í landinu. Athugaðu landið og tölurnar.</s:String>
+    <s:String x:Key="coordinate_problem_empty">Sláðu inn hnitin.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">Tvær tölur þarf: breiddargráðu og lengdargráðu.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">Fleiri en tvær tölur. Sláðu aðeins inn breiddar- og lengdargráðu.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">Báðar tölurnar eru merktar sem breiddargráða.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">Báðar tölurnar eru merktar sem lengdargráða.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">Breiddargráðan verður að vera á bilinu -90 til 90 gráður.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">Lengdargráðan verður að vera á bilinu -180 til 180 gráður.</s:String>
+    <s:String x:Key="coordinate_problem_neither">Í hvorugri röðinni mynda tölurnar breiddargráðu (mest 90) og lengdargráðu (mest 180).</s:String>
+    <s:String x:Key="open_system_settings">Opna kerfisstillingar</s:String>
+    <s:String x:Key="open_computer_management">Tölvustjórnun</s:String>
+    <s:String x:Key="open_drives">Opna drif</s:String>
+    <s:String x:Key="this_pc">Þessi tölva</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">Reyna að halda opnum gluggum á þessu skjáborði (tilraun)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Endurnýta glugga sem birtast á öllum skjáborðum án þess að færa þá. Annars opna skjáborðstákn og festir ræsiforrit vafra, Explorer-möppur og Notepad++ á þessu skjáborði; önnur forrit og virkjun í tilkynningarsvæði halda áfram að færa glugga milli skjáborða.</s:String>
 </ResourceDictionary>

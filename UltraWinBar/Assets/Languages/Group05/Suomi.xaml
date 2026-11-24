@@ -2,6 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:s="clr-namespace:System;assembly=mscorlib">
 
+
     <s:String x:Key="ultrawinbar_properties">UltraWinBar Ominaisuudet</s:String>
     <s:String x:Key="taskbar_tab">Tehtäväpalkki</s:String>
     <s:String x:Key="advanced_tab">Lisäasetukset</s:String>
@@ -14,6 +15,9 @@
     <s:String x:Key="language_tip">Valitse käytettävä kieli.</s:String>
     <s:String x:Key="theme_text">_Teema:</s:String>
     <s:String x:Key="theme_tip">Asenna teemoja Themes-kansioon.</s:String>
+    <s:String x:Key="accent_text">Korostusväri:</s:String>
+    <s:String x:Key="accent_tip">Modern Glass -teeman neonväri.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String"><s:String>Syaani</s:String><s:String>Violetti</s:String><s:String>Fuksia</s:String><s:String>Smaragdi</s:String><s:String>Meripihka</s:String><s:String>Ruusu</s:String></x:Array>
     <s:String x:Key="location_text">Sijaint_i:</s:String>
     <s:String x:Key="location_tip">Vaihda tehtäväpalkin sijaintia näytöllä.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -26,6 +30,7 @@
     <s:String x:Key="rowcount_tip">Rivien määrä tehtäväpalkissa, kun se on ylhäällä tai alhaalla.</s:String>
     <s:String x:Key="taskbar_width">Tehtäväpalkin leveys:</s:String>
     <s:String x:Key="allow_font_smoothing">_Salli fontin pehmennys</s:String>
+    <s:String x:Key="allow_font_smoothing_menu">Salli fontin pehmennys valikoissa</s:String>
     <s:String x:Key="collapse_tray_icons">Piilota _ilmoitusalueen kuvakkeet</s:String>
     <s:String x:Key="customize">_Mukauta...</s:String>
     <s:String x:Key="show_input_language">Näytä syötteen _kieli</s:String>
@@ -48,6 +53,7 @@
         <s:String>Saman ikkunan tehtäväpalkilla</s:String>
         <s:String>Pää- ja ikkunan tehtäväpalkilla</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">Käännä harmaasävyvärit:</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>Kun teema tarvitsee</s:String>
         <s:String>Aina</s:String>
@@ -66,14 +72,32 @@
         <s:String>Avaa Modern-kalenteri</s:String>
         <s:String>Avaa ilmoituskeskus</s:String>
     </x:Array>
+    <s:String x:Key="task_wheel_action">Hiiren rullan toiminto:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String"><s:String>Älä tee mitään</s:String><s:String>Näytä/piilota ikkuna</s:String></x:Array>
     <s:String x:Key="auto_hide_transparent">Piilota tehtäväpalkin viiva, kun se on piilotettu automaattisen piilotuksen avulla</s:String>
     <s:String x:Key="version">Versio {0}</s:String>
     <s:String x:Key="visit_on_github">UltraWinBarin GitHub</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Useita tehtäväpalkkeja</s:String>
+    <s:String x:Key="additional_taskbars_text">Näytä tehtäväpalkki näillä reunoilla. Napsauta tehtäväpalkkia hiiren oikealla painikkeella, niin se ulottuu koko reunalle ja siirtää muut sivuun.</s:String>
+    <s:String x:Key="location_left">Vasemmalla</s:String>
+    <s:String x:Key="location_top">Ylhäällä</s:String>
+    <s:String x:Key="location_right">Oikealla</s:String>
+    <s:String x:Key="location_bottom">Alhaalla</s:String>
+    <s:String x:Key="tray_location_text">Ilmoitusalueen sijainti:</s:String>
+    <s:String x:Key="clock_location_text">Kellon sijainti:</s:String>
+    <s:String x:Key="start_button_location_text">Käynnistä-painikkeen sijainti:</s:String>
+    <s:String x:Key="language_location_text">Kielikuvakkeen sijainti:</s:String>
+    <s:String x:Key="task_assignment_hint">Siirrä sovellus vetämällä sen tehtäväpainike toiseen tehtäväpalkkiin. Vedä samalla Ctrl-näppäintä painettuna, jos haluat siirtää vain kyseisen ikkunan. Nollaa tehtäväpainikkeen määritys napsauttamalla sitä hiiren oikealla painikkeella.</s:String>
+    <s:String x:Key="reset_task_assignments">Palauta kaikki tehtäväpalkkimääritykset</s:String>
+    <s:String x:Key="stretch">Venytä</s:String>
+    <s:String x:Key="make_main">Aseta päätehtäväpalkiksi</s:String>
+    <s:String x:Key="reset_task_assignment">Palauta tehtäväpalkkimääritys</s:String>
     <s:String x:Key="taskbar_scale">Tehtäväpalkin skaalaus</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">Nykyinen asetus: {0}%</s:String>
     <s:String x:Key="debug_logging">Ota käyttöön virheenkorjausloki</s:String>
+    <s:String x:Key="window_activity_logging">Kirjaa ikkunoiden avaukset ja sulkemiset</s:String>
     <s:String x:Key="check_for_updates">Tarkista päivitykset automaattisesti</s:String>
     <s:String x:Key="show_exit_menu_item">Näytä Sulje-vaihtoehto hiiren kakkospainikkeella avautuvassa valikossa</s:String>
     <s:String x:Key="show_end_task_button">Näytä Lopetettu tehtävä-vaihtoehto hiiren kakkospainikkeella avautuvassa valikossa</s:String>
@@ -92,6 +116,12 @@
     <s:String x:Key="ok_dialog">OK</s:String>
 
 
+    <s:String x:Key="clock_format_help">Näytä käytettävissä olevat muotoiluasetukset</s:String>
+    <s:String x:Key="clock_format_warning">Huomautus: Kellon mukautettu muotoilu ei ehkä toimi odotetusti, jos valitussa teemassa on määritetty oma muoto.</s:String>
+    <s:String x:Key="override_clock_format">Kellon mukautettu muotoilu:</s:String>
+    <s:String x:Key="override_ampm_designators">Mukautetut aamupäivä- ja iltapäivämerkinnät:</s:String>
+    <s:String x:Key="am_designator">Aamupäivä:</s:String>
+    <s:String x:Key="pm_designator">Iltapäivä:</s:String>
     <s:String x:Key="customize_notifications">Mukauta ilmoitukset</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar näyttää aktiivisten ja kiireellisten ilmoitusten kuvakkeet ja piilottaa passiiviset. Voit muuttaa tätä asetusta alla olevien kohteiden kohdalla.</s:String>
     <s:String x:Key="customize_notifications_instruction">Valitse kohde ja valitse sitten sen ilmoitustoiminta:</s:String>
@@ -127,6 +157,7 @@
     <s:String x:Key="tray_properties">Ominaisuudet</s:String>
     <s:String x:Key="update_available">Päivitys saatavilla...</s:String>
     <s:String x:Key="exit_ultrawinbar">_Sulje UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">Käynnistä UltraWinBar uudelleen</s:String>
     <s:String x:Key="customize_notifications_menu">Mukauta ilmoitukset...</s:String>
     <s:String x:Key="lock_taskbar_menu">Lukitse tehtäväpalkki</s:String>
 
@@ -149,6 +180,7 @@
 
     <s:String x:Key="open_folder">&amp;Avaa kansio</s:String>
 
+    <s:String x:Key="move_to_taskbar_format">Siirrä tehtäväpalkkiin {0}</s:String>
     <s:String x:Key="ime_input_tip_enabled">Napsauta hiiren kakkospainikkeella IME-asetuksia varten</s:String>
     <s:String x:Key="ime_input_tip_disabled">IME pois käytöstä</s:String>
     <s:String x:Key="ime_input_full_shape_hiragana">Hiragana</s:String>
@@ -169,7 +201,106 @@
     <s:String x:Key="ime_conversion_none">Ei muuntamista</s:String>
     <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
 
-    <!-- Items below are settings, and should always be in English -->
+    
+    <s:String x:Key="pin_to_taskbar">Kiinnitä tähän tehtäväpalkkiin</s:String>
+    <s:String x:Key="pinned_app_windows">Avoimet ikkunat</s:String>
+    <s:String x:Key="unpin_from_taskbar">Poista kiinnitys tästä tehtäväpalkista</s:String>
+    <s:String x:Key="copy_executable_path">Kopioi suoritettavan tiedoston polku</s:String>
+    <s:String x:Key="copy_executable_directory">Kopioi suoritettavan tiedoston kansio</s:String>
     <FlowDirection x:Key="flow_direction">LeftToRight</FlowDirection>
     <FontFamily x:Key="start_text_xp_font_family">Franklin Gothic</FontFamily>
+
+    <s:String x:Key="app_all_desktops">Näytä tämän sovelluksen ikkunat kaikilla työpöydillä</s:String>
+    <s:String x:Key="move_window_desktop">Siirrä tämä ikkuna työpöydälle</s:String>
+    <s:String x:Key="move_app_desktop">Siirrä kaikki sovelluksen ikkunat työpöydälle</s:String>
+    <s:String x:Key="desktop_number">Työpöytä {0}</s:String>
+    <s:String x:Key="desktop_action_failed">Windows ei voinut suorittaa toimintoa kaikille ikkunoille. Osa ikkunoista on saattanut jo siirtyä. Katso lisätietoja lokista.</s:String>
+    <s:String x:Key="show_hebrew_date">Näytä heprealainen päivämäärä ja viikonpäivät numeroina</s:String>
+    <s:String x:Key="hebrew_date_midnight">Käyttää paikallista kalenteripäivää; päivämäärä vaihtuu keskiyöllä, ei auringonlaskun aikaan.</s:String>
+    <s:String x:Key="hebrew_place">Heprealaisen päivämäärän sijainti:</s:String>
+    <s:String x:Key="hebrew_place_none">ei valittu</s:String>
+    <s:String x:Key="hebrew_place_choose">Valitse...</s:String>
+    <s:String x:Key="hebrew_place_clear">Tyhjennä</s:String>
+    <s:String x:Key="zone_clear">Poista</s:String>
+    <s:String x:Key="hebrew_place_hint">Paikka, jonka auringonlasku päättää heprealaisen päivän ja jonka halakhiset ajat kalenteri näyttää.</s:String>
+    <s:String x:Key="hebrew_place_title">Heprealaisen päivämäärän sijainti</s:String>
+    <s:String x:Key="hebrew_place_city_tab">Kaupunki</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">Koordinaatit</s:String>
+    <s:String x:Key="hebrew_place_search">Kaupungin nimi (englanniksi):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">Kirjoita vähintään kaksi kirjainta, esimerkiksi: jerus, new york, paris texas. Luettelossa ovat vähintään 10 000 asukkaan kaupungit.</s:String>
+    <s:String x:Key="hebrew_place_country">Maa:</s:String>
+    <s:String x:Key="hebrew_place_need_country">Valitse maa: sen perusteella päätellään, kumpi luvuista on leveysaste.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">Leveys- ja pituusaste:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">Mikä tahansa muoto käy: 32.0853, 34.7818 tai 34,7818 32,0853 tai 32°05'07&quot;N 34°46'54&quot;E. Desimaalierottimena piste tai pilkku; lukujen välissä pilkku, kaksoispiste tai välilyönti.</s:String>
+    <s:String x:Key="hebrew_place_zone">Aikavyöhyke:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">Valitaan kaupungin perusteella; muuta, jos se on väärä. Vyöhykkeen säännöt (kesäaika ja sen muutokset) ovat Windowsin käytössä olevat.</s:String>
+    <s:String x:Key="calendar_title">Juutalainen kalenteri</s:String>
+    <s:String x:Key="calendar_today">Tänään</s:String>
+    <s:String x:Key="calendar_copy_name">Kopioi nimi</s:String>
+    <s:String x:Key="calendar_search_name">Hae nimeä Googlesta</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Heprealainen kuukausi</s:String>
+    <s:String x:Key="calendar_grid_civil">Siviilikuukausi</s:String>
+    <s:String x:Key="calendar_shabbat">Shabbat</s:String>
+    <s:String x:Key="calendar_previous_month">Edellinen kuukausi</s:String>
+    <s:String x:Key="calendar_next_month">Seuraava kuukausi</s:String>
+    <s:String x:Key="calendar_settings">Asetukset...</s:String>
+    <s:String x:Key="calendar_close">Sulje</s:String>
+    <s:String x:Key="calendar_portion">Viikon parasha: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">Tänä Shabbatina luetaan juhlapäivän lukukappale</s:String>
+    <s:String x:Key="calendar_day_of">{0}, {1}. päivä kuuta {2}</s:String>
+    <s:String x:Key="calendar_molad">Kuukauden {0} molad: {1}, {2} ja {3} chalakimia</s:String>
+    <s:String x:Key="calendar_omer">Omerin laskenta</s:String>
+    <s:String x:Key="calendar_omer_day">Omerin {0}. päivä</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} viikkoa ja {1} päivää</s:String>
+    <s:String x:Key="calendar_place">Paikka: {0}</s:String>
+    <s:String x:Key="calendar_israel">Israelin maa</s:String>
+    <s:String x:Key="calendar_diaspora">diaspora</s:String>
+    <s:String x:Key="calendar_no_place">Näet vuorokauden ajat valitsemalla paikan kalenterin asetuksista.</s:String>
+    <s:String x:Key="calendar_times">Vuorokauden ajat</s:String>
+    <s:String x:Key="calendar_yahrzeits">Yahrzeit-muistopäivät</s:String>
+    <s:String x:Key="calendar_candles_after_dark">Kynttilöiden sytytys (pimeän tultua)</s:String>
+    <s:String x:Key="calendar_havdalah">Lepopäivän päättyminen (havdala)</s:String>
+    <s:String x:Key="calendar_rest_begins">Alkaa: {0} (kynttilöiden sytytys)</s:String>
+    <s:String x:Key="calendar_rest_ends">Päättyy: {0} (pimeän tulo)</s:String>
+    <s:String x:Key="calendar_settings_title">Kalenterin asetukset</s:String>
+    <s:String x:Key="calendar_settings_place">Vyöhykkeen paikka:</s:String>
+    <s:String x:Key="calendar_settings_zone">Päivämäärän, vuorokauden vaihtumisen ja vuorokauden aikojen aikavyöhyke:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (tietokoneen aikavyöhyke)</s:String>
+    <s:String x:Key="zones_heading">Kellon aikavyöhykkeet</s:String>
+    <s:String x:Key="zone_main">Pääaikavyöhyke:</s:String>
+    <s:String x:Key="zone_second">Toinen aikavyöhyke:</s:String>
+    <s:String x:Key="zone_third">Kolmas aikavyöhyke:</s:String>
+    <s:String x:Key="zone_show_name">Näytä nimi</s:String>
+    <s:String x:Key="zone_label">Nimi kellossa</s:String>
+    <s:String x:Key="zone_label_hint">Nimi, jonka kello näyttää tämän vyöhykkeen paikannimen sijasta (esimerkiksi Heart Jerusalemin sijasta). Tyhjä kenttä näyttää paikannimen.</s:String>
+    <s:String x:Key="zone_place">Paikka:</s:String>
+    <s:String x:Key="zones_tab">Aikavyöhykkeet</s:String>
+    <s:String x:Key="hebrew_date_tab">Heprealainen päivämäärä</s:String>
+    <s:String x:Key="zone_computer">Tietokoneen ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">Heprealainen päivämäärä määräytyy pääaikavyöhykkeen paikan mukaan, joka valitaan Aikavyöhykkeet-välilehdessä.</s:String>
+    <s:String x:Key="zone_none">(ei näytetä)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">Näytettävät yahrzeit-muistopäivät (kaikki, luokittain tai yksitellen):</s:String>
+    <s:String x:Key="calendar_all_figures">Kaikki</s:String>
+    <s:String x:Key="cancel_dialog">Peruuta</s:String>
+    <s:String x:Key="coordinate_result">Leveys- ja pituusaste: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">Järjestys on merkitty tekstissä.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">Vain yksi järjestys sopii: leveysaste on enintään 90 astetta.</s:String>
+    <s:String x:Key="coordinate_basis_country">Järjestys päätellään maasta: toinen vaihtoehto sijoittuisi kauas siitä.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">Oletetaan, että leveysaste on ensin.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">Oletetaan, että leveysaste on ensin; myös päinvastainen järjestys sopisi maahan suunnilleen yhtä hyvin.</s:String>
+    <s:String x:Key="coordinate_warning_far">Piste on {0:N0} km:n päässä maan lähimmästä kaupungista. Tarkista maa ja luvut.</s:String>
+    <s:String x:Key="coordinate_problem_empty">Kirjoita koordinaatit.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">Tarvitaan kaksi lukua: leveys- ja pituusaste.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">Lukuja on enemmän kuin kaksi. Kirjoita vain leveys- ja pituusaste.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">Molemmat luvut on merkitty leveysasteiksi.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">Molemmat luvut on merkitty pituusasteiksi.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">Leveysasteen on oltava välillä -90–90 astetta.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">Pituusasteen on oltava välillä -180–180 astetta.</s:String>
+    <s:String x:Key="coordinate_problem_neither">Kumpikaan järjestys ei anna näistä luvuista kelvollista leveysastetta (enintään 90) ja pituusastetta (enintään 180).</s:String>
+    <s:String x:Key="open_system_settings">Avaa järjestelmäasetukset</s:String>
+    <s:String x:Key="open_computer_management">Tietokoneen hallinta</s:String>
+    <s:String x:Key="open_drives">Avaa asemat</s:String>
+    <s:String x:Key="this_pc">Tämä tietokone</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">Yritä pitää avatut ikkunat tällä työpöydällä (kokeellinen)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Käytä kaikilla työpöydillä näytettäviä ikkunoita siirtämättä niitä. Muussa tapauksessa työpöydän kuvakkeet ja kiinnitetyt käynnistimet avaavat selaimet, Resurssienhallinnan kansiot ja Notepad++:n paikallisesti; muut sovellukset ja ilmoitusalueen aktivointi siirtävät ikkunan edelleen.</s:String>
 </ResourceDictionary>

@@ -14,6 +14,16 @@
     <s:String x:Key="language_tip">Wybierz język.</s:String>
     <s:String x:Key="theme_text">_Motyw:</s:String>
     <s:String x:Key="theme_tip">Zainstaluj motywy w folderze Themes.</s:String>
+    <s:String x:Key="accent_text">Kol_or akcentu:</s:String>
+    <s:String x:Key="accent_tip">Neonowy kolor motywu Modern Glass.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>Cyjan</s:String>
+        <s:String>Fioletowy</s:String>
+        <s:String>Fuksja</s:String>
+        <s:String>Szmaragdowy</s:String>
+        <s:String>Bursztynowy</s:String>
+        <s:String>Różany</s:String>
+    </x:Array>
     <s:String x:Key="location_text">Lokalizacja:</s:String>
     <s:String x:Key="location_tip">Zmień umiejscowienie paska zadań na ekranie.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -49,6 +59,7 @@
         <s:String>Ten sam pasek zadań co okno</s:String>
         <s:String>Ten sam pasek zadań co okno i główny pasek zadań</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_Odwróć kolory w skali szarości:</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>Gdy potrzebuje tego motyw</s:String>
         <s:String>Zawsze</s:String>
@@ -67,14 +78,35 @@
         <s:String>Otwórz kalendarz Modern</s:String>
         <s:String>Otwórz Centrum powiadomień</s:String>
     </x:Array>
+    <s:String x:Key="task_wheel_action">_Akcja kółka myszy:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>Nic nie rób</s:String>
+        <s:String>Pokaż/ukryj okno</s:String>
+    </x:Array>
     <s:String x:Key="auto_hide_transparent">Ukryj także linię paska zadań, gdy jest on ukryty przez Autoukrywanie</s:String>
     <s:String x:Key="version">Wersja {0}</s:String>
     <s:String x:Key="visit_on_github">Zobacz na GitHub</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Wiele pasków zadań</s:String>
+    <s:String x:Key="additional_taskbars_text">Pokaż pasek zadań przy tych krawędziach. Kliknij pasek zadań prawym przyciskiem myszy, aby rozciągnąć go na całą krawędź i przesunąć pozostałe.</s:String>
+    <s:String x:Key="location_left">Po lewej</s:String>
+    <s:String x:Key="location_top">Na górze</s:String>
+    <s:String x:Key="location_right">Po prawej</s:String>
+    <s:String x:Key="location_bottom">Na dole</s:String>
+    <s:String x:Key="tray_location_text">Obszar _powiadomień na:</s:String>
+    <s:String x:Key="clock_location_text">_Zegar na:</s:String>
+    <s:String x:Key="start_button_location_text">Przycisk _Start na:</s:String>
+    <s:String x:Key="language_location_text">Wskaźnik _języka na:</s:String>
+    <s:String x:Key="task_assignment_hint">Przeciągnij przycisk zadania na inny pasek zadań, aby przenieść całą aplikację; przytrzymaj Ctrl podczas przeciągania, aby przenieść tylko to okno. Kliknij przycisk zadania prawym przyciskiem myszy, aby zresetować jego przypisanie.</s:String>
+    <s:String x:Key="reset_task_assignments">Zresetuj wszystkie przypisania pasków zadań</s:String>
+    <s:String x:Key="stretch">_Rozciągnij</s:String>
+    <s:String x:Key="make_main">_Ustaw jako główny</s:String>
+    <s:String x:Key="reset_task_assignment">Zresetuj _przypisanie paska zadań</s:String>
     <s:String x:Key="taskbar_scale">Skala paska zadań</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">Aktualne ustawienie: {0}%</s:String>
     <s:String x:Key="debug_logging">Włącz debugowanie</s:String>
+    <s:String x:Key="window_activity_logging">Rejestruj otwieranie i zamykanie okien</s:String>
     <s:String x:Key="check_for_updates">Sprawdź aktualizacje</s:String>
     <s:String x:Key="show_exit_menu_item">Pokaż opcję "Wyjdź z UltraWinBar" w menu podręcznym (prawy przycisk myszy)</s:String>
     <s:String x:Key="show_end_task_button">Pokaż opcję "Zakończ zadanie" w menu podręcznym (prawy przycisk myszy)</s:String>
@@ -92,6 +124,12 @@
     <s:String x:Key="allow_blur_behind">Pozwolić na rozmycie za przeźroczystym paskiem zadań?</s:String>
     <s:String x:Key="ok_dialog">OK</s:String>
 
+    <s:String x:Key="clock_format_help">Wyświetl dostępne opcje formatowania</s:String>
+    <s:String x:Key="clock_format_warning">Uwaga: niestandardowy format zegara może nie działać zgodnie z oczekiwaniami, jeśli wybrany motyw określa własny format.</s:String>
+    <s:String x:Key="override_clock_format">Niestandardowy _format zegara:</s:String>
+    <s:String x:Key="override_ampm_designators">Niestandardowe oznaczenia _AM/PM:</s:String>
+    <s:String x:Key="am_designator">AM:</s:String>
+    <s:String x:Key="pm_designator">PM:</s:String>
     <s:String x:Key="customize_notifications">Dostosuj powiadomienia</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar wyświetla ikony aktywnych i pilnych powiadomień oraz ukrywa nieaktywne. Możesz zmienić to zachowanie dla elementów z poniższej listy.</s:String>
     <s:String x:Key="customize_notifications_instruction">Wybierz element, a następnie wybierz jego sposób powiadamiania:</s:String>
@@ -127,6 +165,7 @@
     <s:String x:Key="tray_properties">Właś_ciwości</s:String>
     <s:String x:Key="update_available">_Dostępna aktualizacja...</s:String>
     <s:String x:Key="exit_ultrawinbar">_Wyjdź z UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">_Uruchom ponownie UltraWinBar</s:String>
     <s:String x:Key="customize_notifications_menu">_Dostosuj powiadomienia...</s:String>
     <s:String x:Key="lock_taskbar_menu">_Zablokuj pasek zadań</s:String>
 
@@ -149,6 +188,7 @@
 
     <s:String x:Key="open_folder">&amp;Otwórz folder</s:String>
 
+    <s:String x:Key="move_to_taskbar_format">Przenieś na pasek zadań {0}</s:String>
     <s:String x:Key="ime_input_tip_enabled">Kliknięcie prawym przyciskiem myszy otwiera opcje IME</s:String>
     <s:String x:Key="ime_input_tip_disabled">IME jest nieaktywne</s:String>
     <s:String x:Key="ime_input_full_shape_hiragana">Hiragana</s:String>
@@ -168,4 +208,102 @@
     <s:String x:Key="ime_conversion_general">Ogólna</s:String>
     <s:String x:Key="ime_conversion_none">Bez konwersji</s:String>
     <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+    <s:String x:Key="pin_to_taskbar">Przypnij do tego paska zadań</s:String>
+    <s:String x:Key="pinned_app_windows">Otwarte okna</s:String>
+    <s:String x:Key="unpin_from_taskbar">Odepnij od tego paska zadań</s:String>
+    <s:String x:Key="copy_executable_path">Kopiuj ścieżkę pliku wykonywalnego</s:String>
+    <s:String x:Key="copy_executable_directory">Kopiuj folder pliku wykonywalnego</s:String>
+    <s:String x:Key="app_all_desktops">Pokaż okna tej aplikacji na wszystkich pulpitach</s:String>
+    <s:String x:Key="move_window_desktop">Przenieś to okno na pulpit</s:String>
+    <s:String x:Key="move_app_desktop">Przenieś wszystkie okna aplikacji na pulpit</s:String>
+    <s:String x:Key="desktop_number">Pulpit {0}</s:String>
+    <s:String x:Key="desktop_action_failed">System Windows nie mógł wykonać operacji dla wszystkich okien. Niektóre okna mogły już zostać przeniesione. Szczegóły znajdziesz w dzienniku.</s:String>
+    <s:String x:Key="show_hebrew_date">Pokaż datę hebrajską i numerowane dni tygodnia</s:String>
+    <s:String x:Key="hebrew_date_midnight">Używa lokalnej daty kalendarzowej; zmienia się o północy, a nie o zachodzie słońca.</s:String>
+    <s:String x:Key="hebrew_place">Miejsce dla daty hebrajskiej:</s:String>
+    <s:String x:Key="hebrew_place_none">nie wybrano</s:String>
+    <s:String x:Key="hebrew_place_choose">Wybierz...</s:String>
+    <s:String x:Key="hebrew_place_clear">Wyczyść</s:String>
+    <s:String x:Key="zone_clear">Usuń</s:String>
+    <s:String x:Key="hebrew_place_hint">Miejsce, którego zachód słońca kończy dzień hebrajski i którego czasy halachiczne pokazuje kalendarz.</s:String>
+    <s:String x:Key="hebrew_place_title">Miejsce dla daty hebrajskiej</s:String>
+    <s:String x:Key="hebrew_place_city_tab">Miasto</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">Współrzędne</s:String>
+    <s:String x:Key="hebrew_place_search">Nazwa miasta (po angielsku):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">Wpisz co najmniej dwie litery, na przykład: jerus, new york, paris texas. Wyświetlane są miasta liczące co najmniej 10 000 mieszkańców.</s:String>
+    <s:String x:Key="hebrew_place_country">Kraj:</s:String>
+    <s:String x:Key="hebrew_place_need_country">Wybierz kraj: określa on, która z dwóch liczb jest szerokością geograficzną.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">Szerokość i długość geograficzna:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">Akceptowany jest dowolny format: 32.0853, 34.7818 lub 34,7818 32,0853 albo 32°05'07&quot;N 34°46'54&quot;E. Użyj kropki lub przecinka w części ułamkowej oraz przecinka, dwukropka lub spacji między liczbami.</s:String>
+    <s:String x:Key="hebrew_place_zone">Strefa czasowa:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">Wybierana wraz z miastem; zmień ją, jeśli jest nieprawidłowa. Obowiązują reguły strefy systemu Windows (czas letni i jego zmiany).</s:String>
+    <s:String x:Key="calendar_title">Kalendarz żydowski</s:String>
+    <s:String x:Key="calendar_today">Dzisiaj</s:String>
+    <s:String x:Key="calendar_copy_name">Kopiuj nazwę</s:String>
+    <s:String x:Key="calendar_search_name">Wyszukaj nazwę w Google</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Miesiąc hebrajski</s:String>
+    <s:String x:Key="calendar_grid_civil">Miesiąc cywilny</s:String>
+    <s:String x:Key="calendar_shabbat">Szabat</s:String>
+    <s:String x:Key="calendar_previous_month">Poprzedni miesiąc</s:String>
+    <s:String x:Key="calendar_next_month">Następny miesiąc</s:String>
+    <s:String x:Key="calendar_settings">Ustawienia...</s:String>
+    <s:String x:Key="calendar_close">Zamknij</s:String>
+    <s:String x:Key="calendar_portion">Cotygodniowy fragment Tory: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">W ten szabat czyta się fragment świąteczny</s:String>
+    <s:String x:Key="calendar_day_of">{0}, dzień {1} miesiąca {2}</s:String>
+    <s:String x:Key="calendar_molad">Molad miesiąca {0}: {1}, {2} i {3} chalakim</s:String>
+    <s:String x:Key="calendar_omer">Odliczanie omeru</s:String>
+    <s:String x:Key="calendar_omer_day">{0}. dzień omeru</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} tyg. i {1} dni</s:String>
+    <s:String x:Key="calendar_place">Miejsce: {0}</s:String>
+    <s:String x:Key="calendar_israel">Ziemia Izraela</s:String>
+    <s:String x:Key="calendar_diaspora">diaspora</s:String>
+    <s:String x:Key="calendar_no_place">Wybierz miejsce w ustawieniach kalendarza, aby zobaczyć pory dnia.</s:String>
+    <s:String x:Key="calendar_times">Pory dnia</s:String>
+    <s:String x:Key="calendar_yahrzeits">Jorcajty</s:String>
+    <s:String x:Key="calendar_candles_after_dark">Zapalenie świec (po zmroku)</s:String>
+    <s:String x:Key="calendar_havdalah">Koniec dnia odpoczynku (hawdala)</s:String>
+    <s:String x:Key="calendar_rest_begins">Początek: {0} (zapalenie świec)</s:String>
+    <s:String x:Key="calendar_rest_ends">Koniec: {0} (zmrok)</s:String>
+    <s:String x:Key="calendar_settings_title">Ustawienia kalendarza</s:String>
+    <s:String x:Key="calendar_settings_place">Miejsce strefy:</s:String>
+    <s:String x:Key="calendar_settings_zone">Strefa czasowa dla daty, zmiany dnia i pór dnia:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (komputera)</s:String>
+    <s:String x:Key="zones_heading">Strefy czasowe zegara</s:String>
+    <s:String x:Key="zone_main">Główna strefa czasowa:</s:String>
+    <s:String x:Key="zone_second">Druga strefa czasowa:</s:String>
+    <s:String x:Key="zone_third">Trzecia strefa czasowa:</s:String>
+    <s:String x:Key="zone_show_name">Pokaż nazwę</s:String>
+    <s:String x:Key="zone_label">Nazwa na zegarze</s:String>
+    <s:String x:Key="zone_label_hint">Nazwa wyświetlana przez zegar dla tej strefy zamiast jej miejsca (na przykład Heart dla Jerusalem). Puste pole pozostawia nazwę miejsca.</s:String>
+    <s:String x:Key="zone_place">Miejsce:</s:String>
+    <s:String x:Key="zones_tab">Strefy czasowe</s:String>
+    <s:String x:Key="hebrew_date_tab">Data hebrajska</s:String>
+    <s:String x:Key="zone_computer">Komputera ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">Data hebrajska odpowiada miejscu głównej strefy czasowej, wybranemu na karcie Strefy czasowe.</s:String>
+    <s:String x:Key="zone_none">(nie wyświetlaj)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">Jorcajty do wyświetlenia (wszystkie, według kategorii, pojedynczo):</s:String>
+    <s:String x:Key="calendar_all_figures">Wszystkie</s:String>
+    <s:String x:Key="cancel_dialog">Anuluj</s:String>
+    <s:String x:Key="coordinate_result">Szerokość i długość geograficzna: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">Kolejność jest oznaczona w tekście.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">Pasuje tylko jedna kolejność: szerokość geograficzna wynosi maksymalnie 90 stopni.</s:String>
+    <s:String x:Key="coordinate_basis_country">Kolejność określa kraj: druga wartość wskazuje miejsce daleko poza jego granicami.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">Przyjęto, że najpierw podano szerokość geograficzną.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">Przyjęto, że najpierw podano szerokość geograficzną; odwrotna kolejność pasowałaby do kraju niemal równie dobrze.</s:String>
+    <s:String x:Key="coordinate_warning_far">Punkt znajduje się {0:N0} km od najbliższego miasta w kraju. Sprawdź kraj i liczby.</s:String>
+    <s:String x:Key="coordinate_problem_empty">Wpisz współrzędne.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">Wymagane są dwie liczby: szerokość i długość geograficzna.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">Podano więcej niż dwie liczby. Wpisz tylko szerokość i długość geograficzną.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">Obie liczby oznaczono jako szerokość geograficzną.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">Obie liczby oznaczono jako długość geograficzną.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">Szerokość geograficzna musi wynosić od -90 do 90 stopni.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">Długość geograficzna musi wynosić od -180 do 180 stopni.</s:String>
+    <s:String x:Key="coordinate_problem_neither">W żadnej kolejności te liczby nie tworzą szerokości (maks. 90) i długości geograficznej (maks. 180).</s:String>
+    <s:String x:Key="open_system_settings">Otwórz Ustawienia systemu</s:String>
+    <s:String x:Key="open_computer_management">Zarządzanie komputerem</s:String>
+    <s:String x:Key="open_drives">Otwórz dyski</s:String>
+    <s:String x:Key="this_pc">Ten komputer</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">Staraj się pozostawiać otwarte okna na tym pulpicie (eksperymentalne)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Używaj ponownie okien widocznych na wszystkich pulpitach bez ich przenoszenia. W przeciwnym razie ikony pulpitu i przypięte elementy uruchamiające otwierają lokalnie przeglądarki, foldery Eksploratora plików i Notepad++; aktywowanie innych aplikacji i ikon w obszarze powiadomień nadal przenosi okna.</s:String>
 </ResourceDictionary>

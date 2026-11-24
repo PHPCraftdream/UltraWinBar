@@ -23,8 +23,19 @@ namespace UltraWinBar.Utilities
         public static bool ShowsName(int zone) => zone == Main ? Settings.Instance.ShowMainZoneName
             : zone == Second ? Settings.Instance.ShowSecondZoneName : Settings.Instance.ShowThirdZoneName;
 
-        /// <summary>The name shown for the zone: the place it is named after ("Jerusalem"); the computer's own zone as Windows names it.</summary>
-        public static string NameOf(int zone) => zone == Main && IdOf(Main) == "" ? ZoneClock.LocalName() : ZoneClock.ShortName(IdOf(zone));
+        /// <summary>
+        /// The name shown for the zone: the one given to it in the settings ("Heart"), else the place it is named after
+        /// ("Jerusalem"); the computer's own zone as Windows names it.
+        /// </summary>
+        public static string NameOf(int zone) => DisplayName(LabelOf(zone),
+            zone == Main && IdOf(Main) == "" ? ZoneClock.LocalName() : ZoneClock.ShortName(IdOf(zone)));
+
+        /// <summary>The name given to the zone in the settings; empty for none.</summary>
+        public static string LabelOf(int zone) => zone == Second ? Settings.Instance.SecondZoneLabel
+            : zone == Third ? Settings.Instance.ThirdZoneLabel : Settings.Instance.MainZoneLabel;
+
+        /// <summary>The given name without its outer spaces; the zone's own name when none is given.</summary>
+        public static string DisplayName(string label, string zoneName) => string.IsNullOrWhiteSpace(label) ? zoneName : label.Trim();
 
         /// <summary>Between a time and its zone's name: a new line on a vertical panel (one long line would shrink the clock), else a space.</summary>
         public static string NameSeparator(bool vertical) => vertical ? System.Environment.NewLine : " ";

@@ -1,7 +1,6 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:s="clr-namespace:System;assembly=mscorlib">
-
     <s:String x:Key="ultrawinbar_properties">Proprietăți UltraWinBar</s:String>
     <s:String x:Key="taskbar_tab">Bară de activităţi</s:String>
     <s:String x:Key="advanced_tab">Avansat</s:String>
@@ -14,14 +13,24 @@
     <s:String x:Key="language_tip">Selectați limba.</s:String>
     <s:String x:Key="theme_text">_Temă:</s:String>
     <s:String x:Key="theme_tip">Instalați teme în dosarul Themes.</s:String>
+    <s:String x:Key="accent_text">Culoare de _accent:</s:String>
+    <s:String x:Key="accent_tip">Culoarea neon a temei Modern Glass.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+            <s:String>Turcoaz</s:String>
+            <s:String>Violet</s:String>
+            <s:String>Fucsia</s:String>
+            <s:String>Smarald</s:String>
+            <s:String>Chihlimbar</s:String>
+            <s:String>Trandafiriu</s:String>
+        </x:Array>
     <s:String x:Key="location_text">_Poziție:</s:String>
     <s:String x:Key="location_tip">Schimbați poziția barei de activități de pe ecran.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
-        <s:String>Stânga</s:String>
-        <s:String>Sus</s:String>
-        <s:String>Dreapta</s:String>
-        <s:String>Jos</s:String>
-    </x:Array>
+            <s:String>Stânga</s:String>
+            <s:String>Sus</s:String>
+            <s:String>Dreapta</s:String>
+            <s:String>Jos</s:String>
+        </x:Array>
     <s:String x:Key="rowcount_text">Număr de _rânduri:</s:String>
     <s:String x:Key="rowcount_tip">Numărul de rânduri din bara de activități când este în partea de sus sau de jos.</s:String>
     <s:String x:Key="taskbar_width">Lățime_a barei de activități:</s:String>
@@ -45,36 +54,58 @@
     <s:String x:Key="multiple_displays">Ecrane multiple</s:String>
     <s:String x:Key="show_tasks_on">A_rătați activitățile pe:</s:String>
     <x:Array x:Key="show_tasks_on_values" Type="s:String">
-        <s:String>Toate bările de activități</s:String>
-        <s:String>Aceeași bară de activități ca fereastra</s:String>
-        <s:String>Aceeași bară de activități ca fereastra și bara de activități principală</s:String>
-    </x:Array>
+            <s:String>Toate bările de activități</s:String>
+            <s:String>Aceeași bară de activități ca fereastra</s:String>
+            <s:String>Aceeași bară de activități ca fereastra și bara de activități principală</s:String>
+        </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_Inversare culori în tonuri de gri:</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
-        <s:String>Doar când este nevoie</s:String>
-        <s:String>Mereu</s:String>
-        <s:String>Niciodată</s:String>
-    </x:Array>
+            <s:String>Doar când este nevoie</s:String>
+            <s:String>Mereu</s:String>
+            <s:String>Niciodată</s:String>
+        </x:Array>
     <s:String x:Key="middle_mouse_task_action">_Acțiune cu click-ul mijlociu:</s:String>
     <x:Array x:Key="middle_mouse_task_action_values" Type="s:String">
-        <s:String>Nu fă nimic</s:String>
-        <s:String>Deschideți o nouă instanță</s:String>
-        <s:String>Închideți activitatea</s:String>
-    </x:Array>
+            <s:String>Nu fă nimic</s:String>
+            <s:String>Deschideți o nouă instanță</s:String>
+            <s:String>Închideți activitatea</s:String>
+        </x:Array>
     <s:String x:Key="clock_click_action">_Acțiune la click-ul ceasului:</s:String>
     <x:Array x:Key="clock_click_action_values" Type="s:String">
-        <s:String>Nu fă nimic</s:String>
-        <s:String>Deschideți calendarul Aero</s:String>
-        <s:String>Deschideți calendarul Modern</s:String>
-        <s:String>Deschideți Centrul de Notificații</s:String>
-    </x:Array>
+            <s:String>Nu fă nimic</s:String>
+            <s:String>Deschideți calendarul Aero</s:String>
+            <s:String>Deschideți calendarul Modern</s:String>
+            <s:String>Deschideți Centrul de Notificații</s:String>
+        </x:Array>
+    <s:String x:Key="task_wheel_action">_Acțiune pentru rotița mouse-ului:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+            <s:String>Nu face nimic</s:String>
+            <s:String>Afișează/ascunde fereastra</s:String>
+        </x:Array>
     <s:String x:Key="auto_hide_transparent">Ascundeți _linia barei de activități atunci când se ascunde automat</s:String>
     <s:String x:Key="version">Versiunea {0}</s:String>
     <s:String x:Key="visit_on_github">Vizitați UltraWinBar pe GitHub</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Bare de activități multiple</s:String>
+    <s:String x:Key="additional_taskbars_text">Afișați o bară de activități pe aceste margini. Faceți clic dreapta pe o bară pentru a o întinde pe toată marginea, împingându-le pe celelalte.</s:String>
+    <s:String x:Key="location_left">Stânga</s:String>
+    <s:String x:Key="location_top">Sus</s:String>
+    <s:String x:Key="location_right">Dreapta</s:String>
+    <s:String x:Key="location_bottom">Jos</s:String>
+    <s:String x:Key="tray_location_text">_Zona de notificare pe:</s:String>
+    <s:String x:Key="clock_location_text">_Ceas pe:</s:String>
+    <s:String x:Key="start_button_location_text">Butonul Sta_rt pe:</s:String>
+    <s:String x:Key="language_location_text">Indicatorul de _limbă pe:</s:String>
+    <s:String x:Key="task_assignment_hint">Glisați un buton de activitate pe altă bară pentru a muta întreaga aplicație; țineți apăsat Ctrl în timp ce glisați pentru a muta doar fereastra. Faceți clic dreapta pe un buton de activitate pentru a-i reseta asocierea.</s:String>
+    <s:String x:Key="reset_task_assignments">Resetați toate asocierile barelor de activități</s:String>
+    <s:String x:Key="stretch">_Întindere</s:String>
+    <s:String x:Key="make_main">_Setați ca principală</s:String>
+    <s:String x:Key="reset_task_assignment">Resetați _asocierea barei de activități</s:String>
     <s:String x:Key="taskbar_scale">Scara barei de activități</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">Setare actuală: {0}%</s:String>
     <s:String x:Key="debug_logging">Activați _jurnalul de depanare</s:String>
+    <s:String x:Key="window_activity_logging">Înregistrați deschiderea și închiderea ferestrelor</s:String>
     <s:String x:Key="check_for_updates">Verificați dacă există actualizări</s:String>
     <s:String x:Key="show_exit_menu_item">Arătați opțiunea "Închidere" când faceți click dreapta</s:String>
     <s:String x:Key="show_end_task_button">Arătați opțiunea "Terminare activitate" când faceți click dreapta</s:String>
@@ -83,15 +114,20 @@
     <s:String x:Key="open_custom_themes_folder">Deschideți sertarul cu teme personalizate</s:String>
     <s:String x:Key="win_num_hotkeys_action">_Acțiune taste rapide Win+[0-9]:</s:String>
     <x:Array x:Key="win_num_hotkeys_action_values" Type="s:String">
-        <s:String>Implicit Windows</s:String>
-        <s:String>Schimbați activitățile</s:String>
-        <s:String>Deschidere element de lansare rapidă</s:String>
-    </x:Array>
+            <s:String>Implicit Windows</s:String>
+            <s:String>Schimbați activitățile</s:String>
+            <s:String>Deschidere element de lansare rapidă</s:String>
+        </x:Array>
     <s:String x:Key="hotkey_warning_title">Taste rapide UltraWinBar</s:String>
     <s:String x:Key="hotkey_warning_text">UltraWinBar va suprascrie tastele rapide din bara de activități Windows. Chiar dacă UltraWinBar este închis, acestea nu vor fi restaurate în Windows până când nu vă deconectați și vă reconectați.</s:String>
     <s:String x:Key="allow_blur_behind">Permite _estomparea în spatele barei de activități transparente</s:String>
     <s:String x:Key="ok_dialog">OK</s:String>
-
+    <s:String x:Key="clock_format_help">Consultați opțiunile de formatare disponibile</s:String>
+    <s:String x:Key="clock_format_warning">Notă: formatarea personalizată a ceasului poate să nu funcționeze conform așteptărilor dacă tema selectată specifică propriul format.</s:String>
+    <s:String x:Key="override_clock_format">Format personalizat al ceasului:</s:String>
+    <s:String x:Key="override_ampm_designators">Indicatori personalizați:</s:String>
+    <s:String x:Key="am_designator">AM:</s:String>
+    <s:String x:Key="pm_designator">PM:</s:String>
     <s:String x:Key="customize_notifications">Personalizați Notificările</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar arată pictograme pentru notificări active și urgente, și le ascunde pe cele inactive. Puteți schimba acest comportament pentru următoarele din lista de jos.</s:String>
     <s:String x:Key="customize_notifications_instruction">Selectați o opțiune, apoi alegeți comportamentul notificării:</s:String>
@@ -102,13 +138,11 @@
     <s:String x:Key="name_heading">Nume</s:String>
     <s:String x:Key="behavior_heading">Comportament</s:String>
     <s:String x:Key="invert_heading">Inversează</s:String>
-
     <s:String x:Key="start_text">Start</s:String>
     <s:String x:Key="start_text_xp">start</s:String>
     <s:String x:Key="start_button_tip_98">Click aici pentru a începe.</s:String>
     <s:String x:Key="start_button_tip">Click aici pentru a începe</s:String>
     <s:String x:Key="start_button_tip_vista">Start</s:String>
-
     <s:String x:Key="ultrawinbar_title">Bara de activități UltraWinBar</s:String>
     <s:String x:Key="toolbars">_Bara de instrumente</s:String>
     <s:String x:Key="quick_launch">_Lansare rapidă</s:String>
@@ -127,15 +161,14 @@
     <s:String x:Key="tray_properties">Propr_ietăți</s:String>
     <s:String x:Key="update_available">_Actualizare disponibilă...</s:String>
     <s:String x:Key="exit_ultrawinbar">Închideți _UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">_Reporniți UltraWinBar</s:String>
     <s:String x:Key="customize_notifications_menu">_Personalizați notificările...</s:String>
     <s:String x:Key="lock_taskbar_menu">_Blocați bara de activități</s:String>
-
     <s:String x:Key="show_desktop_tip_95">Restabiliți suprafața de lucru</s:String>
     <s:String x:Key="show_desktop_tip">Arătați suprafața de lucru</s:String>
     <s:String x:Key="show_desktop_95">_Suprafață de lucru</s:String>
     <s:String x:Key="show_desktop">_Arătați suprafața de lucru</s:String>
     <s:String x:Key="peek_at_desktop">_Aruncați o privire la trecerea cursorului</s:String>
-
     <s:String x:Key="restore">_Restabilire</s:String>
     <s:String x:Key="move">_Mutare</s:String>
     <s:String x:Key="size">_Dimensiune</s:String>
@@ -143,12 +176,10 @@
     <s:String x:Key="maximize">Ma_ximizare</s:String>
     <s:String x:Key="close">_Închidere</s:String>
     <s:String x:Key="end_task">_Terminare activitate</s:String>
-
     <s:String x:Key="show_hidden">Arată pictogramele ascunse</s:String>
     <s:String x:Key="hide">Ascundere</s:String>
-
     <s:String x:Key="open_folder">&amp;Deschideți dosarul</s:String>
-
+    <s:String x:Key="move_to_taskbar_format">Mutare pe bara de activități {0}</s:String>
     <s:String x:Key="ime_input_tip_enabled">Click dreapta pentru opțiuni IME</s:String>
     <s:String x:Key="ime_input_tip_disabled">IME dezactivat</s:String>
     <s:String x:Key="ime_input_full_shape_hiragana">Hiragana</s:String>
@@ -168,4 +199,102 @@
     <s:String x:Key="ime_conversion_general">General</s:String>
     <s:String x:Key="ime_conversion_none">Fără conversie</s:String>
     <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+    <s:String x:Key="pin_to_taskbar">Fixați pe această bară de activități</s:String>
+    <s:String x:Key="pinned_app_windows">Ferestre deschise</s:String>
+    <s:String x:Key="unpin_from_taskbar">Anulați fixarea pe această bară de activități</s:String>
+    <s:String x:Key="copy_executable_path">Copiați calea fișierului executabil</s:String>
+    <s:String x:Key="copy_executable_directory">Copiați directorul fișierului executabil</s:String>
+    <s:String x:Key="app_all_desktops">Afișați ferestrele acestei aplicații pe toate desktopurile</s:String>
+    <s:String x:Key="move_window_desktop">Mutați această fereastră pe desktopul</s:String>
+    <s:String x:Key="move_app_desktop">Mutați toate ferestrele aplicației pe desktopul</s:String>
+    <s:String x:Key="desktop_number">Desktopul {0}</s:String>
+    <s:String x:Key="desktop_action_failed">Windows nu a putut finaliza operațiunea pentru toate ferestrele. Este posibil ca unele ferestre să fi fost deja mutate. Consultați jurnalul pentru detalii.</s:String>
+    <s:String x:Key="show_hebrew_date">Afișați data ebraică și zilele săptămânii numerotate</s:String>
+    <s:String x:Key="hebrew_date_midnight">Folosește data calendaristică locală; se schimbă la miezul nopții, nu la apus.</s:String>
+    <s:String x:Key="hebrew_place">Locul pentru data ebraică:</s:String>
+    <s:String x:Key="hebrew_place_none">neselectat</s:String>
+    <s:String x:Key="hebrew_place_choose">Alegeți...</s:String>
+    <s:String x:Key="hebrew_place_clear">Ștergeți</s:String>
+    <s:String x:Key="zone_clear">Eliminați</s:String>
+    <s:String x:Key="hebrew_place_hint">Locul al cărui apus încheie ziua ebraică și ale cărui ore halahice sunt afișate în calendar.</s:String>
+    <s:String x:Key="hebrew_place_title">Locul pentru data ebraică</s:String>
+    <s:String x:Key="hebrew_place_city_tab">Oraș</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">Coordonate</s:String>
+    <s:String x:Key="hebrew_place_search">Numele orașului (în engleză):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">Introduceți cel puțin două litere, de exemplu: jerus, new york, paris texas. Sunt listate orașele cu cel puțin 10 000 de locuitori.</s:String>
+    <s:String x:Key="hebrew_place_country">Țară:</s:String>
+    <s:String x:Key="hebrew_place_need_country">Alegeți țara: aceasta indică care dintre cele două numere reprezintă latitudinea.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">Latitudine și longitudine:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">Este acceptată orice formă: 32.0853, 34.7818 sau 34,7818 32,0853 sau 32°05'07&quot;N 34°46'54&quot;E. Folosiți punct sau virgulă pentru zecimale și virgulă, două puncte ori spațiu între numere.</s:String>
+    <s:String x:Key="hebrew_place_zone">Fus orar:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">Selectat împreună cu orașul; schimbați-l dacă este greșit. Se aplică regulile fusului orar din Windows (ora de vară și schimbările acesteia).</s:String>
+    <s:String x:Key="calendar_title">Calendar evreiesc</s:String>
+    <s:String x:Key="calendar_today">Astăzi</s:String>
+    <s:String x:Key="calendar_copy_name">Copiați numele</s:String>
+    <s:String x:Key="calendar_search_name">Căutați numele pe Google</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Luna ebraică</s:String>
+    <s:String x:Key="calendar_grid_civil">Luna civilă</s:String>
+    <s:String x:Key="calendar_shabbat">Șabat</s:String>
+    <s:String x:Key="calendar_previous_month">Luna precedentă</s:String>
+    <s:String x:Key="calendar_next_month">Luna următoare</s:String>
+    <s:String x:Key="calendar_settings">Setări...</s:String>
+    <s:String x:Key="calendar_close">Închideți</s:String>
+    <s:String x:Key="calendar_portion">Pericopa săptămânii: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">În acest Șabat se citește o pericopă de sărbătoare</s:String>
+    <s:String x:Key="calendar_day_of">{0}, ziua {1} din {2}</s:String>
+    <s:String x:Key="calendar_molad">Moladul lunii {0}: {1}, {2} și {3} halakim</s:String>
+    <s:String x:Key="calendar_omer">Numărătoarea Omerului</s:String>
+    <s:String x:Key="calendar_omer_day">Ziua {0} a Omerului</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} săptămână/săptămâni și {1} zi/zile</s:String>
+    <s:String x:Key="calendar_place">Loc: {0}</s:String>
+    <s:String x:Key="calendar_israel">Țara Israelului</s:String>
+    <s:String x:Key="calendar_diaspora">diaspora</s:String>
+    <s:String x:Key="calendar_no_place">Alegeți un loc din setările calendarului pentru a vedea orele zilei.</s:String>
+    <s:String x:Key="calendar_times">Orele zilei</s:String>
+    <s:String x:Key="calendar_yahrzeits">Yahrzeituri</s:String>
+    <s:String x:Key="calendar_candles_after_dark">Aprinderea lumânărilor (după lăsarea nopții)</s:String>
+    <s:String x:Key="calendar_havdalah">Încheierea zilei de odihnă (havdala)</s:String>
+    <s:String x:Key="calendar_rest_begins">Începe: {0} (aprinderea lumânărilor)</s:String>
+    <s:String x:Key="calendar_rest_ends">Se încheie: {0} (lăsarea nopții)</s:String>
+    <s:String x:Key="calendar_settings_title">Setările calendarului</s:String>
+    <s:String x:Key="calendar_settings_place">Locul fusului orar:</s:String>
+    <s:String x:Key="calendar_settings_zone">Fusul orar folosit pentru dată, schimbarea zilei și orele zilei:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (cel al computerului)</s:String>
+    <s:String x:Key="zones_heading">Fusurile orare ale ceasului</s:String>
+    <s:String x:Key="zone_main">Fus orar principal:</s:String>
+    <s:String x:Key="zone_second">Al doilea fus orar:</s:String>
+    <s:String x:Key="zone_third">Al treilea fus orar:</s:String>
+    <s:String x:Key="zone_show_name">Afișați numele</s:String>
+    <s:String x:Key="zone_label">Nume pe ceas</s:String>
+    <s:String x:Key="zone_label_hint">Un nume pe care ceasul îl afișează pentru acest fus orar în locul locului (de exemplu, Heart pentru Jerusalem). Dacă este gol, se păstrează locul.</s:String>
+    <s:String x:Key="zone_place">Loc:</s:String>
+    <s:String x:Key="zones_tab">Fusuri orare</s:String>
+    <s:String x:Key="hebrew_date_tab">Data ebraică</s:String>
+    <s:String x:Key="zone_computer">Cel al computerului ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">Data ebraică este cea a locului fusului orar principal, selectat în fila Fusuri orare.</s:String>
+    <s:String x:Key="zone_none">(nu este afișat)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">Yahrzeituri de afișat (toate, după categorie sau individual):</s:String>
+    <s:String x:Key="calendar_all_figures">Toate</s:String>
+    <s:String x:Key="cancel_dialog">Anulare</s:String>
+    <s:String x:Key="coordinate_result">Latitudine și longitudine: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">Ordinea este indicată în text.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">Se potrivește o singură ordine: latitudinea este de cel mult 90 de grade.</s:String>
+    <s:String x:Key="coordinate_basis_country">Ordinea este stabilită după țară: cealaltă variantă indică un loc îndepărtat de aceasta.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">Se presupune că latitudinea este prima.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">Se presupune că latitudinea este prima; ordinea cu longitudinea prima s-ar potrivi aproape la fel de bine cu țara.</s:String>
+    <s:String x:Key="coordinate_warning_far">Punctul se află la {0:N0} km de cel mai apropiat oraș din țară. Verificați țara și coordonatele.</s:String>
+    <s:String x:Key="coordinate_problem_empty">Introduceți coordonatele.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">Sunt necesare două numere: latitudinea și longitudinea.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">Mai mult de două numere. Introduceți doar latitudinea și longitudinea.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">Ambele numere sunt marcate ca latitudine.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">Ambele numere sunt marcate ca longitudine.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">Latitudinea trebuie să fie între -90 și 90 de grade.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">Longitudinea trebuie să fie între -180 și 180 de grade.</s:String>
+    <s:String x:Key="coordinate_problem_neither">În niciuna dintre ordini aceste numere nu reprezintă o latitudine (cel mult 90) și o longitudine (cel mult 180).</s:String>
+    <s:String x:Key="open_system_settings">Deschideți Setări de sistem</s:String>
+    <s:String x:Key="open_computer_management">Gestionare computer</s:String>
+    <s:String x:Key="open_drives">Deschideți unitățile</s:String>
+    <s:String x:Key="this_pc">Acest PC</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">Încercați să păstrați ferestrele deschise pe acest desktop (experimental)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Reactivați ferestrele afișate pe toate desktopurile fără a le muta. În caz contrar, pictogramele desktopului și lansatoarele fixate deschid local browserele, folderele Explorer și Notepad++; pentru celelalte aplicații și activarea din zona de notificare se păstrează transferul ferestrelor.</s:String>
 </ResourceDictionary>

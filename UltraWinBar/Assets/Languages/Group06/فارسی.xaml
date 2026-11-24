@@ -1,17 +1,30 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:s="clr-namespace:System;assembly=mscorlib">
+                    xmlns:s="clr-namespace:System;assembly=mscorlib"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
     <s:String x:Key="ultrawinbar_properties">تنظیمات رتروبار</s:String>
     <s:String x:Key="taskbar_tab">نوار وظیفه</s:String>
     <s:String x:Key="advanced_tab">پیشرفته</s:String>
     <s:String x:Key="taskbar_appearance">ظاهر نوار وظیفه</s:String>
     <s:String x:Key="notification_area">منطقه اعلان‌ها</s:String>
+    <s:String x:Key="general_heading">عمومی</s:String>
+    <s:String x:Key="clock_heading">ساعت</s:String>
     <s:String x:Key="autostart">در راه‌اندازی سیستم اجرا شود</s:String>
     <s:String x:Key="language_text">زبان و ظاهر:</s:String>
     <s:String x:Key="language_tip">لطفاً زبان را انتخاب کنید.</s:String>
     <s:String x:Key="theme_text">_تم:</s:String>
     <s:String x:Key="theme_tip">تم را در پوشه تم نوار وظیفه نصب کنید.</s:String>
+    <s:String x:Key="accent_text">_رنگ تأکیدی:</s:String>
+    <s:String x:Key="accent_tip">رنگ نئونی تم Modern Glass.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>فیروزه‌ای</s:String>
+        <s:String>بنفش</s:String>
+        <s:String>سرخابی</s:String>
+        <s:String>زمردی</s:String>
+        <s:String>کهربایی</s:String>
+        <s:String>رزگلی</s:String>
+    </x:Array>
     <s:String x:Key="location_text">مکان:</s:String>
     <s:String x:Key="location_tip">مکان نوار وظیفه</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -20,17 +33,26 @@
         <s:String>راست</s:String>
         <s:String>پایین</s:String>
     </x:Array>
+    <s:String x:Key="rowcount_text">تعداد _ردیف‌ها:</s:String>
+    <s:String x:Key="rowcount_tip">تعداد ردیف‌های نوار وظیفه هنگام قرارگیری در بالا یا پایین.</s:String>
+    <s:String x:Key="taskbar_width">Taskba_r width:</s:String>
     <s:String x:Key="allow_font_smoothing">_صاف‌سازی فونت</s:String>
     <s:String x:Key="allow_font_smoothing_menu">صاف‌سازی فونت در _منوها</s:String>
     <s:String x:Key="collapse_tray_icons">آیکون‌ها در منطقه اعلان‌ها جمع شوند</s:String>
     <s:String x:Key="customize">سفارشی‌سازی</s:String>
+    <s:String x:Key="show_input_language">نمایش _زبان ورودی</s:String>
     <s:String x:Key="show_clock">نمایش ساعت</s:String>
     <s:String x:Key="show_multi_mon">نمایش در چند مانیتور</s:String>
+    <s:String x:Key="show_start_button_multi_mon">نمایش دکمه _شروع در همه نوارهای وظیفه</s:String>
     <s:String x:Key="show_quick_launch">کوییک لانچ</s:String>
     <s:String x:Key="select_location">_انتخاب مکان...</s:String>
     <s:String x:Key="quick_launch_folder">پوشه کوییک لانچ</s:String>
+    <s:String x:Key="show_badges">نمایش _نشان‌ها</s:String>
     <s:String x:Key="show_window_previews">نمایش _پیش‌نمایش پنجره‌ها (thumbnails)</s:String>
     <s:String x:Key="use_software_rendering">_رندر نرم‌افزاری</s:String>
+    <s:String x:Key="add_show_desktop_button">افزودن دکمه _نمایش دسکتاپ</s:String>
+    <s:String x:Key="enable_auto_hide">_پنهان‌سازی خودکار نوار وظیفه</s:String>
+    <s:String x:Key="lock_taskbar">_قفل‌کردن نوار وظیفه</s:String>
     <s:String x:Key="multiple_displays">چندین مانیتور</s:String>
     <s:String x:Key="show_tasks_on">نمایش وظایف در:</s:String>
     <x:Array x:Key="show_tasks_on_values" Type="s:String">
@@ -38,17 +60,88 @@
         <s:String>نوار وظیفه در مانیتور ۱</s:String>
         <s:String>نوار وظیفه در مانیتورهای دیگر</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_وارونه‌کردن رنگ‌های خاکستری:</s:String>
+    <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
+        <s:String>در صورت نیاز تم</s:String>
+        <s:String>همیشه</s:String>
+        <s:String>هرگز</s:String>
+    </x:Array>
+    <s:String x:Key="middle_mouse_task_action">عملکرد _کلیک میانی:</s:String>
+    <x:Array x:Key="middle_mouse_task_action_values" Type="s:String">
+        <s:String>هیچ کاری نکن</s:String>
+        <s:String>بازکردن نمونه‌ای جدید</s:String>
+        <s:String>بستن وظیفه</s:String>
+    </x:Array>
+    <s:String x:Key="clock_click_action">عملکرد _کلیک ساعت:</s:String>
+    <x:Array x:Key="clock_click_action_values" Type="s:String">
+        <s:String>هیچ کاری نکن</s:String>
+        <s:String>بازکردن تقویم Aero</s:String>
+        <s:String>بازکردن تقویم Modern</s:String>
+        <s:String>بازکردن مرکز اعلان‌ها</s:String>
+    </x:Array>
+    <s:String x:Key="task_wheel_action">عملکرد _چرخ ماوس:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>هیچ کاری نکن</s:String>
+        <s:String>نمایش/پنهان‌کردن پنجره</s:String>
+    </x:Array>
+    <s:String x:Key="auto_hide_transparent">پنهان‌کردن خط _نوار وظیفه هنگام پنهان‌شدن خودکار</s:String>
     <s:String x:Key="version">نسخه {0}</s:String>
     <s:String x:Key="visit_on_github">مراجعه به گیت‌هاب</s:String>
+    <s:String x:Key="multiple_taskbars_heading">چند نوار وظیفه</s:String>
+    <s:String x:Key="additional_taskbars_text">نوار وظیفه را در این لبه‌ها نمایش دهید. برای کشیده‌شدن نوار وظیفه تا سراسر لبه و کناررفتن بقیه، روی آن راست‌کلیک کنید.</s:String>
+    <s:String x:Key="location_left">چپ</s:String>
+    <s:String x:Key="location_top">بالا</s:String>
+    <s:String x:Key="location_right">راست</s:String>
+    <s:String x:Key="location_bottom">پایین</s:String>
+    <s:String x:Key="tray_location_text">_منطقه اعلان‌ها در:</s:String>
+    <s:String x:Key="clock_location_text">_ساعت در:</s:String>
+    <s:String x:Key="start_button_location_text">دکمه _شروع در:</s:String>
+    <s:String x:Key="language_location_text">_نشانگر زبان در:</s:String>
+    <s:String x:Key="task_assignment_hint">برای جابه‌جایی کل برنامه، دکمهٔ وظیفه را به نوار وظیفهٔ دیگری بکشید؛ هنگام کشیدن Ctrl را نگه دارید تا فقط همان پنجره جابه‌جا شود. برای بازنشانی جایگاه، روی دکمهٔ وظیفه راست‌کلیک کنید.</s:String>
+    <s:String x:Key="reset_task_assignments">بازنشانی جایگاه همه وظایف</s:String>
+    <s:String x:Key="stretch">_کشیدن</s:String>
+    <s:String x:Key="make_main">_اصلی‌کردن</s:String>
+    <s:String x:Key="reset_task_assignment">بازنشانی _جایگاه نوار وظیفه</s:String>
+    <s:String x:Key="taskbar_scale">مقیاس نوار وظیفه</s:String>
+    <s:String x:Key="taskbar_scale_1x">۱۰۰٪</s:String>
+    <s:String x:Key="taskbar_scale_2x">۲۰۰٪</s:String>
+    <s:String x:Key="taskbar_scale_current">تنظیم کنونی: {0}٪</s:String>
+    <s:String x:Key="debug_logging">فعال‌کردن ثبت گزارش _اشکال‌زدایی</s:String>
+    <s:String x:Key="window_activity_logging">ثبت باز و بسته‌شدن پنجره‌ها</s:String>
+    <s:String x:Key="check_for_updates">بررسی _به‌روزرسانی‌ها</s:String>
+    <s:String x:Key="show_exit_menu_item">نمایش گزینهٔ _خروج در منوی راست‌کلیک</s:String>
+    <s:String x:Key="show_end_task_button">نمایش گزینهٔ _پایان وظیفه در منوی راست‌کلیک</s:String>
+    <s:String x:Key="slide_taskbar_buttons">_لغزش دکمه‌های نوار وظیفه</s:String>
+    <s:String x:Key="show_clock_seconds">_نمایش ثانیه در ساعت</s:String>
+    <s:String x:Key="open_custom_themes_folder">بازکردن پوشه تم‌های سفارشی</s:String>
+    <s:String x:Key="win_num_hotkeys_action">عملکرد کلیدهای میانبر _Win+[0-9]:</s:String>
+    <x:Array x:Key="win_num_hotkeys_action_values" Type="s:String">
+        <s:String>پیش‌فرض ویندوز</s:String>
+        <s:String>تعویض وظایف</s:String>
+        <s:String>بازکردن مورد اجرای سریع</s:String>
+    </x:Array>
+    <s:String x:Key="hotkey_warning_title">کلیدهای میانبر UltraWinBar</s:String>
+    <s:String x:Key="hotkey_warning_text">UltraWinBar کلیدهای میانبر نوار وظیفه ویندوز را جایگزین می‌کند. حتی پس از بستن UltraWinBar، این کلیدها تا زمان خروج از حساب و ورود دوباره به ویندوز بازگردانده نمی‌شوند.</s:String>
+    <s:String x:Key="allow_blur_behind">اجازهٔ _محو‌شدن پشت نوار وظیفه شفاف</s:String>
     <s:String x:Key="ok_dialog">تایید</s:String>
+
+    <s:String x:Key="clock_format_help">مشاهده گزینه‌های قالب‌بندی موجود</s:String>
+    <s:String x:Key="clock_format_warning">توجه: اگر تم انتخابی قالب مخصوص خود را تعیین کرده باشد، قالب‌بندی سفارشی ساعت ممکن است مطابق انتظار کار نکند.</s:String>
+    <s:String x:Key="override_clock_format">_قالب سفارشی ساعت:</s:String>
+    <s:String x:Key="override_ampm_designators">_نشانه‌های سفارشی:</s:String>
+    <s:String x:Key="am_designator">قبل‌ازظهر:</s:String>
+    <s:String x:Key="pm_designator">بعدازظهر:</s:String>
 
     <s:String x:Key="customize_notifications">تنظیمات اعلان‌ها</s:String>
     <s:String x:Key="customize_notifications_info">رتروبار همیشه اعلان‌های جمع‌آوری‌شده را نمایش می‌دهد، اما می‌توانید در آینده آن را تغییر دهید.</s:String>
     <s:String x:Key="customize_notifications_instruction">گزینه را انتخاب کنید، سپس بگویید چگونه اعلان‌ها نمایش داده شوند:</s:String>
     <s:String x:Key="hide_when_inactive">پنهان شود وقتی فعال نیست</s:String>
     <s:String x:Key="always_show">همیشه نمایش داده شود</s:String>
+    <s:String x:Key="always_hide">همیشه پنهان شود</s:String>
+    <s:String x:Key="remove">حذف</s:String>
     <s:String x:Key="name_heading">نام</s:String>
     <s:String x:Key="behavior_heading">رفتار</s:String>
+    <s:String x:Key="invert_heading">وارونه</s:String>
 
     <s:String x:Key="start_text">منو</s:String>
     <s:String x:Key="start_text_xp">منو</s:String>
@@ -61,12 +154,28 @@
     <s:String x:Key="quick_launch">_کوییک لانچ</s:String>
     <s:String x:Key="new_toolbar">نوار ابزار _جدید...</s:String>
     <s:String x:Key="set_time">تنظیمات _ساعت</s:String>
+    <s:String x:Key="cascade">چینش آبشاری _پنجره‌ها</s:String>
+    <s:String x:Key="horiz_tile">چیدن پنجره‌ها به‌صورت _افقی</s:String>
+    <s:String x:Key="vert_tile">چیدن پنجره‌ها به‌صورت _عمودی</s:String>
+    <s:String x:Key="toggle_desktop">_نمایش دسکتاپ</s:String>
+    <s:String x:Key="hide_desktop">_نمایش پنجره‌های باز</s:String>
+    <s:String x:Key="undo_cascade">_واگرد چینش آبشاری</s:String>
+    <s:String x:Key="undo_tile">_واگرد چیدمان</s:String>
+    <s:String x:Key="undo_minimize_all">_واگرد کمینه‌سازی همه</s:String>
     <s:String x:Key="show_taskman_2k">مدیر وظایف...</s:String>
     <s:String x:Key="show_taskman">مدیر وظایف</s:String>
     <s:String x:Key="tray_properties">تنظیمات</s:String>
     <s:String x:Key="update_available">_بروزرسانی در دسترس است!...</s:String>
     <s:String x:Key="exit_ultrawinbar">_خروج</s:String>
+    <s:String x:Key="restart_ultrawinbar">_راه‌اندازی دوباره UltraWinBar</s:String>
     <s:String x:Key="customize_notifications_menu">_تنظیمات اعلان‌ها...</s:String>
+    <s:String x:Key="lock_taskbar_menu">_قفل‌کردن نوار وظیفه</s:String>
+
+    <s:String x:Key="show_desktop_tip_95">نمایش/بازگردانی دسکتاپ</s:String>
+    <s:String x:Key="show_desktop_tip">نمایش دسکتاپ</s:String>
+    <s:String x:Key="show_desktop_95">_دسکتاپ</s:String>
+    <s:String x:Key="show_desktop">_نمایش دسکتاپ</s:String>
+    <s:String x:Key="peek_at_desktop">_نگاهی به دسکتاپ</s:String>
 
     <s:String x:Key="restore">_بازگردانی</s:String>
     <s:String x:Key="move">_جابجا کردن</s:String>
@@ -74,11 +183,134 @@
     <s:String x:Key="minimize">_کوچک‌سازی</s:String>
     <s:String x:Key="maximize">_بیشینه‌سازی</s:String>
     <s:String x:Key="close">_بستن</s:String>
+    <s:String x:Key="end_task">_پایان وظیفه</s:String>
 
     <s:String x:Key="show_hidden">نمایش آیکون‌های پنهان</s:String>
     <s:String x:Key="hide">پنهان‌سازی</s:String>
 
     <s:String x:Key="open_folder">&amp;فولدرش</s:String>
+    <s:String x:Key="move_to_taskbar_format">انتقال به نوار وظیفهٔ {0}</s:String>
 
+    <s:String x:Key="ime_input_tip_enabled">برای بازکردن گزینه‌های IME راست‌کلیک کنید.</s:String>
+    <s:String x:Key="ime_input_tip_disabled">IME غیرفعال است</s:String>
+    <s:String x:Key="ime_input_full_shape_hiragana">_هیراگانا</s:String>
+    <s:String x:Key="ime_input_full_shape_katakana">_کاتاکانای تمام‌عرض</s:String>
+    <s:String x:Key="ime_input_full_shape_alphanumeric">حروف و اعداد تمام‌_عرض</s:String>
+    <s:String x:Key="ime_input_katakana">کاتاکانای نیم‌_عرض</s:String>
+    <s:String x:Key="ime_input_alphanumeric">حروف و اعداد نیم‌_عرض</s:String>
+    <s:String x:Key="ime_input_direct">_ورودی مستقیم</s:String>
+    <s:String x:Key="ime_open_pad">_صفحه‌کلید IME</s:String>
+    <s:String x:Key="ime_open_add_word_dictionary">افزودن _واژه</s:String>
+    <s:String x:Key="ime_open_dictionary_tool">_ابزار واژه‌نامهٔ کاربر</s:String>
+    <s:String x:Key="ime_open_properties">_تنظیمات</s:String>
+    <s:String x:Key="ime_input_key">_روش ورودی</s:String>
+    <s:String x:Key="ime_input_key_roma">ورودی _روماجی</s:String>
+    <s:String x:Key="ime_input_key_kana">ورودی _کانا</s:String>
+    <s:String x:Key="ime_conversion">حالت _تبدیل</s:String>
+    <s:String x:Key="ime_conversion_general">_عمومی</s:String>
+    <s:String x:Key="ime_conversion_none">بدون _تبدیل</s:String>
+    <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+
+    <s:String x:Key="pin_to_taskbar">سنجاق‌کردن به این نوار وظیفه</s:String>
+    <s:String x:Key="pinned_app_windows">پنجره‌های باز</s:String>
+    <s:String x:Key="unpin_from_taskbar">برداشتن سنجاق از این نوار وظیفه</s:String>
+    <s:String x:Key="copy_executable_path">رونوشت از مسیر فایل اجرایی</s:String>
+    <s:String x:Key="copy_executable_directory">رونوشت از پوشهٔ فایل اجرایی</s:String>
+
+    <!-- موارد زیر تنظیمات هستند و باید همیشه به انگلیسی باشند -->
     <FlowDirection x:Key="flow_direction">RightToLeft</FlowDirection>
+    <FontFamily x:Key="start_text_xp_font_family">Franklin Gothic</FontFamily>
+    <sys:String x:Key="app_all_desktops">نمایش پنجره‌های این برنامه در همه دسکتاپ‌ها</sys:String>
+    <sys:String x:Key="move_window_desktop">انتقال این پنجره به دسکتاپ</sys:String>
+    <sys:String x:Key="move_app_desktop">انتقال همه پنجره‌های برنامه به دسکتاپ</sys:String>
+    <sys:String x:Key="desktop_number">دسکتاپ {0}</sys:String>
+    <sys:String x:Key="desktop_action_failed">ویندوز نتوانست عملیات را برای همه پنجره‌ها کامل کند. ممکن است برخی پنجره‌ها قبلاً جابه‌جا شده باشند. برای جزئیات گزارش را ببینید.</sys:String>
+    <s:String x:Key="show_hebrew_date">نمایش تاریخ عبری و روزهای هفتهٔ شماره‌گذاری‌شده</s:String>
+    <s:String x:Key="hebrew_date_midnight">از تاریخ محلی تقویم استفاده می‌کند؛ تغییر در نیمه‌شب است، نه هنگام غروب.</s:String>
+    <s:String x:Key="hebrew_place">مکان برای تاریخ عبری:</s:String>
+    <s:String x:Key="hebrew_place_none">انتخاب نشده</s:String>
+    <s:String x:Key="hebrew_place_choose">انتخاب...</s:String>
+    <s:String x:Key="hebrew_place_clear">پاک‌کردن</s:String>
+    <s:String x:Key="zone_clear">حذف</s:String>
+    <s:String x:Key="hebrew_place_hint">مکانی که غروب آفتاب در آن روز عبری را به پایان می‌رساند و اوقات شرعی تقویم بر اساس آن نمایش داده می‌شود.</s:String>
+    <s:String x:Key="hebrew_place_title">مکان برای تاریخ عبری</s:String>
+    <s:String x:Key="hebrew_place_city_tab">شهر</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">مختصات</s:String>
+    <s:String x:Key="hebrew_place_search">نام شهر (به انگلیسی):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">دست‌کم دو حرف وارد کنید؛ برای نمونه: jerus، new york، paris texas. شهرهای دارای ۱۰٬۰۰۰ نفر جمعیت یا بیشتر فهرست می‌شوند.</s:String>
+    <s:String x:Key="hebrew_place_country">کشور:</s:String>
+    <s:String x:Key="hebrew_place_need_country">کشور را انتخاب کنید؛ این انتخاب مشخص می‌کند کدام‌یک از دو عدد عرض جغرافیایی است.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">عرض و طول جغرافیایی:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">هر قالبی پذیرفته است: 32.0853, 34.7818 یا 34,7818 32,0853 یا 32°05'07&quot;N 34°46'54&quot;E. در بخش اعشاری نقطه یا ویرگول و میان دو عدد ویرگول، دونقطه یا فاصله بگذارید.</s:String>
+    <s:String x:Key="hebrew_place_zone">منطقهٔ زمانی:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">همراه شهر انتخاب می‌شود؛ اگر نادرست بود آن را تغییر دهید. قوانین منطقهٔ زمانی (ساعت تابستانی و تغییرات آن) همان قوانینی است که ویندوز دارد.</s:String>
+    <s:String x:Key="calendar_title">تقویم یهودی</s:String>
+    <s:String x:Key="calendar_today">امروز</s:String>
+    <s:String x:Key="calendar_copy_name">رونوشت از نام</s:String>
+    <s:String x:Key="calendar_search_name">جست‌وجوی نام در گوگل</s:String>
+    <s:String x:Key="calendar_grid_hebrew">ماه عبری</s:String>
+    <s:String x:Key="calendar_grid_civil">ماه میلادی</s:String>
+    <s:String x:Key="calendar_shabbat">شبات</s:String>
+    <s:String x:Key="calendar_previous_month">ماه قبل</s:String>
+    <s:String x:Key="calendar_next_month">ماه بعد</s:String>
+    <s:String x:Key="calendar_settings">تنظیمات...</s:String>
+    <s:String x:Key="calendar_close">بستن</s:String>
+    <s:String x:Key="calendar_portion">بخش هفتگی تورات: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">در این شبات، قرائت ویژهٔ عید انجام می‌شود</s:String>
+    <s:String x:Key="calendar_day_of">{0}، روز {1} از {2}</s:String>
+    <s:String x:Key="calendar_molad">مولادِ {0}: {1}، {2} و {3} حلاقیم</s:String>
+    <s:String x:Key="calendar_omer">شمارش عُمر</s:String>
+    <s:String x:Key="calendar_omer_day">روز {0} از عُمر</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} هفته و {1} روز</s:String>
+    <s:String x:Key="calendar_place">مکان: {0}</s:String>
+    <s:String x:Key="calendar_israel">سرزمین اسرائیل</s:String>
+    <s:String x:Key="calendar_diaspora">جوامع خارج از اسرائیل</s:String>
+    <s:String x:Key="calendar_no_place">برای دیدن اوقات روز، در تنظیمات تقویم مکانی انتخاب کنید.</s:String>
+    <s:String x:Key="calendar_times">اوقات روز</s:String>
+    <s:String x:Key="calendar_yahrzeits">یادبودهای سالگرد درگذشت</s:String>
+    <s:String x:Key="calendar_candles_after_dark">روشن‌کردن شمع (پس از تاریک‌شدن)</s:String>
+    <s:String x:Key="calendar_havdalah">پایان روز استراحت (هاودالا)</s:String>
+    <s:String x:Key="calendar_rest_begins">آغاز: {0} (روشن‌کردن شمع)</s:String>
+    <s:String x:Key="calendar_rest_ends">پایان: {0} (پس از فرارسیدن شب)</s:String>
+    <s:String x:Key="calendar_settings_title">تنظیمات تقویم</s:String>
+    <s:String x:Key="calendar_settings_place">مکان منطقه:</s:String>
+    <s:String x:Key="calendar_settings_zone">منطقهٔ زمانی برای تاریخ، تغییر روز و اوقات روز:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (منطقهٔ زمانی رایانه)</s:String>
+    <s:String x:Key="zones_heading">منطقه‌های زمانی ساعت</s:String>
+    <s:String x:Key="zone_main">منطقهٔ زمانی اصلی:</s:String>
+    <s:String x:Key="zone_second">منطقهٔ زمانی دوم:</s:String>
+    <s:String x:Key="zone_third">منطقهٔ زمانی سوم:</s:String>
+    <s:String x:Key="zone_show_name">نمایش نام</s:String>
+    <s:String x:Key="zone_label">نام روی ساعت</s:String>
+    <s:String x:Key="zone_label_hint">نامی که ساعت برای این منطقه به‌جای مکان آن نشان می‌دهد (برای نمونه، «قلب» برای اورشلیم). اگر خالی بماند، مکان نمایش داده می‌شود.</s:String>
+    <s:String x:Key="zone_place">مکان:</s:String>
+    <s:String x:Key="zones_tab">منطقه‌های زمانی</s:String>
+    <s:String x:Key="hebrew_date_tab">تاریخ عبری</s:String>
+    <s:String x:Key="zone_computer">منطقهٔ زمانی رایانه ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">تاریخ عبری مربوط به مکان منطقهٔ زمانی اصلی است که در زبانهٔ منطقه‌های زمانی انتخاب شده.</s:String>
+    <s:String x:Key="zone_none">(نمایش داده نمی‌شود)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">سالگردهای درگذشت برای نمایش (همه، بر اساس دسته، تک‌تک):</s:String>
+    <s:String x:Key="calendar_all_figures">همه</s:String>
+    <s:String x:Key="cancel_dialog">لغو</s:String>
+    <s:String x:Key="coordinate_result">عرض و طول جغرافیایی: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">ترتیب همان است که در متن مشخص شده.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">فقط یک ترتیب سازگار است: عرض جغرافیایی حداکثر ۹۰ درجه است.</s:String>
+    <s:String x:Key="coordinate_basis_country">ترتیب از روی کشور تعیین شده است؛ ترتیب دیگر نقطه‌ای دور از آن کشور می‌دهد.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">فرض شده است که ابتدا عرض جغرافیایی آمده.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">فرض شده است که ابتدا عرض جغرافیایی آمده؛ قرار دادن طول جغرافیایی در ابتدا نیز تقریباً به همان اندازه با کشور سازگار است.</s:String>
+    <s:String x:Key="coordinate_warning_far">این نقطه {0:N0} کیلومتر از نزدیک‌ترین شهر آن کشور فاصله دارد. کشور و اعداد را بررسی کنید.</s:String>
+    <s:String x:Key="coordinate_problem_empty">مختصات را وارد کنید.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">دو عدد لازم است: عرض و طول جغرافیایی.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">بیش از دو عدد وارد شده است. فقط عرض و طول جغرافیایی را وارد کنید.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">هر دو عدد به‌عنوان عرض جغرافیایی مشخص شده‌اند.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">هر دو عدد به‌عنوان طول جغرافیایی مشخص شده‌اند.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">عرض جغرافیایی باید بین ۹۰- و ۹۰ درجه باشد.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">طول جغرافیایی باید بین ۱۸۰- و ۱۸۰ درجه باشد.</s:String>
+    <s:String x:Key="coordinate_problem_neither">در هیچ‌یک از دو ترتیب، این اعداد عرض (حداکثر ۹۰) و طول (حداکثر ۱۸۰) جغرافیایی نمی‌سازند.</s:String>
+    <s:String x:Key="open_system_settings">بازکردن تنظیمات سیستم</s:String>
+    <s:String x:Key="open_computer_management">مدیریت رایانه</s:String>
+    <s:String x:Key="open_drives">بازکردن درایوها</s:String>
+    <s:String x:Key="this_pc">این رایانه</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">تلاش برای نگه‌داشتن پنجره‌های باز در این دسکتاپ (آزمایشی)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">از پنجره‌های نمایش‌داده‌شده در همه دسکتاپ‌ها بدون جابه‌جایی استفاده می‌کند. در غیر این صورت، نمادهای دسکتاپ و راه‌اندازهای سنجاق‌شده مرورگرها، پوشه‌های اکسپلورر و Notepad++ را به‌صورت محلی باز می‌کنند؛ برنامه‌های دیگر و فعال‌سازی از ناحیهٔ اعلان همچنان پنجره‌ها را منتقل می‌کنند.</s:String>
 </ResourceDictionary>

@@ -7,11 +7,23 @@
     <s:String x:Key="advanced_tab">Avançado</s:String>
     <s:String x:Key="taskbar_appearance">Aparência da barra de tarefas</s:String>
     <s:String x:Key="notification_area">Área de notificação</s:String>
+    <s:String x:Key="general_heading">Geral</s:String>
+    <s:String x:Key="clock_heading">Relógio</s:String>
     <s:String x:Key="autostart">Iniciar _automaticamente no logon</s:String>
     <s:String x:Key="language_text">Idio_ma:</s:String>
     <s:String x:Key="language_tip">Seleciona o idioma a ser usado.</s:String>
     <s:String x:Key="theme_text">_Tema:</s:String>
     <s:String x:Key="theme_tip">Temas devem ser instalados na pasta Themes.</s:String>
+    <s:String x:Key="accent_text">_Cor de destaque:</s:String>
+    <s:String x:Key="accent_tip">A cor neon do tema Modern Glass.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>Ciano</s:String>
+        <s:String>Violeta</s:String>
+        <s:String>Fúcsia</s:String>
+        <s:String>Esmeralda</s:String>
+        <s:String>Âmbar</s:String>
+        <s:String>Rosa</s:String>
+    </x:Array>
     <s:String x:Key="location_text">_Local:</s:String>
     <s:String x:Key="location_tip">Muda o local da barra de tarefas na tela.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -47,6 +59,7 @@
         <s:String>Mesma barra de tarefas que a janela</s:String>
         <s:String>Mesma barra de tarefas que a janela e barra de tarefas principal</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_Inverter cores em escala de cinza:</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>Quando necessário pelo tema</s:String>
         <s:String>Sempre</s:String>
@@ -65,16 +78,58 @@
         <s:String>Abrir o calendário moderno</s:String>
         <s:String>Abrir a Central de Notificação</s:String>
     </x:Array>
+    <s:String x:Key="task_wheel_action">Ação da _roda do mouse:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>Não fazer nada</s:String>
+        <s:String>Mostrar/ocultar janela</s:String>
+    </x:Array>
+    <s:String x:Key="auto_hide_transparent">Ocultar a linha da _barra de tarefas quando estiver oculta automaticamente</s:String>
     <s:String x:Key="version">Versão {0}</s:String>
     <s:String x:Key="visit_on_github">Visite a UltraWinBar no GitHub</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Várias barras de tarefas</s:String>
+    <s:String x:Key="additional_taskbars_text">Mostrar uma barra de tarefas nestas bordas. Clique com o botão direito numa barra de tarefas para expandi-la por toda a borda, deslocando as outras.</s:String>
+    <s:String x:Key="location_left">Esquerda</s:String>
+    <s:String x:Key="location_top">Superior</s:String>
+    <s:String x:Key="location_right">Direita</s:String>
+    <s:String x:Key="location_bottom">Inferior</s:String>
+    <s:String x:Key="tray_location_text">Área de _notificação em:</s:String>
+    <s:String x:Key="clock_location_text">_Relógio em:</s:String>
+    <s:String x:Key="start_button_location_text">_Botão Iniciar em:</s:String>
+    <s:String x:Key="language_location_text">Indicador de _idioma em:</s:String>
+    <s:String x:Key="task_assignment_hint">Arraste um botão de tarefa para outra barra de tarefas para mover todo o aplicativo; mantenha Ctrl pressionado ao arrastar para mover apenas essa janela. Clique com o botão direito num botão de tarefa para redefinir sua atribuição.</s:String>
+    <s:String x:Key="reset_task_assignments">Redefinir todas as atribuições da barra de tarefas</s:String>
+    <s:String x:Key="stretch">_Expandir</s:String>
+    <s:String x:Key="make_main">_Tornar principal</s:String>
+    <s:String x:Key="reset_task_assignment">Redefinir atribuição da barra de tarefas</s:String>
     <s:String x:Key="taskbar_scale">Escala da barra de tarefas</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">Configuração atual: {0}%</s:String>
     <s:String x:Key="debug_logging">_Habilitar logging de depuração</s:String>
+    <s:String x:Key="window_activity_logging">Registrar abertura e fechamento de janelas</s:String>
     <s:String x:Key="check_for_updates">_Verificar se há atualizações</s:String>
     <s:String x:Key="show_exit_menu_item">Mostrar _opção de saída no menu de contexto</s:String>
+    <s:String x:Key="show_end_task_button">Mostrar a opção _Encerrar tarefa no menu de contexto</s:String>
+    <s:String x:Key="slide_taskbar_buttons">_Deslizar botões da barra de tarefas</s:String>
+    <s:String x:Key="show_clock_seconds">_Mostrar segundos no relógio</s:String>
+    <s:String x:Key="open_custom_themes_folder">Abrir pasta de temas personalizados</s:String>
+    <s:String x:Key="win_num_hotkeys_action">Ação das teclas de atalho Win+[0-9]:</s:String>
+    <x:Array x:Key="win_num_hotkeys_action_values" Type="s:String">
+        <s:String>Padrão do Windows</s:String>
+        <s:String>Alternar entre tarefas</s:String>
+        <s:String>Abrir item da Inicialização rápida</s:String>
+    </x:Array>
+    <s:String x:Key="hotkey_warning_title">Teclas de atalho da UltraWinBar</s:String>
+    <s:String x:Key="hotkey_warning_text">A UltraWinBar substituirá as teclas de atalho da barra de tarefas do Windows. Mesmo que a UltraWinBar seja fechada, elas não serão restauradas no Windows até você sair da sessão e entrar novamente.</s:String>
+    <s:String x:Key="allow_blur_behind">Permitir _desfoque atrás da barra de tarefas transparente</s:String>
     <s:String x:Key="ok_dialog">OK</s:String>
+
+    <s:String x:Key="clock_format_help">Ver opções de formatação disponíveis</s:String>
+    <s:String x:Key="clock_format_warning">Nota: a formatação personalizada do relógio pode não funcionar como esperado se o tema selecionado especificar seu próprio formato.</s:String>
+    <s:String x:Key="override_clock_format">_Formato personalizado do relógio:</s:String>
+    <s:String x:Key="override_ampm_designators">_Indicadores personalizados:</s:String>
+    <s:String x:Key="am_designator">AM:</s:String>
+    <s:String x:Key="pm_designator">PM:</s:String>
 
     <s:String x:Key="customize_notifications">Personalizar notificações</s:String>
     <s:String x:Key="customize_notifications_info">A UltraWinBar exibe ícones para notificações ativas e urgentes e oculta os ícones inativos. Você pode alterar esse comportamento para os itens da lista abaixo.</s:String>
@@ -111,6 +166,7 @@
     <s:String x:Key="tray_properties">P_ropriedades</s:String>
     <s:String x:Key="update_available">_Atualização disponível...</s:String>
     <s:String x:Key="exit_ultrawinbar">_Sair da UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">_Reiniciar a UltraWinBar</s:String>
     <s:String x:Key="customize_notifications_menu">_Personalizar notificações...</s:String>
     <s:String x:Key="lock_taskbar_menu">Bl_oquear a barra de tarefas</s:String>
 
@@ -126,9 +182,134 @@
     <s:String x:Key="minimize">Mi_nimizar</s:String>
     <s:String x:Key="maximize">Ma_ximizar</s:String>
     <s:String x:Key="close">_Fechar</s:String>
+    <s:String x:Key="end_task">_Encerrar tarefa</s:String>
 
     <s:String x:Key="show_hidden">Mostrar ícones ocultos</s:String>
     <s:String x:Key="hide">Ocultar</s:String>
 
     <s:String x:Key="open_folder">A&amp;brir pasta</s:String>
+    <s:String x:Key="move_to_taskbar_format">Mover para a barra de tarefas {0}</s:String>
+
+    <s:String x:Key="ime_input_tip_enabled">Clique com o botão direito para abrir as opções do IME.</s:String>
+    <s:String x:Key="ime_input_tip_disabled">IME desativado</s:String>
+    <s:String x:Key="ime_input_full_shape_hiragana">_Hiragana</s:String>
+    <s:String x:Key="ime_input_full_shape_katakana">_Katakana de largura total</s:String>
+    <s:String x:Key="ime_input_full_shape_alphanumeric">_Alfanumérico de largura total</s:String>
+    <s:String x:Key="ime_input_katakana">Katakana de meia largura</s:String>
+    <s:String x:Key="ime_input_alphanumeric">Alfanumérico de meia _largura</s:String>
+    <s:String x:Key="ime_input_direct">_Entrada direta</s:String>
+    <s:String x:Key="ime_open_pad">_Bloco IME</s:String>
+    <s:String x:Key="ime_open_add_word_dictionary">Adicionar _palavra</s:String>
+    <s:String x:Key="ime_open_dictionary_tool">_Ferramenta do dicionário do usuário</s:String>
+    <s:String x:Key="ime_open_properties">P_ropriedades</s:String>
+    <s:String x:Key="ime_input_key">_Método de entrada</s:String>
+    <s:String x:Key="ime_input_key_roma">Entrada _Romaji</s:String>
+    <s:String x:Key="ime_input_key_kana">Entrada Kana</s:String>
+    <s:String x:Key="ime_conversion">Modo de _conversão</s:String>
+    <s:String x:Key="ime_conversion_general">_Geral</s:String>
+    <s:String x:Key="ime_conversion_none">Sem c_onversão</s:String>
+    <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+
+    <s:String x:Key="pin_to_taskbar">Fixar nesta barra de tarefas</s:String>
+    <s:String x:Key="pinned_app_windows">Janelas abertas</s:String>
+    <s:String x:Key="unpin_from_taskbar">Desafixar desta barra de tarefas</s:String>
+    <s:String x:Key="copy_executable_path">Copiar caminho do executável</s:String>
+    <s:String x:Key="copy_executable_directory">Copiar diretório do executável</s:String>
+
+    <!-- Items below are settings, and should always be in English -->
+    <FlowDirection x:Key="flow_direction">LeftToRight</FlowDirection>
+    <FontFamily x:Key="start_text_xp_font_family">Franklin Gothic</FontFamily>
+    <s:String x:Key="app_all_desktops">Show this application's windows on all desktops</s:String>
+    <s:String x:Key="move_window_desktop">Move this window to desktop</s:String>
+    <s:String x:Key="move_app_desktop">Move all application windows to desktop</s:String>
+    <s:String x:Key="desktop_number">Desktop {0}</s:String>
+    <s:String x:Key="desktop_action_failed">Windows could not complete the operation for every window. Some windows may already have moved. See the log for details.</s:String>
+    <s:String x:Key="show_hebrew_date">Mostrar data hebraica e dias da semana numerados</s:String>
+    <s:String x:Key="hebrew_date_midnight">Usa a data do calendário local; muda à meia-noite, não ao pôr do sol.</s:String>
+    <s:String x:Key="hebrew_place">Local da data hebraica:</s:String>
+    <s:String x:Key="hebrew_place_none">não escolhido</s:String>
+    <s:String x:Key="hebrew_place_choose">Escolher...</s:String>
+    <s:String x:Key="hebrew_place_clear">Limpar</s:String>
+    <s:String x:Key="zone_clear">Remover</s:String>
+    <s:String x:Key="hebrew_place_hint">O local cujo pôr do sol encerra o dia hebraico e cujos horários haláchicos são exibidos no calendário.</s:String>
+    <s:String x:Key="hebrew_place_title">Local da data hebraica</s:String>
+    <s:String x:Key="hebrew_place_city_tab">Cidade</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">Coordenadas</s:String>
+    <s:String x:Key="hebrew_place_search">Nome da cidade (em inglês):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">Digite pelo menos duas letras, por exemplo: jerus, new york, paris texas. Cidades com 10 000 habitantes ou mais são listadas.</s:String>
+    <s:String x:Key="hebrew_place_country">País:</s:String>
+    <s:String x:Key="hebrew_place_need_country">Escolha o país: isso indica qual dos dois números é a latitude.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">Latitude e longitude:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">Qualquer formato serve: 32.0853, 34.7818 ou 34,7818 32,0853 ou 32°05'07&quot;N 34°46'54&quot;E. Ponto ou vírgula na parte decimal; vírgula, dois-pontos ou espaço entre os números.</s:String>
+    <s:String x:Key="hebrew_place_zone">Fuso horário:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">Escolhido junto com a cidade; altere se estiver incorreto. As regras do fuso (horário de verão e suas mudanças) são as que o Windows tem.</s:String>
+    <s:String x:Key="calendar_title">Calendário judaico</s:String>
+    <s:String x:Key="calendar_today">Hoje</s:String>
+    <s:String x:Key="calendar_copy_name">Copiar o nome</s:String>
+    <s:String x:Key="calendar_search_name">Pesquisar o nome no Google</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Mês hebraico</s:String>
+    <s:String x:Key="calendar_grid_civil">Mês civil</s:String>
+    <s:String x:Key="calendar_shabbat">Shabat</s:String>
+    <s:String x:Key="calendar_previous_month">Mês anterior</s:String>
+    <s:String x:Key="calendar_next_month">Próximo mês</s:String>
+    <s:String x:Key="calendar_settings">Configurações...</s:String>
+    <s:String x:Key="calendar_close">Fechar</s:String>
+    <s:String x:Key="calendar_portion">Porção semanal: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">Uma leitura festiva é lida neste Shabat</s:String>
+    <s:String x:Key="calendar_day_of">{0}, dia {1} de {2}</s:String>
+    <s:String x:Key="calendar_molad">Molad de {0}: {1}, {2} e {3} chalakim</s:String>
+    <s:String x:Key="calendar_omer">Contagem do Omer</s:String>
+    <s:String x:Key="calendar_omer_day">Dia {0} do Omer</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} semana(s) e {1} dia(s)</s:String>
+    <s:String x:Key="calendar_place">Local: {0}</s:String>
+    <s:String x:Key="calendar_israel">Terra de Israel</s:String>
+    <s:String x:Key="calendar_diaspora">diáspora</s:String>
+    <s:String x:Key="calendar_no_place">Escolha um local nas configurações do calendário para ver os horários do dia.</s:String>
+    <s:String x:Key="calendar_times">Horários do dia</s:String>
+    <s:String x:Key="calendar_yahrzeits">Yahrzeits</s:String>
+    <s:String x:Key="calendar_candles_after_dark">Acendimento das velas (após o anoitecer)</s:String>
+    <s:String x:Key="calendar_havdalah">Fim do dia de descanso (havdalá)</s:String>
+    <s:String x:Key="calendar_rest_begins">Começa: {0} (acendimento das velas)</s:String>
+    <s:String x:Key="calendar_rest_ends">Termina: {0} (anoitecer)</s:String>
+    <s:String x:Key="calendar_settings_title">Configurações do calendário</s:String>
+    <s:String x:Key="calendar_settings_place">Local do fuso:</s:String>
+    <s:String x:Key="calendar_settings_zone">Fuso horário para a data, a mudança do dia e os horários do dia:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (do computador)</s:String>
+    <s:String x:Key="zones_heading">Fusos horários do relógio</s:String>
+    <s:String x:Key="zone_main">Fuso horário principal:</s:String>
+    <s:String x:Key="zone_second">Segundo fuso horário:</s:String>
+    <s:String x:Key="zone_third">Terceiro fuso horário:</s:String>
+    <s:String x:Key="zone_show_name">Mostrar o nome</s:String>
+    <s:String x:Key="zone_label">Identificação do fuso:</s:String>
+    <s:String x:Key="zone_label_hint">Rótulo personalizado para o fuso horário. Mantenha Heart e Jerusalem exatamente como estão.</s:String>
+    <s:String x:Key="zone_place">Local:</s:String>
+    <s:String x:Key="zones_tab">Fusos horários</s:String>
+    <s:String x:Key="hebrew_date_tab">Data hebraica</s:String>
+    <s:String x:Key="zone_computer">Do computador ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">A data hebraica corresponde ao local do fuso horário principal, escolhido na aba Fusos horários.</s:String>
+    <s:String x:Key="zone_none">(não exibido)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">Yahrzeits a exibir (todos, por categoria, um a um):</s:String>
+    <s:String x:Key="calendar_all_figures">Todos</s:String>
+    <s:String x:Key="cancel_dialog">Cancelar</s:String>
+    <s:String x:Key="coordinate_result">Latitude e longitude: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">A ordem é a indicada no texto.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">Apenas uma ordem é possível: a latitude pode ter até 90 graus.</s:String>
+    <s:String x:Key="coordinate_basis_country">A ordem é determinada pelo país: a outra combinação fica muito longe dele.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">Considera-se primeiro a latitude.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">Considera-se primeiro a latitude; com a longitude primeiro, o resultado ficaria quase tão próximo do país.</s:String>
+    <s:String x:Key="coordinate_warning_far">O ponto fica a {0:N0} km da cidade mais próxima do país. Verifique o país e os números.</s:String>
+    <s:String x:Key="coordinate_problem_empty">Digite as coordenadas.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">São necessários dois números: a latitude e a longitude.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">Há mais de dois números. Digite apenas a latitude e a longitude.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">Os dois números estão indicados como latitude.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">Os dois números estão indicados como longitude.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">A latitude deve estar entre -90 e 90 graus.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">A longitude deve estar entre -180 e 180 graus.</s:String>
+    <s:String x:Key="coordinate_problem_neither">Em nenhuma das ordens estes números formam uma latitude (até 90) e uma longitude (até 180).</s:String>
+    <s:String x:Key="open_system_settings">Abrir Configurações do sistema</s:String>
+    <s:String x:Key="open_computer_management">Gerenciamento do computador</s:String>
+    <s:String x:Key="open_drives">Abrir unidades</s:String>
+    <s:String x:Key="this_pc">Este Computador</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">Tentar manter as janelas abertas nesta área de trabalho (experimental)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Reutiliza janelas exibidas em todas as áreas de trabalho sem movê-las. Caso contrário, os ícones da área de trabalho e os atalhos fixados abrem navegadores, pastas do Explorer e o Notepad++ localmente; outros aplicativos e a ativação pela área de notificação continuam transferindo janelas.</s:String>
 </ResourceDictionary>

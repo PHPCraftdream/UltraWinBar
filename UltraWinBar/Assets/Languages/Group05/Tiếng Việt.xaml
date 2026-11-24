@@ -1,7 +1,6 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:s="clr-namespace:System;assembly=mscorlib">
-
     <s:String x:Key="ultrawinbar_properties">Tinh chỉnh UltraWinBar</s:String>
     <s:String x:Key="taskbar_tab">Thanh tác vụ</s:String>
     <s:String x:Key="advanced_tab">Nâng cao</s:String>
@@ -14,6 +13,16 @@
     <s:String x:Key="language_tip">Chọn ngôn ngữ để sử dụng.</s:String>
     <s:String x:Key="theme_text">Chủ đề:</s:String>
     <s:String x:Key="theme_tip">Cài đặt chủ đề trong thư mục Themes.</s:String>
+    <s:String x:Key="accent_text">Màu _nhấn:</s:String>
+    <s:String x:Key="accent_tip">Màu neon của chủ đề Modern Glass.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>Xanh lơ</s:String>
+        <s:String>Tím</s:String>
+        <s:String>Hồng cánh sen</s:String>
+        <s:String>Xanh lục bảo</s:String>
+        <s:String>Hổ phách</s:String>
+        <s:String>Hồng</s:String>
+    </x:Array>
     <s:String x:Key="location_text">Vị trí:</s:String>
     <s:String x:Key="location_tip">Thay đổi vị trí của thanh tác vụ trên màn hình.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -49,6 +58,7 @@
         <s:String>Thanh tác vụ cùng cửa sổ</s:String>
         <s:String>Thanh tác vụ cùng cửa sổ và thanh tác vụ chính</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_Đảo ngược màu xám:</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>Theo chủ đề</s:String>
         <s:String>Luôn luôn</s:String>
@@ -67,14 +77,35 @@
         <s:String>Mở lịch với giao diện hiện đại</s:String>
         <s:String>Mở Trung tâm Thông báo</s:String>
     </x:Array>
+    <s:String x:Key="task_wheel_action">Thao tác _con lăn chuột:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>Không làm gì</s:String>
+        <s:String>Hiện/ẩn cửa sổ</s:String>
+    </x:Array>
     <s:String x:Key="auto_hide_transparent">Ẩn _dòng kẻ của thanh tác vụ khi ẩn bằng chế độ tự động ẩn</s:String>
     <s:String x:Key="version">Phiên bản {0}</s:String>
     <s:String x:Key="visit_on_github">UltraWinBar trên GitHub</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Nhiều thanh tác vụ</s:String>
+    <s:String x:Key="additional_taskbars_text">Hiển thị thanh tác vụ ở các cạnh này. Nhấp chuột phải vào thanh tác vụ để kéo dài nó hết cạnh, đẩy các thanh khác sang bên.</s:String>
+    <s:String x:Key="location_left">Bên trái</s:String>
+    <s:String x:Key="location_top">Trên cùng</s:String>
+    <s:String x:Key="location_right">Bên phải</s:String>
+    <s:String x:Key="location_bottom">Dưới cùng</s:String>
+    <s:String x:Key="tray_location_text">Khu vực _thông báo ở:</s:String>
+    <s:String x:Key="clock_location_text">_Đồng hồ ở:</s:String>
+    <s:String x:Key="start_button_location_text">Nút _Bắt đầu ở:</s:String>
+    <s:String x:Key="language_location_text">Chỉ báo _ngôn ngữ ở:</s:String>
+    <s:String x:Key="task_assignment_hint">Kéo nút tác vụ sang thanh tác vụ khác để di chuyển toàn bộ ứng dụng; giữ Ctrl khi kéo để chỉ di chuyển cửa sổ đó. Nhấp chuột phải vào nút tác vụ để đặt lại phân công.</s:String>
+    <s:String x:Key="reset_task_assignments">Đặt lại mọi phân công thanh tác vụ</s:String>
+    <s:String x:Key="stretch">_Kéo dài</s:String>
+    <s:String x:Key="make_main">_Đặt làm chính</s:String>
+    <s:String x:Key="reset_task_assignment">Đặt lại _phân công thanh tác vụ</s:String>
     <s:String x:Key="taskbar_scale">Phóng lớn thanh tác vụ</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">Cài đặt hiện tại: {0}%</s:String>
     <s:String x:Key="debug_logging">Kích hoạt ghi nhật ký gỡ lỗi</s:String>
+    <s:String x:Key="window_activity_logging">Ghi nhật ký khi cửa sổ mở và đóng</s:String>
     <s:String x:Key="check_for_updates">Kiểm tra cập nhật</s:String>
     <s:String x:Key="show_exit_menu_item">Hiển thị tùy chọn _Thoát trong menu chuột phải</s:String>
     <s:String x:Key="show_end_task_button">Hiển thị tùy chọn Kết thúc tác vụ trong menu chuột phải</s:String>
@@ -91,7 +122,12 @@
     <s:String x:Key="hotkey_warning_text">UltraWinBar sẽ ghi đè các phím tắt của thanh tác vụ Windows. Ngay cả khi UltraWinBar đóng, chúng sẽ không được khôi phục lại cho Windows cho đến khi bạn đăng xuất và đăng nhập lại.</s:String>
     <s:String x:Key="allow_blur_behind">Cho phép làm mờ nền thanh tác vụ trong suốt</s:String>
     <s:String x:Key="ok_dialog">OK</s:String>
-
+    <s:String x:Key="clock_format_help">Xem các tùy chọn định dạng hiện có</s:String>
+    <s:String x:Key="clock_format_warning">Lưu ý: Định dạng đồng hồ tùy chỉnh có thể không hoạt động như mong đợi nếu chủ đề đã chọn có định dạng riêng.</s:String>
+    <s:String x:Key="override_clock_format">Định dạng đồng hồ _tùy chỉnh:</s:String>
+    <s:String x:Key="override_ampm_designators">Ký hiệu _sáng/chiều tùy chỉnh:</s:String>
+    <s:String x:Key="am_designator">SA:</s:String>
+    <s:String x:Key="pm_designator">CH:</s:String>
     <s:String x:Key="customize_notifications">Tùy chỉnh thông báo</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar sẽ hiện các biểu tượng thông báo đang hoạt động hoặc quan trọng, đồng thời ẩn các biểu tượng không cần thiết. Bạn cũng có thể thay đổi hành vi của chúng trong danh sách dưới đây.</s:String>
     <s:String x:Key="customize_notifications_instruction">Chọn một mục nào đó, rồi chọn hành vi thông báo cho mục đó:</s:String>
@@ -102,13 +138,11 @@
     <s:String x:Key="name_heading">Tên</s:String>
     <s:String x:Key="behavior_heading">Hành vi</s:String>
     <s:String x:Key="invert_heading">Đảo ngược</s:String>
-
     <s:String x:Key="start_text">Bắt đầu</s:String>
     <s:String x:Key="start_text_xp">Bắt đầu</s:String>
     <s:String x:Key="start_button_tip_98">Nhấn vào đây để bắt đầu.</s:String>
     <s:String x:Key="start_button_tip">Nhấn vào đây để bắt đầu</s:String>
     <s:String x:Key="start_button_tip_vista">Bắt đầu</s:String>
-
     <s:String x:Key="ultrawinbar_title">Thanh tác vụ UltraWinBar</s:String>
     <s:String x:Key="toolbars">_Thanh công cụ</s:String>
     <s:String x:Key="quick_launch">_Truy cập nhanh</s:String>
@@ -127,15 +161,14 @@
     <s:String x:Key="tray_properties">Tinh chỉnh</s:String>
     <s:String x:Key="update_available">_Có bản cập nhật mới...</s:String>
     <s:String x:Key="exit_ultrawinbar">_Thoát UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">_Khởi động lại UltraWinBar</s:String>
     <s:String x:Key="customize_notifications_menu">_Tùy chỉnh thông báo...</s:String>
     <s:String x:Key="lock_taskbar_menu">_Khoá thanh tác vụ</s:String>
-
     <s:String x:Key="show_desktop_tip_95">Khôi phục bàn làm việc</s:String>
     <s:String x:Key="show_desktop_tip">Hiện bàn làm việc</s:String>
     <s:String x:Key="show_desktop_95">_Bàn làm việc</s:String>
     <s:String x:Key="show_desktop">_Hiện bàn làm việc</s:String>
     <s:String x:Key="peek_at_desktop">_Xem nhanh bàn làm việc</s:String>
-
     <s:String x:Key="restore">_Khôi phục</s:String>
     <s:String x:Key="move">_Di chuyển</s:String>
     <s:String x:Key="size">_Kích thước</s:String>
@@ -143,12 +176,10 @@
     <s:String x:Key="maximize">Phóng to</s:String>
     <s:String x:Key="close">_Đóng</s:String>
     <s:String x:Key="end_task">Kết thúc tác vụ</s:String>
-
     <s:String x:Key="show_hidden">Hiển thị biểu tượng đã ẩn</s:String>
     <s:String x:Key="hide">Ẩn</s:String>
-
     <s:String x:Key="open_folder">&amp;Mở thư mục</s:String>
-
+    <s:String x:Key="move_to_taskbar_format">Chuyển đến thanh tác vụ {0}</s:String>
     <s:String x:Key="ime_input_tip_enabled">Nhấn chuột phải để chọn tùy chọn IME</s:String>
     <s:String x:Key="ime_input_tip_disabled">IME đã bị vô hiệu hóa</s:String>
     <s:String x:Key="ime_input_full_shape_hiragana">Hiragana</s:String>
@@ -168,6 +199,103 @@
     <s:String x:Key="ime_conversion_general">Chung</s:String>
     <s:String x:Key="ime_conversion_none">Không chuyển đổi</s:String>
     <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
-
+    <s:String x:Key="pin_to_taskbar">Ghim vào thanh tác vụ này</s:String>
+    <s:String x:Key="pinned_app_windows">Cửa sổ đang mở</s:String>
+    <s:String x:Key="unpin_from_taskbar">Bỏ ghim khỏi thanh tác vụ này</s:String>
+    <s:String x:Key="copy_executable_path">Sao chép đường dẫn tệp thực thi</s:String>
+    <s:String x:Key="copy_executable_directory">Sao chép thư mục tệp thực thi</s:String>
     <FontFamily x:Key="start_text_xp_font_family">Tahoma</FontFamily>
+    <s:String x:Key="app_all_desktops">Hiển thị cửa sổ của ứng dụng này trên mọi màn hình nền</s:String>
+    <s:String x:Key="move_window_desktop">Di chuyển cửa sổ này sang màn hình nền</s:String>
+    <s:String x:Key="move_app_desktop">Di chuyển mọi cửa sổ ứng dụng sang màn hình nền</s:String>
+    <s:String x:Key="desktop_number">Màn hình nền {0}</s:String>
+    <s:String x:Key="desktop_action_failed">Windows không thể hoàn tất thao tác cho mọi cửa sổ. Một số cửa sổ có thể đã được di chuyển. Xem nhật ký để biết chi tiết.</s:String>
+    <s:String x:Key="show_hebrew_date">Hiển thị ngày Do Thái và thứ trong tuần dạng số</s:String>
+    <s:String x:Key="hebrew_date_midnight">Dùng ngày lịch địa phương; đổi ngày lúc nửa đêm, không phải lúc hoàng hôn.</s:String>
+    <s:String x:Key="hebrew_place">Địa điểm cho ngày Do Thái:</s:String>
+    <s:String x:Key="hebrew_place_none">chưa chọn</s:String>
+    <s:String x:Key="hebrew_place_choose">Chọn...</s:String>
+    <s:String x:Key="hebrew_place_clear">Xóa</s:String>
+    <s:String x:Key="zone_clear">Xóa</s:String>
+    <s:String x:Key="hebrew_place_hint">Địa điểm có hoàng hôn kết thúc ngày Do Thái và giờ halakhic được lịch hiển thị.</s:String>
+    <s:String x:Key="hebrew_place_title">Địa điểm cho ngày Do Thái</s:String>
+    <s:String x:Key="hebrew_place_city_tab">Thành phố</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">Tọa độ</s:String>
+    <s:String x:Key="hebrew_place_search">Tên thành phố (bằng tiếng Anh):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">Nhập ít nhất hai chữ cái, ví dụ: jerus, new york, paris texas. Liệt kê các thành phố có từ 10.000 dân trở lên.</s:String>
+    <s:String x:Key="hebrew_place_country">Quốc gia:</s:String>
+    <s:String x:Key="hebrew_place_need_country">Chọn quốc gia: thông tin này cho biết số nào trong hai số là vĩ độ.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">Vĩ độ và kinh độ:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">Chấp nhận mọi định dạng: 32.0853, 34.7818 hoặc 34,7818 32,0853 hoặc 32°05'07"N 34°46'54"E. Dùng dấu chấm hoặc phẩy cho phần thập phân; dùng dấu phẩy, dấu hai chấm hoặc khoảng trắng giữa hai số.</s:String>
+    <s:String x:Key="hebrew_place_zone">Múi giờ:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">Được chọn theo thành phố; hãy đổi nếu không đúng. Quy tắc múi giờ (giờ mùa hè và các lần thay đổi) là theo Windows.</s:String>
+    <s:String x:Key="calendar_title">Lịch Do Thái</s:String>
+    <s:String x:Key="calendar_today">Hôm nay</s:String>
+    <s:String x:Key="calendar_copy_name">Sao chép tên</s:String>
+    <s:String x:Key="calendar_search_name">Tìm tên trên Google</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Tháng Do Thái</s:String>
+    <s:String x:Key="calendar_grid_civil">Tháng dương lịch</s:String>
+    <s:String x:Key="calendar_shabbat">Shabbat</s:String>
+    <s:String x:Key="calendar_previous_month">Tháng trước</s:String>
+    <s:String x:Key="calendar_next_month">Tháng sau</s:String>
+    <s:String x:Key="calendar_settings">Cài đặt...</s:String>
+    <s:String x:Key="calendar_close">Đóng</s:String>
+    <s:String x:Key="calendar_portion">Phần Torah hằng tuần: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">Shabbat này đọc phần kinh ngày lễ</s:String>
+    <s:String x:Key="calendar_day_of">{0}, ngày {1} tháng {2}</s:String>
+    <s:String x:Key="calendar_molad">Molad của {0}: {1}, {2} và {3} chalakim</s:String>
+    <s:String x:Key="calendar_omer">Đếm Omer</s:String>
+    <s:String x:Key="calendar_omer_day">Ngày {0} của Omer</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} tuần và {1} ngày</s:String>
+    <s:String x:Key="calendar_place">Địa điểm: {0}</s:String>
+    <s:String x:Key="calendar_israel">Đất Israel</s:String>
+    <s:String x:Key="calendar_diaspora">Diaspora</s:String>
+    <s:String x:Key="calendar_no_place">Chọn địa điểm trong cài đặt lịch để xem giờ trong ngày.</s:String>
+    <s:String x:Key="calendar_times">Giờ trong ngày</s:String>
+    <s:String x:Key="calendar_yahrzeits">Yahrzeit</s:String>
+    <s:String x:Key="calendar_candles_after_dark">Thắp nến (sau khi trời tối)</s:String>
+    <s:String x:Key="calendar_havdalah">Kết thúc ngày nghỉ (havdalah)</s:String>
+    <s:String x:Key="calendar_rest_begins">Bắt đầu: {0} (thắp nến)</s:String>
+    <s:String x:Key="calendar_rest_ends">Kết thúc: {0} (trời tối)</s:String>
+    <s:String x:Key="calendar_settings_title">Cài đặt lịch</s:String>
+    <s:String x:Key="calendar_settings_place">Địa điểm của múi giờ:</s:String>
+    <s:String x:Key="calendar_settings_zone">Múi giờ dùng cho ngày tháng, thời điểm đổi ngày và giờ trong ngày:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (của máy tính)</s:String>
+    <s:String x:Key="zones_heading">Múi giờ của đồng hồ</s:String>
+    <s:String x:Key="zone_main">Múi giờ chính:</s:String>
+    <s:String x:Key="zone_second">Múi giờ thứ hai:</s:String>
+    <s:String x:Key="zone_third">Múi giờ thứ ba:</s:String>
+    <s:String x:Key="zone_show_name">Hiển thị tên</s:String>
+    <s:String x:Key="zone_label">Tên hiển thị trên đồng hồ</s:String>
+    <s:String x:Key="zone_label_hint">Tên đồng hồ hiển thị cho múi giờ này thay cho địa điểm (ví dụ: Heart cho Jerusalem). Để trống để giữ địa điểm.</s:String>
+    <s:String x:Key="zone_place">Địa điểm:</s:String>
+    <s:String x:Key="zones_tab">Múi giờ</s:String>
+    <s:String x:Key="hebrew_date_tab">Ngày Do Thái</s:String>
+    <s:String x:Key="zone_computer">Của máy tính ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">Ngày Do Thái được tính theo địa điểm của múi giờ chính, chọn trong thẻ Múi giờ.</s:String>
+    <s:String x:Key="zone_none">(không hiển thị)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">Yahrzeit cần hiển thị (tất cả, theo danh mục, từng mục):</s:String>
+    <s:String x:Key="calendar_all_figures">Tất cả</s:String>
+    <s:String x:Key="cancel_dialog">Hủy</s:String>
+    <s:String x:Key="coordinate_result">Vĩ độ và kinh độ: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">Thứ tự tọa độ được ghi rõ trong văn bản.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">Chỉ có một thứ tự phù hợp: vĩ độ không vượt quá 90 độ.</s:String>
+    <s:String x:Key="coordinate_basis_country">Thứ tự được xác định theo quốc gia: đảo ngược sẽ rơi xa khỏi quốc gia đó.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">Giả định vĩ độ đứng trước.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">Giả định vĩ độ đứng trước; nếu kinh độ đứng trước thì cũng phù hợp với quốc gia gần như tương đương.</s:String>
+    <s:String x:Key="coordinate_warning_far">Điểm này cách thành phố gần nhất trong quốc gia {0:N0} km. Hãy kiểm tra quốc gia và các con số.</s:String>
+    <s:String x:Key="coordinate_problem_empty">Nhập tọa độ.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">Cần hai số: vĩ độ và kinh độ.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">Có hơn hai số. Chỉ nhập vĩ độ và kinh độ.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">Cả hai số đều được đánh dấu là vĩ độ.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">Cả hai số đều được đánh dấu là kinh độ.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">Vĩ độ phải nằm trong khoảng -90 đến 90 độ.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">Kinh độ phải nằm trong khoảng -180 đến 180 độ.</s:String>
+    <s:String x:Key="coordinate_problem_neither">Theo cả hai thứ tự, các số này đều không tạo thành vĩ độ (tối đa 90) và kinh độ (tối đa 180).</s:String>
+    <s:String x:Key="open_system_settings">Mở Cài đặt hệ thống</s:String>
+    <s:String x:Key="open_computer_management">Quản lý máy tính</s:String>
+    <s:String x:Key="open_drives">Mở ổ đĩa</s:String>
+    <s:String x:Key="this_pc">Máy tính này</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">Cố gắng giữ các cửa sổ đã mở trên màn hình nền này (thử nghiệm)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Dùng lại các cửa sổ hiển thị trên mọi màn hình nền mà không di chuyển chúng. Nếu không, biểu tượng màn hình nền và trình khởi chạy đã ghim sẽ mở trình duyệt, thư mục Explorer và Notepad++ trên màn hình hiện tại; các ứng dụng khác và thao tác kích hoạt từ khay hệ thống vẫn chuyển cửa sổ.</s:String>
 </ResourceDictionary>

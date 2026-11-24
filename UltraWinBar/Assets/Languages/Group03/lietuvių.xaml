@@ -1,16 +1,30 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:s="clr-namespace:System;assembly=mscorlib">
+                    xmlns:s="clr-namespace:System;assembly=mscorlib"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
     <s:String x:Key="ultrawinbar_properties">UltraWinBar ypatybės</s:String>
     <s:String x:Key="taskbar_tab">Užduočių juosta</s:String>
+    <s:String x:Key="advanced_tab">Išplėstiniai</s:String>
     <s:String x:Key="taskbar_appearance">Užduočių juostos išvaizda</s:String>
     <s:String x:Key="notification_area">Pranešimų sritis</s:String>
+    <s:String x:Key="general_heading">Bendrieji</s:String>
+    <s:String x:Key="clock_heading">Laikrodis</s:String>
     <s:String x:Key="autostart">Automatiškai pradėti</s:String>
     <s:String x:Key="language_text">Kal_ba:</s:String>
     <s:String x:Key="language_tip">Pasirinkite kalbą.</s:String>
     <s:String x:Key="theme_text">_Tema:</s:String>
     <s:String x:Key="theme_tip">Diegikite temas ,,Themes" aplankoje.</s:String>
+    <s:String x:Key="accent_text">Akcento _spalva:</s:String>
+    <s:String x:Key="accent_tip">Modern Glass temos neoninė spalva.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>Žydra</s:String>
+        <s:String>Violetinė</s:String>
+        <s:String>Fuksija</s:String>
+        <s:String>Smaragdinė</s:String>
+        <s:String>Gintarinė</s:String>
+        <s:String>Rožinė</s:String>
+    </x:Array>
     <s:String x:Key="location_text">Vie_ta:</s:String>
     <s:String x:Key="location_tip">Pakeiskite užduočių juostos vietą ekrane.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -19,53 +33,272 @@
         <s:String>Dešinėje</s:String>
         <s:String>Apačioje</s:String>
     </x:Array>
+    <s:String x:Key="rowcount_text">Eilučių _skaičius:</s:String>
+    <s:String x:Key="rowcount_tip">Užduočių juostos eilučių skaičius, kai ji yra viršuje arba apačioje.</s:String>
+    <s:String x:Key="taskbar_width">Užduočių _juostos plotis:</s:String>
     <s:String x:Key="allow_font_smoothing">_Leisti šriftų sulyginimą</s:String>
     <s:String x:Key="allow_font_smoothing_menu">_Leisti šriftų sulyginimą meniu</s:String>
     <s:String x:Key="collapse_tray_icons">Sutra_ukti pranešimų srities piktogramas</s:String>
     <s:String x:Key="customize">_Tinkinti...</s:String>
+    <s:String x:Key="show_input_language">Rodyti įvesties _kalbą</s:String>
     <s:String x:Key="show_clock">Rodyti lai_krodį</s:String>
     <s:String x:Key="show_multi_mon">Rodyti keliuose _monitoriuose</s:String>
+    <s:String x:Key="show_start_button_multi_mon">Rodyti _pradžios mygtuką visose užduočių juostose</s:String>
     <s:String x:Key="show_quick_launch">Rodyti _greitą paleidimą</s:String>
     <s:String x:Key="select_location">_Pasirinkti vietą...</s:String>
     <s:String x:Key="quick_launch_folder">Greitas paleidimas - Pasirinkite aplanką</s:String>
+    <s:String x:Key="show_badges">Rodyti _ženklelius</s:String>
+    <s:String x:Key="show_window_previews">Rodyti _langų peržiūras (miniatiūras)</s:String>
     <s:String x:Key="use_software_rendering">_Naudoti programos vaizdavimą</s:String>
+    <s:String x:Key="add_show_desktop_button">Pridėti mygtuką „_Rodyti darbalaukį“</s:String>
+    <s:String x:Key="enable_auto_hide">_Automatiškai slėpti užduočių juostą</s:String>
+    <s:String x:Key="lock_taskbar">_Užrakinti užduočių juostą</s:String>
+    <s:String x:Key="multiple_displays">Keli ekranai</s:String>
+    <s:String x:Key="show_tasks_on">_Rodyti užduotis:</s:String>
+    <x:Array x:Key="show_tasks_on_values" Type="s:String">
+        <s:String>Visose užduočių juostose</s:String>
+        <s:String>Toje pačioje užduočių juostoje kaip langas</s:String>
+        <s:String>Toje pačioje užduočių juostoje kaip langas ir pagrindinėje užduočių juostoje</s:String>
+    </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_Invertuoti pilkų atspalvių spalvas:</s:String>
+    <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
+        <s:String>Kai to reikia temai</s:String>
+        <s:String>Visada</s:String>
+        <s:String>Niekada</s:String>
+    </x:Array>
+    <s:String x:Key="middle_mouse_task_action">_Viduriniojo mygtuko spustelėjimo veiksmas:</s:String>
+    <x:Array x:Key="middle_mouse_task_action_values" Type="s:String">
+        <s:String>Nieko nedaryti</s:String>
+        <s:String>Atidaryti naują egzempliorių</s:String>
+        <s:String>Užverti užduotį</s:String>
+    </x:Array>
+    <s:String x:Key="clock_click_action">_Laikrodžio spustelėjimo veiksmas:</s:String>
+    <x:Array x:Key="clock_click_action_values" Type="s:String">
+        <s:String>Nieko nedaryti</s:String>
+        <s:String>Atidaryti „Aero“ kalendorių</s:String>
+        <s:String>Atidaryti „Modern“ kalendorių</s:String>
+        <s:String>Atidaryti pranešimų centrą</s:String>
+    </x:Array>
+    <s:String x:Key="task_wheel_action">_Pelės ratuko veiksmas:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>Nieko nedaryti</s:String>
+        <s:String>Rodyti / slėpti langą</s:String>
+    </x:Array>
+    <s:String x:Key="auto_hide_transparent">Automatiškai slepiant slėpti _užduočių juostos liniją</s:String>
+    <s:String x:Key="version">Versija {0}</s:String>
+    <s:String x:Key="visit_on_github">Apsilankyti „UltraWinBar“ svetainėje „GitHub“</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Kelios užduočių juostos</s:String>
+    <s:String x:Key="additional_taskbars_text">Rodyti užduočių juostą ties šiais ekrano kraštais. Dešiniuoju pelės mygtuku spustelėkite užduočių juostą, kad ji užimtų visą kraštą ir pastumtų kitas.</s:String>
+    <s:String x:Key="location_left">Kairėje</s:String>
+    <s:String x:Key="location_top">Viršuje</s:String>
+    <s:String x:Key="location_right">Dešinėje</s:String>
+    <s:String x:Key="location_bottom">Apačioje</s:String>
+    <s:String x:Key="tray_location_text">_Pranešimų sritis:</s:String>
+    <s:String x:Key="clock_location_text">_Laikrodis:</s:String>
+    <s:String x:Key="start_button_location_text">_Pradžios mygtukas:</s:String>
+    <s:String x:Key="language_location_text">_Kalbos indikatorius:</s:String>
+    <s:String x:Key="task_assignment_hint">Vilkite užduoties mygtuką į kitą užduočių juostą, kad perkeltumėte visą programą; vilkdami laikykite nuspaudę „Ctrl“, kad perkeltumėte tik tą langą. Dešiniuoju pelės mygtuku spustelėję užduoties mygtuką iš naujo nustatysite jo priskyrimą.</s:String>
+    <s:String x:Key="reset_task_assignments">Iš naujo nustatyti visus užduočių juostos priskyrimus</s:String>
+    <s:String x:Key="stretch">_Išplėsti</s:String>
+    <s:String x:Key="make_main">_Padaryti pagrindine</s:String>
+    <s:String x:Key="reset_task_assignment">Iš naujo nustatyti užduoties _priskyrimą</s:String>
+    <s:String x:Key="taskbar_scale">Užduočių juostos mastelis</s:String>
+    <s:String x:Key="taskbar_scale_1x">100%</s:String>
+    <s:String x:Key="taskbar_scale_2x">200%</s:String>
+    <s:String x:Key="taskbar_scale_current">Dabartinis nustatymas: {0}%</s:String>
+    <s:String x:Key="debug_logging">Įjungti _derinimo žurnalą</s:String>
+    <s:String x:Key="window_activity_logging">Registruoti langų atidarymą ir uždarymą</s:String>
+    <s:String x:Key="check_for_updates">Tikrinti, ar yra _naujinimų</s:String>
+    <s:String x:Key="show_exit_menu_item">Meniu rodyti parinktį _Išeiti</s:String>
+    <s:String x:Key="show_end_task_button">Meniu rodyti parinktį _Baigti užduotį</s:String>
+    <s:String x:Key="slide_taskbar_buttons">_Slinkti užduočių juostos mygtukus</s:String>
+    <s:String x:Key="show_clock_seconds">R_odyti laikrodyje sekundes</s:String>
+    <s:String x:Key="open_custom_themes_folder">Atidaryti pasirinktinių temų aplanką</s:String>
+    <s:String x:Key="win_num_hotkeys_action">„Win“+[0–9] _sparčiųjų klavišų veiksmas:</s:String>
+    <x:Array x:Key="win_num_hotkeys_action_values" Type="s:String">
+        <s:String>Numatytasis „Windows“ veiksmas</s:String>
+        <s:String>Perjungti užduotis</s:String>
+        <s:String>Atidaryti greitojo paleidimo elementą</s:String>
+    </x:Array>
+    <s:String x:Key="hotkey_warning_title">„UltraWinBar“ spartieji klavišai</s:String>
+    <s:String x:Key="hotkey_warning_text">„UltraWinBar“ perims „Windows“ užduočių juostos sparčiuosius klavišus. Jie bus grąžinti „Windows“ tik atsijungus ir vėl prisijungus.</s:String>
+    <s:String x:Key="allow_blur_behind">Leisti _sulieti vaizdą už permatomos užduočių juostos</s:String>
     <s:String x:Key="ok_dialog">Gerai</s:String>
-
+    <s:String x:Key="clock_format_help">Peržiūrėti galimus formatavimo parametrus</s:String>
+    <s:String x:Key="clock_format_warning">Pastaba: pasirinktinio laikrodžio formato rezultatas gali skirtis, jei pasirinktoje temoje nurodytas savas formatas.</s:String>
+    <s:String x:Key="override_clock_format">Pasirinktinis laikrodžio _formatas:</s:String>
+    <s:String x:Key="override_ampm_designators">Pasirinktiniai _žymenys:</s:String>
+    <s:String x:Key="am_designator">Priešpiet:</s:String>
+    <s:String x:Key="pm_designator">Popiet:</s:String>
     <s:String x:Key="customize_notifications">Priminimų tvarkymas</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar rodo aktyvių ir svarbių piktogramos pranešimų, ir slepia neaktyvių. Jūs galite pakeisti šių elementų elgesį čia.</s:String>
     <s:String x:Key="customize_notifications_instruction">Pažymėkite elementą, tada pasirinkite jo pranešimo elgesį:</s:String>
     <s:String x:Key="hide_when_inactive">Slėpti, kai neaktyvus</s:String>
     <s:String x:Key="always_show">Visada rodyti</s:String>
+    <s:String x:Key="always_hide">Visada slėpti</s:String>
+    <s:String x:Key="remove">Pašalinti</s:String>
     <s:String x:Key="name_heading">Pavadinimas</s:String>
     <s:String x:Key="behavior_heading">Elgesys</s:String>
-
+    <s:String x:Key="invert_heading">Invertuoti</s:String>
     <s:String x:Key="start_text">Pradėti</s:String>
     <s:String x:Key="start_text_xp">pradėti</s:String>
     <s:String x:Key="start_button_tip_98">Pradėkite spustelėdami čia.</s:String>
     <s:String x:Key="start_button_tip">Pradėkite spustelėdami čia</s:String>
     <s:String x:Key="start_button_tip_vista">Pradėti</s:String>
-
     <s:String x:Key="ultrawinbar_title">UltraWinBar Taskbar</s:String>
     <s:String x:Key="toolbars">Į_rankių juostos</s:String>
     <s:String x:Key="quick_launch">_Greitas paleidimas</s:String>
     <s:String x:Key="new_toolbar">_Nauja įrankių juosta...</s:String>
     <s:String x:Key="set_time">_Datos/laiko nustatymas</s:String>
+    <s:String x:Key="cascade">_Kaskaduoti langus</s:String>
+    <s:String x:Key="horiz_tile">Išdėstyti langus _horizontaliai</s:String>
+    <s:String x:Key="vert_tile">Išdėstyti langus _vertikaliai</s:String>
+    <s:String x:Key="toggle_desktop">_Rodyti darbalaukį</s:String>
+    <s:String x:Key="hide_desktop">_Rodyti atidarytus langus</s:String>
+    <s:String x:Key="undo_cascade">_Anuliuoti langų kaskadavimą</s:String>
+    <s:String x:Key="undo_tile">_Anuliuoti langų išdėstymą</s:String>
+    <s:String x:Key="undo_minimize_all">_Anuliuoti visų langų minimizavimą</s:String>
     <s:String x:Key="show_taskman_2k">Uždu_očių tvarkymas...</s:String>
     <s:String x:Key="show_taskman">Uždu_očių tvarkymas</s:String>
     <s:String x:Key="tray_properties">_Ypatybės</s:String>
     <s:String x:Key="update_available">_Yra atnaujinimas</s:String>
     <s:String x:Key="exit_ultrawinbar">_Išjungti UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">_Paleisti „UltraWinBar“ iš naujo</s:String>
     <s:String x:Key="customize_notifications_menu">_Priminimų tvarkymas...</s:String>
-
+    <s:String x:Key="lock_taskbar_menu">_Užrakinti užduočių juostą</s:String>
+    <s:String x:Key="show_desktop_tip_95">Rodyti / atkurti darbalaukį</s:String>
+    <s:String x:Key="show_desktop_tip">Rodyti darbalaukį</s:String>
+    <s:String x:Key="show_desktop_95">_Darbalaukis</s:String>
+    <s:String x:Key="show_desktop">_Rodyti darbalaukį</s:String>
+    <s:String x:Key="peek_at_desktop">_Žvilgtelėti į darbalaukį</s:String>
     <s:String x:Key="restore">_Atkurti</s:String>
     <s:String x:Key="move">_Perkelti</s:String>
     <s:String x:Key="size">D_ydis</s:String>
     <s:String x:Key="minimize">Mi_nimizuoti</s:String>
     <s:String x:Key="maximize">_Maksimizuoti</s:String>
     <s:String x:Key="close">_Uždaryti</s:String>
-
+    <s:String x:Key="end_task">_Baigti užduotį</s:String>
     <s:String x:Key="show_hidden">Rodyti paslėptas piktogramas</s:String>
     <s:String x:Key="hide">Slėpti</s:String>
-
     <s:String x:Key="open_folder">&amp;Atidaryti aplanką</s:String>
+    <s:String x:Key="move_to_taskbar_format">Perkelti į {0} užduočių juostą</s:String>
+    <s:String x:Key="ime_input_tip_enabled">Spustelėkite dešiniuoju pelės mygtuku, kad atvertumėte IME parinktis.</s:String>
+    <s:String x:Key="ime_input_tip_disabled">IME išjungta</s:String>
+    <s:String x:Key="ime_input_full_shape_hiragana">_Hiragana</s:String>
+    <s:String x:Key="ime_input_full_shape_katakana">Viso pločio _katakana</s:String>
+    <s:String x:Key="ime_input_full_shape_alphanumeric">Viso pločio raidiniai ir skaitiniai simboliai</s:String>
+    <s:String x:Key="ime_input_katakana">Pusės pločio katakana</s:String>
+    <s:String x:Key="ime_input_alphanumeric">Pusės pločio raidiniai ir skaitiniai simboliai</s:String>
+    <s:String x:Key="ime_input_direct">_Tiesioginė įvestis</s:String>
+    <s:String x:Key="ime_open_pad">IME _skydelis</s:String>
+    <s:String x:Key="ime_open_add_word_dictionary">Pridėti žodį</s:String>
+    <s:String x:Key="ime_open_dictionary_tool">Vartotojo žodyno _įrankis</s:String>
+    <s:String x:Key="ime_open_properties">_Ypatybės</s:String>
+    <s:String x:Key="ime_input_key">Įvesties _metodas</s:String>
+    <s:String x:Key="ime_input_key_roma">_Romaji įvestis</s:String>
+    <s:String x:Key="ime_input_key_kana">Kana įvestis</s:String>
+    <s:String x:Key="ime_conversion">_Konvertavimo režimas</s:String>
+    <s:String x:Key="ime_conversion_general">_Bendrasis</s:String>
+    <s:String x:Key="ime_conversion_none">N_ekonvertuoti</s:String>
+    <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+    <s:String x:Key="pin_to_taskbar">Prisegti prie šios užduočių juostos</s:String>
+    <s:String x:Key="pinned_app_windows">Atidaryti langai</s:String>
+    <s:String x:Key="unpin_from_taskbar">Atsegti nuo šios užduočių juostos</s:String>
+    <s:String x:Key="copy_executable_path">Kopijuoti vykdomojo failo kelią</s:String>
+    <s:String x:Key="copy_executable_directory">Kopijuoti vykdomojo failo aplanką</s:String>
+    <FlowDirection x:Key="flow_direction">LeftToRight</FlowDirection>
+    <FontFamily x:Key="start_text_xp_font_family">Franklin Gothic</FontFamily>
+    <sys:String x:Key="app_all_desktops">Rodyti šios programos langus visuose darbalaukiuose</sys:String>
+    <sys:String x:Key="move_window_desktop">Perkelti šį langą į darbalaukį</sys:String>
+    <sys:String x:Key="move_app_desktop">Perkelti visus programos langus į darbalaukį</sys:String>
+    <sys:String x:Key="desktop_number">Darbalaukis {0}</sys:String>
+    <sys:String x:Key="desktop_action_failed">„Windows“ nepavyko atlikti veiksmo su visais langais. Kai kurie langai galėjo būti perkelti. Daugiau informacijos žr. žurnale.</sys:String>
+    <s:String x:Key="show_hebrew_date">Rodyti hebrajų datą ir sunumeruotas savaitės dienas</s:String>
+    <s:String x:Key="hebrew_date_midnight">Naudojama vietinio kalendoriaus data; ji keičiasi vidurnaktį, ne saulei leidžiantis.</s:String>
+    <s:String x:Key="hebrew_place">Hebrajų datos vietovė:</s:String>
+    <s:String x:Key="hebrew_place_none">nepasirinkta</s:String>
+    <s:String x:Key="hebrew_place_choose">Pasirinkti...</s:String>
+    <s:String x:Key="hebrew_place_clear">Išvalyti</s:String>
+    <s:String x:Key="zone_clear">Pašalinti</s:String>
+    <s:String x:Key="hebrew_place_hint">Vietovė, kurios saulėlydis užbaigia hebrajų dieną ir kurios halachinius laikus rodo kalendorius.</s:String>
+    <s:String x:Key="hebrew_place_title">Hebrajų datos vietovė</s:String>
+    <s:String x:Key="hebrew_place_city_tab">Miestas</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">Koordinatės</s:String>
+    <s:String x:Key="hebrew_place_search">Miesto pavadinimas (anglų kalba):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">Įveskite bent dvi raides, pavyzdžiui: jerus, new york, paris texas. Pateikiami miestai, kuriuose gyvena bent 10 000 žmonių.</s:String>
+    <s:String x:Key="hebrew_place_country">Šalis:</s:String>
+    <s:String x:Key="hebrew_place_need_country">Pasirinkite šalį: pagal ją nustatoma, kuris skaičius yra platuma.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">Platuma ir ilguma:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">Tinka bet kuris formatas: 32.0853, 34.7818 arba 34,7818 32,0853 ar 32°05'07&quot;N 34°46'54&quot;E. Trupmenai naudokite tašką arba kablelį, skaičiams atskirti – kablelį, dvitaškį arba tarpą.</s:String>
+    <s:String x:Key="hebrew_place_zone">Laiko juosta:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">Parenkama pagal miestą; jei netinka, pakeiskite. Laiko juostos taisyklės nustatomos „Windows“.</s:String>
+    <s:String x:Key="calendar_title">Žydų kalendorius</s:String>
+    <s:String x:Key="calendar_today">Šiandien</s:String>
+    <s:String x:Key="calendar_copy_name">Kopijuoti pavadinimą</s:String>
+    <s:String x:Key="calendar_search_name">Ieškoti pavadinimo „Google“</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Hebrajų mėnuo</s:String>
+    <s:String x:Key="calendar_grid_civil">Civilinis mėnuo</s:String>
+    <s:String x:Key="calendar_shabbat">Šabas</s:String>
+    <s:String x:Key="calendar_previous_month">Ankstesnis mėnuo</s:String>
+    <s:String x:Key="calendar_next_month">Kitas mėnuo</s:String>
+    <s:String x:Key="calendar_settings">Parametrai...</s:String>
+    <s:String x:Key="calendar_close">Užverti</s:String>
+    <s:String x:Key="calendar_portion">Savaitės Toros dalis: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">Šį šabą skaitoma šventinė ištrauka</s:String>
+    <s:String x:Key="calendar_day_of">{0}, {1}-oji {2} diena</s:String>
+    <s:String x:Key="calendar_molad">{0} moladas: {1}, {2} ir {3} chalakimai</s:String>
+    <s:String x:Key="calendar_omer">Omero skaičiavimas</s:String>
+    <s:String x:Key="calendar_omer_day">{0}-oji Omero diena</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} sav. ir {1} d.</s:String>
+    <s:String x:Key="calendar_place">Vietovė: {0}</s:String>
+    <s:String x:Key="calendar_israel">Izraelio žemė</s:String>
+    <s:String x:Key="calendar_diaspora">diaspora</s:String>
+    <s:String x:Key="calendar_no_place">Norėdami matyti dienos laikus, kalendoriaus parametruose pasirinkite vietovę.</s:String>
+    <s:String x:Key="calendar_times">Dienos laikai</s:String>
+    <s:String x:Key="calendar_yahrzeits">Jarcaitai</s:String>
+    <s:String x:Key="calendar_candles_after_dark">Žvakių uždegimas (sutemus)</s:String>
+    <s:String x:Key="calendar_havdalah">Poilsio dienos pabaiga (havdala)</s:String>
+    <s:String x:Key="calendar_rest_begins">Prasideda: {0} (žvakių uždegimas)</s:String>
+    <s:String x:Key="calendar_rest_ends">Baigiasi: {0} (sutemus)</s:String>
+    <s:String x:Key="calendar_settings_title">Kalendoriaus parametrai</s:String>
+    <s:String x:Key="calendar_settings_place">Laiko juostos vietovė:</s:String>
+    <s:String x:Key="calendar_settings_zone">Datos, dienos pasikeitimo ir dienos laikų laiko juosta:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (kompiuterio)</s:String>
+    <s:String x:Key="zones_heading">Laikrodžio laiko juostos</s:String>
+    <s:String x:Key="zone_main">Pagrindinė laiko juosta:</s:String>
+    <s:String x:Key="zone_second">Antroji laiko juosta:</s:String>
+    <s:String x:Key="zone_third">Trečioji laiko juosta:</s:String>
+    <s:String x:Key="zone_show_name">Rodyti pavadinimą</s:String>
+    <s:String x:Key="zone_label">Pavadinimas:</s:String>
+    <s:String x:Key="zone_label_hint">Pavadinimas, kurį laikrodis rodys vietoj šios vietovės (pavyzdžiui, Heart vietoj Jerusalem). Jei laukas tuščias, bus rodoma vietovė.</s:String>
+    <s:String x:Key="zone_place">Vietovė:</s:String>
+    <s:String x:Key="zones_tab">Laiko juostos</s:String>
+    <s:String x:Key="hebrew_date_tab">Hebrajų data</s:String>
+    <s:String x:Key="zone_computer">Kompiuterio ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">Hebrajų data nustatoma pagal pagrindinės laiko juostos vietovę, pasirinktą skirtuke „Laiko juostos“.</s:String>
+    <s:String x:Key="zone_none">(nerodoma)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">Rodomi jarcaitai (visi, pagal kategoriją, po vieną):</s:String>
+    <s:String x:Key="calendar_all_figures">Visi</s:String>
+    <s:String x:Key="cancel_dialog">Atšaukti</s:String>
+    <s:String x:Key="coordinate_result">Platuma ir ilguma: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">Tvarka nurodyta tekste.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">Tinka tik viena tvarka: platuma negali viršyti 90 laipsnių.</s:String>
+    <s:String x:Key="coordinate_basis_country">Tvarka parinkta pagal šalį: sukeisti skaičiai nurodytų vietą toli nuo jos.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">Daroma prielaida, kad pirmiausia nurodyta platuma.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">Daroma prielaida, kad pirmiausia nurodyta platuma; ilgumą nurodžius pirmiau šalis taip pat tiktų.</s:String>
+    <s:String x:Key="coordinate_warning_far">Taškas yra už {0:N0} km nuo artimiausio šalies miesto. Patikrinkite šalį ir skaičius.</s:String>
+    <s:String x:Key="coordinate_problem_empty">Įveskite koordinates.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">Reikia dviejų skaičių: platumos ir ilgumos.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">Daugiau nei du skaičiai. Įveskite tik platumą ir ilgumą.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">Abu skaičiai pažymėti kaip platuma.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">Abu skaičiai pažymėti kaip ilguma.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">Platumos reikšmė turi būti nuo -90 iki 90 laipsnių.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">Ilgumos reikšmė turi būti nuo -180 iki 180 laipsnių.</s:String>
+    <s:String x:Key="coordinate_problem_neither">Nė viena skaičių tvarka neatitinka platumos (iki 90) ir ilgumos (iki 180).</s:String>
+    <s:String x:Key="open_system_settings">Atidaryti sistemos parametrus</s:String>
+    <s:String x:Key="open_computer_management">Kompiuterio valdymas</s:String>
+    <s:String x:Key="open_drives">Atidaryti diskus</s:String>
+    <s:String x:Key="this_pc">Šis kompiuteris</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">Stengtis palikti atidarytus langus šiame darbalaukyje (eksperimentinė funkcija)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Pakartotinai naudoti visuose darbalaukiuose rodomus langus jų neperkeliant. Kitu atveju darbalaukio piktogramos ir prisegtos paleidimo priemonės šiame darbalaukyje atidaro naršykles, „Explorer“ aplankus ir „Notepad++“; kitos programos ir aktyvinimas pranešimų srityje išlaiko langų perkėlimą.</s:String>
 </ResourceDictionary>

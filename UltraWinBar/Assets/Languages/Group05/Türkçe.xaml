@@ -3,169 +3,558 @@
                     xmlns:s="clr-namespace:System;assembly=mscorlib">
 
     <s:String x:Key="ultrawinbar_properties">UltraWinBar Özellikleri</s:String>
+
     <s:String x:Key="taskbar_tab">Görev Çubuğu</s:String>
+
     <s:String x:Key="advanced_tab">Gelişmiş</s:String>
+
     <s:String x:Key="taskbar_appearance">Görev çubuğu görünümü</s:String>
+
     <s:String x:Key="notification_area">Bildirim alanı</s:String>
+
     <s:String x:Key="general_heading">Genel</s:String>
+
     <s:String x:Key="clock_heading">Saat</s:String>
+
     <s:String x:Key="autostart">_Oturum açarken otomatik olarak başlat</s:String>
+
     <s:String x:Key="language_text">_Dil:</s:String>
+
     <s:String x:Key="language_tip">Kullanılacak dili seçin.</s:String>
+
     <s:String x:Key="theme_text">_Tema:</s:String>
+
     <s:String x:Key="theme_tip">Temaları Themes klasörüne yükleyin.</s:String>
+
+    <s:String x:Key="accent_text">Vurgu _rengi:</s:String>
+
+    <s:String x:Key="accent_tip">Modern Glass temasının neon rengi.</s:String>
+
+    <x:Array x:Key="accent_values" Type="s:String">
+            <s:String>Camgöbeği</s:String>
+            <s:String>Menekşe</s:String>
+            <s:String>Fuşya</s:String>
+            <s:String>Zümrüt</s:String>
+            <s:String>Kehribar</s:String>
+            <s:String>Gül</s:String>
+        </x:Array>
+
     <s:String x:Key="location_text">_Konum:</s:String>
+
     <s:String x:Key="location_tip">Görev çubuğunun ekrandaki konumunu değiştir.</s:String>
+
     <x:Array x:Key="location_values" Type="s:String">
         <s:String>Sol</s:String>
         <s:String>Üst</s:String>
         <s:String>Sağ</s:String>
         <s:String>Alt</s:String>
     </x:Array>
+
     <s:String x:Key="rowcount_text">Satı_r sayısı:</s:String>
+
     <s:String x:Key="rowcount_tip">Görev çubuğunun üstte veya altta olduğunda gösterilen satır sayısı.</s:String>
+
     <s:String x:Key="taskbar_width">Görev çubuğu genişliği:</s:String>
+
     <s:String x:Key="allow_font_smoothing">_Yazı tipi yumuşatmaya izin ver</s:String>
+
     <s:String x:Key="allow_font_smoothing_menu">Menülerde yazı tipi yumuşatmaya _izin ver</s:String>
+
     <s:String x:Key="collapse_tray_icons">Bildirim _alanı simgelerini daralt</s:String>
+
     <s:String x:Key="customize">_Özelleştir...</s:String>
+
     <s:String x:Key="show_input_language">Kla_vye düzenini göster</s:String>
+
     <s:String x:Key="show_clock">_Saati göster</s:String>
+
     <s:String x:Key="show_multi_mon">_Birden çok ekranda göster</s:String>
+
     <s:String x:Key="show_start_button_multi_mon">Başlat'ı birden çok _ekranda göster</s:String>
+
     <s:String x:Key="show_quick_launch">_Hızlı Başlat'ı Göster</s:String>
+
     <s:String x:Key="select_location">K_onum seç...</s:String>
+
     <s:String x:Key="quick_launch_folder">Hızlı Başlat - Bir klasör seç</s:String>
+
     <s:String x:Key="show_badges">Ro_zetleri göster</s:String>
+
     <s:String x:Key="show_window_previews">_Pencere önizlemelerini (küçük resimleri) göster</s:String>
+
     <s:String x:Key="use_software_rendering">_Yazılım tabanlı görüntüleme kullan</s:String>
+
     <s:String x:Key="add_show_desktop_button">_Masaüstünü Göster düğmesi ekle</s:String>
+
     <s:String x:Key="enable_auto_hide">_Görev çubuğunu otomatik olarak gizle</s:String>
+
     <s:String x:Key="lock_taskbar">Görev _çubuğunu kilitle</s:String>
+
     <s:String x:Key="multiple_displays">Birden çok ekran</s:String>
+
     <s:String x:Key="show_tasks_on">Görev _düğmelerini şurada göster:</s:String>
+
     <x:Array x:Key="show_tasks_on_values" Type="s:String">
         <s:String>Tüm görev çubukları</s:String>
         <s:String>Pencerenin açıldığı görev çubuğu</s:String>
         <s:String>Ana görev çubuğu ve pencerenin açıldığı görev çubuğu</s:String>
     </x:Array>
+
+    <s:String x:Key="invert_grayscale_colors">_Gri tonlamalı renkleri tersine çevir:</s:String>
+
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>Tema için gerekli olduğunda</s:String>
         <s:String>Her zaman</s:String>
         <s:String>Asla</s:String>
     </x:Array>
+
     <s:String x:Key="middle_mouse_task_action">Orta _tıklama eylemi:</s:String>
+
     <x:Array x:Key="middle_mouse_task_action_values" Type="s:String">
         <s:String>Hiçbir şey yapma</s:String>
         <s:String>Yeni bir pencere aç</s:String>
         <s:String>Görevi sonlandır</s:String>
     </x:Array>
+
     <s:String x:Key="clock_click_action">Sa_at tıklama eylemi:</s:String>
+
     <x:Array x:Key="clock_click_action_values" Type="s:String">
         <s:String>Hiçbir şey yapma</s:String>
         <s:String>Aero takvimi aç</s:String>
         <s:String>Modern takvimi aç</s:String>
         <s:String>Bildirim Merkezini aç</s:String>
     </x:Array>
+
+    <s:String x:Key="task_wheel_action">_Fare tekerleği eylemi:</s:String>
+
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+            <s:String>Hiçbir şey yapma</s:String>
+            <s:String>Pencereyi göster/gizle</s:String>
+        </x:Array>
+
     <s:String x:Key="auto_hide_transparent">Otomatik gizle ile gizlendiğinde görev ç_ubuğu çizgisini gizle</s:String>
+
     <s:String x:Key="version">Sürüm {0}</s:String>
+
     <s:String x:Key="visit_on_github">UltraWinBar'ı GitHub'da ziyaret edin</s:String>
+
+    <s:String x:Key="multiple_taskbars_heading">Birden çok görev çubuğu</s:String>
+
+    <s:String x:Key="additional_taskbars_text">Bu kenarlarda bir görev çubuğu gösterin. Bir görev çubuğunu tam kenar boyunca uzatıp diğerlerini kenara itmek için sağ tıklayın.</s:String>
+
+    <s:String x:Key="location_left">Sol</s:String>
+
+    <s:String x:Key="location_top">Üst</s:String>
+
+    <s:String x:Key="location_right">Sağ</s:String>
+
+    <s:String x:Key="location_bottom">Alt</s:String>
+
+    <s:String x:Key="tray_location_text">_Bildirim alanı:</s:String>
+
+    <s:String x:Key="clock_location_text">_Saat:</s:String>
+
+    <s:String x:Key="start_button_location_text">_Başlat düğmesi:</s:String>
+
+    <s:String x:Key="language_location_text">_Dil göstergesi:</s:String>
+
+    <s:String x:Key="task_assignment_hint">Bir görevin tüm uygulamasını taşımak için görev düğmesini başka bir görev çubuğuna sürükleyin; yalnızca o pencereyi taşımak için sürüklerken Ctrl tuşunu basılı tutun. Atamasını sıfırlamak için görev düğmesine sağ tıklayın.</s:String>
+
+    <s:String x:Key="reset_task_assignments">Tüm görev çubuğu atamalarını sıfırla</s:String>
+
+    <s:String x:Key="stretch">_Uzat</s:String>
+
+    <s:String x:Key="make_main">_Ana yap</s:String>
+
+    <s:String x:Key="reset_task_assignment">Görev çubuğu atamasını _sıfırla</s:String>
+
     <s:String x:Key="taskbar_scale">Görev çubuğu ölçeği</s:String>
+
     <s:String x:Key="taskbar_scale_1x">%100</s:String>
+
     <s:String x:Key="taskbar_scale_2x">%200</s:String>
+
     <s:String x:Key="taskbar_scale_current">Mevcut ayar: %{0}</s:String>
+
     <s:String x:Key="debug_logging">_Hata ayıklama günlüğünü etkinleştir</s:String>
+
+    <s:String x:Key="window_activity_logging">Pencerelerin açılıp kapandığını günlüğe kaydet</s:String>
+
     <s:String x:Key="check_for_updates">_Güncelleştirmeleri denetle</s:String>
+
     <s:String x:Key="show_exit_menu_item">Sağ tıklama menüsünde _Çıkış seçeneğini göster</s:String>
+
     <s:String x:Key="show_end_task_button">Sağ tıklama _menüsünde Görevi sonlandır seçeneğini göster</s:String>
+
     <s:String x:Key="slide_taskbar_buttons">Görev çubuğu d_üğmelerini kaydır</s:String>
+
     <s:String x:Key="show_clock_seconds">Saatte saniy_eleri göster</s:String>
+
     <s:String x:Key="open_custom_themes_folder">Özel temalar klasörünü aç</s:String>
+
     <s:String x:Key="win_num_hotkeys_action">Win+[0-9] _kısayol tuşları eylemi:</s:String>
+
     <x:Array x:Key="win_num_hotkeys_action_values" Type="s:String">
         <s:String>Windows varsılayanı</s:String>
         <s:String>Görev değiştir</s:String>
         <s:String>Hızlı Başlat öğesini aç</s:String>
     </x:Array>
+
     <s:String x:Key="hotkey_warning_title">UltraWinBar Kısayol Tuşları</s:String>
+
     <s:String x:Key="hotkey_warning_text">UltraWinBar, Windows Görev Çubuğu kısayol tuşlarını geçersiz kılacaktır. UltraWinBar kapatılsa bile, oturumunuzu kapatıp tekrar açana kadar Windows'a geri yüklenmeyecektir.</s:String>
+
     <s:String x:Key="allow_blur_behind">Şeffaf görev çubuğunun arkasındaki öğelerin bulanıklaştırılmasına izin ver</s:String>
+
     <s:String x:Key="ok_dialog">Tamam</s:String>
 
+    <s:String x:Key="clock_format_help">Kullanılabilir biçimlendirme seçeneklerini görüntüle</s:String>
+
+    <s:String x:Key="clock_format_warning">Not: Seçili temanız kendi biçimini belirtiyorsa özel saat biçimlendirmesi beklendiği gibi çalışmayabilir.</s:String>
+
+    <s:String x:Key="override_clock_format">Özel saat _biçimi:</s:String>
+
+    <s:String x:Key="override_ampm_designators">Özel _gösterimler:</s:String>
+
+    <s:String x:Key="am_designator">ÖÖ:</s:String>
+
+    <s:String x:Key="pm_designator">ÖS:</s:String>
+
     <s:String x:Key="customize_notifications">Bildirimleri Özelleştir</s:String>
+
     <s:String x:Key="customize_notifications_info">UltraWinBar, etkin ve acil uyarıların simgelerini gösterirken pasif olanları gizler. Bu durumu aşağıdaki listede bulunan öğeler için değiştirebilirsiniz.</s:String>
+
     <s:String x:Key="customize_notifications_instruction">Bir öğe seçip bildirim durumunu belirleyin:</s:String>
+
     <s:String x:Key="hide_when_inactive">Etkin olmadığında gizle</s:String>
+
     <s:String x:Key="always_show">Her zaman göster</s:String>
+
     <s:String x:Key="always_hide">Her zaman gizle</s:String>
+
     <s:String x:Key="remove">Kaldır</s:String>
+
     <s:String x:Key="name_heading">Adı</s:String>
+
     <s:String x:Key="behavior_heading">Davranış</s:String>
+
     <s:String x:Key="invert_heading">Tersine çevir</s:String>
 
     <s:String x:Key="start_text">Başlat</s:String>
+
     <s:String x:Key="start_text_xp">Başlat</s:String>
+
     <s:String x:Key="start_button_tip_98">Başlamak için buraya tıklayın.</s:String>
+
     <s:String x:Key="start_button_tip">Başlamak için buraya tıklayın.</s:String>
+
     <s:String x:Key="start_button_tip_vista">Başlat</s:String>
 
     <s:String x:Key="ultrawinbar_title">UltraWinBar Görev Çubuğu</s:String>
+
     <s:String x:Key="toolbars">Araç Çubuk_ları</s:String>
+
     <s:String x:Key="quick_launch">_Hızlı Başlat</s:String>
+
     <s:String x:Key="new_toolbar">Ye_ni Araç Çubuğu...</s:String>
+
     <s:String x:Key="set_time">Tarih/_Zaman Ayarla</s:String>
+
     <s:String x:Key="cascade">Pencereleri Basamakla</s:String>
+
     <s:String x:Key="horiz_tile">Pencereleri Yatay Döşe</s:String>
+
     <s:String x:Key="vert_tile">Pencereleri Dikey Döşe</s:String>
+
     <s:String x:Key="toggle_desktop">Masaüstünü Göster</s:String>
+
     <s:String x:Key="hide_desktop">Açık Pencereleri Göster</s:String>
+
     <s:String x:Key="undo_cascade">Geri Al Basamakla</s:String>
+
     <s:String x:Key="undo_tile">Geri Al Döşe</s:String>
+
     <s:String x:Key="undo_minimize_all">Geri Al Tümünü Simge Durumuna Küçült</s:String>
+
     <s:String x:Key="show_taskman_2k">_Görev Yöneticisi...</s:String>
+
     <s:String x:Key="show_taskman">_Görev Yöneticisi...</s:String>
+
     <s:String x:Key="tray_properties">Özellikle_r</s:String>
+
     <s:String x:Key="update_available">Güncelleme mevc_ut...</s:String>
+
     <s:String x:Key="exit_ultrawinbar">R_etroBar'dan Çık</s:String>
+
+    <s:String x:Key="restart_ultrawinbar">UltraWinBar’ı _Yeniden başlat</s:String>
+
     <s:String x:Key="customize_notifications_menu">B_ildirimleri Özelleştir...</s:String>
+
     <s:String x:Key="lock_taskbar_menu">_Görev Çubuğunu Kilitle</s:String>
 
     <s:String x:Key="show_desktop_tip_95">Masaüstünü Öne Çıkar/Geri Yükle</s:String>
+
     <s:String x:Key="show_desktop_tip">Masaüstünü Göster</s:String>
+
     <s:String x:Key="show_desktop_95">_Masaüstü</s:String>
+
     <s:String x:Key="show_desktop">Masaüstünü _Göster</s:String>
+
     <s:String x:Key="peek_at_desktop">Masaüstüne _Bak</s:String>
 
     <s:String x:Key="restore">Ön_ceki Boyut</s:String>
+
     <s:String x:Key="move">_Taşı</s:String>
+
     <s:String x:Key="size">_Boyut</s:String>
+
     <s:String x:Key="minimize">_Simge durumuna küçült</s:String>
+
     <s:String x:Key="maximize">_Ekranı kapla</s:String>
+
     <s:String x:Key="close">_Kapat</s:String>
+
     <s:String x:Key="end_task">_Görevi sonlandır</s:String>
 
     <s:String x:Key="show_hidden">Gizli simgeleri göster</s:String>
+
     <s:String x:Key="hide">Gizle</s:String>
 
     <s:String x:Key="open_folder">&amp;Klasörü Aç</s:String>
 
+    <s:String x:Key="move_to_taskbar_format">{0} görev çubuğuna taşı</s:String>
+
     <s:String x:Key="ime_input_tip_enabled">IME seçeneklerini açmak için sağ tıklayın</s:String>
+
     <s:String x:Key="ime_input_tip_disabled">IME devre dışı</s:String>
+
     <s:String x:Key="ime_input_full_shape_hiragana">_Hiragana</s:String>
+
     <s:String x:Key="ime_input_full_shape_katakana">Tam Genişlikli _Katakana</s:String>
+
     <s:String x:Key="ime_input_full_shape_alphanumeric">Tam _Genişlikli Alfasayısal</s:String>
+
     <s:String x:Key="ime_input_katakana">Yarı Genişlikli Kataka_na</s:String>
+
     <s:String x:Key="ime_input_alphanumeric">Yar_ı Genişlikli Alfasayısal</s:String>
+
     <s:String x:Key="ime_input_direct">_Doğrudan Giriş</s:String>
+
     <s:String x:Key="ime_open_pad">IME _Klavye Takımı</s:String>
+
     <s:String x:Key="ime_open_add_word_dictionary">S_özcük ekle</s:String>
+
     <s:String x:Key="ime_open_dictionary_tool">Kullanıcı Sözlüğü _Aracı</s:String>
+
     <s:String x:Key="ime_open_properties">Ö_zellikler</s:String>
+
     <s:String x:Key="ime_input_key">Giriş _Şekli</s:String>
+
     <s:String x:Key="ime_input_key_roma">_Romaji Girişi</s:String>
+
     <s:String x:Key="ime_input_key_kana">Kana G_irişi</s:String>
+
     <s:String x:Key="ime_conversion">_Dönüştürme Modu</s:String>
+
     <s:String x:Key="ime_conversion_general">_Genel</s:String>
+
     <s:String x:Key="ime_conversion_none">D_önüştürme yok</s:String>
+
     <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+
+    <s:String x:Key="pin_to_taskbar">Bu görev çubuğuna sabitle</s:String>
+
+    <s:String x:Key="pinned_app_windows">Açık pencereler</s:String>
+
+    <s:String x:Key="unpin_from_taskbar">Bu görev çubuğundan kaldır</s:String>
+
+    <s:String x:Key="copy_executable_path">Yürütülebilir dosya yolunu kopyala</s:String>
+
+    <s:String x:Key="copy_executable_directory">Yürütülebilir dosya klasörünü kopyala</s:String>
+
+    <s:String x:Key="app_all_desktops">Bu uygulamanın pencerelerini tüm masaüstlerinde göster</s:String>
+
+    <s:String x:Key="move_window_desktop">Bu pencereyi masaüstüne taşı</s:String>
+
+    <s:String x:Key="move_app_desktop">Uygulamanın tüm pencerelerini masaüstüne taşı</s:String>
+
+    <s:String x:Key="desktop_number">Masaüstü {0}</s:String>
+
+    <s:String x:Key="desktop_action_failed">Windows işlemi tüm pencereler için tamamlayamadı. Bazı pencereler zaten taşınmış olabilir. Ayrıntılar için günlüğe bakın.</s:String>
+
+    <s:String x:Key="show_hebrew_date">İbrani tarihini ve numaralı hafta günlerini göster</s:String>
+
+    <s:String x:Key="hebrew_date_midnight">Yerel takvim tarihini kullanır; gün batımında değil, gece yarısında değişir.</s:String>
+
+    <s:String x:Key="hebrew_place">İbrani tarihi için yer:</s:String>
+
+    <s:String x:Key="hebrew_place_none">seçilmedi</s:String>
+
+    <s:String x:Key="hebrew_place_choose">Seç...</s:String>
+
+    <s:String x:Key="hebrew_place_clear">Temizle</s:String>
+
+    <s:String x:Key="zone_clear">Kaldır</s:String>
+
+    <s:String x:Key="hebrew_place_hint">İbrani gününü sona erdiren gün batımının gerçekleştiği ve takvimin halahik saatleri gösterdiği yer.</s:String>
+
+    <s:String x:Key="hebrew_place_title">İbrani tarihi için yer</s:String>
+
+    <s:String x:Key="hebrew_place_city_tab">Şehir</s:String>
+
+    <s:String x:Key="hebrew_place_coordinates_tab">Koordinatlar</s:String>
+
+    <s:String x:Key="hebrew_place_search">Şehir adı (İngilizce):</s:String>
+
+    <s:String x:Key="hebrew_place_search_hint">En az iki harf yazın; örneğin: jerus, new york, paris texas. Nüfusu 10.000 ve üzeri şehirler listelenir.</s:String>
+
+    <s:String x:Key="hebrew_place_country">Ülke:</s:String>
+
+    <s:String x:Key="hebrew_place_need_country">Ülkeyi seçin: iki sayıdan hangisinin enlem olduğunu bu belirler.</s:String>
+
+    <s:String x:Key="hebrew_place_coordinates">Enlem ve boylam:</s:String>
+
+    <s:String x:Key="hebrew_place_coordinates_hint">Herhangi bir biçim olur: 32.0853, 34.7818 veya 34,7818 32,0853 ya da 32°05'07"N 34°46'54"E. Kesirde nokta veya virgül; sayılar arasında virgül, iki nokta veya boşluk kullanın.</s:String>
+
+    <s:String x:Key="hebrew_place_zone">Saat dilimi:</s:String>
+
+    <s:String x:Key="hebrew_place_zone_hint">Şehirle birlikte seçilir; yanlışsa değiştirin. Dilimin kuralları (yaz saati ve değişiklikleri) Windows’taki kurallardır.</s:String>
+
+    <s:String x:Key="calendar_title">Yahudi takvimi</s:String>
+
+    <s:String x:Key="calendar_today">Bugün</s:String>
+
+    <s:String x:Key="calendar_copy_name">Adı kopyala</s:String>
+
+    <s:String x:Key="calendar_search_name">Adı Google’da ara</s:String>
+
+    <s:String x:Key="calendar_grid_hebrew">İbrani ayı</s:String>
+
+    <s:String x:Key="calendar_grid_civil">Miladi ay</s:String>
+
+    <s:String x:Key="calendar_shabbat">Şabat</s:String>
+
+    <s:String x:Key="calendar_previous_month">Önceki ay</s:String>
+
+    <s:String x:Key="calendar_next_month">Sonraki ay</s:String>
+
+    <s:String x:Key="calendar_settings">Ayarlar...</s:String>
+
+    <s:String x:Key="calendar_close">Kapat</s:String>
+
+    <s:String x:Key="calendar_portion">Haftalık paraşa: {0}</s:String>
+
+    <s:String x:Key="calendar_festival_reading">Bu Şabat bir bayram okuması yapılır</s:String>
+
+    <s:String x:Key="calendar_day_of">{0}, {2} ayının {1}. günü</s:String>
+
+    <s:String x:Key="calendar_molad">{0} ayının moladı: {1}, {2} ve {3} halakim</s:String>
+
+    <s:String x:Key="calendar_omer">Omer sayımı</s:String>
+
+    <s:String x:Key="calendar_omer_day">Omer’in {0}. günü</s:String>
+
+    <s:String x:Key="calendar_omer_weeks">{0} hafta ve {1} gün</s:String>
+
+    <s:String x:Key="calendar_place">Yer: {0}</s:String>
+
+    <s:String x:Key="calendar_israel">İsrail Diyarı</s:String>
+
+    <s:String x:Key="calendar_diaspora">Diaspora</s:String>
+
+    <s:String x:Key="calendar_no_place">Günün saatlerini görmek için takvim ayarlarından bir yer seçin.</s:String>
+
+    <s:String x:Key="calendar_times">Günün saatleri</s:String>
+
+    <s:String x:Key="calendar_yahrzeits">Yahrzeitler</s:String>
+
+    <s:String x:Key="calendar_candles_after_dark">Mum yakma (gece olduktan sonra)</s:String>
+
+    <s:String x:Key="calendar_havdalah">Dinlenme gününün sonu (havdala)</s:String>
+
+    <s:String x:Key="calendar_rest_begins">Başlangıç: {0} (mum yakma)</s:String>
+
+    <s:String x:Key="calendar_rest_ends">Bitiş: {0} (gece)</s:String>
+
+    <s:String x:Key="calendar_settings_title">Takvim ayarları</s:String>
+
+    <s:String x:Key="calendar_settings_place">Dilim yeri:</s:String>
+
+    <s:String x:Key="calendar_settings_zone">Tarih, gün değişimi ve günün saatleri için saat dilimi:</s:String>
+
+    <s:String x:Key="calendar_zone_main">{0} (bilgisayarın)</s:String>
+
+    <s:String x:Key="zones_heading">Saatin saat dilimleri</s:String>
+
+    <s:String x:Key="zone_main">Ana saat dilimi:</s:String>
+
+    <s:String x:Key="zone_second">İkinci saat dilimi:</s:String>
+
+    <s:String x:Key="zone_third">Üçüncü saat dilimi:</s:String>
+
+    <s:String x:Key="zone_show_name">Adı göster</s:String>
+
+    <s:String x:Key="zone_label">Saatte gösterilecek ad</s:String>
+
+    <s:String x:Key="zone_label_hint">Bu dilim için yer adı yerine saatin göstereceği ad (örneğin Kudüs için Kalp). Boş bırakılırsa yer adı kullanılır.</s:String>
+
+    <s:String x:Key="zone_place">Yer:</s:String>
+
+    <s:String x:Key="zones_tab">Saat dilimleri</s:String>
+
+    <s:String x:Key="hebrew_date_tab">İbrani tarihi</s:String>
+
+    <s:String x:Key="zone_computer">Bilgisayarın ({0})</s:String>
+
+    <s:String x:Key="hebrew_place_in_zones">İbrani tarihi, Saat dilimleri sekmesinde seçilen ana saat diliminin yerinin tarihidir.</s:String>
+
+    <s:String x:Key="zone_none">(gösterilmez)</s:String>
+
+    <s:String x:Key="calendar_settings_yahrzeits">Gösterilecek yahrzeitler (tümü, kategoriye göre, tek tek):</s:String>
+
+    <s:String x:Key="calendar_all_figures">Tümü</s:String>
+
+    <s:String x:Key="cancel_dialog">İptal</s:String>
+
+    <s:String x:Key="coordinate_result">Enlem ve boylam: {0}</s:String>
+
+    <s:String x:Key="coordinate_basis_labeled">Sıralama metinde belirtildiği gibidir.</s:String>
+
+    <s:String x:Key="coordinate_basis_only_one">Yalnızca bir sıralama uygundur: enlem en fazla 90 derece olabilir.</s:String>
+
+    <s:String x:Key="coordinate_basis_country">Sıralama ülkeye göre belirlenir: diğer sıralamada nokta ülkenin uzağında kalır.</s:String>
+
+    <s:String x:Key="coordinate_basis_assumed">Önce enlem olduğu varsayılır.</s:String>
+
+    <s:String x:Key="coordinate_warning_assumed">Önce enlem olduğu varsayılır; boylam önce olsaydı ülkeye yaklaşık aynı ölçüde uyacaktı.</s:String>
+
+    <s:String x:Key="coordinate_warning_far">Nokta, ülkenin en yakın şehrine {0:N0} km uzaklıkta. Ülkeyi ve sayıları kontrol edin.</s:String>
+
+    <s:String x:Key="coordinate_problem_empty">Koordinatları yazın.</s:String>
+
+    <s:String x:Key="coordinate_problem_need_two">İki sayı gerekli: enlem ve boylam.</s:String>
+
+    <s:String x:Key="coordinate_problem_too_many">İkiden fazla sayı var. Yalnızca enlem ve boylamı yazın.</s:String>
+
+    <s:String x:Key="coordinate_problem_two_lat">Her iki sayı da enlem olarak işaretlenmiş.</s:String>
+
+    <s:String x:Key="coordinate_problem_two_lng">Her iki sayı da boylam olarak işaretlenmiş.</s:String>
+
+    <s:String x:Key="coordinate_problem_lat_range">Enlem -90 ile 90 derece arasında olmalıdır.</s:String>
+
+    <s:String x:Key="coordinate_problem_lng_range">Boylam -180 ile 180 derece arasında olmalıdır.</s:String>
+
+    <s:String x:Key="coordinate_problem_neither">Her iki sıralamada da bu sayılar bir enlem (en fazla 90) ve boylam (en fazla 180) oluşturmuyor.</s:String>
+
+    <s:String x:Key="open_system_settings">Sistem Ayarlarını Aç</s:String>
+
+    <s:String x:Key="open_computer_management">Bilgisayar Yönetimi</s:String>
+
+    <s:String x:Key="open_drives">Sürücüleri aç</s:String>
+
+    <s:String x:Key="this_pc">Bu Bilgisayar</s:String>
+
+    <s:String x:Key="move_activated_windows_to_current_desktop">Açılan pencereleri bu masaüstünde tutmaya çalış (deneysel)</s:String>
+
+    <s:String x:Key="desktop_activation_experiment_hint">Taşımadan tüm masaüstlerinde gösterilen pencereleri yeniden kullanın. Aksi durumda masaüstü simgeleri ve sabitlenmiş başlatıcılar tarayıcıları, Explorer klasörlerini ve Notepad++’ı bu masaüstünde açar; diğer uygulamalar ve bildirim alanından etkinleştirme pencere aktarımını sürdürür.</s:String>
 </ResourceDictionary>

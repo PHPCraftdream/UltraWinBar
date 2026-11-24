@@ -281,6 +281,8 @@
     <s:String x:Key="zone_second">Second time zone:</s:String>
     <s:String x:Key="zone_third">Third time zone:</s:String>
     <s:String x:Key="zone_show_name">Show the name</s:String>
+    <s:String x:Key="zone_label">Name on the clock</s:String>
+    <s:String x:Key="zone_label_hint">A name the clock shows for this zone instead of its place (for example, Heart for Jerusalem). Empty keeps the place.</s:String>
     <s:String x:Key="zone_place">Place:</s:String>
     <s:String x:Key="zones_tab">Time zones</s:String>
     <s:String x:Key="hebrew_date_tab">Hebrew date</s:String>

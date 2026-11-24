@@ -598,6 +598,28 @@ namespace UltraWinBar.Utilities
             set => Set(ref _showThirdZoneName, value);
         }
 
+        // The name the clock shows for each zone instead of its place's ("Heart" for "Jerusalem"); empty is the place's.
+        private string _mainZoneLabel = "";
+        public string MainZoneLabel
+        {
+            get => _mainZoneLabel;
+            set => Set(ref _mainZoneLabel, value ?? "");
+        }
+
+        private string _secondZoneLabel = "";
+        public string SecondZoneLabel
+        {
+            get => _secondZoneLabel;
+            set => Set(ref _secondZoneLabel, value ?? "");
+        }
+
+        private string _thirdZoneLabel = "";
+        public string ThirdZoneLabel
+        {
+            get => _thirdZoneLabel;
+            set => Set(ref _thirdZoneLabel, value ?? "");
+        }
+
         // Which of the three time zones the calendar goes by for the date, the change of the day and the times of the
         // day: 0 the main one (the computer's), 1 the second, 2 the third.
         private int _calendarZone;

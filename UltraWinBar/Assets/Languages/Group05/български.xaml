@@ -7,66 +7,270 @@
     <s:String x:Key="advanced_tab">Разширени</s:String>
     <s:String x:Key="taskbar_appearance">Облик на лентата на задачите</s:String>
     <s:String x:Key="notification_area">Район на известията</s:String>
+    <s:String x:Key="general_heading">Общи</s:String>
+    <s:String x:Key="clock_heading">Часовник</s:String>
     <s:String x:Key="autostart">Пуска_й автоматично при влизане</s:String>
     <s:String x:Key="language_text">_Език:</s:String>
     <s:String x:Key="language_tip">Избери езика, който искаш да използваш.</s:String>
     <s:String x:Key="theme_text">_Тема:</s:String>
     <s:String x:Key="theme_tip">Инсталирай теми в папката Themes.</s:String>
+    <s:String x:Key="accent_text">Акцентен _цвят:</s:String>
+    <s:String x:Key="accent_tip">Неоновият цвят на темата Modern Glass.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>Циан</s:String>
+        <s:String>Виолетов</s:String>
+        <s:String>Фуксия</s:String>
+        <s:String>Изумруден</s:String>
+        <s:String>Кехлибарен</s:String>
+        <s:String>Розов</s:String>
+    </x:Array>
     <s:String x:Key="location_text">Местополо_жение:</s:String>
     <s:String x:Key="location_tip">Промени местоположението на лентата на задачите върху екрана.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
-        <s:String>Отляво</s:String>
-        <s:String>Отгоре</s:String>
-        <s:String>Отдясно</s:String>
-        <s:String>Отдолу</s:String>
+        <s:String>Отляво</s:String><s:String>Отгоре</s:String><s:String>Отдясно</s:String><s:String>Отдолу</s:String>
     </x:Array>
+    <s:String x:Key="rowcount_text">Брой _редове:</s:String>
+    <s:String x:Key="rowcount_tip">Броят редове на лентата на задачите, когато е отгоре или отдолу.</s:String>
+    <s:String x:Key="taskbar_width">Ширина на лентата на зада_чите:</s:String>
     <s:String x:Key="allow_font_smoothing">_Позволи изглаждането на шрифтовете</s:String>
     <s:String x:Key="allow_font_smoothing_menu">Позволи изглаждането на шрифтовете в _менютата</s:String>
     <s:String x:Key="collapse_tray_icons">Събери и_коните в района на известията</s:String>
     <s:String x:Key="customize">Персонали_зирай...</s:String>
+    <s:String x:Key="show_input_language">Показвай _езика на въвеждане</s:String>
     <s:String x:Key="show_clock">Показвай _часовника</s:String>
     <s:String x:Key="show_multi_mon">Показвай върху множество _екрани</s:String>
+    <s:String x:Key="show_start_button_multi_mon">Показвай бутона _Старт на всички ленти</s:String>
     <s:String x:Key="show_quick_launch">Показвай _Бърз достъп</s:String>
     <s:String x:Key="select_location">_Избери местоположение...</s:String>
     <s:String x:Key="quick_launch_folder">Бърз достъп - избери папка</s:String>
+    <s:String x:Key="show_badges">Показвай _значките</s:String>
+    <s:String x:Key="show_window_previews">Показвай _визуализации на прозорците (миниатюри)</s:String>
     <s:String x:Key="use_software_rendering">Използвай _софтуерен рендъринг</s:String>
+    <s:String x:Key="add_show_desktop_button">Добави бутона „Показване на _работния плот“</s:String>
+    <s:String x:Key="enable_auto_hide">А_втоматично скривай лентата на задачите</s:String>
+    <s:String x:Key="lock_taskbar">_Заключи лентата на задачите</s:String>
+    <s:String x:Key="multiple_displays">Няколко екрана</s:String>
+    <s:String x:Key="show_tasks_on">Пока_звай задачите на:</s:String>
+    <x:Array x:Key="show_tasks_on_values" Type="s:String"><s:String>Всички ленти</s:String><s:String>Същата лента като прозореца</s:String><s:String>Същата лента като прозореца и основната лента</s:String></x:Array>
+    <s:String x:Key="invert_grayscale_colors">_Обръщай сивите цветове:</s:String>
+    <x:Array x:Key="invert_grayscale_colors_values" Type="s:String"><s:String>Когато темата го изисква</s:String><s:String>Винаги</s:String><s:String>Никога</s:String></x:Array>
+    <s:String x:Key="middle_mouse_task_action">Действие при _щракване със средния бутон:</s:String>
+    <x:Array x:Key="middle_mouse_task_action_values" Type="s:String"><s:String>Не прави нищо</s:String><s:String>Отвори нов екземпляр</s:String><s:String>Затвори задачата</s:String></x:Array>
+    <s:String x:Key="clock_click_action">Действие при щракване върху _часовника:</s:String>
+    <x:Array x:Key="clock_click_action_values" Type="s:String"><s:String>Не прави нищо</s:String><s:String>Отвори календара Aero</s:String><s:String>Отвори календара Modern</s:String><s:String>Отвори центъра за известия</s:String></x:Array>
+    <s:String x:Key="task_wheel_action">Действие при _завъртане на колелцето:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String"><s:String>Не прави нищо</s:String><s:String>Покажи/скрий прозореца</s:String></x:Array>
+    <s:String x:Key="auto_hide_transparent">Скривай _линията на лентата при автоматично скриване</s:String>
+    <s:String x:Key="version">Версия {0}</s:String>
+    <s:String x:Key="visit_on_github">Посети UltraWinBar в GitHub</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Няколко ленти на задачите</s:String>
+    <s:String x:Key="additional_taskbars_text">Показвай лента по тези краища. Щракни с десния бутон върху лента, за да я разтегнеш по целия край и да изместиш останалите.</s:String>
+    <s:String x:Key="location_left">Отляво</s:String>
+    <s:String x:Key="location_top">Отгоре</s:String>
+    <s:String x:Key="location_right">Отдясно</s:String>
+    <s:String x:Key="location_bottom">Отдолу</s:String>
+    <s:String x:Key="tray_location_text">_Район на известията на:</s:String>
+    <s:String x:Key="clock_location_text">_Часовник на:</s:String>
+    <s:String x:Key="start_button_location_text">Бу_тон „Старт“ на:</s:String>
+    <s:String x:Key="language_location_text">_Индикатор за език на:</s:String>
+    <s:String x:Key="task_assignment_hint">Плъзни бутон на задача към друга лента, за да преместиш цялото приложение; задръж Ctrl при плъзгане, за да преместиш само този прозорец. Щракни с десния бутон върху бутон на задача, за да нулираш присвояването му.</s:String>
+    <s:String x:Key="reset_task_assignments">Нулирай всички присвоявания на лентите</s:String>
+    <s:String x:Key="stretch">_Разтегни</s:String>
+    <s:String x:Key="make_main">_Направи основна</s:String>
+    <s:String x:Key="reset_task_assignment">Нулирай присвоя_ването към лента</s:String>
+    <s:String x:Key="taskbar_scale">Мащаб на лентата на задачите</s:String>
+    <s:String x:Key="taskbar_scale_1x">100%</s:String>
+    <s:String x:Key="taskbar_scale_2x">200%</s:String>
+    <s:String x:Key="taskbar_scale_current">Текуща настройка: {0}%</s:String>
+    <s:String x:Key="debug_logging">Включи _дневника за отстраняване на грешки</s:String>
+    <s:String x:Key="window_activity_logging">Записвай отварянето и затварянето на прозорци</s:String>
+    <s:String x:Key="check_for_updates">Провери за а_ктуализации</s:String>
+    <s:String x:Key="show_exit_menu_item">Показвай опцията „И_зход“ в менюто с десен бутон</s:String>
+    <s:String x:Key="show_end_task_button">Показвай опцията „Край на _задачата“ в менюто с десен бутон</s:String>
+    <s:String x:Key="slide_taskbar_buttons">Плъз_гай бутоните на лентата</s:String>
+    <s:String x:Key="show_clock_seconds">Показвай _секундите в часовника</s:String>
+    <s:String x:Key="open_custom_themes_folder">Отвори папката с потребителски теми</s:String>
+    <s:String x:Key="win_num_hotkeys_action">Действие на клавишите Win+[0-9] _за бърз достъп:</s:String>
+    <x:Array x:Key="win_num_hotkeys_action_values" Type="s:String"><s:String>По подразбиране за Windows</s:String><s:String>Превключвай задачите</s:String><s:String>Отваряй елемент от „Бърз достъп“</s:String></x:Array>
+    <s:String x:Key="hotkey_warning_title">Клавишни комбинации на UltraWinBar</s:String>
+    <s:String x:Key="hotkey_warning_text">UltraWinBar ще замени клавишните комбинации на лентата на задачите на Windows. Дори ако затвориш UltraWinBar, те няма да бъдат възстановени в Windows, докато не излезеш от системата и не влезеш отново.</s:String>
+    <s:String x:Key="allow_blur_behind">Позволи _замъгляване зад прозрачната лента</s:String>
     <s:String x:Key="ok_dialog">ОК</s:String>
 
+    <s:String x:Key="clock_format_help">Виж наличните опции за форматиране</s:String>
+    <s:String x:Key="clock_format_warning">Забележка: Потребителският формат на часовника може да не работи очаквано, ако избраната тема задава собствен формат.</s:String>
+    <s:String x:Key="override_clock_format">Потребителски _формат на часовника:</s:String>
+    <s:String x:Key="override_ampm_designators">Потребителски _обозначения:</s:String>
+    <s:String x:Key="am_designator">Преди обед:</s:String>
+    <s:String x:Key="pm_designator">След обед:</s:String>
     <s:String x:Key="customize_notifications">Персонализирай известията</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar показва иконите на активните и спешните известия, а крие неактивните. Можеш да промениш това поведение за долупосочените елементи.</s:String>
     <s:String x:Key="customize_notifications_instruction">Избери елемент, а после му избери поведението на известията:</s:String>
     <s:String x:Key="hide_when_inactive">Крий го при неактивност</s:String>
     <s:String x:Key="always_show">Винаги го показвай</s:String>
+    <s:String x:Key="always_hide">Винаги го крий</s:String>
+    <s:String x:Key="remove">Премахни</s:String>
     <s:String x:Key="name_heading">Име</s:String>
     <s:String x:Key="behavior_heading">Поведение</s:String>
-
+    <s:String x:Key="invert_heading">Обърни</s:String>
     <s:String x:Key="start_text">Старт</s:String>
     <s:String x:Key="start_text_xp">старт</s:String>
     <s:String x:Key="start_button_tip_98">Натисни тук, за да започнеш.</s:String>
     <s:String x:Key="start_button_tip">Натисни тук, за да започнеш</s:String>
     <s:String x:Key="start_button_tip_vista">Старт</s:String>
-
     <s:String x:Key="ultrawinbar_title">Лента на задачите UltraWinBar</s:String>
     <s:String x:Key="toolbars">_Ленти с инструменти</s:String>
     <s:String x:Key="quick_launch">_Бърз достъп</s:String>
     <s:String x:Key="new_toolbar">_Нова лента с инструменти...</s:String>
     <s:String x:Key="set_time">На_гласи датата и часа</s:String>
+    <s:String x:Key="cascade">_Подреди каскадно прозорците</s:String>
+    <s:String x:Key="horiz_tile">Подреди прозорците _хоризонтално</s:String>
+    <s:String x:Key="vert_tile">Подреди прозорците в_ертикално</s:String>
+    <s:String x:Key="toggle_desktop">_Покажи работния плот</s:String>
+    <s:String x:Key="hide_desktop">_Покажи отворените прозорци</s:String>
+    <s:String x:Key="undo_cascade">_Отмени каскадното подреждане</s:String>
+    <s:String x:Key="undo_tile">_Отмени подреждането</s:String>
+    <s:String x:Key="undo_minimize_all">_Отмени минимизирането на всички</s:String>
     <s:String x:Key="show_taskman_2k">_Диспечер на задачите...</s:String>
     <s:String x:Key="show_taskman">_Диспечер на задачите</s:String>
     <s:String x:Key="tray_properties">Св_ойства</s:String>
     <s:String x:Key="update_available">Н_алична е актуализация...</s:String>
     <s:String x:Key="exit_ultrawinbar">_Излез от UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">Стар_тирай отново UltraWinBar</s:String>
     <s:String x:Key="customize_notifications_menu">П_ерсонализирай известията...</s:String>
-
+    <s:String x:Key="lock_taskbar_menu">_Заключи лентата на задачите</s:String>
+    <s:String x:Key="show_desktop_tip_95">Покажи/възстанови работния плот</s:String>
+    <s:String x:Key="show_desktop_tip">Покажи работния плот</s:String>
+    <s:String x:Key="show_desktop_95">_Работен плот</s:String>
+    <s:String x:Key="show_desktop">_Покажи работния плот</s:String>
+    <s:String x:Key="peek_at_desktop">_Надникни към работния плот</s:String>
     <s:String x:Key="restore">_Възстанови</s:String>
     <s:String x:Key="move">_Премести</s:String>
     <s:String x:Key="size">П_реоразмери</s:String>
     <s:String x:Key="minimize">_Намали</s:String>
     <s:String x:Key="maximize">_Увеличи</s:String>
     <s:String x:Key="close">_Затвори</s:String>
-
+    <s:String x:Key="end_task">_Приключи задачата</s:String>
     <s:String x:Key="show_hidden">Покажи скритите икони</s:String>
     <s:String x:Key="hide">Скрий</s:String>
-
     <s:String x:Key="open_folder">&amp;Отвори папка</s:String>
+    <s:String x:Key="move_to_taskbar_format">Премести към лента {0}</s:String>
+    <s:String x:Key="ime_input_tip_enabled">Щракни с десния бутон, за да отвориш опциите на IME.</s:String>
+    <s:String x:Key="ime_input_tip_disabled">IME е изключен</s:String>
+    <s:String x:Key="ime_input_full_shape_hiragana">_Хирагана</s:String>
+    <s:String x:Key="ime_input_full_shape_katakana">Катакана с пълна _ширина</s:String>
+    <s:String x:Key="ime_input_full_shape_alphanumeric">Буквено-цифрови с пълна _ширина</s:String>
+    <s:String x:Key="ime_input_katakana">Катакана с половин _ширина</s:String>
+    <s:String x:Key="ime_input_alphanumeric">Буквено-цифрови с _половин ширина</s:String>
+    <s:String x:Key="ime_input_direct">_Пряко въвеждане</s:String>
+    <s:String x:Key="ime_open_pad">_Панел за IME</s:String>
+    <s:String x:Key="ime_open_add_word_dictionary">Добави _дума</s:String>
+    <s:String x:Key="ime_open_dictionary_tool">_Инструмент за потребителския речник</s:String>
+    <s:String x:Key="ime_open_properties">Св_ойства</s:String>
+    <s:String x:Key="ime_input_key">_Метод на въвеждане</s:String>
+    <s:String x:Key="ime_input_key_roma">Въвеждане с _ромадзи</s:String>
+    <s:String x:Key="ime_input_key_kana">Въвеждане на _кана</s:String>
+    <s:String x:Key="ime_conversion">Режим на _преобразуване</s:String>
+    <s:String x:Key="ime_conversion_general">_Общ</s:String>
+    <s:String x:Key="ime_conversion_none">Бе_з преобразуване</s:String>
+    <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+    <s:String x:Key="pin_to_taskbar">Закачи към тази лента</s:String>
+    <s:String x:Key="pinned_app_windows">Отворени прозорци</s:String>
+    <s:String x:Key="unpin_from_taskbar">Откачи от тази лента</s:String>
+    <s:String x:Key="copy_executable_path">Копирай пътя до изпълнимия файл</s:String>
+    <s:String x:Key="copy_executable_directory">Копирай папката на изпълнимия файл</s:String>
+
+    <s:String x:Key="app_all_desktops">Показвай прозорците на това приложение на всички работни плотове</s:String>
+    <s:String x:Key="move_window_desktop">Премести този прозорец на работния плот</s:String>
+    <s:String x:Key="move_app_desktop">Премести всички прозорци на приложението на работния плот</s:String>
+    <s:String x:Key="desktop_number">Работен плот {0}</s:String>
+    <s:String x:Key="desktop_action_failed">Windows не успя да извърши операцията за всеки прозорец. Някои прозорци може вече да са преместени. Виж дневника за подробности.</s:String>
+    <s:String x:Key="show_hebrew_date">Показвай еврейската дата и номерираните дни от седмицата</s:String>
+    <s:String x:Key="hebrew_date_midnight">Използва местната календарна дата; сменя се в полунощ, а не при залез.</s:String>
+    <s:String x:Key="hebrew_place">Място за еврейската дата:</s:String>
+    <s:String x:Key="hebrew_place_none">не е избрано</s:String>
+    <s:String x:Key="hebrew_place_choose">Избери...</s:String>
+    <s:String x:Key="hebrew_place_clear">Изчисти</s:String>
+    <s:String x:Key="zone_clear">Премахни</s:String>
+    <s:String x:Key="hebrew_place_hint">Мястото, чийто залез приключва еврейския ден и чиито халахични часове показва календарът.</s:String>
+    <s:String x:Key="hebrew_place_title">Място за еврейската дата</s:String>
+    <s:String x:Key="hebrew_place_city_tab">Град</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">Координати</s:String>
+    <s:String x:Key="hebrew_place_search">Име на град (на английски):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">Въведи поне две букви, например: jerus, new york, paris texas. Показани са градове с 10 000 и повече жители.</s:String>
+    <s:String x:Key="hebrew_place_country">Държава:</s:String>
+    <s:String x:Key="hebrew_place_need_country">Избери държавата: така се определя кое от двете числа е географската ширина.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">Географска ширина и дължина:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">Приемлив е всеки формат: 32.0853, 34.7818 или 34,7818 32,0853 или 32°05'07&quot;N 34°46'54&quot;E. Точка или запетая за дробната част; запетая, двоеточие или интервал между числата.</s:String>
+    <s:String x:Key="hebrew_place_zone">Часова зона:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">Избира се заедно с града; промени я, ако е грешна. Правилата на зоната (лятното часово време и промените му) са тези, които използва Windows.</s:String>
+    <s:String x:Key="calendar_title">Еврейски календар</s:String>
+    <s:String x:Key="calendar_today">Днес</s:String>
+    <s:String x:Key="calendar_copy_name">Копирай името</s:String>
+    <s:String x:Key="calendar_search_name">Потърси името в Google</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Еврейски месец</s:String>
+    <s:String x:Key="calendar_grid_civil">Граждански месец</s:String>
+    <s:String x:Key="calendar_shabbat">Шабат</s:String>
+    <s:String x:Key="calendar_previous_month">Предишен месец</s:String>
+    <s:String x:Key="calendar_next_month">Следващ месец</s:String>
+    <s:String x:Key="calendar_settings">Настройки...</s:String>
+    <s:String x:Key="calendar_close">Затвори</s:String>
+    <s:String x:Key="calendar_portion">Седмична глава: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">На този шабат се чете празничен откъс</s:String>
+    <s:String x:Key="calendar_day_of">{0}, ден {1} от {2}</s:String>
+    <s:String x:Key="calendar_molad">Моладът на {0}: {1}, {2} и {3} халакім</s:String>
+    <s:String x:Key="calendar_omer">Броене на Омера</s:String>
+    <s:String x:Key="calendar_omer_day">Ден {0} от Омера</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} седмица(и) и {1} ден(дни)</s:String>
+    <s:String x:Key="calendar_place">Място: {0}</s:String>
+    <s:String x:Key="calendar_israel">Земя Израилева</s:String>
+    <s:String x:Key="calendar_diaspora">диаспора</s:String>
+    <s:String x:Key="calendar_no_place">Избери място в настройките на календара, за да виждаш часовете за деня.</s:String>
+    <s:String x:Key="calendar_times">Часове за деня</s:String>
+    <s:String x:Key="calendar_yahrzeits">Ярцайти</s:String>
+    <s:String x:Key="calendar_candles_after_dark">Запалване на свещите (след свечеряване)</s:String>
+    <s:String x:Key="calendar_havdalah">Край на почивния ден (хавдала)</s:String>
+    <s:String x:Key="calendar_rest_begins">Начало: {0} (запалване на свещите)</s:String>
+    <s:String x:Key="calendar_rest_ends">Край: {0} (нощно време)</s:String>
+    <s:String x:Key="calendar_settings_title">Настройки на календара</s:String>
+    <s:String x:Key="calendar_settings_place">Място на зоната:</s:String>
+    <s:String x:Key="calendar_settings_zone">Часова зона за датата, смяната на деня и часовете за деня:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (на компютъра)</s:String>
+    <s:String x:Key="zones_heading">Часови зони на часовника</s:String>
+    <s:String x:Key="zone_main">Основна часова зона:</s:String>
+    <s:String x:Key="zone_second">Втора часова зона:</s:String>
+    <s:String x:Key="zone_third">Трета часова зона:</s:String>
+    <s:String x:Key="zone_show_name">Показвай името</s:String>
+    <s:String x:Key="zone_label">Име на часовника</s:String>
+    <s:String x:Key="zone_label_hint">Име, което часовникът показва за тази зона вместо нейното място (например „Сърце“ за Йерусалим). Празното поле оставя мястото.</s:String>
+    <s:String x:Key="zone_place">Място:</s:String>
+    <s:String x:Key="zones_tab">Часови зони</s:String>
+    <s:String x:Key="hebrew_date_tab">Еврейска дата</s:String>
+    <s:String x:Key="zone_computer">Компютърът ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">Еврейската дата е за мястото на основната часова зона, избрано в раздела „Часови зони“.</s:String>
+    <s:String x:Key="zone_none">(не се показва)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">Ярцайти за показване (всички, по категория, поотделно):</s:String>
+    <s:String x:Key="calendar_all_figures">Всички</s:String>
+    <s:String x:Key="cancel_dialog">Отказ</s:String>
+    <s:String x:Key="coordinate_result">Географска ширина и дължина: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">Редът е указан в текста.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">Подходящ е само единият ред: географската ширина е до 90 градуса.</s:String>
+    <s:String x:Key="coordinate_basis_country">Редът е определен по държавата: другият вариант попада далеч от нея.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">Приема се, че първо е географската ширина.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">Приема се, че първо е географската ширина; ако първо е дължината, резултатът пак би съответствал почти толкова добре на държавата.</s:String>
+    <s:String x:Key="coordinate_warning_far">Точката е на {0:N0} км от най-близкия град в държавата. Провери държавата и числата.</s:String>
+    <s:String x:Key="coordinate_problem_empty">Въведи координатите.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">Нужни са две числа: географската ширина и дължина.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">Повече от две числа. Въведи само географската ширина и дължина.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">И двете числа са означени като географска ширина.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">И двете числа са означени като географска дължина.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">Географската ширина трябва да е между -90 и 90 градуса.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">Географската дължина трябва да е между -180 и 180 градуса.</s:String>
+    <s:String x:Key="coordinate_problem_neither">При нито един ред числата не дават географска ширина (до 90) и дължина (до 180).</s:String>
+    <s:String x:Key="open_system_settings">Отвори системните настройки</s:String>
+    <s:String x:Key="open_computer_management">Управление на компютъра</s:String>
+    <s:String x:Key="open_drives">Отвори устройствата</s:String>
+    <s:String x:Key="this_pc">Този компютър</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">Опитай да запазваш отворените прозорци на този работен плот (експериментално)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Използвай повторно прозорците, показани на всички работни плотове, без да ги местиш. В противен случай иконите на работния плот и закачените преки пътища отварят браузъри, папки на Explorer и Notepad++ локално; другите приложения и активирането от областта за известия продължават да прехвърлят прозорци.</s:String>
 </ResourceDictionary>

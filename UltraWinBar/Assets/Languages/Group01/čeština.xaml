@@ -2,16 +2,29 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:s="clr-namespace:System;assembly=mscorlib">
 
+
     <s:String x:Key="ultrawinbar_properties">Vlastnosti UltraWinBar</s:String>
     <s:String x:Key="taskbar_tab">Hlavní panel</s:String>
     <s:String x:Key="advanced_tab">Upřesnit</s:String>
     <s:String x:Key="taskbar_appearance">Vzhled lišty</s:String>
     <s:String x:Key="notification_area">Prostor pro upozornění</s:String>
+    <s:String x:Key="general_heading">Obecné</s:String>
+    <s:String x:Key="clock_heading">Hodiny</s:String>
     <s:String x:Key="autostart">Automaticky spustit po _přihlášení</s:String>
     <s:String x:Key="language_text">Ja_zyk:</s:String>
     <s:String x:Key="language_tip">Vyberte jazyk.</s:String>
     <s:String x:Key="theme_text">_Motiv:</s:String>
     <s:String x:Key="theme_tip">Vložte vlastní motivy do složky "Themes".</s:String>
+    <s:String x:Key="accent_text">Barva zvýraznění:</s:String>
+    <s:String x:Key="accent_tip">Neonová barva motivu Modern Glass.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>Azurová</s:String>
+        <s:String>Fialová</s:String>
+        <s:String>Fuchsiová</s:String>
+        <s:String>Smaragdová</s:String>
+        <s:String>Jantarová</s:String>
+        <s:String>Růžová</s:String>
+    </x:Array>
     <s:String x:Key="location_text">_Umístění:</s:String>
     <s:String x:Key="location_tip">Změnit umístění lišty na obrazovce.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -20,53 +33,270 @@
         <s:String>Vpravo</s:String>
         <s:String>Dole</s:String>
     </x:Array>
+    <s:String x:Key="rowcount_text">Počet _řádků:</s:String>
+    <s:String x:Key="rowcount_tip">Počet řádků na hlavním panelu nahoře nebo dole.</s:String>
+    <s:String x:Key="taskbar_width">Šířka hlavního pane_lu:</s:String>
     <s:String x:Key="allow_font_smoothing">Povolit vyhlazovaní _textu</s:String>
     <s:String x:Key="allow_font_smoothing_menu">Povolit vyhlazování textu v _nabídkách</s:String>
     <s:String x:Key="collapse_tray_icons">Skrýt upozornění</s:String>
     <s:String x:Key="customize">_Přizspůsobit...</s:String>
+    <s:String x:Key="show_input_language">Zobrazit vstupní _jazyk</s:String>
     <s:String x:Key="show_clock">Zobrazit _hodiny</s:String>
     <s:String x:Key="show_multi_mon">Zobrazit na více _obrazovkách</s:String>
+    <s:String x:Key="show_start_button_multi_mon">Zobrazit tlačítko _Start na všech hlavních panelech</s:String>
     <s:String x:Key="show_quick_launch">Zobrazit _Rychlý Přístup</s:String>
     <s:String x:Key="select_location">Vybrat _umístění...</s:String>
     <s:String x:Key="quick_launch_folder">Rychlý Přístup - Zvolte složku</s:String>
+    <s:String x:Key="show_badges">Zobrazit _odznaky</s:String>
+    <s:String x:Key="show_window_previews">Zobrazit _náhledy oken (miniatury)</s:String>
     <s:String x:Key="use_software_rendering">_Použít programové vykreslování</s:String>
+    <s:String x:Key="add_show_desktop_button">Přidat tlačítko Zobrazit _plochu</s:String>
+    <s:String x:Key="enable_auto_hide">_Automaticky skrývat hlavní panel</s:String>
+    <s:String x:Key="lock_taskbar">_Zamknout hlavní panel</s:String>
+    <s:String x:Key="multiple_displays">Více displejů</s:String>
+    <s:String x:Key="show_tasks_on">Zobrazit úkoly na:</s:String>
+    <x:Array x:Key="show_tasks_on_values" Type="s:String">
+        <s:String>Všechny hlavní panely</s:String>
+        <s:String>Stejný hlavní panel jako okno</s:String>
+        <s:String>Stejný hlavní panel jako okno a primární panel úloh</s:String>
+    </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_Invertovat barvy ve stupních šedi:</s:String>
+    <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
+        <s:String>Když je potřeba podle tématu</s:String>
+        <s:String>Vždy</s:String>
+        <s:String>Nikdy</s:String>
+    </x:Array>
+    <s:String x:Key="middle_mouse_task_action">_Akce prostředního kliknutí:</s:String>
+    <x:Array x:Key="middle_mouse_task_action_values" Type="s:String">
+        <s:String>Nedělat nic</s:String>
+        <s:String>Otevřít novou instanci</s:String>
+        <s:String>Zavřít úlohu</s:String>
+    </x:Array>
+    <s:String x:Key="clock_click_action">_Akce kliknutí na hodiny:</s:String>
+    <x:Array x:Key="clock_click_action_values" Type="s:String">
+        <s:String>Nedělat nic</s:String>
+        <s:String>Otevřít kalendář Aero</s:String>
+        <s:String>Otevřít moderní kalendář</s:String>
+        <s:String>Otevřít Centrum oznámení</s:String>
+    </x:Array>
+    <s:String x:Key="task_wheel_action">_Akce kolečka myši:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>Nedělat nic</s:String>
+        <s:String>Zobrazit/skrýt okno</s:String>
+    </x:Array>
+    <s:String x:Key="auto_hide_transparent">Skrýt _linku hlavního panelu při automatickém skrytí</s:String>
+    <s:String x:Key="version">Verze {0}</s:String>
+    <s:String x:Key="visit_on_github">Navštivte UltraWinBar na GitHubu</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Více hlavních panelů</s:String>
+    <s:String x:Key="additional_taskbars_text">Zobrazit hlavní panel na těchto okrajích. Klepněte pravým tlačítkem myši na hlavní panel, aby se roztáhl až k úplnému okraji a ostatní odsunul stranou.</s:String>
+    <s:String x:Key="location_left">Vlevo</s:String>
+    <s:String x:Key="location_top">Nahoru</s:String>
+    <s:String x:Key="location_right">Vpravo</s:String>
+    <s:String x:Key="location_bottom">Dole</s:String>
+    <s:String x:Key="tray_location_text">_Oznamovací oblast na:</s:String>
+    <s:String x:Key="clock_location_text">_Hodiny:</s:String>
+    <s:String x:Key="start_button_location_text">Tlačítko Sta_rt na:</s:String>
+    <s:String x:Key="language_location_text">_Indikátor jazyka na:</s:String>
+    <s:String x:Key="task_assignment_hint">Přetažením tlačítka úlohy na jiný hlavní panel přesunete celou aplikaci; podržením Ctrl při přetahování přesunete pouze toto okno. Kliknutím pravým tlačítkem na tlačítko úlohy obnovíte jeho přiřazení.</s:String>
+    <s:String x:Key="reset_task_assignments">Obnovit všechna přiřazení na hlavním panelu</s:String>
+    <s:String x:Key="stretch">_Roztáhnout</s:String>
+    <s:String x:Key="make_main">_Nastavit jako hlavní panel</s:String>
+    <s:String x:Key="reset_task_assignment">Obnovit přiřazení hlavního panelu</s:String>
+    <s:String x:Key="taskbar_scale">Měřítko hlavního panelu</s:String>
+    <s:String x:Key="taskbar_scale_1x">100 %</s:String>
+    <s:String x:Key="taskbar_scale_2x">200 %</s:String>
+    <s:String x:Key="taskbar_scale_current">Aktuální nastavení: {0} %</s:String>
+    <s:String x:Key="debug_logging">Povolit protokolování _debug</s:String>
+    <s:String x:Key="window_activity_logging">Zaznamenávat otevírání a zavírání oken</s:String>
+    <s:String x:Key="check_for_updates">Zkontrolujte u_pdates</s:String>
+    <s:String x:Key="show_exit_menu_item">Zobrazit v místní nabídce možnost _Ukončit</s:String>
+    <s:String x:Key="show_end_task_button">Zobrazit v místní nabídce možnost _Ukončit úlohu</s:String>
+    <s:String x:Key="slide_taskbar_buttons">_Animovat tlačítka hlavního panelu</s:String>
+    <s:String x:Key="show_clock_seconds">Zobrazit _sekundy v hodinách</s:String>
+    <s:String x:Key="open_custom_themes_folder">Otevřete složku vlastních motivů</s:String>
+    <s:String x:Key="win_num_hotkeys_action">Akce Win+[0-9] _hotkeys:</s:String>
+    <x:Array x:Key="win_num_hotkeys_action_values" Type="s:String">
+        <s:String>Výchozí nastavení systému Windows</s:String>
+        <s:String>Přepínání úkolů</s:String>
+        <s:String>Otevřete položku Rychlé spuštění</s:String>
+    </x:Array>
+    <s:String x:Key="hotkey_warning_title">Klávesové zkratky UltraWinBar</s:String>
+    <s:String x:Key="hotkey_warning_text">UltraWinBar přepíše klávesové zkratky na hlavním panelu Windows. I když je UltraWinBar zavřený, nebudou obnoveny do Windows, dokud se neodhlásíte a znovu nepřihlásíte.</s:String>
+    <s:String x:Key="allow_blur_behind">Povolit _blur za průhledným hlavním panelem</s:String>
     <s:String x:Key="ok_dialog">OK</s:String>
-
+    <s:String x:Key="clock_format_help">Zobrazit dostupné možnosti formátování</s:String>
+    <s:String x:Key="clock_format_warning">Poznámka: Vlastní formátování hodin nemusí fungovat podle očekávání, pokud vybraný motiv určuje svůj vlastní formát.</s:String>
+    <s:String x:Key="override_clock_format">Vlastní formát hodin:</s:String>
+    <s:String x:Key="override_ampm_designators">Vlastní d_esignators:</s:String>
+    <s:String x:Key="am_designator">DOPOLEDNE:</s:String>
+    <s:String x:Key="pm_designator">ODPOLEDNE:</s:String>
     <s:String x:Key="customize_notifications">Přizspůsobit upozornění</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar zobrazuje ikony pro aktivní či důležitá upozornění, a skryvá ty neaktivní. Dole v seznamu můžete zobrazení těchto upozornění změnit.</s:String>
     <s:String x:Key="customize_notifications_instruction">Vyberte položku a poté zvolte její zobrazení:</s:String>
     <s:String x:Key="hide_when_inactive">Skrýt při neaktivitě</s:String>
     <s:String x:Key="always_show">Neskrývat</s:String>
+    <s:String x:Key="always_hide">Vždy se schovej</s:String>
+    <s:String x:Key="remove">Odstranit</s:String>
     <s:String x:Key="name_heading">Název</s:String>
     <s:String x:Key="behavior_heading">Zobrazení</s:String>
-
+    <s:String x:Key="invert_heading">Invertovat</s:String>
     <s:String x:Key="start_text">Start</s:String>
     <s:String x:Key="start_text_xp">Start</s:String>
     <s:String x:Key="start_button_tip_98">Začněte klepnutím sem.</s:String>
     <s:String x:Key="start_button_tip">Začněte klepnutím sem</s:String>
     <s:String x:Key="start_button_tip_vista">Start</s:String>
-
     <s:String x:Key="ultrawinbar_title">Lišta UltraWinBar</s:String>
     <s:String x:Key="toolbars">_Lišty</s:String>
     <s:String x:Key="quick_launch">_Rychlý Přístup</s:String>
     <s:String x:Key="new_toolbar">_Nová lišta...</s:String>
     <s:String x:Key="set_time">_Změnit Datum a Čas</s:String>
+    <s:String x:Key="cascade">Ca_scade Windows</s:String>
+    <s:String x:Key="horiz_tile">Uspořádat okna _vodorovně</s:String>
+    <s:String x:Key="vert_tile">Uspořádat Windows V_erticky</s:String>
+    <s:String x:Key="toggle_desktop">_Zobrazit plochu</s:String>
+    <s:String x:Key="hide_desktop">_Zobrazit otevřená Windows</s:String>
+    <s:String x:Key="undo_cascade">_Zrušit kaskádu</s:String>
+    <s:String x:Key="undo_tile">_Zrušit dlaždici</s:String>
+    <s:String x:Key="undo_minimize_all">_Zrušit minimalizaci všeho</s:String>
     <s:String x:Key="show_taskman_2k">_Správce Úloh...</s:String>
     <s:String x:Key="show_taskman">_Správce Úloh</s:String>
     <s:String x:Key="tray_properties">_Vlastnosti</s:String>
     <s:String x:Key="update_available">Dostupná _aktualizace...</s:String>
     <s:String x:Key="exit_ultrawinbar">_Zavřít UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">Res_tartovat UltraWinBar</s:String>
     <s:String x:Key="customize_notifications_menu">_Přizspůsobit Upozornění...</s:String>
-
+    <s:String x:Key="lock_taskbar_menu">_Zamkněte hlavní panel</s:String>
+    <s:String x:Key="show_desktop_tip_95">Zobrazit/obnovit plochu</s:String>
+    <s:String x:Key="show_desktop_tip">Zobrazit plochu</s:String>
+    <s:String x:Key="show_desktop_95">_Počítač</s:String>
+    <s:String x:Key="show_desktop">_Zobrazit plochu</s:String>
+    <s:String x:Key="peek_at_desktop">_Náhled plochy</s:String>
     <s:String x:Key="restore">_Obnovit</s:String>
     <s:String x:Key="move">_Posunout</s:String>
     <s:String x:Key="size">_Velikost</s:String>
     <s:String x:Key="minimize">Mi_nimalizovat</s:String>
     <s:String x:Key="maximize">Ma_ximalizovat</s:String>
     <s:String x:Key="close">_Zavřít</s:String>
-
+    <s:String x:Key="end_task">_Ukončit úlohu</s:String>
     <s:String x:Key="show_hidden">Zobrazit skryté upozornění</s:String>
     <s:String x:Key="hide">Skrýt</s:String>
-
     <s:String x:Key="open_folder">&amp;Otevřít Složku</s:String>
+    <s:String x:Key="move_to_taskbar_format">Přejít na hlavní panel {0}</s:String>
+    <s:String x:Key="ime_input_tip_enabled">Kliknutím pravým tlačítkem myši otevřete možnosti editoru IME.</s:String>
+    <s:String x:Key="ime_input_tip_disabled">IME zakázáno</s:String>
+    <s:String x:Key="ime_input_full_shape_hiragana">_Hiragana</s:String>
+    <s:String x:Key="ime_input_full_shape_katakana">_Katakana v plné šířce</s:String>
+    <s:String x:Key="ime_input_full_shape_alphanumeric">_Alfanumerické znaky v plné šířce</s:String>
+    <s:String x:Key="ime_input_katakana">Katakana v poloviční šířce</s:String>
+    <s:String x:Key="ime_input_alphanumeric">Alfanumerické znaky v poloviční šířce</s:String>
+    <s:String x:Key="ime_input_direct">_Přímý vstup</s:String>
+    <s:String x:Key="ime_open_pad">Otevřít _IME Pad</s:String>
+    <s:String x:Key="ime_open_add_word_dictionary">Přidat _slovo</s:String>
+    <s:String x:Key="ime_open_dictionary_tool">_Nástroj uživatelského slovníku</s:String>
+    <s:String x:Key="ime_open_properties">_Vlastnosti</s:String>
+    <s:String x:Key="ime_input_key">_Metoda zadávání</s:String>
+    <s:String x:Key="ime_input_key_roma">_Zadávání romadži</s:String>
+    <s:String x:Key="ime_input_key_kana">Zadávání _kany</s:String>
+    <s:String x:Key="ime_conversion">_Režim konverze</s:String>
+    <s:String x:Key="ime_conversion_general">_Generál</s:String>
+    <s:String x:Key="ime_conversion_none">_Bez převodu</s:String>
+    <s:String x:Key="input_switcher_item_format">{0} – {1}</s:String>
+    <s:String x:Key="pin_to_taskbar">Připnout na tento hlavní panel</s:String>
+    <s:String x:Key="pinned_app_windows">Otevřete okna</s:String>
+    <s:String x:Key="unpin_from_taskbar">Odepnout z tohoto hlavního panelu</s:String>
+    <s:String x:Key="copy_executable_path">Zkopírujte spustitelnou cestu</s:String>
+    <s:String x:Key="copy_executable_directory">Zkopírujte spustitelný adresář</s:String>
+    <s:String x:Key="app_all_desktops">Zobrazit okna této aplikace na všech plochách</s:String>
+    <s:String x:Key="move_window_desktop">Přesuňte toto okno na plochu</s:String>
+    <s:String x:Key="move_app_desktop">Přesuňte všechna okna aplikací na plochu</s:String>
+    <s:String x:Key="desktop_number">Plocha {0}</s:String>
+    <s:String x:Key="desktop_action_failed">Systém Windows nemohl dokončit operaci pro každé okno. Některá okna se již možná přesunula. Podrobnosti naleznete v protokolu.</s:String>
+    <s:String x:Key="show_hebrew_date">Zobrazit hebrejské datum a očíslované dny v týdnu</s:String>
+    <s:String x:Key="hebrew_date_midnight">Používá místní kalendářní datum; se mění o půlnoci, ne při západu slunce.</s:String>
+    <s:String x:Key="hebrew_place">Místo pro hebrejské datum:</s:String>
+    <s:String x:Key="hebrew_place_none">nebyl vybrán</s:String>
+    <s:String x:Key="hebrew_place_choose">Vybrat...</s:String>
+    <s:String x:Key="hebrew_place_clear">Vymazat</s:String>
+    <s:String x:Key="zone_clear">Odstranit</s:String>
+    <s:String x:Key="hebrew_place_hint">Místo, jehož západem slunce končí hebrejský den a jehož halachické časy kalendář ukazuje.</s:String>
+    <s:String x:Key="hebrew_place_title">Místo pro hebrejské datum</s:String>
+    <s:String x:Key="hebrew_place_city_tab">Město</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">Souřadnice</s:String>
+    <s:String x:Key="hebrew_place_search">Název města (v angličtině):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">Napište alespoň dvě písmena, například: jerus, new york, paris texas. Jsou uvedena města s 10 000 obyvateli a více.</s:String>
+    <s:String x:Key="hebrew_place_country">Země:</s:String>
+    <s:String x:Key="hebrew_place_need_country">Vyberte zemi, která určí, které z obou čísel je zeměpisná šířka.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">Zeměpisná šířka a délka:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">Vyhovuje jakýkoli formulář: 32.0853, 34.7818 nebo 34.7818 32.0853 nebo 32°05'07"N 34°46'54"E. Tečka nebo čárka ve zlomku; čárka, dvojtečka nebo mezera mezi čísly.</s:String>
+    <s:String x:Key="hebrew_place_zone">Časové pásmo:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">Zvolen s městem; změňte to, pokud je to špatně. Pravidla zóny (letní čas a jeho změny) jsou ta, která má Windows.</s:String>
+    <s:String x:Key="calendar_title">Židovský kalendář</s:String>
+    <s:String x:Key="calendar_today">Dnes</s:String>
+    <s:String x:Key="calendar_copy_name">Kopírovat název</s:String>
+    <s:String x:Key="calendar_search_name">Vyhledat název na Googlu</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Hebrejský měsíc</s:String>
+    <s:String x:Key="calendar_grid_civil">Občanský měsíc</s:String>
+    <s:String x:Key="calendar_shabbat">Šabat</s:String>
+    <s:String x:Key="calendar_previous_month">Předchozí měsíc</s:String>
+    <s:String x:Key="calendar_next_month">Příští měsíc</s:String>
+    <s:String x:Key="calendar_settings">Nastavení...</s:String>
+    <s:String x:Key="calendar_close">Zavřít</s:String>
+    <s:String x:Key="calendar_portion">Týdenní paraša: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">O tomto šabatu se čte festivalové čtení</s:String>
+    <s:String x:Key="calendar_day_of">{0}, den {1} z {2}</s:String>
+    <s:String x:Key="calendar_molad">Molad z {0}: {1}, {2} a {3} chalakim</s:String>
+    <s:String x:Key="calendar_omer">Počítání omeru</s:String>
+    <s:String x:Key="calendar_omer_day">{0}. den počítání omeru</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} týdnů a {1} dnů</s:String>
+    <s:String x:Key="calendar_place">Místo: {0}</s:String>
+    <s:String x:Key="calendar_israel">Země Izrael</s:String>
+    <s:String x:Key="calendar_diaspora">Diaspora</s:String>
+    <s:String x:Key="calendar_no_place">Vyberte místo v nastavení kalendáře, abyste viděli denní dobu.</s:String>
+    <s:String x:Key="calendar_times">Zmanim</s:String>
+    <s:String x:Key="calendar_yahrzeits">Jarctajty</s:String>
+    <s:String x:Key="calendar_candles_after_dark">Zapálení svíček (po setmění)</s:String>
+    <s:String x:Key="calendar_havdalah">Konec dne odpočinku (havdalah)</s:String>
+    <s:String x:Key="calendar_rest_begins">Začíná: {0} (zapálení svíček)</s:String>
+    <s:String x:Key="calendar_rest_ends">Končí: {0} (po setmění)</s:String>
+    <s:String x:Key="calendar_settings_title">Nastavení kalendáře</s:String>
+    <s:String x:Key="calendar_settings_place">Místo zóny:</s:String>
+    <s:String x:Key="calendar_settings_zone">Časové pásmo pro datum, změnu dne a denní doby:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (počítače)</s:String>
+    <s:String x:Key="zones_heading">Časová pásma hodin</s:String>
+    <s:String x:Key="zone_main">Hlavní časové pásmo:</s:String>
+    <s:String x:Key="zone_second">Druhé časové pásmo:</s:String>
+    <s:String x:Key="zone_third">Třetí časové pásmo:</s:String>
+    <s:String x:Key="zone_show_name">Zobrazit název</s:String>
+    <s:String x:Key="zone_label">Název na hodinách</s:String>
+    <s:String x:Key="zone_label_hint">Název, který hodiny zobrazí místo názvu místa pro toto časové pásmo (například Heart pro Jerusalem). Ponecháte-li pole prázdné, zobrazí se název místa.</s:String>
+    <s:String x:Key="zone_place">Místo:</s:String>
+    <s:String x:Key="zones_tab">Časová pásma</s:String>
+    <s:String x:Key="hebrew_date_tab">Hebrejské datum</s:String>
+    <s:String x:Key="zone_computer">Počítač ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">Hebrejské datum je datum v místě hlavního časového pásma vybraného na kartě Časová pásma.</s:String>
+    <s:String x:Key="zone_none">(nezobrazeno)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">Jarctajty k zobrazení (všechny, podle kategorie, jednotlivě):</s:String>
+    <s:String x:Key="calendar_all_figures">Vše</s:String>
+    <s:String x:Key="cancel_dialog">Zrušit</s:String>
+    <s:String x:Key="coordinate_result">Zeměpisná šířka a délka: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">Pořadí odpovídá označení v textu.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">Vyhovuje pouze jedno pořadí: zeměpisná šířka může být nejvýše 90 stupňů.</s:String>
+    <s:String x:Key="coordinate_basis_country">Pořadí se odvozuje od země: při opačném pořadí by bod ležel daleko od ní.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">Předpokládá se nejprve zeměpisná šířka.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">Předpokládá se nejprve zeměpisná šířka; opačné pořadí souřadnic by ale zemi odpovídalo podobně.</s:String>
+    <s:String x:Key="coordinate_warning_far">Bod je {0:N0} km od nejbližšího města v zemi. Zkontrolujte zemi a čísla.</s:String>
+    <s:String x:Key="coordinate_problem_empty">Zadejte souřadnice.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">Jsou zapotřebí dvě čísla: zeměpisná šířka a zeměpisná délka.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">Více než dvě čísla. Zadejte pouze zeměpisnou šířku a délku.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">Obě čísla jsou označena jako zeměpisná šířka.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">Obě čísla jsou označena jako zeměpisná délka.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">Zeměpisná šířka musí být mezi -90 a 90 stupni.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">Zeměpisná délka musí být mezi -180 a 180 stupni.</s:String>
+    <s:String x:Key="coordinate_problem_neither">Ani v jednom pořadí tato čísla netvoří zeměpisnou šířku (až 90) a zeměpisnou délku (až 180).</s:String>
+    <s:String x:Key="open_system_settings">Otevřít Nastavení systému</s:String>
+    <s:String x:Key="open_computer_management">Správa počítače</s:String>
+    <s:String x:Key="open_drives">Otevřít jednotky</s:String>
+    <s:String x:Key="this_pc">Tento počítač</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">Zkusit ponechat otevřená okna na této ploše (experimentální)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Znovu použít okna zobrazená na všech plochách, aniž by se přesouvala. Jinak se ikony na ploše a připnuté spouštěče otevírají místně v prohlížečích, složkách Průzkumníka a Poznámkovém bloku++; ostatní aplikace a aktivace z oznamovací oblasti zachovají přesun okna.</s:String>
 </ResourceDictionary>

@@ -206,6 +206,9 @@ namespace UltraWinBar.Controls
                 case nameof(Settings.ShowMainZoneName):
                 case nameof(Settings.ShowSecondZoneName):
                 case nameof(Settings.ShowThirdZoneName):
+                case nameof(Settings.MainZoneLabel):
+                case nameof(Settings.SecondZoneLabel):
+                case nameof(Settings.ThirdZoneLabel):
                 case nameof(Settings.CalendarZone):
                 case nameof(Settings.SecondPlace):
                 case nameof(Settings.ThirdPlace):

@@ -14,6 +14,9 @@
     <s:String x:Key="language_tip">사용할 언어를 선택해 주십시오.</s:String>
     <s:String x:Key="theme_text">테마(_T):</s:String>
     <s:String x:Key="theme_tip">Themes 폴더에 테마를 설치합니다.</s:String>
+    <s:String x:Key="accent_text">강조 색(_C):</s:String>
+    <s:String x:Key="accent_tip">Modern Glass 테마의 네온 색상입니다.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String"><s:String>청록</s:String><s:String>보라</s:String><s:String>자홍</s:String><s:String>에메랄드</s:String><s:String>호박색</s:String><s:String>장미색</s:String></x:Array>
     <s:String x:Key="location_text">위치(_L):</s:String>
     <s:String x:Key="location_tip">화면의 작업 표시줄 위치를 변경합니다.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -49,6 +52,7 @@
         <s:String>창이 있는 작업 표시줄</s:String>
         <s:String>창이 있는 작업 표시줄 및 기본 작업 표시줄</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">회색조 색상 반전(_I):</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>테마에서 필요할 때만</s:String>
         <s:String>항상</s:String>
@@ -67,14 +71,32 @@
         <s:String>Modern 달력 열기</s:String>
         <s:String>알림 센터 열기</s:String>
     </x:Array>
+    <s:String x:Key="task_wheel_action">마우스 휠 동작(_W):</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String"><s:String>아무것도 안 함</s:String><s:String>창 표시/숨기기</s:String></x:Array>
     <s:String x:Key="auto_hide_transparent">자동 숨김 시 작업 표시줄 선 숨기기</s:String>
     <s:String x:Key="version">버전 {0}</s:String>
     <s:String x:Key="visit_on_github">GitHub에서 UltraWinBar 방문</s:String>
+    <s:String x:Key="multiple_taskbars_heading">여러 작업 표시줄</s:String>
+    <s:String x:Key="additional_taskbars_text">이 가장자리에 작업 표시줄을 표시합니다. 작업 표시줄을 마우스 오른쪽 단추로 클릭하면 가장자리 전체로 늘어나 다른 작업 표시줄을 밀어냅니다.</s:String>
+    <s:String x:Key="location_left">왼쪽</s:String>
+    <s:String x:Key="location_top">상단</s:String>
+    <s:String x:Key="location_right">오른쪽</s:String>
+    <s:String x:Key="location_bottom">하단</s:String>
+    <s:String x:Key="tray_location_text">알림 영역 표시 위치(_N):</s:String>
+    <s:String x:Key="clock_location_text">시계 표시 위치(_C):</s:String>
+    <s:String x:Key="start_button_location_text">시작 단추 표시 위치(_R):</s:String>
+    <s:String x:Key="language_location_text">언어 표시기 표시 위치(_L):</s:String>
+    <s:String x:Key="task_assignment_hint">작업 단추를 다른 작업 표시줄로 끌어 응용 프로그램 전체를 이동합니다. Ctrl 키를 누른 채 끌면 해당 창만 이동합니다. 작업 단추를 마우스 오른쪽 단추로 클릭하면 할당을 초기화합니다.</s:String>
+    <s:String x:Key="reset_task_assignments">모든 작업 표시줄 할당 초기화</s:String>
+    <s:String x:Key="stretch">늘이기(_S)</s:String>
+    <s:String x:Key="make_main">주 작업 표시줄로 설정(_M)</s:String>
+    <s:String x:Key="reset_task_assignment">작업 표시줄 할당 초기화(_N)</s:String>
     <s:String x:Key="taskbar_scale">작업 표시줄 크기</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">현재 설정: {0}%</s:String>
     <s:String x:Key="debug_logging">디버그 로깅 사용</s:String>
+    <s:String x:Key="window_activity_logging">창의 열기 및 닫기 기록</s:String>
     <s:String x:Key="check_for_updates">업데이트 확인</s:String>
     <s:String x:Key="show_exit_menu_item">우클릭 메뉴에 종료 옵션 표시</s:String>
     <s:String x:Key="show_end_task_button">우클릭 메뉴에 작업 끝내기 옵션 표시</s:String>
@@ -92,6 +114,12 @@
     <s:String x:Key="ok_dialog">확인</s:String>
     <s:String x:Key="allow_blur_behind">투명한 작업 표시줄 뒤에 흐림 효과 허용</s:String>
 
+    <s:String x:Key="clock_format_help">사용 가능한 서식 옵션 보기</s:String>
+    <s:String x:Key="clock_format_warning">참고: 선택한 테마에 자체 서식이 지정되어 있으면 사용자 지정 시계 서식이 예상대로 작동하지 않을 수 있습니다.</s:String>
+    <s:String x:Key="override_clock_format">사용자 지정 시계 서식(_F):</s:String>
+    <s:String x:Key="override_ampm_designators">사용자 지정 오전/오후 표시(_E):</s:String>
+    <s:String x:Key="am_designator">오전:</s:String>
+    <s:String x:Key="pm_designator">오후:</s:String>
     <s:String x:Key="customize_notifications">알림 사용자 지정</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar에서는 사용 중이거나 긴급한 알림 아이콘은 표시하고 사용하지 않은 아이콘은 감춥니다. 아래 목록에 있는 항목의 동작을 변경할 수 있습니다.</s:String>
     <s:String x:Key="customize_notifications_instruction">항목을 선택한 후 알림 설정을 선택하십시오.</s:String>
@@ -127,6 +155,7 @@
     <s:String x:Key="tray_properties">속성(_R)</s:String>
     <s:String x:Key="update_available">업데이트 가능(_U)...</s:String>
     <s:String x:Key="exit_ultrawinbar">UltraWinBar 종료(_E)</s:String>
+    <s:String x:Key="restart_ultrawinbar">UltraWinBar 다시 시작(_T)</s:String>
     <s:String x:Key="customize_notifications_menu">알림 사용자 지정(_C)...</s:String>
     <s:String x:Key="lock_taskbar_menu">작업 표시줄 잠금</s:String>
 
@@ -149,6 +178,7 @@
 
     <s:String x:Key="open_folder">폴더 열기(&amp;O)</s:String>
 
+    <s:String x:Key="move_to_taskbar_format">{0} 작업 표시줄로 이동</s:String>
     <s:String x:Key="ime_input_tip_enabled">IME 옵션을 보려면 마우스 오른쪽 단추를 클릭하십시오</s:String>
     <s:String x:Key="ime_input_tip_disabled">IME 사용 안 함</s:String>
     <s:String x:Key="ime_input_full_shape_hiragana">히라가나</s:String>
@@ -169,5 +199,103 @@
     <s:String x:Key="ime_conversion_none">변환 없음</s:String>
     <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
 
+    <s:String x:Key="pin_to_taskbar">이 작업 표시줄에 고정</s:String>
+    <s:String x:Key="pinned_app_windows">열린 창</s:String>
+    <s:String x:Key="unpin_from_taskbar">이 작업 표시줄에서 고정 해제</s:String>
+    <s:String x:Key="copy_executable_path">실행 파일 경로 복사</s:String>
+    <s:String x:Key="copy_executable_directory">실행 파일 폴더 복사</s:String>
     <FontFamily x:Key="start_text_xp_font_family">굴림 Bold</FontFamily>
+    <s:String x:Key="app_all_desktops">이 응용 프로그램의 창을 모든 데스크톱에 표시</s:String>
+    <s:String x:Key="move_window_desktop">이 창을 데스크톱으로 이동</s:String>
+    <s:String x:Key="move_app_desktop">응용 프로그램의 모든 창을 데스크톱으로 이동</s:String>
+    <s:String x:Key="desktop_number">데스크톱 {0}</s:String>
+    <s:String x:Key="desktop_action_failed">Windows에서 모든 창에 대해 작업을 완료할 수 없습니다. 일부 창은 이미 이동되었을 수 있습니다. 자세한 내용은 로그를 확인하십시오.</s:String>
+    <s:String x:Key="show_hebrew_date">히브리 날짜와 숫자로 된 요일 표시</s:String>
+    <s:String x:Key="hebrew_date_midnight">현지 달력 날짜를 사용하며, 해 질 녘이 아니라 자정에 날짜가 바뀝니다.</s:String>
+    <s:String x:Key="hebrew_place">히브리 날짜의 장소:</s:String>
+    <s:String x:Key="hebrew_place_none">선택 안 함</s:String>
+    <s:String x:Key="hebrew_place_choose">선택...</s:String>
+    <s:String x:Key="hebrew_place_clear">지우기</s:String>
+    <s:String x:Key="zone_clear">제거</s:String>
+    <s:String x:Key="hebrew_place_hint">히브리 날짜가 끝나는 일몰 시각과 달력에 표시할 할라카 시간을 정하는 장소입니다.</s:String>
+    <s:String x:Key="hebrew_place_title">히브리 날짜의 장소</s:String>
+    <s:String x:Key="hebrew_place_city_tab">도시</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">좌표</s:String>
+    <s:String x:Key="hebrew_place_search">도시 이름(영어):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">최소 두 글자를 입력하십시오. 예: jerus, new york, paris texas. 인구 10,000명 이상인 도시가 표시됩니다.</s:String>
+    <s:String x:Key="hebrew_place_country">국가:</s:String>
+    <s:String x:Key="hebrew_place_need_country">국가를 선택하십시오. 두 숫자 중 어느 것이 위도인지 판단하는 데 사용됩니다.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">위도 및 경도:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">형식은 자유롭습니다: 32.0853, 34.7818 또는 34,7818 32,0853 또는 32°05'07&quot;N 34°46'54&quot;E. 소수점에는 마침표나 쉼표를, 두 숫자 사이에는 쉼표, 콜론 또는 공백을 사용하십시오.</s:String>
+    <s:String x:Key="hebrew_place_zone">시간대:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">도시를 기준으로 선택됩니다. 잘못된 경우 변경하십시오. 시간대 규칙(서머타임 및 변경 시점)은 Windows 설정을 따릅니다.</s:String>
+    <s:String x:Key="calendar_title">유대력</s:String>
+    <s:String x:Key="calendar_today">오늘</s:String>
+    <s:String x:Key="calendar_copy_name">이름 복사</s:String>
+    <s:String x:Key="calendar_search_name">Google에서 이름 검색</s:String>
+    <s:String x:Key="calendar_grid_hebrew">히브리 월</s:String>
+    <s:String x:Key="calendar_grid_civil">일반 월</s:String>
+    <s:String x:Key="calendar_shabbat">샤바트</s:String>
+    <s:String x:Key="calendar_previous_month">이전 달</s:String>
+    <s:String x:Key="calendar_next_month">다음 달</s:String>
+    <s:String x:Key="calendar_settings">설정...</s:String>
+    <s:String x:Key="calendar_close">닫기</s:String>
+    <s:String x:Key="calendar_portion">주간 토라 포션: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">이번 샤바트에는 축제 독서가 있습니다</s:String>
+    <s:String x:Key="calendar_day_of">{0}, {2}월 {1}일</s:String>
+    <s:String x:Key="calendar_molad">{0}의 몰라드: {1}, {2} 및 {3} 할라킴</s:String>
+    <s:String x:Key="calendar_omer">오메르 계수</s:String>
+    <s:String x:Key="calendar_omer_day">오메르 {0}일째</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0}주 {1}일</s:String>
+    <s:String x:Key="calendar_place">장소: {0}</s:String>
+    <s:String x:Key="calendar_israel">이스라엘 땅</s:String>
+    <s:String x:Key="calendar_diaspora">디아스포라</s:String>
+    <s:String x:Key="calendar_no_place">하루의 시각을 보려면 달력 설정에서 장소를 선택하십시오.</s:String>
+    <s:String x:Key="calendar_times">하루의 시각</s:String>
+    <s:String x:Key="calendar_yahrzeits">야르차이트</s:String>
+    <s:String x:Key="calendar_candles_after_dark">촛불 점화(밤이 된 후)</s:String>
+    <s:String x:Key="calendar_havdalah">안식일 종료(하브달라)</s:String>
+    <s:String x:Key="calendar_rest_begins">시작: {0}(촛불 점화)</s:String>
+    <s:String x:Key="calendar_rest_ends">종료: {0}(밤)</s:String>
+    <s:String x:Key="calendar_settings_title">달력 설정</s:String>
+    <s:String x:Key="calendar_settings_place">시간대의 장소:</s:String>
+    <s:String x:Key="calendar_settings_zone">날짜, 날짜 변경 및 하루의 시각에 사용할 시간대:</s:String>
+    <s:String x:Key="calendar_zone_main">{0}(컴퓨터의 시간대)</s:String>
+    <s:String x:Key="zones_heading">시계 시간대</s:String>
+    <s:String x:Key="zone_main">기본 시간대:</s:String>
+    <s:String x:Key="zone_second">두 번째 시간대:</s:String>
+    <s:String x:Key="zone_third">세 번째 시간대:</s:String>
+    <s:String x:Key="zone_show_name">이름 표시</s:String>
+    <s:String x:Key="zone_label">시계에 표시할 이름:</s:String>
+    <s:String x:Key="zone_label_hint">이 시간대의 장소 대신 시계에 표시할 이름입니다(예: Jerusalem의 경우 Heart). 비워 두면 장소가 표시됩니다.</s:String>
+    <s:String x:Key="zone_place">장소:</s:String>
+    <s:String x:Key="zones_tab">시간대</s:String>
+    <s:String x:Key="hebrew_date_tab">히브리 날짜</s:String>
+    <s:String x:Key="zone_computer">컴퓨터의 시간대({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">히브리 날짜는 시간대 탭에서 선택한 기본 시간대 장소의 날짜입니다.</s:String>
+    <s:String x:Key="zone_none">(표시 안 함)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">표시할 야르차이트(전체, 범주별 또는 하나씩):</s:String>
+    <s:String x:Key="calendar_all_figures">전체</s:String>
+    <s:String x:Key="cancel_dialog">취소</s:String>
+    <s:String x:Key="coordinate_result">위도 및 경도: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">순서는 텍스트에 표시된 대로입니다.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">가능한 순서가 하나뿐입니다. 위도는 90도를 넘을 수 없습니다.</s:String>
+    <s:String x:Key="coordinate_basis_country">국가를 기준으로 순서를 정했습니다. 다른 순서로는 해당 국가에서 멀리 떨어집니다.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">위도가 먼저인 것으로 간주합니다.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">위도가 먼저인 것으로 간주합니다. 경도가 먼저여도 국가와의 거리는 거의 같습니다.</s:String>
+    <s:String x:Key="coordinate_warning_far">이 지점은 해당 국가에서 가장 가까운 도시로부터 {0:N0}km 떨어져 있습니다. 국가와 좌표를 확인하십시오.</s:String>
+    <s:String x:Key="coordinate_problem_empty">좌표를 입력하십시오.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">위도와 경도, 두 숫자가 필요합니다.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">숫자가 두 개보다 많습니다. 위도와 경도만 입력하십시오.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">두 숫자 모두 위도로 표시되어 있습니다.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">두 숫자 모두 경도로 표시되어 있습니다.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">위도는 -90도에서 90도 사이여야 합니다.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">경도는 -180도에서 180도 사이여야 합니다.</s:String>
+    <s:String x:Key="coordinate_problem_neither">어느 순서로도 위도(최대 90도)와 경도(최대 180도)가 되지 않습니다.</s:String>
+    <s:String x:Key="open_system_settings">시스템 설정 열기</s:String>
+    <s:String x:Key="open_computer_management">컴퓨터 관리</s:String>
+    <s:String x:Key="open_drives">드라이브 열기</s:String>
+    <s:String x:Key="this_pc">내 PC</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">열린 창을 이 데스크톱에 유지하도록 시도(실험적)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">창을 이동하지 않고 모든 데스크톱에 표시되는 창을 재사용합니다. 그렇지 않으면 바탕 화면 아이콘과 고정된 실행 항목은 브라우저, 탐색기 폴더 및 Notepad++를 현재 데스크톱에서 열고, 다른 응용 프로그램과 알림 영역 활성화는 창 이동을 유지합니다.</s:String>
 </ResourceDictionary>

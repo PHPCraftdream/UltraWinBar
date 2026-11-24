@@ -1,5 +1,6 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib"
                     xmlns:s="clr-namespace:System;assembly=mscorlib">
 
     <s:String x:Key="ultrawinbar_properties">خصائص UltraWinBar</s:String>
@@ -14,6 +15,16 @@
     <s:String x:Key="language_tip">اختر اللغة التي تريد استخدامها.</s:String>
     <s:String x:Key="theme_text">ال_سمة:</s:String>
     <s:String x:Key="theme_tip">قم بتثبيت السمات داخل مجلد السمات.</s:String>
+    <s:String x:Key="accent_text">_لون التمييز:</s:String>
+    <s:String x:Key="accent_tip">لون النيون في سمة Modern Glass.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>سماوي</s:String>
+        <s:String>بنفسجي</s:String>
+        <s:String>فوشيا</s:String>
+        <s:String>زمردي</s:String>
+        <s:String>كهرماني</s:String>
+        <s:String>وردي</s:String>
+    </x:Array>
     <s:String x:Key="location_text">الم_وضع:</s:String>
     <s:String x:Key="location_tip">غيّر موضع شريط المهام على الشاشة.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -49,6 +60,7 @@
         <s:String>نفس شريط المهام الذي توجد عليه النافذة</s:String>
         <s:String>نفس شريط المهام الذي توجد عليه النافذة وشريط المهام الرئيسي</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_عكس الألوان الرمادية:</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>عند الحاجة حسب السمة</s:String>
         <s:String>دائمًا</s:String>
@@ -67,14 +79,35 @@
         <s:String>فتح التقويم الحديث</s:String>
         <s:String>فتح مركز الإشعارات</s:String>
     </x:Array>
+    <s:String x:Key="task_wheel_action">_إجراء عجلة الفأرة:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>عدم تنفيذ أي إجراء</s:String>
+        <s:String>إظهار النافذة أو إخفاؤها</s:String>
+    </x:Array>
     <s:String x:Key="auto_hide_transparent">إخفاء خط شريط الم_هام عند استخدام الإخفاء التلقائي</s:String>
     <s:String x:Key="version">الإصدار {0}</s:String>
     <s:String x:Key="visit_on_github">زيارة UltraWinBar على GitHub</s:String>
+    <s:String x:Key="multiple_taskbars_heading">أشرطة مهام متعددة</s:String>
+    <s:String x:Key="additional_taskbars_text">إظهار شريط مهام على هذه الحواف. انقر بزر الماوس الأيمن على شريط مهام لجعله يمتد على الحافة كاملةً، مع إزاحة الأشرطة الأخرى.</s:String>
+    <s:String x:Key="location_left">يسار</s:String>
+    <s:String x:Key="location_top">أعلى</s:String>
+    <s:String x:Key="location_right">يمين</s:String>
+    <s:String x:Key="location_bottom">أسفل</s:String>
+    <s:String x:Key="tray_location_text">_منطقة الإعلام على:</s:String>
+    <s:String x:Key="clock_location_text">_الساعة على:</s:String>
+    <s:String x:Key="start_button_location_text">زر _ابدأ على:</s:String>
+    <s:String x:Key="language_location_text">_مؤشر اللغة على:</s:String>
+    <s:String x:Key="task_assignment_hint">اسحب زر مهمة إلى شريط مهام آخر لنقل التطبيق بأكمله؛ واضغط Ctrl أثناء السحب لنقل تلك النافذة وحدها. انقر بزر الماوس الأيمن على زر مهمة لإعادة تعيين موضعها.</s:String>
+    <s:String x:Key="reset_task_assignments">إعادة تعيين مواضع جميع المهام على أشرطة المهام</s:String>
+    <s:String x:Key="stretch">_تمديد</s:String>
+    <s:String x:Key="make_main">_جعله رئيسيًا</s:String>
+    <s:String x:Key="reset_task_assignment">إعادة تعيين موضع الم_همة</s:String>
     <s:String x:Key="taskbar_scale">مقياس شريط المهام</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">الإعداد الحالي: ‎{0}%‎</s:String>
     <s:String x:Key="debug_logging">تمكين تسجيل ال_تصحيح</s:String>
+    <s:String x:Key="window_activity_logging">تسجيل فتح النوافذ وإغلاقها</s:String>
     <s:String x:Key="check_for_updates">التحقق من الت_حديثات</s:String>
     <s:String x:Key="show_exit_menu_item">إظهار خيار ال_خروج في قائمة النقر بزر الماوس الأيمن</s:String>
     <s:String x:Key="show_end_task_button">إظهار خيار إنهاء الم_همة في قائمة النقر بزر الماوس الأيمن</s:String>
@@ -91,6 +124,13 @@
     <s:String x:Key="hotkey_warning_text">سيقوم UltraWinBar باستبدال اختصارات شريط مهام ويندوز. حتى إذا أغلقت UltraWinBar، فلن تعود الاختصارات الأصلية حتى تقوم بتسجيل الخروج والعودة.</s:String>
 	<s:String x:Key="allow_blur_behind">تمكين تمويه الخلفية خلف شريط المهام الشفاف</s:String>
     <s:String x:Key="ok_dialog">موافق</s:String>
+
+    <s:String x:Key="clock_format_help">عرض خيارات التنسيق المتاحة</s:String>
+    <s:String x:Key="clock_format_warning">ملاحظة: قد لا يعمل تنسيق الساعة المخصص كما هو متوقع إذا حددت السمة المختارة تنسيقًا خاصًا بها.</s:String>
+    <s:String x:Key="override_clock_format">تنسيق الساعة الم_خصص:</s:String>
+    <s:String x:Key="override_ampm_designators">رموز مخصصة ل_ص/م:</s:String>
+    <s:String x:Key="am_designator">ص:</s:String>
+    <s:String x:Key="pm_designator">م:</s:String>
 
     <s:String x:Key="customize_notifications">تخصيص الإشعارات</s:String>
     <s:String x:Key="customize_notifications_info">يعرض UltraWinBar أيقونات للإشعارات النشطة والعاجلة ويخفي غير النشطة. يمكنك تغيير هذا السلوك للعناصر في القائمة أدناه.</s:String>
@@ -127,6 +167,7 @@
     <s:String x:Key="tray_properties">_خصائص</s:String>
     <s:String x:Key="update_available">_تحديث متاح...</s:String>
     <s:String x:Key="exit_ultrawinbar">_خروج من UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">إ_عادة تشغيل UltraWinBar</s:String>
     <s:String x:Key="customize_notifications_menu">_تخصيص الإشعارات...</s:String>
     <s:String x:Key="lock_taskbar_menu">_قفل شريط المهام</s:String>
 
@@ -148,6 +189,7 @@
     <s:String x:Key="hide">إخفاء</s:String>
 
     <s:String x:Key="open_folder">&amp;فتح المجلد</s:String>
+    <s:String x:Key="move_to_taskbar_format">نقل إلى شريط المهام {0}</s:String>
 
     <s:String x:Key="ime_input_tip_enabled">انقر بزر الماوس الأيمن لخيارات IME</s:String>
     <s:String x:Key="ime_input_tip_disabled">IME معطل</s:String>
@@ -169,7 +211,106 @@
     <s:String x:Key="ime_conversion_none">بدون تحويل</s:String>
     <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
 
+    <s:String x:Key="pin_to_taskbar">تثبيت على شريط المهام هذا</s:String>
+    <s:String x:Key="pinned_app_windows">النوافذ المفتوحة</s:String>
+    <s:String x:Key="unpin_from_taskbar">إلغاء التثبيت من شريط المهام هذا</s:String>
+    <s:String x:Key="copy_executable_path">نسخ مسار الملف التنفيذي</s:String>
+    <s:String x:Key="copy_executable_directory">نسخ مجلد الملف التنفيذي</s:String>
+
     <!-- العناصر التالية هي إعدادات ويجب أن تبقى بالإنجليزية دائمًا -->
     <FlowDirection x:Key="flow_direction">RightToLeft</FlowDirection>
     <FontFamily x:Key="start_text_xp_font_family">Microsoft Sans Serif</FontFamily>
+    <sys:String x:Key="app_all_desktops">إظهار نوافذ هذا التطبيق على جميع أسطح المكتب</sys:String>
+    <sys:String x:Key="move_window_desktop">نقل هذه النافذة إلى سطح المكتب</sys:String>
+    <sys:String x:Key="move_app_desktop">نقل جميع نوافذ التطبيق إلى سطح المكتب</sys:String>
+    <sys:String x:Key="desktop_number">سطح المكتب {0}</sys:String>
+    <sys:String x:Key="desktop_action_failed">تعذّر على Windows إكمال العملية لكل النوافذ. ربما نُقلت بعض النوافذ بالفعل. راجع السجل للتفاصيل.</sys:String>
+    <s:String x:Key="show_hebrew_date">إظهار التاريخ العبري وأيام الأسبوع مرقمة</s:String>
+    <s:String x:Key="hebrew_date_midnight">يُستخدم التاريخ المحلي في التقويم؛ ويتغير عند منتصف الليل لا عند غروب الشمس.</s:String>
+    <s:String x:Key="hebrew_place">المكان للتاريخ العبري:</s:String>
+    <s:String x:Key="hebrew_place_none">لم يُحدد</s:String>
+    <s:String x:Key="hebrew_place_choose">اختيار...</s:String>
+    <s:String x:Key="hebrew_place_clear">مسح</s:String>
+    <s:String x:Key="zone_clear">إزالة</s:String>
+    <s:String x:Key="hebrew_place_hint">المكان الذي ينتهي فيه اليوم العبري عند غروب الشمس، والذي يعرض التقويم مواقيته الشرعية.</s:String>
+    <s:String x:Key="hebrew_place_title">المكان للتاريخ العبري</s:String>
+    <s:String x:Key="hebrew_place_city_tab">المدينة</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">الإحداثيات</s:String>
+    <s:String x:Key="hebrew_place_search">اسم المدينة (بالإنجليزية):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">اكتب حرفين على الأقل، مثل: jerus أو new york أو paris texas. تُدرج المدن التي يبلغ عدد سكانها 10 000 نسمة فأكثر.</s:String>
+    <s:String x:Key="hebrew_place_country">البلد:</s:String>
+    <s:String x:Key="hebrew_place_need_country">اختر البلد: فهو يحدد أي الرقمين هو خط العرض.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">خط العرض وخط الطول:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">تُقبل أي صيغة: 32.0853, 34.7818 أو 34,7818 32,0853 أو 32°05'07&quot;N 34°46'54&quot;E. نقطة أو فاصلة للجزء العشري؛ وفاصلة أو نقطتان أو مسافة بين الرقمين.</s:String>
+    <s:String x:Key="hebrew_place_zone">المنطقة الزمنية:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">تُحدد مع المدينة؛ غيّرها إن كانت غير صحيحة. قواعد المنطقة (التوقيت الصيفي وتغييراته) هي القواعد المعتمدة في Windows.</s:String>
+    <s:String x:Key="calendar_title">التقويم العبري</s:String>
+    <s:String x:Key="calendar_today">اليوم</s:String>
+    <s:String x:Key="calendar_copy_name">نسخ الاسم</s:String>
+    <s:String x:Key="calendar_search_name">البحث عن الاسم في Google</s:String>
+    <s:String x:Key="calendar_grid_hebrew">الشهر العبري</s:String>
+    <s:String x:Key="calendar_grid_civil">الشهر المدني</s:String>
+    <s:String x:Key="calendar_shabbat">السبت</s:String>
+    <s:String x:Key="calendar_previous_month">الشهر السابق</s:String>
+    <s:String x:Key="calendar_next_month">الشهر التالي</s:String>
+    <s:String x:Key="calendar_settings">الإعدادات...</s:String>
+    <s:String x:Key="calendar_close">إغلاق</s:String>
+    <s:String x:Key="calendar_portion">القراءة الأسبوعية: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">تُقرأ قراءة العيد في هذا السبت</s:String>
+    <s:String x:Key="calendar_day_of">{0}، اليوم {1} من {2}</s:String>
+    <s:String x:Key="calendar_molad">مولد {0}: {1}، {2} و{3} حلاقيم</s:String>
+    <s:String x:Key="calendar_omer">عدّ العمر</s:String>
+    <s:String x:Key="calendar_omer_day">اليوم {0} من العمر</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} أسبوعًا و{1} يومًا</s:String>
+    <s:String x:Key="calendar_place">المكان: {0}</s:String>
+    <s:String x:Key="calendar_israel">أرض إسرائيل</s:String>
+    <s:String x:Key="calendar_diaspora">الشتات</s:String>
+    <s:String x:Key="calendar_no_place">اختر مكانًا من إعدادات التقويم لعرض مواقيت اليوم.</s:String>
+    <s:String x:Key="calendar_times">مواقيت اليوم</s:String>
+    <s:String x:Key="calendar_yahrzeits">ذكرى الوفاة السنوية (يورتسايت)</s:String>
+    <s:String x:Key="calendar_candles_after_dark">إشعال الشموع (بعد حلول الليل)</s:String>
+    <s:String x:Key="calendar_havdalah">نهاية يوم الراحة (هفدالا)</s:String>
+    <s:String x:Key="calendar_rest_begins">يبدأ: {0} (إشعال الشموع)</s:String>
+    <s:String x:Key="calendar_rest_ends">ينتهي: {0} (حلول الليل)</s:String>
+    <s:String x:Key="calendar_settings_title">إعدادات التقويم</s:String>
+    <s:String x:Key="calendar_settings_place">مكان المنطقة الزمنية:</s:String>
+    <s:String x:Key="calendar_settings_zone">المنطقة الزمنية للتاريخ وتغيير اليوم ومواقيت اليوم:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (الكمبيوتر)</s:String>
+    <s:String x:Key="zones_heading">المناطق الزمنية للساعة</s:String>
+    <s:String x:Key="zone_main">المنطقة الزمنية الرئيسية:</s:String>
+    <s:String x:Key="zone_second">المنطقة الزمنية الثانية:</s:String>
+    <s:String x:Key="zone_third">المنطقة الزمنية الثالثة:</s:String>
+    <s:String x:Key="zone_show_name">إظهار الاسم</s:String>
+    <s:String x:Key="zone_label">الاسم على الساعة</s:String>
+    <s:String x:Key="zone_label_hint">اسم تعرضه الساعة لهذه المنطقة بدلًا من مكانها (مثلًا: «القلب» للقدس). اتركه فارغًا لإظهار المكان.</s:String>
+    <s:String x:Key="zone_place">المكان:</s:String>
+    <s:String x:Key="zones_tab">المناطق الزمنية</s:String>
+    <s:String x:Key="hebrew_date_tab">التاريخ العبري</s:String>
+    <s:String x:Key="zone_computer">الكمبيوتر ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">التاريخ العبري هو تاريخ مكان المنطقة الزمنية الرئيسية، المحدد في علامة تبويب المناطق الزمنية.</s:String>
+    <s:String x:Key="zone_none">(غير معروض)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">ذكريات الوفاة السنوية المراد عرضها (الكل، حسب الفئة، واحدة تلو الأخرى):</s:String>
+    <s:String x:Key="calendar_all_figures">الكل</s:String>
+    <s:String x:Key="cancel_dialog">إلغاء</s:String>
+    <s:String x:Key="coordinate_result">خط العرض وخط الطول: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">الترتيب موضح في النص.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">يناسب ترتيب واحد فقط: خط العرض لا يتجاوز 90 درجة.</s:String>
+    <s:String x:Key="coordinate_basis_country">استُنتج الترتيب من البلد: فالترتيب الآخر يضع النقطة بعيدًا عنه.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">يُفترض أن خط العرض أولًا.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">يُفترض أن خط العرض أولًا؛ لكن وضع خط الطول أولًا يناسب البلد بالقدر نفسه تقريبًا.</s:String>
+    <s:String x:Key="coordinate_warning_far">تبعد النقطة {0:N0} كم عن أقرب مدينة في البلد. تحقق من البلد والأرقام.</s:String>
+    <s:String x:Key="coordinate_problem_empty">أدخل الإحداثيات.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">يلزم رقمان: خط العرض وخط الطول.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">أكثر من رقمين. أدخل خط العرض وخط الطول فقط.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">كلا الرقمين محددان على أنهما خط عرض.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">كلا الرقمين محددان على أنهما خط طول.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">يجب أن يكون خط العرض بين -90 و90 درجة.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">يجب أن يكون خط الطول بين -180 و180 درجة.</s:String>
+    <s:String x:Key="coordinate_problem_neither">لا يعطي أي من الترتيبين خط عرض (حتى 90) وخط طول (حتى 180).</s:String>
+    <s:String x:Key="open_system_settings">فتح إعدادات النظام</s:String>
+    <s:String x:Key="open_computer_management">إدارة الكمبيوتر</s:String>
+    <s:String x:Key="open_drives">فتح محركات الأقراص</s:String>
+    <s:String x:Key="this_pc">هذا الكمبيوتر</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">محاولة إبقاء النوافذ المفتوحة على سطح المكتب هذا (تجريبي)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">إعادة استخدام النوافذ المعروضة على جميع أسطح المكتب دون نقلها. وإلا، تفتح أيقونات سطح المكتب ومشغلات البرامج المثبتة المتصفحات ومجلدات Explorer وNotepad++ محليًا؛ أما التطبيقات الأخرى والتنشيط من منطقة الإعلام فيواصلان نقل النوافذ.</s:String>
 </ResourceDictionary>

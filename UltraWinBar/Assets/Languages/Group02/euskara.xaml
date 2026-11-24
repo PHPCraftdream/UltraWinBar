@@ -7,11 +7,23 @@
     <s:String x:Key="advanced_tab">Ezarpen aurreratuak</s:String>
     <s:String x:Key="taskbar_appearance">Ataza barraren itxura</s:String>
     <s:String x:Key="notification_area">Jakinarazpen eremua</s:String>
+    <s:String x:Key="general_heading">Orokorra</s:String>
+    <s:String x:Key="clock_heading">Erlojua</s:String>
     <s:String x:Key="autostart">_Abiarazi automatikoki saioa hastean</s:String>
     <s:String x:Key="language_text">Hiz_kuntza:</s:String>
     <s:String x:Key="language_tip">Hautatu erabiltzeko hizkuntza:</s:String>
     <s:String x:Key="theme_text">_Gaia:</s:String>
     <s:String x:Key="theme_tip">Instalatu gaiak Themes karpetan.</s:String>
+    <s:String x:Key="accent_text">_Nabarmendu kolorea:</s:String>
+    <s:String x:Key="accent_tip">Modern Glass gaiaren neon kolorea.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>Zian</s:String>
+        <s:String>Morea</s:String>
+        <s:String>Fuksia</s:String>
+        <s:String>Esmeralda</s:String>
+        <s:String>Anbarra</s:String>
+        <s:String>Arrosa</s:String>
+    </x:Array>
     <s:String x:Key="location_text">_Kokalekua:</s:String>
     <s:String x:Key="location_tip">Aldatu ataza barraren kokalekua pantailan.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -20,15 +32,21 @@
         <s:String>Eskuinean</s:String>
         <s:String>Behean</s:String>
     </x:Array>
+    <s:String x:Key="rowcount_text">_Errenkada kopurua:</s:String>
+    <s:String x:Key="rowcount_tip">Ataza barrak goian edo behean dagoenean dituen errenkaden kopurua.</s:String>
+    <s:String x:Key="taskbar_width">Ataza barraren _zabalera:</s:String>
     <s:String x:Key="allow_font_smoothing">Onartu _letra leuntzea</s:String>
     <s:String x:Key="allow_font_smoothing_menu">_Onartu letra leuntzea menuetan</s:String>
     <s:String x:Key="collapse_tray_icons">Ezkutatu jakinarazpen _ikonoak</s:String>
     <s:String x:Key="customize">_Personalizatu...</s:String>
+    <s:String x:Key="show_input_language">Erakutsi sarrerako _hizkuntza</s:String>
     <s:String x:Key="show_clock">Erakutsi _erlojua</s:String>
     <s:String x:Key="show_multi_mon">Erakutsi _hainbat pantailetan</s:String>
+    <s:String x:Key="show_start_button_multi_mon">Erakutsi _Hasi botoia ataza barra guztietan</s:String>
     <s:String x:Key="show_quick_launch">Erakutsi abiarazte az_karra</s:String>
     <s:String x:Key="select_location">_Aldatu karpeta...</s:String>
     <s:String x:Key="quick_launch_folder">Abiarazte azkarra: hautatu karpeta bat</s:String>
+    <s:String x:Key="show_badges">Erakutsi _ikurrak</s:String>
     <s:String x:Key="show_window_previews">Erakutsi leihoen aurrebistak</s:String>
     <s:String x:Key="use_software_rendering">Erabili soft_ware prozesatzea</s:String>
     <s:String x:Key="add_show_desktop_button">Gehitu _mahaigaina ezkutatzeko botoia</s:String>
@@ -41,27 +59,88 @@
         <s:String>Leihoaren ataza barra berdinean</s:String>
         <s:String>Lehenetsitako ataza barran eta leihoaren ataza barra berdinean</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_Alderantzikatu gris-eskalako koloreak:</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>Gaiak behar duenean</s:String>
         <s:String>Beti</s:String>
         <s:String>Inoiz ez</s:String>
     </x:Array>
+    <s:String x:Key="middle_mouse_task_action">_Saguaren erdiko botoiaren ekintza:</s:String>
+    <x:Array x:Key="middle_mouse_task_action_values" Type="s:String">
+        <s:String>Ez egin ezer</s:String>
+        <s:String>Instantzia berria ireki</s:String>
+        <s:String>Itxi ataza</s:String>
+    </x:Array>
+    <s:String x:Key="clock_click_action">_Erlojuaren klikaren ekintza:</s:String>
+    <x:Array x:Key="clock_click_action_values" Type="s:String">
+        <s:String>Ez egin ezer</s:String>
+        <s:String>Ireki Aero egutegia</s:String>
+        <s:String>Ireki Modern egutegia</s:String>
+        <s:String>Ireki jakinarazpen-zentroa</s:String>
+    </x:Array>
+    <s:String x:Key="task_wheel_action">_Saguaren gurpilaren ekintza:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>Ez egin ezer</s:String>
+        <s:String>Erakutsi/ezkutatu leihoa</s:String>
+    </x:Array>
+    <s:String x:Key="auto_hide_transparent">Ezkutatu _ataza barraren marra automatikoki ezkutatzean</s:String>
     <s:String x:Key="version">{0} bertsioa</s:String>
     <s:String x:Key="visit_on_github">Bisitatu UltraWinBar GitHub-en</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Hainbat ataza barra</s:String>
+    <s:String x:Key="additional_taskbars_text">Erakutsi ataza barra ertz hauetan. Egin eskuin-klika ataza barra batean, ertz osoan zabaltzeko eta besteak albo batera mugitzeko.</s:String>
+    <s:String x:Key="location_left">Ezkerra</s:String>
+    <s:String x:Key="location_top">Goia</s:String>
+    <s:String x:Key="location_right">Eskuina</s:String>
+    <s:String x:Key="location_bottom">Behea</s:String>
+    <s:String x:Key="tray_location_text">_Jakinarazpen-eremua hemen:</s:String>
+    <s:String x:Key="clock_location_text">_Erlojua hemen:</s:String>
+    <s:String x:Key="start_button_location_text">_Hasi botoia hemen:</s:String>
+    <s:String x:Key="language_location_text">_Hizkuntza-adierazlea hemen:</s:String>
+    <s:String x:Key="task_assignment_hint">Arrastatu ataza-botoi bat beste ataza barra batera aplikazio osoa mugitzeko; eduki Ctrl sakatuta arrastatzean leiho hori bakarrik mugitzeko. Egin eskuin-klika ataza-botoi batean haren esleipena berrezartzeko.</s:String>
+    <s:String x:Key="reset_task_assignments">Berrezarri ataza barraren esleipen guztiak</s:String>
+    <s:String x:Key="stretch">_Luzatu</s:String>
+    <s:String x:Key="make_main">_Egin nagusi</s:String>
+    <s:String x:Key="reset_task_assignment">Berrezarri ataza barraren esleipena</s:String>
     <s:String x:Key="taskbar_scale">Ataza barraren tamaina</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">Oraingo ezarpena: {0}%</s:String>
     <s:String x:Key="debug_logging">Arazketa erregistroa aktibatu</s:String>
+    <s:String x:Key="window_activity_logging">Erregistratu leihoen irekiera eta itxiera</s:String>
+    <s:String x:Key="check_for_updates">_Eguneratzeak bilatu</s:String>
+    <s:String x:Key="show_exit_menu_item">Erakutsi _Irten aukera eskuin-klikaren menuan</s:String>
+    <s:String x:Key="show_end_task_button">Erakutsi _Amaitu ataza aukera eskuin-klikaren menuan</s:String>
+    <s:String x:Key="slide_taskbar_buttons">Ataza-botoiak irristatu</s:String>
+    <s:String x:Key="show_clock_seconds">Erakutsi segundoak erlojuan</s:String>
+    <s:String x:Key="open_custom_themes_folder">Ireki gai pertsonalizatuen karpeta</s:String>
+    <s:String x:Key="win_num_hotkeys_action">Win+[0-9] _laster-teklen ekintza:</s:String>
+    <x:Array x:Key="win_num_hotkeys_action_values" Type="s:String">
+        <s:String>Windowsen lehenetsia</s:String>
+        <s:String>Aldatu atazen artean</s:String>
+        <s:String>Ireki abiarazte azkarreko elementua</s:String>
+    </x:Array>
+    <s:String x:Key="hotkey_warning_title">UltraWinBar laster-teklak</s:String>
+    <s:String x:Key="hotkey_warning_text">UltraWinBar-ek Windowsen ataza-barrako laster-teklak ordeztuko ditu. UltraWinBar itxita egonda ere, ez dira Windows-era itzuliko saioa amaitu eta berriro hasi arte.</s:String>
+    <s:String x:Key="allow_blur_behind">Onartu ataza barra gardenaren atzeko _lausotzea</s:String>
     <s:String x:Key="ok_dialog">Onartu</s:String>
+
+    <s:String x:Key="clock_format_help">Ikusi formatu-aukerak</s:String>
+    <s:String x:Key="clock_format_warning">Oharra: erloju-formatu pertsonalizatuak espero bezala ez funtzionatzea gerta daiteke hautatutako gaiak bere formatua zehazten badu.</s:String>
+    <s:String x:Key="override_clock_format">Erloju-formatu _pertsonalizatua:</s:String>
+    <s:String x:Key="override_ampm_designators">_AM/PM izendatzaile pertsonalizatuak:</s:String>
+    <s:String x:Key="am_designator">AM:</s:String>
+    <s:String x:Key="pm_designator">PM:</s:String>
 
     <s:String x:Key="customize_notifications">Pertsonalizatu jakinarazpenak</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar-ek jakinarazpen garrantzitsuen ikonoak erakusten ditu, eta besteak ezkutatu egiten ditu. Jarrera hau hurrego elementuentzat hautatu dezakezu.</s:String>
     <s:String x:Key="customize_notifications_instruction">Hautatu elementu bat ezarri eta haren jakinarazpenen jarrera:</s:String>
     <s:String x:Key="hide_when_inactive">Ezkutatu aktibo ez dagoenean</s:String>
     <s:String x:Key="always_show">Erakutsi beti</s:String>
+    <s:String x:Key="always_hide">Ezkutatu beti</s:String>
+    <s:String x:Key="remove">Kendu</s:String>
     <s:String x:Key="name_heading">Izena</s:String>
     <s:String x:Key="behavior_heading">Jarrera</s:String>
+    <s:String x:Key="invert_heading">Alderantzikatu</s:String>
 
     <s:String x:Key="start_text">Hasi</s:String>
     <s:String x:Key="start_text_xp">Hasi</s:String>
@@ -87,6 +166,7 @@
     <s:String x:Key="tray_properties">_Propietateak</s:String>
     <s:String x:Key="update_available">_Eguneraketa eskuragarri...</s:String>
     <s:String x:Key="exit_ultrawinbar">_Itxi UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">_Berrabiarazi UltraWinBar</s:String>
     <s:String x:Key="customize_notifications_menu">Pertsonalizatu jakinarazpenak...</s:String>
     <s:String x:Key="lock_taskbar_menu">Blokeatu _ataza barra</s:String>
 
@@ -102,9 +182,131 @@
     <s:String x:Key="minimize">Ik_onotu</s:String>
     <s:String x:Key="maximize">Ma_ximizatu</s:String>
     <s:String x:Key="close">_Itxi</s:String>
+    <s:String x:Key="end_task">_Amaitu ataza</s:String>
 
     <s:String x:Key="show_hidden">Erakutsi ezkutuko ikonoak</s:String>
     <s:String x:Key="hide">Ezkutatu</s:String>
 
     <s:String x:Key="open_folder">&amp;Ireki karpeta</s:String>
+    <s:String x:Key="move_to_taskbar_format">Mugitu {0} ataza barrara</s:String>
+
+    <s:String x:Key="ime_input_tip_enabled">Egin eskuin-klika IME aukerak irekitzeko.</s:String>
+    <s:String x:Key="ime_input_tip_disabled">IME desgaituta</s:String>
+    <s:String x:Key="ime_input_full_shape_hiragana">_Hiragana</s:String>
+    <s:String x:Key="ime_input_full_shape_katakana">Zabalera osoko _Katakana</s:String>
+    <s:String x:Key="ime_input_full_shape_alphanumeric">Zabalera osoko alfanumerikoa</s:String>
+    <s:String x:Key="ime_input_katakana">Zabalera erdiko Katakana</s:String>
+    <s:String x:Key="ime_input_alphanumeric">Zabalera erdiko alfanumerikoa</s:String>
+    <s:String x:Key="ime_input_direct">_Zuzeneko sarrera</s:String>
+    <s:String x:Key="ime_open_pad">IME _Panela</s:String>
+    <s:String x:Key="ime_open_add_word_dictionary">Gehitu hitza</s:String>
+    <s:String x:Key="ime_open_dictionary_tool">Erabiltzaile-hiztegiaren tresna</s:String>
+    <s:String x:Key="ime_open_properties">_Propietateak</s:String>
+    <s:String x:Key="ime_input_key">Sarrera-_metodoa</s:String>
+    <s:String x:Key="ime_input_key_roma">_Romaji sarrera</s:String>
+    <s:String x:Key="ime_input_key_kana">Kana sarrera</s:String>
+    <s:String x:Key="ime_conversion">_Bihurketa-modua</s:String>
+    <s:String x:Key="ime_conversion_general">_Orokorra</s:String>
+    <s:String x:Key="ime_conversion_none">Bihurketarik ez</s:String>
+    <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+
+    <s:String x:Key="pin_to_taskbar">Ainguratu ataza-barra honetan</s:String>
+    <s:String x:Key="pinned_app_windows">Irekitako leihoak</s:String>
+    <s:String x:Key="unpin_from_taskbar">Kendu aingura ataza-barra honetatik</s:String>
+    <s:String x:Key="copy_executable_path">Kopiatu exekutagarriaren bidea</s:String>
+    <s:String x:Key="copy_executable_directory">Kopiatu exekutagarriaren direktorioa</s:String>
+
+    <s:String x:Key="app_all_desktops">Erakutsi aplikazio honen leihoak mahaigain guztietan</s:String>
+    <s:String x:Key="move_window_desktop">Mugitu leiho hau mahaigainera</s:String>
+    <s:String x:Key="move_app_desktop">Mugitu aplikazioaren leiho guztiak mahaigainera</s:String>
+    <s:String x:Key="desktop_number">{0} mahaigaina</s:String>
+    <s:String x:Key="desktop_action_failed">Windows-ek ezin izan du eragiketa leiho guztietan burutu. Baliteke leiho batzuk dagoeneko mugitu izana. Ikusi erregistroa xehetasunetarako.</s:String>
+    <s:String x:Key="show_hebrew_date">Erakutsi hebrear data eta asteko egunak zenbakiz</s:String>
+    <s:String x:Key="hebrew_date_midnight">Tokiko egutegiko data erabiltzen du; gauerdian aldatzen da, ez ilunabarrean.</s:String>
+    <s:String x:Key="hebrew_place">Hebrear datarako lekua:</s:String>
+    <s:String x:Key="hebrew_place_none">hautatu gabe</s:String>
+    <s:String x:Key="hebrew_place_choose">Aukeratu...</s:String>
+    <s:String x:Key="hebrew_place_clear">Garbitu</s:String>
+    <s:String x:Key="zone_clear">Kendu</s:String>
+    <s:String x:Key="hebrew_place_hint">Ilunabarrean hebrear eguna amaitzen den lekua, egutegiak denbora halakikoak erakusteko erabiltzen duena.</s:String>
+    <s:String x:Key="hebrew_place_title">Hebrear datarako lekua</s:String>
+    <s:String x:Key="hebrew_place_city_tab">Hiria</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">Koordenatuak</s:String>
+    <s:String x:Key="hebrew_place_search">Hiriaren izena (ingelesez):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">Idatzi gutxienez bi letra, adibidez: jerus, new york, paris texas. 10 000 biztanle edo gehiagoko hiriak zerrendatzen dira.</s:String>
+    <s:String x:Key="hebrew_place_country">Herrialdea:</s:String>
+    <s:String x:Key="hebrew_place_need_country">Aukeratu herrialdea: bi zenbakietatik zein den latitudea adierazten du.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">Latitudea eta longitudea:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">Edozein formatu erabil daiteke: 32.0853, 34.7818 edo 34,7818 32,0853 edo 32°05'07&quot;N 34°46'54&quot;E. Zatikiarentzat puntua edo koma; zenbakien artean koma, bi puntu edo zuriunea.</s:String>
+    <s:String x:Key="hebrew_place_zone">Ordu-eremua:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">Hiriarekin hautatzen da; aldatu oker badago. Eremuaren arauak (udako ordua eta haren aldaketak) Windows-ek ezarritakoak dira.</s:String>
+    <s:String x:Key="calendar_title">Juduen egutegia</s:String>
+    <s:String x:Key="calendar_today">Gaur</s:String>
+    <s:String x:Key="calendar_copy_name">Kopiatu izena</s:String>
+    <s:String x:Key="calendar_search_name">Bilatu izena Google-n</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Hebrear hilabetea</s:String>
+    <s:String x:Key="calendar_grid_civil">Hilabete zibila</s:String>
+    <s:String x:Key="calendar_shabbat">Shabbat</s:String>
+    <s:String x:Key="calendar_previous_month">Aurreko hilabetea</s:String>
+    <s:String x:Key="calendar_next_month">Hurrengo hilabetea</s:String>
+    <s:String x:Key="calendar_settings">Ezarpenak...</s:String>
+    <s:String x:Key="calendar_close">Itxi</s:String>
+    <s:String x:Key="calendar_portion">Asteko parasha: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">Jaieguneko irakurketa egingo da Shabbat honetan</s:String>
+    <s:String x:Key="calendar_day_of">{0}, {2}(r)en {1}. eguna</s:String>
+    <s:String x:Key="calendar_molad">{0}(r)en molada: {1}, {2} eta {3} chalakim</s:String>
+    <s:String x:Key="calendar_omer">Omer zenbaketa</s:String>
+    <s:String x:Key="calendar_omer_day">Omer-en {0}. eguna</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} aste eta {1} egun</s:String>
+    <s:String x:Key="calendar_place">Lekua: {0}</s:String>
+    <s:String x:Key="calendar_israel">Israelgo lurra</s:String>
+    <s:String x:Key="calendar_diaspora">diaspora</s:String>
+    <s:String x:Key="calendar_no_place">Aukeratu leku bat egutegiaren ezarpenetan eguneko orduak ikusteko.</s:String>
+    <s:String x:Key="calendar_times">Eguneko orduak</s:String>
+    <s:String x:Key="calendar_yahrzeits">Yahrzeit-ak</s:String>
+    <s:String x:Key="calendar_candles_after_dark">Kandelak piztea (ilundu ondoren)</s:String>
+    <s:String x:Key="calendar_havdalah">Atseden-egunaren amaiera (havdalah)</s:String>
+    <s:String x:Key="calendar_rest_begins">Hasten da: {0} (kandelak piztea)</s:String>
+    <s:String x:Key="calendar_rest_ends">Amaitzen da: {0} (iluntzea)</s:String>
+    <s:String x:Key="calendar_settings_title">Egutegiaren ezarpenak</s:String>
+    <s:String x:Key="calendar_settings_place">Eremuaren lekua:</s:String>
+    <s:String x:Key="calendar_settings_zone">Dataren, egunaren aldaketaren eta eguneko orduen ordu-eremua:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (ordenagailuarena)</s:String>
+    <s:String x:Key="zones_heading">Erlojuaren ordu-eremuak</s:String>
+    <s:String x:Key="zone_main">Ordu-eremu nagusia:</s:String>
+    <s:String x:Key="zone_second">Bigarren ordu-eremua:</s:String>
+    <s:String x:Key="zone_third">Hirugarren ordu-eremua:</s:String>
+    <s:String x:Key="zone_show_name">Erakutsi izena</s:String>
+    <s:String x:Key="zone_label">Erlojuan erakutsitako izena</s:String>
+    <s:String x:Key="zone_label_hint">Erlojuak eremu honen lekuaren ordez erakusten duen izena (adibidez, Heart for Jerusalem). Utzi hutsik lekua erakusteko.</s:String>
+    <s:String x:Key="zone_place">Lekua:</s:String>
+    <s:String x:Key="zones_tab">Ordu-eremuak</s:String>
+    <s:String x:Key="hebrew_date_tab">Hebrear data</s:String>
+    <s:String x:Key="zone_computer">Ordenagailuarena ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">Hebrear data ordu-eremu nagusiaren lekukoa da; Ordu-eremuak fitxan hautatzen da.</s:String>
+    <s:String x:Key="zone_none">(ez da erakusten)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">Erakutsi beharreko yahrzeit-ak (guztiak, kategoriaka, banan-banan):</s:String>
+    <s:String x:Key="calendar_all_figures">Guztiak</s:String>
+    <s:String x:Key="cancel_dialog">Utzi</s:String>
+    <s:String x:Key="coordinate_result">Latitudea eta longitudea: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">Ordena testuan adierazten dena da.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">Ordena bakarra da egokia: latitudeak gehienez 90 gradu ditu.</s:String>
+    <s:String x:Key="coordinate_basis_country">Ordena herrialdearen arabera zehaztu da: beste ordenak urrun kokatzen du.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">Lehenik latitudea dela suposatu da.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">Lehenik latitudea dela suposatu da; longitudea lehenik ere ia berdin egokituko litzateke herrialdean.</s:String>
+    <s:String x:Key="coordinate_warning_far">Puntua herrialdeko hurbilen dagoen hiritik {0:N0} km-ra dago. Egiaztatu herrialdea eta zenbakiak.</s:String>
+    <s:String x:Key="coordinate_problem_empty">Idatzi koordenatuak.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">Bi zenbaki behar dira: latitudea eta longitudea.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">Bi zenbaki baino gehiago. Idatzi latitudea eta longitudea soilik.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">Bi zenbakiak latitude gisa markatuta daude.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">Bi zenbakiak longitude gisa markatuta daude.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">Latitudeak -90 eta 90 gradu artean egon behar du.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">Longitudeak -180 eta 180 gradu artean egon behar du.</s:String>
+    <s:String x:Key="coordinate_problem_neither">Bi ordenetako batean ere zenbakiek ez dute latitudea (90 arte) eta longitudea (180 arte) osatzen.</s:String>
+    <s:String x:Key="open_system_settings">Ireki sistemaren ezarpenak</s:String>
+    <s:String x:Key="open_computer_management">Ordenagailuaren kudeaketa</s:String>
+    <s:String x:Key="open_drives">Ireki unitateak</s:String>
+    <s:String x:Key="this_pc">PC hau</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">Saiatu irekitako leihoak mahaigain honetan mantentzen (esperimentala)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Berrerabili mahaigain guztietan erakutsitako leihoak mugitu gabe. Bestela, mahaigaineko ikonoek eta ainguratutako abiarazleek nabigatzaileak, Explorer karpetak eta Notepad++ lokalean irekitzen dituzte; beste aplikazioen eta jakinarazpen-eremuko aktibazioak leiho-transferentzia mantentzen du.</s:String>
 </ResourceDictionary>

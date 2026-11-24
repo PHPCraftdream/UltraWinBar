@@ -14,6 +14,16 @@
     <s:String x:Key="language_tip">Επιλέξτε την γλώσσα που θα χρησιμοποιήσετε.</s:String>
     <s:String x:Key="theme_text">_Θέμα:</s:String>
     <s:String x:Key="theme_tip">Εγκαταστήστε θέματα στο φάκελο "Themes".</s:String>
+    <s:String x:Key="accent_text">Χρώμα _έμφασης:</s:String>
+    <s:String x:Key="accent_tip">Το νέον χρώμα του θέματος Modern Glass.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>Κυανό</s:String>
+        <s:String>Ιώδες</s:String>
+        <s:String>Φούξια</s:String>
+        <s:String>Σμαραγδί</s:String>
+        <s:String>Κεχριμπαρί</s:String>
+        <s:String>Ροζ</s:String>
+    </x:Array>
     <s:String x:Key="location_text">Τοποθ_εσία:</s:String>
     <s:String x:Key="location_tip">Αλλάξτε την τοποθεσία της γραμμής εργασιών στην οθόνη.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -49,6 +59,7 @@
         <s:String>Ίδια γραμμή εργασιών με το παράθυρο</s:String>
         <s:String>Ίδια γραμμή εργασιών με το παράθυρο και την κύρια γραμμή εργασιών</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_Αντιστροφή αποχρώσεων του γκρι:</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>Όταν απαιτείται ανά θέμα</s:String>
         <s:String>Πάντα</s:String>
@@ -67,14 +78,35 @@
         <s:String>Ανοίξτε το ημερολόγιο «Modern»</s:String>
         <s:String>Άνοιγμα Κέντρου ειδοποιήσεων</s:String>
     </x:Array>
+    <s:String x:Key="task_wheel_action">_Ενέργεια τροχού ποντικιού:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>Καμία ενέργεια</s:String>
+        <s:String>Εμφάνιση/απόκρυψη παραθύρου</s:String>
+    </x:Array>
     <s:String x:Key="auto_hide_transparent">Απόκρυψη γραμμής γραμμής εργασιών όταν είναι κρυμμένη με αυτόματη απόκρυψη</s:String>
     <s:String x:Key="version">Έκδοση {0}</s:String>
     <s:String x:Key="visit_on_github">Επισκεφθείτε το UltraWinBar στο GitHub</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Πολλαπλές γραμμές εργασιών</s:String>
+    <s:String x:Key="additional_taskbars_text">Εμφάνιση γραμμής εργασιών σε αυτές τις πλευρές. Κάντε δεξί κλικ σε μια γραμμή εργασιών για να εκταθεί σε ολόκληρη την πλευρά, μετακινώντας τις υπόλοιπες.</s:String>
+    <s:String x:Key="location_left">Αριστερά</s:String>
+    <s:String x:Key="location_top">Κορυφή</s:String>
+    <s:String x:Key="location_right">Δεξιά</s:String>
+    <s:String x:Key="location_bottom">Κάτω</s:String>
+    <s:String x:Key="tray_location_text">_Περιοχή ειδοποιήσεων σε:</s:String>
+    <s:String x:Key="clock_location_text">_Ρολόι σε:</s:String>
+    <s:String x:Key="start_button_location_text">Κουμπί έ_ναρξης σε:</s:String>
+    <s:String x:Key="language_location_text">_Ένδειξη γλώσσας σε:</s:String>
+    <s:String x:Key="task_assignment_hint">Σύρετε ένα κουμπί εργασίας σε άλλη γραμμή εργασιών για να μετακινήσετε ολόκληρη την εφαρμογή· κρατήστε πατημένο το Ctrl κατά τη μεταφορά για να μετακινήσετε μόνο αυτό το παράθυρο. Κάντε δεξί κλικ σε κουμπί εργασίας για να επαναφέρετε την αντιστοίχισή του.</s:String>
+    <s:String x:Key="reset_task_assignments">Επαναφορά όλων των αντιστοιχίσεων γραμμών εργασιών</s:String>
+    <s:String x:Key="stretch">_Επέκταση</s:String>
+    <s:String x:Key="make_main">_Ορισμός ως κύριας</s:String>
+    <s:String x:Key="reset_task_assignment">Επαναφορά αντιστοίχισης γραμμής εργασιών</s:String>
     <s:String x:Key="taskbar_scale">Κλίμακα γραμμής εργασιών</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">Τρέχουσα ρύθμιση: {0}%</s:String>
     <s:String x:Key="debug_logging">Ενεργοποίηση καταγραφής σφαλμάτων</s:String>
+    <s:String x:Key="window_activity_logging">Καταγραφή ανοίγματος και κλεισίματος παραθύρων</s:String>
     <s:String x:Key="check_for_updates">Έλεγχος για ενημερώσεις</s:String>
     <s:String x:Key="show_exit_menu_item">Εμφάνιση της επιλογής «Κλείσιμο» στο μενού του δεξιού κλικ</s:String>
     <s:String x:Key="show_end_task_button">Εμφάνιση της επιλογής «Τερματισμός εργασίας» στο μενού του δεξιού κλικ</s:String>
@@ -91,7 +123,12 @@
     <s:String x:Key="hotkey_warning_text">Το UltraWinBar θα αντικαταστήσει τα πλήκτρα συντόμευσης της γραμμής εργασιών των Windows. Ακόμα και αν το UltraWinBar είναι κλειστό, τα πλήκτρα συντόμευσης δεν θα επανέλθουν στα Windows μέχρι να αποσυνδεθείτε και να συνδεθείτε ξανά.</s:String>
     <s:String x:Key="allow_blur_behind">Επιτρέψτε θόλωση πίσω από τη διαφανή γραμμή εργασιών</s:String>
     <s:String x:Key="ok_dialog">Εντάξει</s:String>
-
+    <s:String x:Key="clock_format_help">Προβολή διαθέσιμων επιλογών μορφοποίησης</s:String>
+    <s:String x:Key="clock_format_warning">Σημείωση: Η προσαρμοσμένη μορφοποίηση του ρολογιού ενδέχεται να μη λειτουργεί όπως αναμένεται, αν το επιλεγμένο θέμα ορίζει τη δική του μορφή.</s:String>
+    <s:String x:Key="override_clock_format">Προσαρμοσμένη _μορφή ρολογιού:</s:String>
+    <s:String x:Key="override_ampm_designators">Προσαρμοσμένες _ενδείξεις:</s:String>
+    <s:String x:Key="am_designator">π.μ.:</s:String>
+    <s:String x:Key="pm_designator">μ.μ.:</s:String>
     <s:String x:Key="customize_notifications">Προσαρμογή ειδοποιήσεων</s:String>
     <s:String x:Key="customize_notifications_info">Το UltraWinBar εμφανίζει εικονίδια για ενεργές και επείγουσες ειδοποιήσεις και αποκρύπτει τις ανενεργές. Μπορείτε να αλλάξετε αυτήν τη συμπεριφορά για τα στοιχεία στην παρακάτω λίστα.</s:String>
     <s:String x:Key="customize_notifications_instruction">Επιλέξτε ένα αντικείμενο, τότε επιλέξτε την συμπεριφορά των ειδοποιήσεων:</s:String>
@@ -102,13 +139,11 @@
     <s:String x:Key="name_heading">Όνομα</s:String>
     <s:String x:Key="behavior_heading">Συμπεριφορά</s:String>
     <s:String x:Key="invert_heading">Αντιστροφή</s:String>
-
     <s:String x:Key="start_text">Έναρξη</s:String>
     <s:String x:Key="start_text_xp">έναρξη</s:String>
     <s:String x:Key="start_button_tip_98">Κάντε κλικ εδώ, για να ξεκινήσετε.</s:String>
     <s:String x:Key="start_button_tip">Κάντε κλικ εδώ, για να ξεκινήσετε</s:String>
     <s:String x:Key="start_button_tip_vista">Έναρξη</s:String>
-
     <s:String x:Key="ultrawinbar_title">Γραμμή εργασιών UltraWinBar</s:String>
     <s:String x:Key="toolbars">_Γραμμές εργαλείων</s:String>
     <s:String x:Key="quick_launch">_Γρήγορη εκκίνηση</s:String>
@@ -127,15 +162,14 @@
     <s:String x:Key="tray_properties">_Ιδιότητες</s:String>
     <s:String x:Key="update_available">_διαθέσιμη ενημέρωση...</s:String>
     <s:String x:Key="exit_ultrawinbar">_Έξοδος από το UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">_Επανεκκίνηση UltraWinBar</s:String>
     <s:String x:Key="customize_notifications_menu">_Προσαρμογή ειδοποιήσεων...</s:String>
     <s:String x:Key="lock_taskbar_menu">_Κλείδωμα της γραμμής εργασιών</s:String>
-
     <s:String x:Key="show_desktop_tip_95">Επιφάνεια/Επαναφορά επιφάνειας εργασίας</s:String>
     <s:String x:Key="show_desktop_tip">Εμφάνιση επιφάνειας εργασίας</s:String>
     <s:String x:Key="show_desktop_95">_Επιτραπέζιος υπολογιστής</s:String>
     <s:String x:Key="show_desktop">_Εμφάνιση επιφάνειας εργασίας</s:String>
     <s:String x:Key="peek_at_desktop">_Μια ματιά στην επιφάνεια εργασίας</s:String>
-
     <s:String x:Key="restore">Επανα_φορά</s:String>
     <s:String x:Key="move">_Μετακίνηση</s:String>
     <s:String x:Key="size">Μέγε_θος</s:String>
@@ -143,12 +177,10 @@
     <s:String x:Key="maximize">Με_γιστοποιήση</s:String>
     <s:String x:Key="close">_Κλείσιμο</s:String>
     <s:String x:Key="end_task">_Τερματισμός εργασίας</s:String>
-
     <s:String x:Key="show_hidden">Εμφάνιση κρυφών εικονιδίων</s:String>
     <s:String x:Key="hide">Απόκρυψη</s:String>
-
     <s:String x:Key="open_folder">&amp;Άνοιγμα Φακέλου</s:String>
-
+    <s:String x:Key="move_to_taskbar_format">Μετακίνηση στη γραμμή εργασιών {0}</s:String>
     <s:String x:Key="ime_input_tip_enabled">Κάντε δεξί κλικ για τις επιλογές του IME</s:String>
     <s:String x:Key="ime_input_tip_disabled">Το IME είναι απενεργοποιημένο</s:String>
     <s:String x:Key="ime_input_full_shape_hiragana">Χιραγκάνα</s:String>
@@ -168,5 +200,102 @@
     <s:String x:Key="ime_conversion_general">Γενικά</s:String>
     <s:String x:Key="ime_conversion_none">Χωρίς μετατροπή</s:String>
     <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
-
+    <s:String x:Key="pin_to_taskbar">Καρφίτσωμα σε αυτήν τη γραμμή εργασιών</s:String>
+    <s:String x:Key="pinned_app_windows">Ανοιχτά παράθυρα</s:String>
+    <s:String x:Key="unpin_from_taskbar">Ξεκαρφίτσωμα από αυτήν τη γραμμή εργασιών</s:String>
+    <s:String x:Key="copy_executable_path">Αντιγραφή διαδρομής εκτελέσιμου αρχείου</s:String>
+    <s:String x:Key="copy_executable_directory">Αντιγραφή φακέλου εκτελέσιμου αρχείου</s:String>
+    <s:String x:Key="app_all_desktops">Εμφάνιση των παραθύρων αυτής της εφαρμογής σε όλους τους επιτραπέζιους χώρους</s:String>
+    <s:String x:Key="move_window_desktop">Μετακίνηση αυτού του παραθύρου στον επιτραπέζιο χώρο</s:String>
+    <s:String x:Key="move_app_desktop">Μετακίνηση όλων των παραθύρων της εφαρμογής στον επιτραπέζιο χώρο</s:String>
+    <s:String x:Key="desktop_number">Επιτραπέζιος χώρος {0}</s:String>
+    <s:String x:Key="desktop_action_failed">Τα Windows δεν μπόρεσαν να ολοκληρώσουν τη λειτουργία για κάθε παράθυρο. Ορισμένα παράθυρα ενδέχεται να έχουν ήδη μετακινηθεί. Για λεπτομέρειες, δείτε το αρχείο καταγραφής.</s:String>
+    <s:String x:Key="show_hebrew_date">Εμφάνιση εβραϊκής ημερομηνίας και αριθμημένων ημερών της εβδομάδας</s:String>
+    <s:String x:Key="hebrew_date_midnight">Χρησιμοποιεί την τοπική ημερολογιακή ημερομηνία· αλλάζει τα μεσάνυχτα, όχι με τη δύση του ηλίου.</s:String>
+    <s:String x:Key="hebrew_place">Τοποθεσία για την εβραϊκή ημερομηνία:</s:String>
+    <s:String x:Key="hebrew_place_none">δεν έχει επιλεγεί</s:String>
+    <s:String x:Key="hebrew_place_choose">Επιλογή...</s:String>
+    <s:String x:Key="hebrew_place_clear">Εκκαθάριση</s:String>
+    <s:String x:Key="zone_clear">Αφαίρεση</s:String>
+    <s:String x:Key="hebrew_place_hint">Η τοποθεσία της οποίας η δύση του ηλίου σηματοδοτεί το τέλος της εβραϊκής ημέρας και της οποίας τις χαλαχικές ώρες εμφανίζει το ημερολόγιο.</s:String>
+    <s:String x:Key="hebrew_place_title">Τοποθεσία για την εβραϊκή ημερομηνία</s:String>
+    <s:String x:Key="hebrew_place_city_tab">Πόλη</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">Συντεταγμένες</s:String>
+    <s:String x:Key="hebrew_place_search">Όνομα πόλης (στα αγγλικά):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">Πληκτρολογήστε τουλάχιστον δύο γράμματα, για παράδειγμα: jerus, new york, paris texas. Παρατίθενται πόλεις με 10 000 ή περισσότερους κατοίκους.</s:String>
+    <s:String x:Key="hebrew_place_country">Χώρα:</s:String>
+    <s:String x:Key="hebrew_place_need_country">Επιλέξτε τη χώρα: έτσι καθορίζεται ποιος από τους δύο αριθμούς είναι το γεωγραφικό πλάτος.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">Γεωγραφικό πλάτος και μήκος:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">Οποιαδήποτε μορφή είναι αποδεκτή: 32.0853, 34.7818 ή 34,7818 32,0853 ή 32°05'07&quot;N 34°46'54&quot;E. Τελεία ή κόμμα στο δεκαδικό μέρος· κόμμα, άνω και κάτω τελεία ή κενό ανάμεσα στους αριθμούς.</s:String>
+    <s:String x:Key="hebrew_place_zone">Ζώνη ώρας:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">Επιλέγεται μαζί με την πόλη· αλλάξτε την αν είναι λανθασμένη. Ισχύουν οι κανόνες της ζώνης ώρας των Windows (θερινή ώρα και αλλαγές της).</s:String>
+    <s:String x:Key="calendar_title">Εβραϊκό ημερολόγιο</s:String>
+    <s:String x:Key="calendar_today">Σήμερα</s:String>
+    <s:String x:Key="calendar_copy_name">Αντιγραφή ονόματος</s:String>
+    <s:String x:Key="calendar_search_name">Αναζήτηση του ονόματος στο Google</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Εβραϊκός μήνας</s:String>
+    <s:String x:Key="calendar_grid_civil">Πολιτικός μήνας</s:String>
+    <s:String x:Key="calendar_shabbat">Σαμπάτ</s:String>
+    <s:String x:Key="calendar_previous_month">Προηγούμενος μήνας</s:String>
+    <s:String x:Key="calendar_next_month">Επόμενος μήνας</s:String>
+    <s:String x:Key="calendar_settings">Ρυθμίσεις...</s:String>
+    <s:String x:Key="calendar_close">Κλείσιμο</s:String>
+    <s:String x:Key="calendar_portion">Εβδομαδιαία παρασά: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">Αυτό το Σαμπάτ διαβάζεται περικοπή εορτής</s:String>
+    <s:String x:Key="calendar_day_of">{0}, ημέρα {1} του {2}</s:String>
+    <s:String x:Key="calendar_molad">Μολάντ του {0}: {1}, {2} και {3} χαλάκιμ</s:String>
+    <s:String x:Key="calendar_omer">Καταμέτρηση του Όμερ</s:String>
+    <s:String x:Key="calendar_omer_day">Ημέρα {0} του Όμερ</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} εβδομάδα(ες) και {1} ημέρα(ες)</s:String>
+    <s:String x:Key="calendar_place">Τοποθεσία: {0}</s:String>
+    <s:String x:Key="calendar_israel">Γη του Ισραήλ</s:String>
+    <s:String x:Key="calendar_diaspora">Διασπορά</s:String>
+    <s:String x:Key="calendar_no_place">Επιλέξτε τοποθεσία στις ρυθμίσεις του ημερολογίου για να δείτε τις ώρες της ημέρας.</s:String>
+    <s:String x:Key="calendar_times">Ώρες της ημέρας</s:String>
+    <s:String x:Key="calendar_yahrzeits">Γιαρτσάιτ</s:String>
+    <s:String x:Key="calendar_candles_after_dark">Άναμμα κεριών (μετά το βράδυ)</s:String>
+    <s:String x:Key="calendar_havdalah">Λήξη της ημέρας ανάπαυσης (χαβνταλά)</s:String>
+    <s:String x:Key="calendar_rest_begins">Έναρξη: {0} (άναμμα κεριών)</s:String>
+    <s:String x:Key="calendar_rest_ends">Λήξη: {0} (νύχτα)</s:String>
+    <s:String x:Key="calendar_settings_title">Ρυθμίσεις ημερολογίου</s:String>
+    <s:String x:Key="calendar_settings_place">Τοποθεσία της ζώνης:</s:String>
+    <s:String x:Key="calendar_settings_zone">Ζώνη ώρας για την ημερομηνία, την αλλαγή της ημέρας και τις ώρες της ημέρας:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (του υπολογιστή)</s:String>
+    <s:String x:Key="zones_heading">Ζώνες ώρας του ρολογιού</s:String>
+    <s:String x:Key="zone_main">Κύρια ζώνη ώρας:</s:String>
+    <s:String x:Key="zone_second">Δεύτερη ζώνη ώρας:</s:String>
+    <s:String x:Key="zone_third">Τρίτη ζώνη ώρας:</s:String>
+    <s:String x:Key="zone_show_name">Εμφάνιση του ονόματος</s:String>
+    <s:String x:Key="zone_label">Όνομα στο ρολόι</s:String>
+    <s:String x:Key="zone_label_hint">Όνομα που εμφανίζει το ρολόι για αυτήν τη ζώνη αντί για την τοποθεσία της (για παράδειγμα, Καρδιά για την Ιερουσαλήμ). Αν μείνει κενό, εμφανίζεται η τοποθεσία.</s:String>
+    <s:String x:Key="zone_place">Τοποθεσία:</s:String>
+    <s:String x:Key="zones_tab">Ζώνες ώρας</s:String>
+    <s:String x:Key="hebrew_date_tab">Εβραϊκή ημερομηνία</s:String>
+    <s:String x:Key="zone_computer">Του υπολογιστή ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">Η εβραϊκή ημερομηνία είναι αυτή της τοποθεσίας της κύριας ζώνης ώρας, που επιλέγεται στην καρτέλα Ζώνες ώρας.</s:String>
+    <s:String x:Key="zone_none">(δεν εμφανίζεται)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">Γιαρτσάιτ προς εμφάνιση (όλα, ανά κατηγορία, ένα προς ένα):</s:String>
+    <s:String x:Key="calendar_all_figures">Όλα</s:String>
+    <s:String x:Key="cancel_dialog">Άκυρο</s:String>
+    <s:String x:Key="coordinate_result">Γεωγραφικό πλάτος και μήκος: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">Η σειρά είναι αυτή που σημειώνεται στο κείμενο.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">Μόνο μία σειρά είναι δυνατή: το γεωγραφικό πλάτος φτάνει έως τις 90 μοίρες.</s:String>
+    <s:String x:Key="coordinate_basis_country">Η σειρά καθορίζεται από τη χώρα: η αντίστροφη θέση βρίσκεται μακριά από αυτήν.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">Θεωρείται πρώτα το γεωγραφικό πλάτος.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">Θεωρείται πρώτα το γεωγραφικό πλάτος· αν προηγηθεί το γεωγραφικό μήκος, η θέση ταιριάζει στη χώρα σχεδόν εξίσου καλά.</s:String>
+    <s:String x:Key="coordinate_warning_far">Το σημείο απέχει {0:N0} χλμ. από την πλησιέστερη πόλη της χώρας. Ελέγξτε τη χώρα και τους αριθμούς.</s:String>
+    <s:String x:Key="coordinate_problem_empty">Πληκτρολογήστε τις συντεταγμένες.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">Χρειάζονται δύο αριθμοί: το γεωγραφικό πλάτος και το μήκος.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">Περισσότεροι από δύο αριθμοί. Πληκτρολογήστε μόνο το γεωγραφικό πλάτος και μήκος.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">Και οι δύο αριθμοί σημειώνονται ως γεωγραφικό πλάτος.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">Και οι δύο αριθμοί σημειώνονται ως γεωγραφικό μήκος.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">Το γεωγραφικό πλάτος πρέπει να είναι μεταξύ -90 και 90 μοιρών.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">Το γεωγραφικό μήκος πρέπει να είναι μεταξύ -180 και 180 μοιρών.</s:String>
+    <s:String x:Key="coordinate_problem_neither">Σε καμία σειρά οι αριθμοί δεν δίνουν γεωγραφικό πλάτος (έως 90) και μήκος (έως 180).</s:String>
+    <s:String x:Key="open_system_settings">Άνοιγμα ρυθμίσεων συστήματος</s:String>
+    <s:String x:Key="open_computer_management">Διαχείριση υπολογιστή</s:String>
+    <s:String x:Key="open_drives">Άνοιγμα μονάδων δίσκου</s:String>
+    <s:String x:Key="this_pc">Αυτός ο υπολογιστής</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">Προσπάθεια διατήρησης των ανοιχτών παραθύρων σε αυτόν τον επιτραπέζιο χώρο (πειραματικό)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Επαναχρησιμοποιεί παράθυρα που εμφανίζονται σε όλους τους επιτραπέζιους χώρους χωρίς να τα μετακινεί. Διαφορετικά, τα εικονίδια επιφάνειας εργασίας και οι καρφιτσωμένοι εκκινητές ανοίγουν τοπικά προγράμματα περιήγησης, φακέλους Explorer και Notepad++; οι άλλες εφαρμογές και η ενεργοποίηση από την περιοχή ειδοποιήσεων εξακολουθούν να μεταφέρουν παράθυρα.</s:String>
 </ResourceDictionary>

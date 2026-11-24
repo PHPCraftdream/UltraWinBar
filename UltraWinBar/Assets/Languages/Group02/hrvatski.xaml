@@ -14,6 +14,16 @@
     <s:String x:Key="language_tip">Odaberi jezik za korištenje.</s:String>
     <s:String x:Key="theme_text">_Teme:</s:String>
     <s:String x:Key="theme_tip">Instaliraj teme u datoteki za teme.</s:String>
+    <s:String x:Key="accent_text">Boja _isticanja:</s:String>
+    <s:String x:Key="accent_tip">Neonska boja teme Modern Glass.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>Cijan</s:String>
+        <s:String>Ljubičasta</s:String>
+        <s:String>Fuksija</s:String>
+        <s:String>Smaragdna</s:String>
+        <s:String>Jantarna</s:String>
+        <s:String>Ružičasta</s:String>
+    </x:Array>
     <s:String x:Key="location_text">_Položaj:</s:String>
     <s:String x:Key="location_tip">Promijenite položaj programske trake.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -49,6 +59,7 @@
         <s:String>Ista programska traka kao prozor</s:String>
         <s:String>Ista programska traka kao prozor i primarna programska traka</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_Obrni nijanse sive:</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>Po potrebi teme</s:String>
         <s:String>Uvijek</s:String>
@@ -67,14 +78,35 @@
         <s:String>Otvori moderni kalendar</s:String>
         <s:String>Otvori centar za obavijesti</s:String>
     </x:Array>
+    <s:String x:Key="task_wheel_action">_Radnja kotačića miša:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>Ne čini ništa</s:String>
+        <s:String>Prikaži/sakrij prozor</s:String>
+    </x:Array>
     <s:String x:Key="auto_hide_transparent">Sakrij _crtu programske trake dok je skrivena</s:String>
     <s:String x:Key="version">Verzija {0}</s:String>
     <s:String x:Key="visit_on_github">Posjete UltraWinBar na GitHubu</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Više programskih traka</s:String>
+    <s:String x:Key="additional_taskbars_text">Prikaži programsku traku na ovim rubovima. Desnom tipkom miša kliknite programsku traku da se protegne cijelim rubom i pomakne ostale.</s:String>
+    <s:String x:Key="location_left">Lijevo</s:String>
+    <s:String x:Key="location_top">Gore</s:String>
+    <s:String x:Key="location_right">Desno</s:String>
+    <s:String x:Key="location_bottom">Dolje</s:String>
+    <s:String x:Key="tray_location_text">_Područje obavijesti na:</s:String>
+    <s:String x:Key="clock_location_text">_Sat na:</s:String>
+    <s:String x:Key="start_button_location_text">Gumb _Start na:</s:String>
+    <s:String x:Key="language_location_text">Pokazatelj _jezika na:</s:String>
+    <s:String x:Key="task_assignment_hint">Povucite gumb zadatka na drugu programsku traku da biste premjestili cijelu aplikaciju; držite Ctrl tijekom povlačenja da biste premjestili samo taj prozor. Desnom tipkom miša kliknite gumb zadatka da biste poništili njegovu dodjelu.</s:String>
+    <s:String x:Key="reset_task_assignments">Poništi sve dodjele programske trake</s:String>
+    <s:String x:Key="stretch">_Razvuci</s:String>
+    <s:String x:Key="make_main">_Postavi kao glavnu</s:String>
+    <s:String x:Key="reset_task_assignment">Poništi dodjel_u programske trake</s:String>
     <s:String x:Key="taskbar_scale">Omjer programske trake</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">Trenutačne postavke: {0}%</s:String>
     <s:String x:Key="debug_logging">Omogući _bilježenje</s:String>
+    <s:String x:Key="window_activity_logging">Bilježi otvaranje i zatvaranje prozora</s:String>
     <s:String x:Key="check_for_updates">Provjeravaj za a_žuriranja</s:String>
     <s:String x:Key="show_exit_menu_item">Prikaži _Izlaznu opciju u kontekstnom izborniku</s:String>
     <s:String x:Key="show_end_task_button">Prikaži opciju _Ugasi program u konteksnom izborniku</s:String>
@@ -91,7 +123,12 @@
     <s:String x:Key="hotkey_warning_text">UltraWinBar će nadjačati prečace Windows programske trake. Iako je UltraWinBar ugašen i neće se vratiti na Windowsove dok se ne odjavite i ponovno prijavite.</s:String>
     <s:String x:Key="allow_blur_behind">Omogući _zamućenje iza prozirne programske trake</s:String>
     <s:String x:Key="ok_dialog">OK</s:String>
-
+    <s:String x:Key="clock_format_help">Prikaži dostupne mogućnosti oblikovanja</s:String>
+    <s:String x:Key="clock_format_warning">Napomena: prilagođeno oblikovanje sata možda neće raditi prema očekivanjima ako odabrana tema određuje vlastiti oblik.</s:String>
+    <s:String x:Key="override_clock_format">Prilagođeni _oblik sata:</s:String>
+    <s:String x:Key="override_ampm_designators">Prilagođene _oznake:</s:String>
+    <s:String x:Key="am_designator">Prijepodne:</s:String>
+    <s:String x:Key="pm_designator">Poslijepodne:</s:String>
     <s:String x:Key="customize_notifications">Prilagodi obavijesti</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar prikazuje ikone aktivnih i hitnih obavijesti, a sakriva neaktivne. Takvo ponašanje možete promijeniti za stavke na popisu.</s:String>
     <s:String x:Key="customize_notifications_instruction">Odaberi savku, onda odaberite njezino obavjesno ponašanje:</s:String>
@@ -102,13 +139,11 @@
     <s:String x:Key="name_heading">Naziv</s:String>
     <s:String x:Key="behavior_heading">Ponašanje</s:String>
     <s:String x:Key="invert_heading">Invertiraj</s:String>
-
     <s:String x:Key="start_text">Start</s:String>
     <s:String x:Key="start_text_xp">Start</s:String>
     <s:String x:Key="start_button_tip_98">Pritisnite ovdje za početak.</s:String>
     <s:String x:Key="start_button_tip">Pritisnite ovdje za početak</s:String>
     <s:String x:Key="start_button_tip_vista">Početak</s:String>
-
     <s:String x:Key="ultrawinbar_title">UltraWinBar programska traka</s:String>
     <s:String x:Key="toolbars">_Alatne take</s:String>
     <s:String x:Key="quick_launch">_Brzo pokretanje</s:String>
@@ -127,15 +162,14 @@
     <s:String x:Key="tray_properties">S_vojstava</s:String>
     <s:String x:Key="update_available">_Ažuriranje dostupno...</s:String>
     <s:String x:Key="exit_ultrawinbar">_Izađi iz UltraWinBara</s:String>
+    <s:String x:Key="restart_ultrawinbar">Po_novno pokreni UltraWinBar</s:String>
     <s:String x:Key="customize_notifications_menu">Prilagod_i obavjesti...</s:String>
     <s:String x:Key="lock_taskbar_menu">_Zaključaj programsku traku</s:String>
-
     <s:String x:Key="show_desktop_tip_95">Pojavi/vrati se na radnu površinu</s:String>
     <s:String x:Key="show_desktop_tip">Pokaži radnu površinu</s:String>
     <s:String x:Key="show_desktop_95">_Radna površina</s:String>
     <s:String x:Key="show_desktop">_Pokaži radnu površinu</s:String>
     <s:String x:Key="peek_at_desktop">P_ogled na radnu površinu</s:String>
-
     <s:String x:Key="restore">_Vrati</s:String>
     <s:String x:Key="move">_Premjesti</s:String>
     <s:String x:Key="size">_Veličina</s:String>
@@ -143,12 +177,10 @@
     <s:String x:Key="maximize">_Maksimiziraj</s:String>
     <s:String x:Key="close">_Zatvori</s:String>
     <s:String x:Key="end_task">_Ugasi program</s:String>
-
     <s:String x:Key="show_hidden">Prikaži sakrivene ikone</s:String>
     <s:String x:Key="hide">Sakriji</s:String>
-
     <s:String x:Key="open_folder">&amp;Otvori Datoteku</s:String>
-
+    <s:String x:Key="move_to_taskbar_format">Premjesti na programsku traku {0}</s:String>
     <s:String x:Key="ime_input_tip_enabled">Pritisnite desni gumb miša za IME opcije</s:String>
     <s:String x:Key="ime_input_tip_disabled">IME onemogućen</s:String>
     <s:String x:Key="ime_input_full_shape_hiragana">_Hiragana</s:String>
@@ -167,4 +199,103 @@
     <s:String x:Key="ime_conversion">Način prijetvorbe</s:String>
     <s:String x:Key="ime_conversion_general">_Generalno</s:String>
     <s:String x:Key="ime_conversion_none">_Bez prijetvorbe</s:String>
+    <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+    <s:String x:Key="pin_to_taskbar">Prikvači na ovu programsku traku</s:String>
+    <s:String x:Key="pinned_app_windows">Otvoreni prozori</s:String>
+    <s:String x:Key="unpin_from_taskbar">Otkvači s ove programske trake</s:String>
+    <s:String x:Key="copy_executable_path">Kopiraj putanju izvršne datoteke</s:String>
+    <s:String x:Key="copy_executable_directory">Kopiraj mapu izvršne datoteke</s:String>
+    <s:String x:Key="app_all_desktops">Prikaži prozore ove aplikacije na svim radnim površinama</s:String>
+    <s:String x:Key="move_window_desktop">Premjesti ovaj prozor na radnu površinu</s:String>
+    <s:String x:Key="move_app_desktop">Premjesti sve prozore aplikacije na radnu površinu</s:String>
+    <s:String x:Key="desktop_number">Radna površina {0}</s:String>
+    <s:String x:Key="desktop_action_failed">Windows nije mogao dovršiti postupak za svaki prozor. Neki su se prozori možda već premjestili. Pojedinosti potražite u zapisniku.</s:String>
+    <s:String x:Key="show_hebrew_date">Prikaži hebrejski datum i dane u tjednu označene brojevima</s:String>
+    <s:String x:Key="hebrew_date_midnight">Koristi lokalni kalendarski datum; mijenja se u ponoć, a ne nakon zalaska sunca.</s:String>
+    <s:String x:Key="hebrew_place">Mjesto za hebrejski datum:</s:String>
+    <s:String x:Key="hebrew_place_none">nije odabrano</s:String>
+    <s:String x:Key="hebrew_place_choose">Odaberi...</s:String>
+    <s:String x:Key="hebrew_place_clear">Očisti</s:String>
+    <s:String x:Key="zone_clear">Ukloni</s:String>
+    <s:String x:Key="hebrew_place_hint">Mjesto čiji zalazak sunca označava kraj hebrejskog dana i čija halahička vremena prikazuje kalendar.</s:String>
+    <s:String x:Key="hebrew_place_title">Mjesto za hebrejski datum</s:String>
+    <s:String x:Key="hebrew_place_city_tab">Grad</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">Koordinate</s:String>
+    <s:String x:Key="hebrew_place_search">Naziv grada (na engleskom):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">Upišite najmanje dva slova, na primjer: jerus, new york, paris texas. Navedeni su gradovi s 10 000 ili više stanovnika.</s:String>
+    <s:String x:Key="hebrew_place_country">Država:</s:String>
+    <s:String x:Key="hebrew_place_need_country">Odaberite državu: ona određuje koji je od dvaju brojeva zemljopisna širina.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">Zemljopisna širina i dužina:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">Prihvaća se bilo koji oblik: 32.0853, 34.7818 ili 34,7818 32,0853 ili 32°05'07&quot;N 34°46'54&quot;E. Točka ili zarez u decimalnom dijelu; zarez, dvotočka ili razmak između brojeva.</s:String>
+    <s:String x:Key="hebrew_place_zone">Vremenska zona:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">Odabrana zajedno s gradom; promijenite je ako nije točna. Pravila zone (ljetno računanje vremena i promjene) preuzimaju se iz sustava Windows.</s:String>
+    <s:String x:Key="calendar_title">Židovski kalendar</s:String>
+    <s:String x:Key="calendar_today">Danas</s:String>
+    <s:String x:Key="calendar_copy_name">Kopiraj naziv</s:String>
+    <s:String x:Key="calendar_search_name">Pretraži naziv na Googleu</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Hebrejski mjesec</s:String>
+    <s:String x:Key="calendar_grid_civil">Građanski mjesec</s:String>
+    <s:String x:Key="calendar_shabbat">Šabat</s:String>
+    <s:String x:Key="calendar_previous_month">Prethodni mjesec</s:String>
+    <s:String x:Key="calendar_next_month">Sljedeći mjesec</s:String>
+    <s:String x:Key="calendar_settings">Postavke...</s:String>
+    <s:String x:Key="calendar_close">Zatvori</s:String>
+    <s:String x:Key="calendar_portion">Tjedni odlomak Tore: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">Ovog se šabata čita blagdanski odlomak</s:String>
+    <s:String x:Key="calendar_day_of">{0}, {1}. dan mjeseca {2}</s:String>
+    <s:String x:Key="calendar_molad">Molad mjeseca {0}: {1}, {2} i {3} halakima</s:String>
+    <s:String x:Key="calendar_omer">Brojanje Omera</s:String>
+    <s:String x:Key="calendar_omer_day">{0}. dan Omera</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} tjedana i {1} dana</s:String>
+    <s:String x:Key="calendar_place">Mjesto: {0}</s:String>
+    <s:String x:Key="calendar_israel">Zemlja Izrael</s:String>
+    <s:String x:Key="calendar_diaspora">dijaspora</s:String>
+    <s:String x:Key="calendar_no_place">Odaberite mjesto u postavkama kalendara da biste vidjeli dnevna vremena.</s:String>
+    <s:String x:Key="calendar_times">Dnevna vremena</s:String>
+    <s:String x:Key="calendar_yahrzeits">Jahrzeiti</s:String>
+    <s:String x:Key="calendar_candles_after_dark">Paljenje svijeća (nakon mraka)</s:String>
+    <s:String x:Key="calendar_havdalah">Završetak dana odmora (havdala)</s:String>
+    <s:String x:Key="calendar_rest_begins">Počinje: {0} (paljenje svijeća)</s:String>
+    <s:String x:Key="calendar_rest_ends">Završava: {0} (noć)</s:String>
+    <s:String x:Key="calendar_settings_title">Postavke kalendara</s:String>
+    <s:String x:Key="calendar_settings_place">Mjesto zone:</s:String>
+    <s:String x:Key="calendar_settings_zone">Vremenska zona za datum, promjenu dana i dnevna vremena:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (računala)</s:String>
+    <s:String x:Key="zones_heading">Vremenske zone sata</s:String>
+    <s:String x:Key="zone_main">Glavna vremenska zona:</s:String>
+    <s:String x:Key="zone_second">Druga vremenska zona:</s:String>
+    <s:String x:Key="zone_third">Treća vremenska zona:</s:String>
+    <s:String x:Key="zone_show_name">Prikaži naziv</s:String>
+    <s:String x:Key="zone_label">Naziv na satu</s:String>
+    <s:String x:Key="zone_label_hint">Naziv koji sat prikazuje za ovu zonu umjesto njezina mjesta (na primjer, Heart za Jerusalem). Prazno polje znači da se prikazuje mjesto.</s:String>
+    <s:String x:Key="zone_place">Mjesto:</s:String>
+    <s:String x:Key="zones_tab">Vremenske zone</s:String>
+    <s:String x:Key="hebrew_date_tab">Hebrejski datum</s:String>
+    <s:String x:Key="zone_computer">Računalo ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">Hebrejski datum odgovara mjestu glavne vremenske zone, odabranom na kartici Vremenske zone.</s:String>
+    <s:String x:Key="zone_none">(nije prikazano)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">Jahrzeiti za prikaz (svi, po kategoriji, pojedinačno):</s:String>
+    <s:String x:Key="calendar_all_figures">Svi</s:String>
+    <s:String x:Key="cancel_dialog">Odustani</s:String>
+    <s:String x:Key="coordinate_result">Zemljopisna širina i dužina: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">Redoslijed je naveden u tekstu.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">Odgovara samo jedan redoslijed: zemljopisna širina ne prelazi 90 stupnjeva.</s:String>
+    <s:String x:Key="coordinate_basis_country">Redoslijed je određen prema državi: druga mogućnost smješta točku daleko od nje.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">Pretpostavlja se da je najprije navedena zemljopisna širina.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">Pretpostavlja se da je najprije navedena zemljopisna širina; i obrnutim bi se redoslijedom točka približno jednako dobro uklopila u državu.</s:String>
+    <s:String x:Key="coordinate_warning_far">Točka je {0:N0} km udaljena od najbližeg grada u državi. Provjerite državu i koordinate.</s:String>
+    <s:String x:Key="coordinate_problem_empty">Upišite koordinate.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">Potrebna su dva broja: zemljopisna širina i dužina.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">Više od dva broja. Upišite samo zemljopisnu širinu i dužinu.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">Oba su broja označena kao zemljopisna širina.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">Oba su broja označena kao zemljopisna dužina.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">Zemljopisna širina mora biti između -90 i 90 stupnjeva.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">Zemljopisna dužina mora biti između -180 i 180 stupnjeva.</s:String>
+    <s:String x:Key="coordinate_problem_neither">Ni u jednom redoslijedu brojevi ne predstavljaju zemljopisnu širinu (do 90) i dužinu (do 180).</s:String>
+    <s:String x:Key="open_system_settings">Otvori postavke sustava</s:String>
+    <s:String x:Key="open_computer_management">Upravljanje računalom</s:String>
+    <s:String x:Key="open_drives">Otvori pogone</s:String>
+    <s:String x:Key="this_pc">Ovo računalo</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">Pokušaj zadržati otvorene prozore na ovoj radnoj površini (eksperimentalno)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Ponovno upotrijebi prozore prikazane na svim radnim površinama bez njihova premještanja. U suprotnom se ikone radne površine i prikvačeni pokretači lokalno otvaraju u preglednicima, mapama Explorera i Notepadu++; aktivacija drugih aplikacija i područja obavijesti i dalje prenosi prozore.</s:String>
 </ResourceDictionary>

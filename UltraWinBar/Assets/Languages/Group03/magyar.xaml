@@ -14,6 +14,16 @@
     <s:String x:Key="language_tip">Válaszd ki a használni kívánt nyelvet.</s:String>
     <s:String x:Key="theme_text">_Téma:</s:String>
     <s:String x:Key="theme_tip">A témákat a Themes mappába telepítsd.</s:String>
+    <s:String x:Key="accent_text">Kiemelő _szín:</s:String>
+    <s:String x:Key="accent_tip">A Modern Glass téma neon színe.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>Cián</s:String>
+        <s:String>Ibolya</s:String>
+        <s:String>Fukszia</s:String>
+        <s:String>Smaragdzöld</s:String>
+        <s:String>Borostyán</s:String>
+        <s:String>Rózsaszín</s:String>
+    </x:Array>
     <s:String x:Key="location_text">H_ely:</s:String>
     <s:String x:Key="location_tip">Tálca elhelyezkedésének megváltoztatása a képernyőn.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -49,6 +59,7 @@
         <s:String>Ugyanaz a tálca, mint az ablaké</s:String>
         <s:String>Ugyanaz a tálca, mint az ablaké és az elsődleges tálca</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_Szürkeárnyalatos színek invertálása:</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>Téma szerint, ha szükséges</s:String>
         <s:String>Mindig</s:String>
@@ -67,17 +78,40 @@
         <s:String>Megnyitja a Modern naptárat</s:String>
         <s:String>Megnyitja az Értesítési központot</s:String>
     </x:Array>
+    <s:String x:Key="task_wheel_action">_Egérgörgő művelete:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>Nem csinál semmit</s:String>
+        <s:String>Ablak megjelenítése/elrejtése</s:String>
+    </x:Array>
     <s:String x:Key="auto_hide_transparent">A tálca sorának elrejtése, ha az automatikus elrejtés funkcióval el van rejtve</s:String>
     <s:String x:Key="version">Verzió {0}</s:String>
     <s:String x:Key="visit_on_github">Látogass el a UltraWinBar oldalára a GitHubon</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Több tálca</s:String>
+    <s:String x:Key="additional_taskbars_text">Tálca megjelenítése ezeken a széleken. Kattints a jobb gombbal egy tálcára, hogy a teljes szélre nyúljon, a többit félretolva.</s:String>
+    <s:String x:Key="location_left">Bal</s:String>
+    <s:String x:Key="location_top">Fent</s:String>
+    <s:String x:Key="location_right">Jobb</s:String>
+    <s:String x:Key="location_bottom">Lent</s:String>
+    <s:String x:Key="tray_location_text">_Értesítési terület helye:</s:String>
+    <s:String x:Key="clock_location_text">_Óra helye:</s:String>
+    <s:String x:Key="start_button_location_text">_Start gomb helye:</s:String>
+    <s:String x:Key="language_location_text">_Nyelvjelző helye:</s:String>
+    <s:String x:Key="task_assignment_hint">Húzd át a feladat gombját egy másik tálcára az egész alkalmazás áthelyezéséhez; húzás közben tartsd lenyomva a Ctrl billentyűt, ha csak az adott ablakot szeretnéd áthelyezni. A hozzárendelés visszaállításához kattints a jobb gombbal a feladat gombjára.</s:String>
+    <s:String x:Key="reset_task_assignments">Minden tálcahozzárendelés visszaállítása</s:String>
+    <s:String x:Key="stretch">_Kinyújtás</s:String>
+    <s:String x:Key="make_main">_Legyen elsődleges</s:String>
+
+    <s:String x:Key="reset_task_assignment">Tálcahozzárendelés visszaállítása</s:String>
     <s:String x:Key="taskbar_scale">A tálca mérete</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">Jelenlegi beállítás: {0}%</s:String>
     <s:String x:Key="debug_logging">Hibaelhárítási naplózás engedélyezése</s:String>
+    <s:String x:Key="window_activity_logging">Ablakok megnyitásának és bezárásának naplózása</s:String>
     <s:String x:Key="check_for_updates">Ellenőrizze, hogy vannak-e frissítések</s:String>
     <s:String x:Key="show_exit_menu_item">A jobb egérgombbal megnyíló menüben jelenítse meg a „Bezárás” lehetőséget</s:String>
     <s:String x:Key="show_end_task_button">A „Feladat befejezése” opció megjelenítése a jobb egérgombbal elérhető menüben</s:String>
+
     <s:String x:Key="slide_taskbar_buttons">A tálca gombjainak csúsztatása</s:String>
     <s:String x:Key="show_clock_seconds">Az óra mutassa a másodperceket</s:String>
     <s:String x:Key="open_custom_themes_folder">Egyéni témák mappa megnyitása</s:String>
@@ -87,11 +121,17 @@
         <s:String>Feladatok közötti váltás</s:String>
         <s:String>Gyorsindító elem megnyitása</s:String>
     </x:Array>
+
     <s:String x:Key="hotkey_warning_title">UltraWinBar gyorsbillentyűk</s:String>
     <s:String x:Key="hotkey_warning_text">A UltraWinBar felülírja a Windows tálcájának gyorsbillentyűit. Még akkor is, ha a UltraWinBar bezárva van, ezek a beállítások csak akkor állnak vissza a Windows-ba, ha kijelentkezel, majd újra bejelentkezel.</s:String>
     <s:String x:Key="allow_blur_behind">Az átlátszó tálca mögötti elmosódás engedélyezése</s:String>
     <s:String x:Key="ok_dialog">OK</s:String>
-
+    <s:String x:Key="clock_format_help">Az elérhető formázási lehetőségek megtekintése</s:String>
+    <s:String x:Key="clock_format_warning">Megjegyzés: Az egyéni óraformátum nem feltétlenül működik a várakozásoknak megfelelően, ha a kiválasztott téma saját formátumot határoz meg.</s:String>
+    <s:String x:Key="override_clock_format">Egyéni óra_formátum:</s:String>
+    <s:String x:Key="override_ampm_designators">Egyéni délelőtt/délután _jelölések:</s:String>
+    <s:String x:Key="am_designator">Délelőtt:</s:String>
+    <s:String x:Key="pm_designator">Délután:</s:String>
     <s:String x:Key="customize_notifications">Értesítések testreszabása</s:String>
     <s:String x:Key="customize_notifications_info">A UltraWinBar az aktív és sürgős értesítésekhez ikonokat jelenít meg, az inaktívakat pedig elrejti. Az alábbi listában szereplő elemek esetében módosíthatod ezt a viselkedést.</s:String>
     <s:String x:Key="customize_notifications_instruction">Válasszon ki egy elemet, majd állítsa be az értesítési beállításait:</s:String>
@@ -116,9 +156,12 @@
     <s:String x:Key="set_time">_Dátum/Idő beállítása</s:String>
     <s:String x:Key="cascade">Kaszkád ablakok</s:String>
     <s:String x:Key="horiz_tile">Ablakok vízszintes elrendezése</s:String>
+
     <s:String x:Key="vert_tile">Ablakok függőleges elrendezése</s:String>
     <s:String x:Key="toggle_desktop">Asztal megjelenítése</s:String>
+
     <s:String x:Key="hide_desktop">Nyitott ablakok megjelenítése</s:String>
+
     <s:String x:Key="undo_cascade">Visszavonás lépésenként</s:String>
     <s:String x:Key="undo_tile">Csempe visszavonása</s:String>
     <s:String x:Key="undo_minimize_all">Visszavonás – Összecsukás</s:String>
@@ -127,28 +170,26 @@
     <s:String x:Key="tray_properties">_Tulajdonságok</s:String>
     <s:String x:Key="update_available">_Frissítés elérhető...</s:String>
     <s:String x:Key="exit_ultrawinbar">_Kilépés a UltraWinBarból</s:String>
+    <s:String x:Key="restart_ultrawinbar">UltraWinBar újra_indítása</s:String>
     <s:String x:Key="customize_notifications_menu">Értesítések testreszabása...</s:String>
     <s:String x:Key="lock_taskbar_menu">A tálca rögzítése</s:String>
-
     <s:String x:Key="show_desktop_tip_95">Asztal felülete/visszaállítása</s:String>
     <s:String x:Key="show_desktop_tip">Asztal megjelenítése</s:String>
     <s:String x:Key="show_desktop_95">Asztali számítógép</s:String>
     <s:String x:Key="show_desktop">Asztal megjelenítése</s:String>
     <s:String x:Key="peek_at_desktop">Asztal megtekintése</s:String>
-
     <s:String x:Key="restore">_Visszaállítás</s:String>
     <s:String x:Key="move">_Áthelyezés</s:String>
     <s:String x:Key="size">_Méret</s:String>
+
     <s:String x:Key="minimize">Mi_nimalizálás</s:String>
     <s:String x:Key="maximize">Ma_ximalizálás</s:String>
     <s:String x:Key="close">_Bezárás</s:String>
     <s:String x:Key="end_task">_Feladat befejezése</s:String>
-
     <s:String x:Key="show_hidden">Rejtett ikonok mutatása</s:String>
     <s:String x:Key="hide">Elrejtés</s:String>
-
     <s:String x:Key="open_folder">&amp;Mappa megnyitása</s:String>
-
+    <s:String x:Key="move_to_taskbar_format">Áthelyezés erre a tálcára: {0}</s:String>
     <s:String x:Key="ime_input_tip_enabled">Kattintson a jobb gombbal az IME beállításokhoz</s:String>
     <s:String x:Key="ime_input_tip_disabled">IME letiltva</s:String>
     <s:String x:Key="ime_input_full_shape_hiragana">Hiragana</s:String>
@@ -168,5 +209,104 @@
     <s:String x:Key="ime_conversion_general">Általános</s:String>
     <s:String x:Key="ime_conversion_none">Nincs konverzió</s:String>
     <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+    <s:String x:Key="pin_to_taskbar">Rögzítés erre a tálcára</s:String>
+    <s:String x:Key="pinned_app_windows">Nyitott ablakok</s:String>
+    <s:String x:Key="unpin_from_taskbar">Eltávolítás a tálcáról</s:String>
+    <s:String x:Key="copy_executable_path">A futtatható fájl elérési útjának másolása</s:String>
+    <s:String x:Key="copy_executable_directory">A futtatható fájl mappájának másolása</s:String>
+    <s:String x:Key="app_all_desktops">Az alkalmazás ablakainak megjelenítése minden asztalon</s:String>
+    <s:String x:Key="move_window_desktop">Az ablak áthelyezése erre az asztalra</s:String>
+    <s:String x:Key="move_app_desktop">Az alkalmazás összes ablakának áthelyezése erre az asztalra</s:String>
+    <s:String x:Key="desktop_number">Asztal {0}</s:String>
+    <s:String x:Key="desktop_action_failed">A Windows nem tudta minden ablakon végrehajtani a műveletet. Lehet, hogy néhány ablak már át lett helyezve. Részletekért tekintsd meg a naplót.</s:String>
+    <s:String x:Key="show_hebrew_date">Héber dátum és számozott hétköznapok megjelenítése</s:String>
+    <s:String x:Key="hebrew_date_midnight">A helyi naptári dátumot használja; éjfélkor változik, nem napnyugtakor.</s:String>
+    <s:String x:Key="hebrew_place">A héber dátum helye:</s:String>
+    <s:String x:Key="hebrew_place_none">nincs kiválasztva</s:String>
+    <s:String x:Key="hebrew_place_choose">Kiválasztás...</s:String>
+    <s:String x:Key="hebrew_place_clear">Törlés</s:String>
+    <s:String x:Key="zone_clear">Eltávolítás</s:String>
+    <s:String x:Key="hebrew_place_hint">Az a hely, amelynek napnyugtája lezárja a héber napot, és amelynek halachikus időpontjait a naptár megjeleníti.</s:String>
+    <s:String x:Key="hebrew_place_title">A héber dátum helye</s:String>
+    <s:String x:Key="hebrew_place_city_tab">Város</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">Koordináták</s:String>
+    <s:String x:Key="hebrew_place_search">Város neve (angolul):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">Írj be legalább két betűt, például: jerus, new york, paris texas. A legalább 10 000 lakosú városok szerepelnek a listában.</s:String>
+    <s:String x:Key="hebrew_place_country">Ország:</s:String>
+    <s:String x:Key="hebrew_place_need_country">Válaszd ki az országot: ez határozza meg, hogy a két szám közül melyik a földrajzi szélesség.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">Földrajzi szélesség és hosszúság:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">Bármilyen alak megfelelő: 32.0853, 34.7818 vagy 34,7818 32,0853 vagy 32°05'07&quot;N 34°46'54&quot;E. A tört részben pont vagy vessző használható; a számok között vessző, kettőspont vagy szóköz.</s:String>
+    <s:String x:Key="hebrew_place_zone">Időzóna:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">A város kiválasztásakor kerül beállításra; módosítsd, ha hibás. Az időzóna szabályai (a nyári időszámítás és annak változásai) a Windows beállításait követik.</s:String>
+    <s:String x:Key="calendar_title">Zsidó naptár</s:String>
+    <s:String x:Key="calendar_today">Ma</s:String>
+    <s:String x:Key="calendar_copy_name">Név másolása</s:String>
+    <s:String x:Key="calendar_search_name">Név keresése a Google-ben</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Héber hónap</s:String>
+    <s:String x:Key="calendar_grid_civil">Polgári hónap</s:String>
+    <s:String x:Key="calendar_shabbat">Sábát</s:String>
+    <s:String x:Key="calendar_previous_month">Előző hónap</s:String>
+    <s:String x:Key="calendar_next_month">Következő hónap</s:String>
+    <s:String x:Key="calendar_settings">Beállítások...</s:String>
+    <s:String x:Key="calendar_close">Bezárás</s:String>
+    <s:String x:Key="calendar_portion">Heti szakasz: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">Ezen a sábáton ünnepi felolvasás van</s:String>
+    <s:String x:Key="calendar_day_of">{0}, {1}. nap, {2}</s:String>
+    <s:String x:Key="calendar_molad">{0} újholdja: {1}, {2} és {3} chalakim</s:String>
+    <s:String x:Key="calendar_omer">Omer-számlálás</s:String>
+    <s:String x:Key="calendar_omer_day">Az Omer {0}. napja</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} hét és {1} nap</s:String>
+    <s:String x:Key="calendar_place">Hely: {0}</s:String>
+    <s:String x:Key="calendar_israel">Izrael földje</s:String>
+    <s:String x:Key="calendar_diaspora">diaszpóra</s:String>
+    <s:String x:Key="calendar_no_place">A napi időpontok megjelenítéséhez válassz ki egy helyet a naptár beállításaiban.</s:String>
+    <s:String x:Key="calendar_times">A nap időpontjai</s:String>
+    <s:String x:Key="calendar_yahrzeits">Jorcájtok</s:String>
+    <s:String x:Key="calendar_candles_after_dark">Gyertyagyújtás (éjszaka beállta után)</s:String>
+    <s:String x:Key="calendar_havdalah">A pihenőnap vége (havdala)</s:String>
+    <s:String x:Key="calendar_rest_begins">Kezdete: {0} (gyertyagyújtás)</s:String>
+    <s:String x:Key="calendar_rest_ends">Vége: {0} (éjszaka beállta)</s:String>
+    <s:String x:Key="calendar_settings_title">Naptárbeállítások</s:String>
+    <s:String x:Key="calendar_settings_place">Az időzóna helye:</s:String>
+    <s:String x:Key="calendar_settings_zone">Időzóna a dátumhoz, a napváltáshoz és a napi időpontokhoz:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (a számítógépé)</s:String>
+    <s:String x:Key="zones_heading">Az óra időzónái</s:String>
+    <s:String x:Key="zone_main">Elsődleges időzóna:</s:String>
+    <s:String x:Key="zone_second">Második időzóna:</s:String>
+    <s:String x:Key="zone_third">Harmadik időzóna:</s:String>
+    <s:String x:Key="zone_show_name">A név megjelenítése</s:String>
+    <s:String x:Key="zone_label">Név az órán:</s:String>
+    <s:String x:Key="zone_label_hint">A név, amelyet az óra ehhez az időzónához mutat a helye helyett (például Heart Jerusalem számára). Ha üres, a hely jelenik meg.</s:String>
+    <s:String x:Key="zone_place">Hely:</s:String>
+    <s:String x:Key="zones_tab">Időzónák</s:String>
+    <s:String x:Key="hebrew_date_tab">Héber dátum</s:String>
+    <s:String x:Key="zone_computer">A számítógépé ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">A héber dátum az elsődleges időzóna helyéhez tartozik, amely az Időzónák lapon van kiválasztva.</s:String>
+    <s:String x:Key="zone_none">(nincs megjelenítve)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">Megjelenítendő jorcájtok (mind, kategóriánként, egyenként):</s:String>
+    <s:String x:Key="calendar_all_figures">Mind</s:String>
+    <s:String x:Key="cancel_dialog">Mégse</s:String>
+    <s:String x:Key="coordinate_result">Földrajzi szélesség és hosszúság: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">A sorrend a szövegben megadott jelölés szerint értendő.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">Csak az egyik sorrend lehetséges: a földrajzi szélesség legfeljebb 90 fok.</s:String>
+    <s:String x:Key="coordinate_basis_country">A sorrendet az ország határozza meg: a másik érték messze esik tőle.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">A program feltételezi, hogy először a földrajzi szélesség szerepel.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">A program feltételezi, hogy először a földrajzi szélesség szerepel; a fordított sorrend is hasonlóan illene az országhoz.</s:String>
+    <s:String x:Key="coordinate_warning_far">A pont {0:N0} km-re van az ország legközelebbi városától. Ellenőrizd az országot és a számokat.</s:String>
+    <s:String x:Key="coordinate_problem_empty">Írd be a koordinátákat.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">Két szám szükséges: a földrajzi szélesség és hosszúság.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">Kettőnél több szám. Csak a földrajzi szélességet és hosszúságot írd be.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">Mindkét szám földrajzi szélességként van megjelölve.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">Mindkét szám földrajzi hosszúságként van megjelölve.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">A földrajzi szélességnek -90 és 90 fok között kell lennie.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">A földrajzi hosszúságnak -180 és 180 fok között kell lennie.</s:String>
+    <s:String x:Key="coordinate_problem_neither">Ezek a számok egyik sorrendben sem adnak meg földrajzi szélességet (legfeljebb 90) és hosszúságot (legfeljebb 180).</s:String>
+    <s:String x:Key="open_system_settings">Rendszerbeállítások megnyitása</s:String>
+    <s:String x:Key="open_computer_management">Számítógép-kezelés</s:String>
+    <s:String x:Key="open_drives">Meghajtók megnyitása</s:String>
+    <s:String x:Key="this_pc">Ez a gép</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">A megnyitott ablakok megtartásának megkísérlése ezen az asztalon (kísérleti)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">A minden asztalon megjelenített ablakok újbóli használata áthelyezés nélkül. Egyébként az asztali ikonok és rögzített indítók helyben nyitják meg a böngészőket, az Intéző mappáit és a Notepad++-t; más alkalmazásoknál és a tálcaikonok aktiválásánál megmarad az ablakok áthelyezése.</s:String>
+
 
 </ResourceDictionary>

@@ -41,7 +41,8 @@ the ones Windows has: it brings them up to date with its updates, and a zone app
 moving its clocks) on the date asked about. The program forgets what it read (`ZoneClock.Refresh`) when the computer's
 time changes and every six hours, so a changed rule is taken up without a restart. A zone that this computer does not
 know is not offered and shows nothing. The clock has three time zones (`ClockZones`): the computer's own, `Settings.SecondTimeZone` and `Settings.ThirdTimeZone`; each shows its time
-under the clock's own and, with its check box set (`ShowMainZoneName`, `ShowSecondZoneName`, `ShowThirdZoneName`), its name.
+under the clock's own and, with its check box set (`ShowMainZoneName`, `ShowSecondZoneName`, `ShowThirdZoneName`), its name: the one given in the settings
+(`MainZoneLabel`, `SecondZoneLabel`, `ThirdZoneLabel`, e.g. "Heart" for "Jerusalem"), else its place's.
 `Settings.CalendarZone` (0, 1 or 2) is the zone the calendar goes by: its clock decides the date, where the Hebrew day turns
 and the times of the day are shown; the place gives only the coordinates and the country.
 

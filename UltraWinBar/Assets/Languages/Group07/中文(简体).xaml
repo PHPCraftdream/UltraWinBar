@@ -14,6 +14,16 @@
     <s:String x:Key="language_tip">选择要使用的语言。</s:String>
     <s:String x:Key="theme_text">主题(_T): </s:String>
     <s:String x:Key="theme_tip">在 Themes 文件夹中安装主题。</s:String>
+    <s:String x:Key="accent_text">强调色(_C):</s:String>
+    <s:String x:Key="accent_tip">“Modern Glass”主题的霓虹色。</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>青色</s:String>
+        <s:String>紫罗兰色</s:String>
+        <s:String>品红色</s:String>
+        <s:String>翠绿色</s:String>
+        <s:String>琥珀色</s:String>
+        <s:String>玫瑰色</s:String>
+    </x:Array>
     <s:String x:Key="location_text">位置(_I): </s:String>
     <s:String x:Key="location_tip">更改任务栏在屏幕上的位置。</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -76,11 +86,27 @@
     <s:String x:Key="auto_hide_transparent">若此选项不被选中，则自动隐藏时保留一根细线(_T)</s:String>
     <s:String x:Key="version">版本 {0}</s:String>
     <s:String x:Key="visit_on_github">访问 GitHub 主页</s:String>
+    <s:String x:Key="multiple_taskbars_heading">多个任务栏</s:String>
+    <s:String x:Key="additional_taskbars_text">在这些边缘显示任务栏。右键单击任务栏可使其延伸至整个边缘，并将其他任务栏推开。</s:String>
+    <s:String x:Key="location_left">左侧</s:String>
+    <s:String x:Key="location_top">顶部</s:String>
+    <s:String x:Key="location_right">右侧</s:String>
+    <s:String x:Key="location_bottom">底部</s:String>
+    <s:String x:Key="tray_location_text">通知区域位置(_N):</s:String>
+    <s:String x:Key="clock_location_text">时钟位置(_C):</s:String>
+    <s:String x:Key="start_button_location_text">开始按钮位置(_R):</s:String>
+    <s:String x:Key="language_location_text">语言指示器位置(_L):</s:String>
+    <s:String x:Key="task_assignment_hint">将任务按钮拖到另一个任务栏可移动整个应用程序；拖动时按住 Ctrl 可仅移动该窗口。右键单击任务按钮可重置其分配。</s:String>
+    <s:String x:Key="reset_task_assignments">重置所有任务栏分配</s:String>
+    <s:String x:Key="stretch">拉伸(_S)</s:String>
+    <s:String x:Key="make_main">设为主任务栏(_M)</s:String>
+    <s:String x:Key="reset_task_assignment">重置任务栏分配(_N)</s:String>
     <s:String x:Key="taskbar_scale">任务栏比例</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">当前设置: {0}%</s:String>
     <s:String x:Key="debug_logging">启用调试日志记录(_D)</s:String>
+    <s:String x:Key="window_activity_logging">记录窗口的打开和关闭</s:String>
     <s:String x:Key="check_for_updates">检查更新(_U)</s:String>
     <s:String x:Key="show_exit_menu_item">在右键菜单中显示“退出”选项(_X)</s:String>
     <s:String x:Key="show_end_task_button">在右键菜单中显示“结束任务”选项(_T)</s:String>
@@ -162,6 +188,7 @@
     <s:String x:Key="hide">隐藏</s:String>
 
     <s:String x:Key="open_folder">&amp;打开文件夹</s:String>
+    <s:String x:Key="move_to_taskbar_format">移动到任务栏 {0}</s:String>
 
     <s:String x:Key="ime_input_tip_enabled">右键单击打开输入法编辑器选项</s:String>
     <s:String x:Key="ime_input_tip_disabled">输入法编辑器已禁用</s:String>
@@ -182,6 +209,106 @@
     <s:String x:Key="ime_conversion_general">常规(_G)</s:String>
     <s:String x:Key="ime_conversion_none">不转换(_O)</s:String>
     <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+
+    <s:String x:Key="pin_to_taskbar">固定到此任务栏</s:String>
+    <s:String x:Key="pinned_app_windows">打开的窗口</s:String>
+    <s:String x:Key="unpin_from_taskbar">从此任务栏取消固定</s:String>
+    <s:String x:Key="copy_executable_path">复制可执行文件路径</s:String>
+    <s:String x:Key="copy_executable_directory">复制可执行文件所在文件夹</s:String>
+
+    <s:String x:Key="app_all_desktops">在所有虚拟桌面上显示此应用程序的窗口</s:String>
+    <s:String x:Key="move_window_desktop">将此窗口移动到虚拟桌面</s:String>
+    <s:String x:Key="move_app_desktop">将此应用程序的所有窗口移动到虚拟桌面</s:String>
+    <s:String x:Key="desktop_number">虚拟桌面 {0}</s:String>
+    <s:String x:Key="desktop_action_failed">Windows 无法对所有窗口完成操作。部分窗口可能已移动。详情请查看日志。</s:String>
+    <s:String x:Key="show_hebrew_date">显示希伯来日期和带编号的星期</s:String>
+    <s:String x:Key="hebrew_date_midnight">使用本地日历日期；在午夜更改，而不是日落时。</s:String>
+    <s:String x:Key="hebrew_place">希伯来日期所用地点:</s:String>
+    <s:String x:Key="hebrew_place_none">未选择</s:String>
+    <s:String x:Key="hebrew_place_choose">选择...</s:String>
+    <s:String x:Key="hebrew_place_clear">清除</s:String>
+    <s:String x:Key="zone_clear">移除</s:String>
+    <s:String x:Key="hebrew_place_hint">该地点的日落作为希伯来日的结束时间，日历也会显示该地的犹太教法定时间。</s:String>
+    <s:String x:Key="hebrew_place_title">希伯来日期所用地点</s:String>
+    <s:String x:Key="hebrew_place_city_tab">城市</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">坐标</s:String>
+    <s:String x:Key="hebrew_place_search">城市名称（英文）:</s:String>
+    <s:String x:Key="hebrew_place_search_hint">输入至少两个字母，例如: jerus、new york、paris texas。列表列出人口达到 10,000 人的城市。</s:String>
+    <s:String x:Key="hebrew_place_country">国家/地区:</s:String>
+    <s:String x:Key="hebrew_place_need_country">请选择国家/地区：这将用于判断两个数字中哪个是纬度。</s:String>
+    <s:String x:Key="hebrew_place_coordinates">纬度和经度:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">格式不限：32.0853, 34.7818 或 34,7818 32,0853 或 32°05'07&quot;N 34°46'54&quot;E。小数部分可用句点或逗号；两个数字之间可用逗号、冒号或空格。</s:String>
+    <s:String x:Key="hebrew_place_zone">时区:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">根据城市自动选择；如果不正确，请更改。时区规则（夏令时及其变更）采用 Windows 中的设置。</s:String>
+    <s:String x:Key="calendar_title">犹太历</s:String>
+    <s:String x:Key="calendar_today">今天</s:String>
+    <s:String x:Key="calendar_copy_name">复制名称</s:String>
+    <s:String x:Key="calendar_search_name">在 Google 中搜索名称</s:String>
+    <s:String x:Key="calendar_grid_hebrew">希伯来月份</s:String>
+    <s:String x:Key="calendar_grid_civil">公历月份</s:String>
+    <s:String x:Key="calendar_shabbat">安息日</s:String>
+    <s:String x:Key="calendar_previous_month">上个月</s:String>
+    <s:String x:Key="calendar_next_month">下个月</s:String>
+    <s:String x:Key="calendar_settings">设置...</s:String>
+    <s:String x:Key="calendar_close">关闭</s:String>
+    <s:String x:Key="calendar_portion">每周经文段落: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">本安息日诵读节日经文</s:String>
+    <s:String x:Key="calendar_day_of">{0}，{2}月第{1}日</s:String>
+    <s:String x:Key="calendar_molad">{0}朔望: {1}，{2}时{3}个 חללקים</s:String>
+    <s:String x:Key="calendar_omer">数俄梅珥</s:String>
+    <s:String x:Key="calendar_omer_day">俄梅珥第 {0} 天</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} 周又 {1} 天</s:String>
+    <s:String x:Key="calendar_place">地点: {0}</s:String>
+    <s:String x:Key="calendar_israel">以色列地</s:String>
+    <s:String x:Key="calendar_diaspora">散居地</s:String>
+    <s:String x:Key="calendar_no_place">请在日历设置中选择地点，以查看每日时刻。</s:String>
+    <s:String x:Key="calendar_times">每日时刻</s:String>
+    <s:String x:Key="calendar_yahrzeits">逝世纪念日</s:String>
+    <s:String x:Key="calendar_candles_after_dark">点燃安息日蜡烛（入夜后）</s:String>
+    <s:String x:Key="calendar_havdalah">安息日结束（哈夫达拉）</s:String>
+    <s:String x:Key="calendar_rest_begins">开始: {0}（点燃蜡烛）</s:String>
+    <s:String x:Key="calendar_rest_ends">结束: {0}（入夜）</s:String>
+    <s:String x:Key="calendar_settings_title">日历设置</s:String>
+    <s:String x:Key="calendar_settings_place">地点时区:</s:String>
+    <s:String x:Key="calendar_settings_zone">日期、日期变更和每日时刻所用时区:</s:String>
+    <s:String x:Key="calendar_zone_main">{0}（计算机时区）</s:String>
+    <s:String x:Key="zones_heading">时钟时区</s:String>
+    <s:String x:Key="zone_main">主时区:</s:String>
+    <s:String x:Key="zone_second">第二时区:</s:String>
+    <s:String x:Key="zone_third">第三时区:</s:String>
+    <s:String x:Key="zone_show_name">显示名称</s:String>
+    <s:String x:Key="zone_label">时钟显示的名称:</s:String>
+    <s:String x:Key="zone_label_hint">时钟会显示此自定义名称，而非该时区的地点（例如，为 Jerusalem 显示 Heart）。留空则显示该地点。</s:String>
+    <s:String x:Key="zone_place">地点:</s:String>
+    <s:String x:Key="zones_tab">时区</s:String>
+    <s:String x:Key="hebrew_date_tab">希伯来日期</s:String>
+    <s:String x:Key="zone_computer">计算机时区（{0}）</s:String>
+    <s:String x:Key="hebrew_place_in_zones">希伯来日期采用主时区地点的日期；可在“时区”选项卡中选择。</s:String>
+    <s:String x:Key="zone_none">（不显示）</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">要显示的逝世纪念日（全部、按类别或逐个选择）:</s:String>
+    <s:String x:Key="calendar_all_figures">全部</s:String>
+    <s:String x:Key="cancel_dialog">取消</s:String>
+    <s:String x:Key="coordinate_result">纬度和经度: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">顺序按文本中的标注确定。</s:String>
+    <s:String x:Key="coordinate_basis_only_one">只有一种顺序符合：纬度最大为 90 度。</s:String>
+    <s:String x:Key="coordinate_basis_country">根据国家/地区确定顺序：另一种顺序会落在很远的地方。</s:String>
+    <s:String x:Key="coordinate_basis_assumed">假定纬度在前。</s:String>
+    <s:String x:Key="coordinate_warning_assumed">假定纬度在前；经度在前也同样符合该国家/地区。</s:String>
+    <s:String x:Key="coordinate_warning_far">该点距离该国家/地区最近的城市 {0:N0} 公里。请检查国家/地区和数字。</s:String>
+    <s:String x:Key="coordinate_problem_empty">请输入坐标。</s:String>
+    <s:String x:Key="coordinate_problem_need_two">需要两个数字：纬度和经度。</s:String>
+    <s:String x:Key="coordinate_problem_too_many">数字超过两个。请仅输入纬度和经度。</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">两个数字都标记为纬度。</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">两个数字都标记为经度。</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">纬度必须介于 -90 度和 90 度之间。</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">经度必须介于 -180 度和 180 度之间。</s:String>
+    <s:String x:Key="coordinate_problem_neither">无论采用哪种顺序，这些数字都无法组成纬度（最大 90 度）和经度（最大 180 度）。</s:String>
+    <s:String x:Key="open_system_settings">打开系统设置</s:String>
+    <s:String x:Key="open_computer_management">计算机管理</s:String>
+    <s:String x:Key="open_drives">打开驱动器</s:String>
+    <s:String x:Key="this_pc">此电脑</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">尝试将已打开的窗口保留在此虚拟桌面上（实验性）</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">重复使用显示在所有虚拟桌面上的窗口，而不移动它们。否则，桌面图标和固定的启动器会在本地打开浏览器、文件资源管理器文件夹和 Notepad++；其他应用程序及通知区域图标的激活仍会转移窗口。</s:String>
 
     <FontFamily x:Key="start_text_xp_font_family">SimSun</FontFamily>
 </ResourceDictionary>

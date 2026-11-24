@@ -1,6 +1,7 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:s="clr-namespace:System;assembly=mscorlib">
+                    xmlns:s="clr-namespace:System;assembly=mscorlib"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
     <s:String x:Key="ultrawinbar_properties">UltraWinBar Propjetajiet</s:String>
     <s:String x:Key="taskbar_tab">Bar tal-kompiti</s:String>
@@ -14,6 +15,16 @@
     <s:String x:Key="language_tip">Agħżel il-lingwa li trid tuża.</s:String>
     <s:String x:Key="theme_text">_Tema:</s:String>
     <s:String x:Key="theme_tip">Installa t-temi fil-folder "Themes".</s:String>
+<s:String x:Key="accent_text">Kulur tal-aċċent:</s:String>
+<s:String x:Key="accent_tip">Il-kulur neon tat-tema Modern Glass.</s:String>
+<x:Array x:Key="accent_values" Type="s:String">
+        <s:String>Ċjan</s:String>
+        <s:String>Vjola</s:String>
+        <s:String>Fuksja</s:String>
+        <s:String>Żmerald</s:String>
+        <s:String>Ambra</s:String>
+        <s:String>Roża</s:String>
+    </x:Array>
     <s:String x:Key="location_text">Post:</s:String>
     <s:String x:Key="location_tip">Biddel il-pożizzjoni tal-bar tal-kompiti fuq l-iskrin.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -49,6 +60,7 @@
         <s:String>L-istess taskbar bħall-tieqa</s:String>
         <s:String>L-istess taskbar bħall-tieqa u t-taskbar primarja</s:String>
     </x:Array>
+<s:String x:Key="invert_grayscale_colors">Aqleb il-kuluri fuq skala ta’ griż:</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>Meta jkun meħtieġ mit-tema</s:String>
         <s:String>Dejjem</s:String>
@@ -67,14 +79,35 @@
         <s:String>Ftaħ il-kalendarju Modern</s:String>
         <s:String>Ftaħ iċ-Ċentru tan-Notifiki</s:String>
     </x:Array>
+<s:String x:Key="task_wheel_action">Azzjoni tar-rota tal-maws:</s:String>
+<x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>Ma tagħmel xejn</s:String>
+        <s:String>Uri/aħbi t-tieqa</s:String>
+    </x:Array>
     <s:String x:Key="auto_hide_transparent">Aħbi l-linja tal-bar tal-kompiti meta tkun moħbija b'moħbija awtomatika</s:String>
     <s:String x:Key="version">Verżjoni {0}</s:String>
     <s:String x:Key="visit_on_github">Żur UltraWinBar fuq GitHub</s:String>
+<s:String x:Key="multiple_taskbars_heading">Diversi bars tal-kompiti</s:String>
+<s:String x:Key="additional_taskbars_text">Uri bar tal-kompiti fuq dawn it-truf. Ikklikkja bil-lemin fuq bar tal-kompiti biex testendih mat-tarf kollu u twarrab il-bars l-oħra.</s:String>
+<s:String x:Key="location_left">Xellug</s:String>
+<s:String x:Key="location_top">Fuq</s:String>
+<s:String x:Key="location_right">Lemin</s:String>
+<s:String x:Key="location_bottom">Taħt</s:String>
+<s:String x:Key="tray_location_text">Żona tan-notifiki fuq:</s:String>
+<s:String x:Key="clock_location_text">Arloġġ fuq:</s:String>
+<s:String x:Key="start_button_location_text">Buttuna Ibda fuq:</s:String>
+<s:String x:Key="language_location_text">Indikatur tal-lingwa fuq:</s:String>
+<s:String x:Key="task_assignment_hint">Kaxkar buttuna ta’ kompitu għal bar tal-kompiti ieħor biex iċċaqlaq l-applikazzjoni kollha; żomm Ctrl waqt li tkaxkar biex iċċaqlaq biss dik it-tieqa. Ikklikkja bil-lemin fuq buttuna ta’ kompitu biex terġa’ tissettja l-assenjazzjoni tagħha.</s:String>
+<s:String x:Key="reset_task_assignments">Irrisettja l-assenjazzjonijiet kollha tal-barijiet tal-kompiti</s:String>
+<s:String x:Key="stretch">Estendi</s:String>
+<s:String x:Key="make_main">Agħmel prinċipali</s:String>
+<s:String x:Key="reset_task_assignment">Irrisettja l-assenjazzjoni tal-bar tal-kompiti</s:String>
     <s:String x:Key="taskbar_scale">Is-skala tal-bar tal-kompitu</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">Ambjent kurrenti: {0}%</s:String>
     <s:String x:Key="debug_logging">Iattiva l-logging tad-debugging</s:String>
+<s:String x:Key="window_activity_logging">Irreġistra l-ftuħ u l-għeluq tat-twieqi</s:String>
     <s:String x:Key="check_for_updates">Iċċekkja għal aġġornamenti</s:String>
     <s:String x:Key="show_exit_menu_item">Uri l-għażla "Għalaq" fil-menu tal-ikklikkjar bil-lemin</s:String>
     <s:String x:Key="show_end_task_button">Uri l-għażla "Temm il-kompitu" fil-menu tal-ikklikkjar bil-lemin</s:String>
@@ -92,6 +125,12 @@
     <s:String x:Key="allow_blur_behind">Ħalli _sfumat wara l-bar tal-kompiti trasparenti</s:String>
     <s:String x:Key="ok_dialog">OK</s:String>
 
+<s:String x:Key="clock_format_help">Ara l-għażliet disponibbli għall-ifformattjar</s:String>
+<s:String x:Key="clock_format_warning">Nota: L-ifformattjar personalizzat tal-arloġġ jista’ ma jaħdimx kif mistenni jekk it-tema magħżula tispeċifika l-format tagħha stess.</s:String>
+<s:String x:Key="override_clock_format">Format personalizzat tal-arloġġ:</s:String>
+<s:String x:Key="override_ampm_designators">Indikaturi personalizzati AM/PM:</s:String>
+<s:String x:Key="am_designator">AM:</s:String>
+<s:String x:Key="pm_designator">PM:</s:String>
     <s:String x:Key="customize_notifications">Personalizza n-notifiki</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar juri ikoni għan-notifiki attivi u urġenti, u jaħbi dawk inattivi. Tista' tbiddel dan l-imġiba għall-oġġetti fil-lista hawn taħt.</s:String>
     <s:String x:Key="customize_notifications_instruction">Agħżel oġġett, imbagħad agħżel il-mod kif għandha titwettaq in-notifika tiegħu:</s:String>
@@ -127,6 +166,7 @@
     <s:String x:Key="tray_properties">Proprjetajiet</s:String>
     <s:String x:Key="update_available">_Aġġornament disponibbli...</s:String>
     <s:String x:Key="exit_ultrawinbar">_Ħruġ mir-UltraWinBar</s:String>
+<s:String x:Key="restart_ultrawinbar">Ibda mill-ġdid UltraWinBar</s:String>
     <s:String x:Key="customize_notifications_menu">_Personalizza n-notifiki...</s:String>
     <s:String x:Key="lock_taskbar_menu">_Iblokka l-bar tal-kompiti</s:String>
 
@@ -149,6 +189,7 @@
 
     <s:String x:Key="open_folder">&amp;Ftaħ il-folder</s:String>
 
+<s:String x:Key="move_to_taskbar_format">Mexxi għal {0} bar tal-kompiti</s:String>
     <s:String x:Key="ime_input_tip_enabled">Ikklikkja bil-lemin biex tara l-għażliet tal-IME</s:String>
     <s:String x:Key="ime_input_tip_disabled">IME diżattivat</s:String>
     <s:String x:Key="ime_input_full_shape_hiragana">Hiragana</s:String>
@@ -168,4 +209,104 @@
     <s:String x:Key="ime_conversion_general">Ġenerali</s:String>
     <s:String x:Key="ime_conversion_none">L-ebda konverżjoni</s:String>
     <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+<s:String x:Key="pin_to_taskbar">Pin ma’ dan il-bar tal-kompiti</s:String>
+<s:String x:Key="pinned_app_windows">Twieqi miftuħa</s:String>
+<s:String x:Key="unpin_from_taskbar">Neħħi l-pin minn dan il-bar tal-kompiti</s:String>
+<s:String x:Key="copy_executable_path">Ikkopja l-mogħdija tal-fajl eżekutibbli</s:String>
+<s:String x:Key="copy_executable_directory">Ikkopja l-folder tal-fajl eżekutibbli</s:String>
+<FlowDirection x:Key="flow_direction">LeftToRight</FlowDirection>
+<FontFamily x:Key="start_text_xp_font_family">Franklin Gothic</FontFamily>
+<sys:String x:Key="app_all_desktops">Uri t-twieqi ta’ din l-applikazzjoni fuq id-desktops kollha</sys:String>
+<sys:String x:Key="move_window_desktop">Mexxi din it-tieqa għad-desktop</sys:String>
+<sys:String x:Key="move_app_desktop">Mexxi t-twieqi kollha tal-applikazzjoni għad-desktop</sys:String>
+<sys:String x:Key="desktop_number">Desktop {0}</sys:String>
+<sys:String x:Key="desktop_action_failed">Windows ma setax itemm l-operazzjoni għal kull tieqa. Jista’ jkun li xi twieqi diġà ġew imċaqalqa. Ara r-reġistru għal aktar dettalji.</sys:String>
+<s:String x:Key="show_hebrew_date">Uri d-data Ebrajka u l-ġranet tal-ġimgħa numerati</s:String>
+<s:String x:Key="hebrew_date_midnight">Juża d-data lokali tal-kalendarju; tinbidel f’nofsillejl, mhux ma’ nżul ix-xemx.</s:String>
+<s:String x:Key="hebrew_place">Post għad-data Ebrajka:</s:String>
+<s:String x:Key="hebrew_place_none">mhux magħżul</s:String>
+<s:String x:Key="hebrew_place_choose">Agħżel...</s:String>
+<s:String x:Key="hebrew_place_clear">Neħħi</s:String>
+<s:String x:Key="zone_clear">Neħħi</s:String>
+<s:String x:Key="hebrew_place_hint">Il-post li nżul ix-xemx fih itemm il-jum Ebrajk, u li l-ħinijiet halakiċi tiegħu jintwerew fil-kalendarju.</s:String>
+<s:String x:Key="hebrew_place_title">Post għad-data Ebrajka</s:String>
+<s:String x:Key="hebrew_place_city_tab">Belt</s:String>
+<s:String x:Key="hebrew_place_coordinates_tab">Koordinati</s:String>
+<s:String x:Key="hebrew_place_search">Isem tal-belt (bl-Ingliż):</s:String>
+<s:String x:Key="hebrew_place_search_hint">Ikteb tal-inqas żewġ ittri, pereżempju: jerus, new york, paris texas. Jidhru bliet b’10 000 abitant jew aktar.</s:String>
+<s:String x:Key="hebrew_place_country">Pajjiż:</s:String>
+<s:String x:Key="hebrew_place_need_country">Agħżel il-pajjiż: dan jgħid liema miż-żewġ numri huwa l-latitudni.</s:String>
+<s:String x:Key="hebrew_place_coordinates">Latitudni u lonġitudni:</s:String>
+<s:String x:Key="hebrew_place_coordinates_hint">Kwalunkwe forma tajba: 32.0853, 34.7818 jew 34,7818 32,0853 jew 32°05'07&quot;N 34°46'54&quot;E. Punt jew virgola fil-frazzjoni; virgola, żewġ punti jew spazju bejn in-numri.</s:String>
+<s:String x:Key="hebrew_place_zone">Żona tal-ħin:</s:String>
+<s:String x:Key="hebrew_place_zone_hint">Magħżula mal-belt; ibdilha jekk mhix korretta. Ir-regoli taż-żona (il-ħin tas-sajf u l-bidliet tiegħu) huma dawk tal-Windows.</s:String>
+<s:String x:Key="calendar_title">Kalendarju Lhudi</s:String>
+<s:String x:Key="calendar_today">Illum</s:String>
+<s:String x:Key="calendar_copy_name">Ikkopja l-isem</s:String>
+<s:String x:Key="calendar_search_name">Fittex l-isem fuq Google</s:String>
+<s:String x:Key="calendar_grid_hebrew">Xahar Ebrajk</s:String>
+<s:String x:Key="calendar_grid_civil">Xahar ċivili</s:String>
+<s:String x:Key="calendar_shabbat">Shabbat</s:String>
+<s:String x:Key="calendar_previous_month">Xahar ta’ qabel</s:String>
+<s:String x:Key="calendar_next_month">Xahar li jmiss</s:String>
+<s:String x:Key="calendar_settings">Settings...</s:String>
+<s:String x:Key="calendar_close">Agħlaq</s:String>
+<s:String x:Key="calendar_portion">Porzjoni tal-ġimgħa: {0}</s:String>
+<s:String x:Key="calendar_festival_reading">F’dan ix-Shabbat jinqara silta ta’ festa</s:String>
+<s:String x:Key="calendar_day_of">{0}, jum {1} minn {2}</s:String>
+<s:String x:Key="calendar_molad">Molad ta’ {0}: {1}, {2} u {3} chalakim</s:String>
+<s:String x:Key="calendar_omer">Għadd tal-Omer</s:String>
+<s:String x:Key="calendar_omer_day">Jum {0} tal-Omer</s:String>
+<s:String x:Key="calendar_omer_weeks">{0} ġimgħa/i u {1} jum/jiem</s:String>
+<s:String x:Key="calendar_place">Post: {0}</s:String>
+<s:String x:Key="calendar_israel">Art ta’ Iżrael</s:String>
+<s:String x:Key="calendar_diaspora">dijaspora</s:String>
+<s:String x:Key="calendar_no_place">Agħżel post fis-settings tal-kalendarju biex tara l-ħinijiet tal-jum.</s:String>
+<s:String x:Key="calendar_times">Ħinijiet tal-jum</s:String>
+<s:String x:Key="calendar_yahrzeits">Yahrzeits</s:String>
+<s:String x:Key="calendar_candles_after_dark">Tixgħil tax-xemgħat (wara d-dlam)</s:String>
+<s:String x:Key="calendar_havdalah">Tmiem il-jum ta’ mistrieħ (havdalah)</s:String>
+<s:String x:Key="calendar_rest_begins">Jibda: {0} (tixgħil tax-xemgħat)</s:String>
+<s:String x:Key="calendar_rest_ends">Jispiċċa: {0} (inżul ix-xemx)</s:String>
+<s:String x:Key="calendar_settings_title">Settings tal-kalendarju</s:String>
+<s:String x:Key="calendar_settings_place">Post taż-żona:</s:String>
+<s:String x:Key="calendar_settings_zone">Żona tal-ħin għad-data, għall-bidla tal-jum u għall-ħinijiet tal-jum:</s:String>
+<s:String x:Key="calendar_zone_main">{0} (ta’ dan il-kompjuter)</s:String>
+<s:String x:Key="zones_heading">Żoni tal-ħin tal-arloġġ</s:String>
+<s:String x:Key="zone_main">Żona tal-ħin ewlenija:</s:String>
+<s:String x:Key="zone_second">It-tieni żona tal-ħin:</s:String>
+<s:String x:Key="zone_third">It-tielet żona tal-ħin:</s:String>
+<s:String x:Key="zone_show_name">Uri l-isem</s:String>
+<s:String x:Key="zone_label">Isem fuq l-arloġġ:</s:String>
+<s:String x:Key="zone_label_hint">Isem li l-arloġġ juri għal din iż-żona minflok il-post (pereżempju, Heart għal Jerusalem). Jekk jitħalla vojt, il-post jibqa’ jintwera.</s:String>
+<s:String x:Key="zone_place">Post:</s:String>
+<s:String x:Key="zones_tab">Żoni tal-ħin</s:String>
+<s:String x:Key="hebrew_date_tab">Data Ebrajka</s:String>
+<s:String x:Key="zone_computer">Ta’ dan il-kompjuter ({0})</s:String>
+<s:String x:Key="hebrew_place_in_zones">Id-data Ebrajka hija dik tal-post taż-żona tal-ħin ewlenija, magħżul fit-tab Żoni tal-ħin.</s:String>
+<s:String x:Key="zone_none">(mhux murija)</s:String>
+<s:String x:Key="calendar_settings_yahrzeits">Yahrzeits li jintwerew (kollha, skont il-kategorija, waħda waħda):</s:String>
+<s:String x:Key="calendar_all_figures">Kollha</s:String>
+<s:String x:Key="cancel_dialog">Ikkanċella</s:String>
+<s:String x:Key="coordinate_result">Latitudni u lonġitudni: {0}</s:String>
+<s:String x:Key="coordinate_basis_labeled">L-ordni hija kif immarkata fit-test.</s:String>
+<s:String x:Key="coordinate_basis_only_one">Ordni waħda biss taqbel: latitudni ma taqbiżx id-90 grad.</s:String>
+<s:String x:Key="coordinate_basis_country">L-ordni hija dedotta mill-pajjiż: l-ieħor ipoġġi l-punt ’il bogħod minnu.</s:String>
+<s:String x:Key="coordinate_basis_assumed">Huwa preżunt li l-latitudni tiġi l-ewwel.</s:String>
+<s:String x:Key="coordinate_warning_assumed">Huwa preżunt li l-latitudni tiġi l-ewwel; jekk il-lonġitudni tiġi l-ewwel, xorta taqbel mal-pajjiż kważi daqstant.</s:String>
+<s:String x:Key="coordinate_warning_far">Il-punt jinsab {0:N0} km mill-eqreb belt tal-pajjiż. Iċċekkja l-pajjiż u n-numri.</s:String>
+<s:String x:Key="coordinate_problem_empty">Daħħal il-koordinati.</s:String>
+<s:String x:Key="coordinate_problem_need_two">Hemm bżonn żewġ numri: il-latitudni u l-lonġitudni.</s:String>
+<s:String x:Key="coordinate_problem_too_many">Aktar minn żewġ numri. Daħħal biss il-latitudni u l-lonġitudni.</s:String>
+<s:String x:Key="coordinate_problem_two_lat">Iż-żewġ numri huma mmarkati bħala latitudni.</s:String>
+<s:String x:Key="coordinate_problem_two_lng">Iż-żewġ numri huma mmarkati bħala lonġitudni.</s:String>
+<s:String x:Key="coordinate_problem_lat_range">Il-latitudni trid tkun bejn -90 u 90 grad.</s:String>
+<s:String x:Key="coordinate_problem_lng_range">Il-lonġitudni trid tkun bejn -180 u 180 grad.</s:String>
+<s:String x:Key="coordinate_problem_neither">Fl-ebda ordni dawn in-numri ma jagħtu latitudni (sa 90) u lonġitudni (sa 180).</s:String>
+<s:String x:Key="open_system_settings">Iftaħ is-Settings tas-Sistema</s:String>
+<s:String x:Key="open_computer_management">Ġestjoni tal-Kompjuter</s:String>
+<s:String x:Key="open_drives">Iftaħ id-drives</s:String>
+<s:String x:Key="this_pc">Dan il-PC</s:String>
+<s:String x:Key="move_activated_windows_to_current_desktop">Ipprova żomm it-twieqi miftuħa fuq dan id-desktop (esperimentali)</s:String>
+<s:String x:Key="desktop_activation_experiment_hint">Uża mill-ġdid twieqi murija fuq id-desktops kollha mingħajr ma ċċaqlaqhom. Inkella, l-ikoni tad-desktop u l-lanċaturi pinnjati jiftħu l-browsers, il-folders tal-Explorer u n-Notepad++ lokalment; applikazzjonijiet oħra u l-attivazzjoni mit-trej jibqgħu jittrasferixxu t-twieqi.</s:String>
 </ResourceDictionary>

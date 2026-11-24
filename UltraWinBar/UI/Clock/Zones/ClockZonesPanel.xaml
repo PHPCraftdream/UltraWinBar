@@ -34,6 +34,22 @@
                     Content="{DynamicResource zone_clear}"
                     Click="MainZoneClear_Click" />
         </Grid>
+        <!-- The name the clock shows instead of the zone's place's; empty keeps the place's. -->
+        <Grid ToolTip="{DynamicResource zone_label_hint}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Label VerticalAlignment="Center"
+                   Content="{DynamicResource zone_label}"
+                   Target="{Binding ElementName=MainLabelBox}" />
+            <TextBox x:Name="MainLabelBox"
+                     Grid.Column="1"
+                     Margin="6,2,0,2"
+                     VerticalAlignment="Center"
+                     MaxLength="40"
+                     Text="{Binding MainZoneLabel, UpdateSourceTrigger=PropertyChanged}" />
+        </Grid>
         <Grid ToolTip="{DynamicResource hebrew_place_hint}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
@@ -81,6 +97,22 @@
                     Content="{DynamicResource zone_clear}"
                     Click="SecondZoneClear_Click" />
         </Grid>
+        <!-- The name the clock shows instead of the zone's place's; empty keeps the place's. -->
+        <Grid ToolTip="{DynamicResource zone_label_hint}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Label VerticalAlignment="Center"
+                   Content="{DynamicResource zone_label}"
+                   Target="{Binding ElementName=SecondLabelBox}" />
+            <TextBox x:Name="SecondLabelBox"
+                     Grid.Column="1"
+                     Margin="6,2,0,2"
+                     VerticalAlignment="Center"
+                     MaxLength="40"
+                     Text="{Binding SecondZoneLabel, UpdateSourceTrigger=PropertyChanged}" />
+        </Grid>
         <Grid ToolTip="{DynamicResource hebrew_place_hint}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
@@ -127,6 +159,22 @@
                     Margin="6,0,0,0"
                     Content="{DynamicResource zone_clear}"
                     Click="ThirdZoneClear_Click" />
+        </Grid>
+        <!-- The name the clock shows instead of the zone's place's; empty keeps the place's. -->
+        <Grid ToolTip="{DynamicResource zone_label_hint}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Label VerticalAlignment="Center"
+                   Content="{DynamicResource zone_label}"
+                   Target="{Binding ElementName=ThirdLabelBox}" />
+            <TextBox x:Name="ThirdLabelBox"
+                     Grid.Column="1"
+                     Margin="6,2,0,2"
+                     VerticalAlignment="Center"
+                     MaxLength="40"
+                     Text="{Binding ThirdZoneLabel, UpdateSourceTrigger=PropertyChanged}" />
         </Grid>
         <Grid ToolTip="{DynamicResource hebrew_place_hint}">
             <Grid.ColumnDefinitions>

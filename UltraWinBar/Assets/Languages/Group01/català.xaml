@@ -2,16 +2,29 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:s="clr-namespace:System;assembly=mscorlib">
 
+
     <s:String x:Key="ultrawinbar_properties">Propietats del UltraWinBar</s:String>
     <s:String x:Key="taskbar_tab">Barra de tasques</s:String>
     <s:String x:Key="advanced_tab">Avançats</s:String>
     <s:String x:Key="taskbar_appearance">Aspecte de la barra de tasques</s:String>
     <s:String x:Key="notification_area">Àrea de notificacions</s:String>
+    <s:String x:Key="general_heading">General</s:String>
+    <s:String x:Key="clock_heading">Rellotge</s:String>
     <s:String x:Key="autostart">Inicia _automàticament en iniciar sessió</s:String>
     <s:String x:Key="language_text">_Llengua:</s:String>
     <s:String x:Key="language_tip">Trieu la llengua a utilitzar.</s:String>
     <s:String x:Key="theme_text">_Tema:</s:String>
     <s:String x:Key="theme_tip">Instal·leu temes a la carpeta Themes.</s:String>
+    <s:String x:Key="accent_text">_Color d'accent:</s:String>
+    <s:String x:Key="accent_tip">El color neó del tema Modern Glass.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>Cian</s:String>
+        <s:String>Violeta</s:String>
+        <s:String>Fúcsia</s:String>
+        <s:String>Maragda</s:String>
+        <s:String>Ambre</s:String>
+        <s:String>Rosa</s:String>
+    </x:Array>
     <s:String x:Key="location_text">_Ubicació:</s:String>
     <s:String x:Key="location_tip">Canvieu la ubicació de la barra de tasques a la pantalla.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -47,6 +60,7 @@
         <s:String>La mateixa barra de tasques que la finestra</s:String>
         <s:String>La mateixa barra de tasques que la finestra i la barra de tasques principal</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_Inverteix els colors en escala de grisos:</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>Quan el tema ho requereixi</s:String>
         <s:String>Sempre</s:String>
@@ -65,16 +79,38 @@
         <s:String>Obre el calendari Modern</s:String>
         <s:String>Obre el centre de notificacions</s:String>
     </x:Array>
+    <s:String x:Key="task_wheel_action">_Acció de la roda del ratolí:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>No feu res</s:String>
+        <s:String>Mostra/amaga la finestra</s:String>
+    </x:Array>
     <s:String x:Key="auto_hide_transparent">Amaga _la barra del tot quan s'amagui automàticament</s:String>
     <s:String x:Key="version">Versió {0}</s:String>
     <s:String x:Key="visit_on_github">Visiteu UltraWinBar a GitHub</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Múltiples barres de tasques</s:String>
+    <s:String x:Key="additional_taskbars_text">Mostra una barra de tasques en aquestes vores. Feu clic amb el botó dret a una barra de tasques per estendre-la al llarg de tota la vora i apartar les altres.</s:String>
+    <s:String x:Key="location_left">Esquerra</s:String>
+    <s:String x:Key="location_top">A dalt</s:String>
+    <s:String x:Key="location_right">Dreta</s:String>
+    <s:String x:Key="location_bottom">A baix</s:String>
+    <s:String x:Key="tray_location_text">_Àrea de notificacions a:</s:String>
+    <s:String x:Key="clock_location_text">_Rellotge a:</s:String>
+    <s:String x:Key="start_button_location_text">Botó d'inici a:</s:String>
+    <s:String x:Key="language_location_text">_Indicador d'idioma activat:</s:String>
+    <s:String x:Key="task_assignment_hint">Arrossegueu un botó de tasca a una altra barra de tasques per moure tota la seva aplicació; manteniu premuda la tecla Ctrl mentre arrossegueu per moure només aquesta finestra. Feu clic amb el botó dret en un botó de tasca per restablir-ne l'assignació.</s:String>
+    <s:String x:Key="reset_task_assignments">Restableix totes les assignacions de la barra de tasques</s:String>
+    <s:String x:Key="stretch">_Estira</s:String>
+    <s:String x:Key="make_main">_Fes principal</s:String>
+    <s:String x:Key="reset_task_assignment">Restableix l'assignació de la barra de tasques</s:String>
     <s:String x:Key="taskbar_scale">Escala de la barra de tasques</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">Configuració actual: {0}%</s:String>
     <s:String x:Key="debug_logging">Activa el registre de _depuració</s:String>
+    <s:String x:Key="window_activity_logging">Registra l'obertura i el tancament de finestres</s:String>
     <s:String x:Key="check_for_updates">Compro_va si hi ha actualitzacions</s:String>
     <s:String x:Key="show_exit_menu_item">Mostra l'opció de sortida en el menú conte_xtual</s:String>
+    <s:String x:Key="show_end_task_button">Mostra l'opció _Finalitza la tasca al menú contextual</s:String>
     <s:String x:Key="slide_taskbar_buttons">Des_lissa els botons de la barra de tasques</s:String>
     <s:String x:Key="show_clock_seconds">M_ostra els segons al rellotge</s:String>
     <s:String x:Key="open_custom_themes_folder">Obre la carpeta dels temes personalitzats</s:String>
@@ -86,8 +122,14 @@
     </x:Array>
     <s:String x:Key="hotkey_warning_title">Tecles d'accés ràpid de UltraWinBar</s:String>
     <s:String x:Key="hotkey_warning_text">El UltraWinBar substituirà les tecles d'accés ràpid de la barra de tasques del Windows. Encara que tanqueu el UltraWinBar, no tornaran a ser utilitzades pel Windows fins que tanqueu i torneu a iniciar sessió.</s:String>
+    <s:String x:Key="allow_blur_behind">Permet _desenfocar darrere de la barra de tasques transparent</s:String>
     <s:String x:Key="ok_dialog">D'acord</s:String>
-
+    <s:String x:Key="clock_format_help">Consulta les opcions de format disponibles</s:String>
+    <s:String x:Key="clock_format_warning">Nota: és possible que el format del rellotge personalitzat no funcioni com s'esperava si el tema seleccionat especifica el seu propi format.</s:String>
+    <s:String x:Key="override_clock_format">_Format de rellotge personalitzat:</s:String>
+    <s:String x:Key="override_ampm_designators">I_ndicadors AM/PM personalitzats:</s:String>
+    <s:String x:Key="am_designator">AM:</s:String>
+    <s:String x:Key="pm_designator">PM:</s:String>
     <s:String x:Key="customize_notifications">Personalització de notificacions</s:String>
     <s:String x:Key="customize_notifications_info">El UltraWinBar mostra les icones de les notificacions actives i urgents i amaga les que estan inactives. Aquest comportament es pot canviar per als elements de la llista següent.</s:String>
     <s:String x:Key="customize_notifications_instruction">Seleccioneu un element i trieu el comportament de notificació adient:</s:String>
@@ -98,13 +140,11 @@
     <s:String x:Key="name_heading">Nom</s:String>
     <s:String x:Key="behavior_heading">Comportament</s:String>
     <s:String x:Key="invert_heading">Inverteix</s:String>
-
     <s:String x:Key="start_text">Inicia</s:String>
     <s:String x:Key="start_text_xp">Inicia</s:String>
     <s:String x:Key="start_button_tip_98">Feu clic aquí per començar.</s:String>
     <s:String x:Key="start_button_tip">Feu clic aquí per començar</s:String>
     <s:String x:Key="start_button_tip_vista">Inicia</s:String>
-
     <s:String x:Key="ultrawinbar_title">Barra de tasques del UltraWinBar</s:String>
     <s:String x:Key="toolbars">_Barres d'eines</s:String>
     <s:String x:Key="quick_launch">_Inici ràpid</s:String>
@@ -123,24 +163,140 @@
     <s:String x:Key="tray_properties">_Propietats</s:String>
     <s:String x:Key="update_available">_Actualització disponible...</s:String>
     <s:String x:Key="exit_ultrawinbar">_Surt del UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">Re_inicia UltraWinBar</s:String>
     <s:String x:Key="customize_notifications_menu">Personalit_zació de notificacions...</s:String>
     <s:String x:Key="lock_taskbar_menu">_Bloca la barra de tasques</s:String>
-
     <s:String x:Key="show_desktop_tip_95">Surface/Restore Desktop</s:String>
     <s:String x:Key="show_desktop_tip">Mostra l'escriptori</s:String>
     <s:String x:Key="show_desktop_95">_Escriptori</s:String>
     <s:String x:Key="show_desktop">_Mostra l'escriptori</s:String>
     <s:String x:Key="peek_at_desktop">_Fes una ullada a l'escriptori</s:String>
-
     <s:String x:Key="restore">_Restaura</s:String>
     <s:String x:Key="move">D_esplaçament</s:String>
     <s:String x:Key="size">_Mida</s:String>
     <s:String x:Key="minimize">Min_imitza</s:String>
     <s:String x:Key="maximize">M_aximitza</s:String>
     <s:String x:Key="close">_Tanca</s:String>
-
+    <s:String x:Key="end_task">_Finalitzar la tasca</s:String>
     <s:String x:Key="show_hidden">Mostra les icones ocultes</s:String>
     <s:String x:Key="hide">Amaga</s:String>
-
     <s:String x:Key="open_folder">&amp;Obre la carpeta</s:String>
+    <s:String x:Key="move_to_taskbar_format">Mou a la barra de tasques {0}</s:String>
+    <s:String x:Key="ime_input_tip_enabled">Feu clic amb el botó dret per obrir les opcions IME.</s:String>
+    <s:String x:Key="ime_input_tip_disabled">IME desactivat</s:String>
+    <s:String x:Key="ime_input_full_shape_hiragana">_Hiragana</s:String>
+    <s:String x:Key="ime_input_full_shape_katakana">Katakana d'amplada completa</s:String>
+    <s:String x:Key="ime_input_full_shape_alphanumeric">Alfanumèric d'amplada completa</s:String>
+    <s:String x:Key="ime_input_katakana">Kataka_na de mitja amplada</s:String>
+    <s:String x:Key="ime_input_alphanumeric">Alfanumèric de mitja amplada</s:String>
+    <s:String x:Key="ime_input_direct">_Entrada directa</s:String>
+    <s:String x:Key="ime_open_pad">_Bloc IME</s:String>
+    <s:String x:Key="ime_open_add_word_dictionary">Afegeix una _paraula</s:String>
+    <s:String x:Key="ime_open_dictionary_tool">_Eina del diccionari d'usuari</s:String>
+    <s:String x:Key="ime_open_properties">P_propietats</s:String>
+    <s:String x:Key="ime_input_key">_Mètode d'entrada</s:String>
+    <s:String x:Key="ime_input_key_roma">Entrada _Romaji</s:String>
+    <s:String x:Key="ime_input_key_kana">Entrada de _kana</s:String>
+    <s:String x:Key="ime_conversion">_Mode de conversió</s:String>
+    <s:String x:Key="ime_conversion_general">_General</s:String>
+    <s:String x:Key="ime_conversion_none">Cap conversió</s:String>
+    <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+    <s:String x:Key="pin_to_taskbar">_Fixa a aquesta barra de tasques</s:String>
+    <s:String x:Key="pinned_app_windows">Obre finestres</s:String>
+    <s:String x:Key="unpin_from_taskbar">_Desancora d'aquesta barra de tasques</s:String>
+    <s:String x:Key="copy_executable_path">Copia el camí executable</s:String>
+    <s:String x:Key="copy_executable_directory">Copia el directori executable</s:String>
+    <s:String x:Key="app_all_desktops">Mostra les finestres d'aquesta aplicació a tots els escriptoris</s:String>
+    <s:String x:Key="move_window_desktop">Mou aquesta finestra a l'escriptori</s:String>
+    <s:String x:Key="move_app_desktop">Mou totes les finestres de l'aplicació a l'escriptori</s:String>
+    <s:String x:Key="desktop_number">Escriptori {0}</s:String>
+    <s:String x:Key="desktop_action_failed">Windows no ha pogut completar l'operació per a totes les finestres. És possible que algunes finestres ja s'hagin mogut. Consulteu el registre per obtenir més informació.</s:String>
+    <s:String x:Key="show_hebrew_date">Mostra la data hebrea i els dies de la setmana numerats</s:String>
+    <s:String x:Key="hebrew_date_midnight">Utilitza la data del calendari local; canvia a mitjanit, no al capvespre.</s:String>
+    <s:String x:Key="hebrew_place">Lloc per a la data hebrea:</s:String>
+    <s:String x:Key="hebrew_place_none">no escollit</s:String>
+    <s:String x:Key="hebrew_place_choose">Tria...</s:String>
+    <s:String x:Key="hebrew_place_clear">Buida</s:String>
+    <s:String x:Key="zone_clear">Eliminar</s:String>
+    <s:String x:Key="hebrew_place_hint">Lloc on la posta de sol marca el final del dia hebreu i per al qual el calendari mostra els horaris halàquics.</s:String>
+    <s:String x:Key="hebrew_place_title">Lloc per a la data hebrea</s:String>
+    <s:String x:Key="hebrew_place_city_tab">Ciutat</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">Coordenades</s:String>
+    <s:String x:Key="hebrew_place_search">Nom de la ciutat (en anglès):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">Escriviu almenys dues lletres, per exemple: jerus, new york, paris texas. S'enumeren ciutats de 10 000 habitants i més.</s:String>
+    <s:String x:Key="hebrew_place_country">País:</s:String>
+    <s:String x:Key="hebrew_place_need_country">Trieu el país: serveix per determinar quin dels dos nombres és la latitud.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">Latitud i longitud:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">S'accepten formats com ara 32.0853, 34.7818; 34.7818 32.0853; o 32°05'07"N 34°46'54"E. Feu servir punt o coma per als decimals i coma, dos punts o espai per separar els nombres.</s:String>
+    <s:String x:Key="hebrew_place_zone">Zona horària:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">La zona s'ha triat amb la ciutat; canvieu-la si no és correcta. S'hi apliquen les regles de zona horària de Windows, inclosos els canvis d'hora d'estiu.</s:String>
+    <s:String x:Key="calendar_title">Calendari jueu</s:String>
+    <s:String x:Key="calendar_today">Avui</s:String>
+    <s:String x:Key="calendar_copy_name">Copia el nom</s:String>
+    <s:String x:Key="calendar_search_name">Cerca a Google el nom</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Mes hebreu</s:String>
+    <s:String x:Key="calendar_grid_civil">Mes civil</s:String>
+    <s:String x:Key="calendar_shabbat">Xabbat</s:String>
+    <s:String x:Key="calendar_previous_month">Mes anterior</s:String>
+    <s:String x:Key="calendar_next_month">El mes vinent</s:String>
+    <s:String x:Key="calendar_settings">Configuració...</s:String>
+    <s:String x:Key="calendar_close">Tancar</s:String>
+    <s:String x:Key="calendar_portion">Parashà setmanal: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">Aquest Xabbat es llegeix una lectura festiva</s:String>
+    <s:String x:Key="calendar_day_of">{0}, dia {1} de {2}</s:String>
+    <s:String x:Key="calendar_molad">Molad de {0}: {1}, {2} i {3} halakim</s:String>
+    <s:String x:Key="calendar_omer">Recompte de l'Omer</s:String>
+    <s:String x:Key="calendar_omer_day">Dia {0} de l'Omer</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} setmanes i {1} dies</s:String>
+    <s:String x:Key="calendar_place">Lloc: {0}</s:String>
+    <s:String x:Key="calendar_israel">Terra d'Israel</s:String>
+    <s:String x:Key="calendar_diaspora">diàspora</s:String>
+    <s:String x:Key="calendar_no_place">Trieu un lloc a la configuració del calendari per veure les hores del dia.</s:String>
+    <s:String x:Key="calendar_times">Hores del dia</s:String>
+    <s:String x:Key="calendar_yahrzeits">Yahrzeits</s:String>
+    <s:String x:Key="calendar_candles_after_dark">Encesa de les espelmes (després de fer-se fosc)</s:String>
+    <s:String x:Key="calendar_havdalah">Final del dia de descans (havdalah)</s:String>
+    <s:String x:Key="calendar_rest_begins">Comença: {0} (il·luminació d'espelmes)</s:String>
+    <s:String x:Key="calendar_rest_ends">Finalitza: {0} (caiguda de nit)</s:String>
+    <s:String x:Key="calendar_settings_title">Configuració del calendari</s:String>
+    <s:String x:Key="calendar_settings_place">Lloc de la zona horària:</s:String>
+    <s:String x:Key="calendar_settings_zone">Zona horària de la data, el canvi de dia i les hores del dia:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (de l'ordinador)</s:String>
+    <s:String x:Key="zones_heading">Zones horàries del rellotge</s:String>
+    <s:String x:Key="zone_main">Zona horària principal:</s:String>
+    <s:String x:Key="zone_second">Segon fus horari:</s:String>
+    <s:String x:Key="zone_third">Tercer fus horari:</s:String>
+    <s:String x:Key="zone_show_name">Mostra el nom</s:String>
+    <s:String x:Key="zone_label">Nom al rellotge</s:String>
+    <s:String x:Key="zone_label_hint">Nom que el rellotge mostra per a aquesta zona en lloc del lloc (per exemple, Heart per a Jerusalem). Si es deixa en blanc, es mostra el lloc.</s:String>
+    <s:String x:Key="zone_place">Lloc:</s:String>
+    <s:String x:Key="zones_tab">Zones horàries</s:String>
+    <s:String x:Key="hebrew_date_tab">data hebrea</s:String>
+    <s:String x:Key="zone_computer">L'ordinador ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">La data hebrea és la del lloc de la zona horària principal, escollida a la pestanya Zones horàries.</s:String>
+    <s:String x:Key="zone_none">(no mostrat)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">Yahrzeits per mostrar (tots, per categoria, un per un):</s:String>
+    <s:String x:Key="calendar_all_figures">Tots</s:String>
+    <s:String x:Key="cancel_dialog">Cancel·la</s:String>
+    <s:String x:Key="coordinate_result">Latitud i longitud: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">L'ordre és el marcat al text.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">Només hi ha un ordre possible: la latitud no pot superar els 90 graus.</s:String>
+    <s:String x:Key="coordinate_basis_country">L'ordre s'infereix a partir del país: amb l'altre ordre, el punt queda lluny del país.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">Primer s'assumeix la latitud.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">S'assumeix que la latitud va primer; si la longitud anés primer, el resultat també encaixaria amb el país.</s:String>
+    <s:String x:Key="coordinate_warning_far">El punt és a {0:N0} km de la ciutat més propera del país. Comproveu el país i els números.</s:String>
+    <s:String x:Key="coordinate_problem_empty">Escriu les coordenades.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">Calen dos números: la latitud i la longitud.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">Més de dos números. Escriviu només la latitud i la longitud.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">Tots dos números estan marcats com a latitud.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">Tots dos números estan marcats com a longitud.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">La latitud ha d'estar entre -90 i 90 graus.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">La longitud ha d'estar entre -180 i 180 graus.</s:String>
+    <s:String x:Key="coordinate_problem_neither">En cap ordre aquests números fan una latitud (fins a 90) i una longitud (fins a 180).</s:String>
+    <s:String x:Key="open_system_settings">Obriu la configuració del sistema</s:String>
+    <s:String x:Key="open_computer_management">Gestió informàtica</s:String>
+    <s:String x:Key="open_drives">Obre les unitats</s:String>
+    <s:String x:Key="this_pc">Aquest ordinador</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">Intenta mantenir les finestres obertes en aquest escriptori (experimental)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Torna a fer servir les finestres visibles a tots els escriptoris sense moure-les. Altrament, les icones de l'escriptori i els accessos directes fixats obren localment els navegadors, les carpetes de l'Explorador i el Notepad++; les altres aplicacions i l'activació des de l'àrea de notificacions continuen transferint les finestres.</s:String>
 </ResourceDictionary>

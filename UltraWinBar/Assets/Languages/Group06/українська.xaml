@@ -1,17 +1,30 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:s="clr-namespace:System;assembly=mscorlib">
+                    xmlns:s="clr-namespace:System;assembly=mscorlib"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
     <s:String x:Key="ultrawinbar_properties">Властивості UltraWinBar</s:String>
     <s:String x:Key="taskbar_tab">Панель завдань</s:String>
     <s:String x:Key="advanced_tab">Додатково</s:String>
     <s:String x:Key="taskbar_appearance">Оформлення панелі завдань</s:String>
     <s:String x:Key="notification_area">Область сповіщень</s:String>
+    <s:String x:Key="general_heading">Загальні</s:String>
+    <s:String x:Key="clock_heading">Годинник</s:String>
     <s:String x:Key="autostart">Автоматично запускати при вході</s:String>
     <s:String x:Key="language_text">Мова:</s:String>
     <s:String x:Key="language_tip">Виберіть мову інтерфейсу.</s:String>
     <s:String x:Key="theme_text">Тема:</s:String>
     <s:String x:Key="theme_tip">Встановіть теми в папку Themes.</s:String>
+    <s:String x:Key="accent_text">Колір акценту:</s:String>
+    <s:String x:Key="accent_tip">Неоновий колір теми Modern Glass.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>Бірюзовий</s:String>
+        <s:String>Фіолетовий</s:String>
+        <s:String>Фуксія</s:String>
+        <s:String>Смарагдовий</s:String>
+        <s:String>Бурштиновий</s:String>
+        <s:String>Рожевий</s:String>
+    </x:Array>
     <s:String x:Key="location_text">_Розташування:</s:String>
     <s:String x:Key="location_tip">Змінити розташування панелі завдань на екрані.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -47,6 +60,7 @@
         <s:String>Та ж панель, що й вікно</s:String>
         <s:String>Та ж панель, що й вікно + основна панель</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">Інвертувати відтінки сірого:</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>Коли потрібно темою</s:String>
         <s:String>Завжди</s:String>
@@ -65,16 +79,38 @@
         <s:String>Відкрити Modern-календар</s:String>
         <s:String>Відкрити центр сповіщень</s:String>
     </x:Array>
+    <s:String x:Key="task_wheel_action">Дія прокручування коліщатка миші:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>Нічого не робити</s:String>
+        <s:String>Показати/приховати вікно</s:String>
+    </x:Array>
     <s:String x:Key="auto_hide_transparent">Сховати лінію панелі при автоприховуванні</s:String>
     <s:String x:Key="version">Версія {0}</s:String>
     <s:String x:Key="visit_on_github">Відвідати UltraWinBar на GitHub</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Кілька панелей завдань</s:String>
+    <s:String x:Key="additional_taskbars_text">Показувати панель завдань на цих краях. Клацніть правою кнопкою миші панель, щоб розтягнути її на весь край і посунути інші.</s:String>
+    <s:String x:Key="location_left">Зліва</s:String>
+    <s:String x:Key="location_top">Зверху</s:String>
+    <s:String x:Key="location_right">Справа</s:String>
+    <s:String x:Key="location_bottom">Знизу</s:String>
+    <s:String x:Key="tray_location_text">Область сповіщень на:</s:String>
+    <s:String x:Key="clock_location_text">Годинник на:</s:String>
+    <s:String x:Key="start_button_location_text">Кнопка «Пуск» на:</s:String>
+    <s:String x:Key="language_location_text">Індикатор мови на:</s:String>
+    <s:String x:Key="task_assignment_hint">Перетягніть кнопку завдання на іншу панель, щоб перемістити всю програму; утримуйте Ctrl під час перетягування, щоб перемістити лише це вікно. Клацніть кнопку правою кнопкою, щоб скинути призначення.</s:String>
+    <s:String x:Key="reset_task_assignments">Скинути всі призначення панелей завдань</s:String>
+    <s:String x:Key="stretch">Розтягнути</s:String>
+    <s:String x:Key="make_main">Зробити основною</s:String>
+    <s:String x:Key="reset_task_assignment">Скинути призначення панелі завдань</s:String>
     <s:String x:Key="taskbar_scale">Масштаб панелі</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">Поточне значення: {0}%</s:String>
     <s:String x:Key="debug_logging">Увімкнути налагоджувальний журнал</s:String>
+    <s:String x:Key="window_activity_logging">Записувати відкриття та закриття вікон</s:String>
     <s:String x:Key="check_for_updates">Перевірити наявність оновлень</s:String>
     <s:String x:Key="show_exit_menu_item">Показати опцію Вийти в меню</s:String>
+    <s:String x:Key="show_end_task_button">Показувати пункт «Завершити завдання» в контекстному меню</s:String>
     <s:String x:Key="slide_taskbar_buttons">Анімація кнопок панелі</s:String>
     <s:String x:Key="show_clock_seconds">Показувати секунди на годиннику</s:String>
     <s:String x:Key="open_custom_themes_folder">Відкрити папку зі сторонніми темами</s:String>
@@ -86,8 +122,14 @@
     </x:Array>
     <s:String x:Key="hotkey_warning_title">Гарячі клавіші UltraWinBar</s:String>
     <s:String x:Key="hotkey_warning_text">UltraWinBar замінить гарячі клавіші Windows. Після закриття UltraWinBar вони не повернуться, поки не вийдете з системи й не увійдете знову.</s:String>
+    <s:String x:Key="allow_blur_behind">Дозволити розмиття за прозорою панеллю завдань</s:String>
     <s:String x:Key="ok_dialog">OK</s:String>
-
+    <s:String x:Key="clock_format_help">Переглянути доступні параметри форматування</s:String>
+    <s:String x:Key="clock_format_warning">Примітка: власний формат годинника може працювати не так, як очікується, якщо вибрана тема задає власний формат.</s:String>
+    <s:String x:Key="override_clock_format">Власний формат годинника:</s:String>
+    <s:String x:Key="override_ampm_designators">Власні позначення часу:</s:String>
+    <s:String x:Key="am_designator">До полудня:</s:String>
+    <s:String x:Key="pm_designator">Після полудня:</s:String>
     <s:String x:Key="customize_notifications">Налаштування панелі сповіщень</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar показує активні та термінові сповіщення, приховуючи неактивні. Ви можете змінити цю поведінку нижче.</s:String>
     <s:String x:Key="customize_notifications_instruction">Оберіть елемент і вкажіть його поведінку:</s:String>
@@ -98,13 +140,11 @@
     <s:String x:Key="name_heading">Назва</s:String>
     <s:String x:Key="behavior_heading">Поведінка</s:String>
     <s:String x:Key="invert_heading">Інверсія</s:String>
-
     <s:String x:Key="start_text">Пуск</s:String>
     <s:String x:Key="start_text_xp">пуск</s:String>
     <s:String x:Key="start_button_tip_98">Нажміть цю кнопку, щоб почати взаємодіяти з комп'ютером.</s:String>
     <s:String x:Key="start_button_tip">Нажміть цю кнопку, щоб почати взаємодіяти з комп'ютером</s:String>
     <s:String x:Key="start_button_tip_vista">Пуск</s:String>
-
     <s:String x:Key="ultrawinbar_title">Панель завдань UltraWinBar</s:String>
     <s:String x:Key="toolbars">Панелі інструментів</s:String>
     <s:String x:Key="quick_launch">Швидкий запуск</s:String>
@@ -123,24 +163,143 @@
     <s:String x:Key="tray_properties">В_ластивості</s:String>
     <s:String x:Key="update_available">Доступне оновлення...</s:String>
     <s:String x:Key="exit_ultrawinbar">Вийти з UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">Перезапустити UltraWinBar</s:String>
     <s:String x:Key="customize_notifications_menu">Н_астройка сповіщень...</s:String>
     <s:String x:Key="lock_taskbar_menu">_Закріпити панель завдань</s:String>
-
     <s:String x:Key="show_desktop_tip_95">Показати/відновити робочий стіл</s:String>
     <s:String x:Key="show_desktop_tip">Показати/відновити робочий стіл</s:String>
     <s:String x:Key="show_desktop_95">Робочий стіл</s:String>
     <s:String x:Key="show_desktop">Показати робочий стіл</s:String>
     <s:String x:Key="peek_at_desktop">Наведення курсору для поп. перегляду</s:String>
-
     <s:String x:Key="restore">Відновити</s:String>
     <s:String x:Key="move">Перемістити</s:String>
     <s:String x:Key="size">Розмір</s:String>
     <s:String x:Key="minimize">Згорнути</s:String>
     <s:String x:Key="maximize">Розгорнути</s:String>
     <s:String x:Key="close">Закрити</s:String>
-
+    <s:String x:Key="end_task">Завершити завдання</s:String>
     <s:String x:Key="show_hidden">Показати приховані значки</s:String>
     <s:String x:Key="hide">Приховати</s:String>
-
     <s:String x:Key="open_folder">&amp;Відкрити папку</s:String>
+    <s:String x:Key="move_to_taskbar_format">Перемістити на панель завдань {0}</s:String>
+    <s:String x:Key="ime_input_tip_enabled">Клацніть правою кнопкою, щоб відкрити параметри IME.</s:String>
+    <s:String x:Key="ime_input_tip_disabled">IME вимкнено</s:String>
+    <s:String x:Key="ime_input_full_shape_hiragana">Хіраґана</s:String>
+    <s:String x:Key="ime_input_full_shape_katakana">Катакана повної ширини</s:String>
+    <s:String x:Key="ime_input_full_shape_alphanumeric">Букви й цифри повної ширини</s:String>
+    <s:String x:Key="ime_input_katakana">Катакана половинної ширини</s:String>
+    <s:String x:Key="ime_input_alphanumeric">Букви й цифри половинної ширини</s:String>
+    <s:String x:Key="ime_input_direct">Пряме введення</s:String>
+    <s:String x:Key="ime_open_pad">Панель IME</s:String>
+    <s:String x:Key="ime_open_add_word_dictionary">Додати слово</s:String>
+    <s:String x:Key="ime_open_dictionary_tool">Інструмент словника користувача</s:String>
+    <s:String x:Key="ime_open_properties">Властивості</s:String>
+    <s:String x:Key="ime_input_key">Спосіб введення</s:String>
+    <s:String x:Key="ime_input_key_roma">Введення ромадзі</s:String>
+    <s:String x:Key="ime_input_key_kana">Введення кани</s:String>
+    <s:String x:Key="ime_conversion">Режим перетворення</s:String>
+    <s:String x:Key="ime_conversion_general">Загальний</s:String>
+    <s:String x:Key="ime_conversion_none">Без перетворення</s:String>
+    <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+    <s:String x:Key="pin_to_taskbar">Закріпити на цій панелі завдань</s:String>
+    <s:String x:Key="pinned_app_windows">Відкриті вікна</s:String>
+    <s:String x:Key="unpin_from_taskbar">Відкріпити від цієї панелі завдань</s:String>
+    <s:String x:Key="copy_executable_path">Копіювати шлях до виконуваного файлу</s:String>
+    <s:String x:Key="copy_executable_directory">Копіювати папку виконуваного файлу</s:String>
+    <!-- Items below are settings, and should always be in English -->
+    <FlowDirection x:Key="flow_direction">LeftToRight</FlowDirection>
+    <FontFamily x:Key="start_text_xp_font_family">Franklin Gothic</FontFamily>
+    <sys:String x:Key="app_all_desktops">Показувати вікна цієї програми на всіх робочих столах</sys:String>
+    <sys:String x:Key="move_window_desktop">Перемістити це вікно на робочий стіл</sys:String>
+    <sys:String x:Key="move_app_desktop">Перемістити всі вікна програми на робочий стіл</sys:String>
+    <sys:String x:Key="desktop_number">Робочий стіл {0}</sys:String>
+    <sys:String x:Key="desktop_action_failed">Windows не вдалося виконати цю дію для всіх вікон. Деякі вікна вже могли бути переміщені. Докладніше див. у журналі.</sys:String>
+    <s:String x:Key="show_hebrew_date">Показувати єврейську дату та пронумеровані дні тижня</s:String>
+    <s:String x:Key="hebrew_date_midnight">Використовується місцева календарна дата; вона змінюється опівночі, а не із заходом сонця.</s:String>
+    <s:String x:Key="hebrew_place">Місце для єврейської дати:</s:String>
+    <s:String x:Key="hebrew_place_none">не вибрано</s:String>
+    <s:String x:Key="hebrew_place_choose">Вибрати...</s:String>
+    <s:String x:Key="hebrew_place_clear">Очистити</s:String>
+    <s:String x:Key="zone_clear">Видалити</s:String>
+    <s:String x:Key="hebrew_place_hint">Місце, захід сонця в якому завершує єврейський день і за яким календар показує галахічний час.</s:String>
+    <s:String x:Key="hebrew_place_title">Місце для єврейської дати</s:String>
+    <s:String x:Key="hebrew_place_city_tab">Місто</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">Координати</s:String>
+    <s:String x:Key="hebrew_place_search">Назва міста (англійською):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">Введіть щонайменше дві літери, наприклад: jerus, new york, paris texas. У списку є міста з населенням від 10 000 осіб.</s:String>
+    <s:String x:Key="hebrew_place_country">Країна:</s:String>
+    <s:String x:Key="hebrew_place_need_country">Виберіть країну: це визначить, яке з двох чисел є широтою.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">Широта й довгота:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">Підійде будь-який формат: 32.0853, 34.7818 або 34,7818 32,0853 чи 32°05'07&quot;N 34°46'54&quot;E. Десятковий роздільник — крапка або кома; між числами — кома, двокрапка або пробіл.</s:String>
+    <s:String x:Key="hebrew_place_zone">Часовий пояс:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">Вибирається разом із містом; змініть його, якщо він неправильний. Правила часового поясу (літній час і його зміни) відповідають налаштуванням Windows.</s:String>
+    <s:String x:Key="calendar_title">Єврейський календар</s:String>
+    <s:String x:Key="calendar_today">Сьогодні</s:String>
+    <s:String x:Key="calendar_copy_name">Копіювати назву</s:String>
+    <s:String x:Key="calendar_search_name">Шукати назву в Google</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Єврейський місяць</s:String>
+    <s:String x:Key="calendar_grid_civil">Цивільний місяць</s:String>
+    <s:String x:Key="calendar_shabbat">Шабат</s:String>
+    <s:String x:Key="calendar_previous_month">Попередній місяць</s:String>
+    <s:String x:Key="calendar_next_month">Наступний місяць</s:String>
+    <s:String x:Key="calendar_settings">Налаштування...</s:String>
+    <s:String x:Key="calendar_close">Закрити</s:String>
+    <s:String x:Key="calendar_portion">Тижневий розділ Тори: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">Цього шабату читають святковий уривок</s:String>
+    <s:String x:Key="calendar_day_of">{0}, день {1} місяця {2}</s:String>
+    <s:String x:Key="calendar_molad">Молад місяця {0}: {1}, {2} і {3} халакім</s:String>
+    <s:String x:Key="calendar_omer">Відлік Омера</s:String>
+    <s:String x:Key="calendar_omer_day">{0}-й день Омера</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} тижнів і {1} днів</s:String>
+    <s:String x:Key="calendar_place">Місце: {0}</s:String>
+    <s:String x:Key="calendar_israel">Земля Ізраїлю</s:String>
+    <s:String x:Key="calendar_diaspora">діаспора</s:String>
+    <s:String x:Key="calendar_no_place">Щоб побачити часи дня, виберіть місце в налаштуваннях календаря.</s:String>
+    <s:String x:Key="calendar_times">Часи дня</s:String>
+    <s:String x:Key="calendar_yahrzeits">Йорцайти</s:String>
+    <s:String x:Key="calendar_candles_after_dark">Запалювання свічок (після настання ночі)</s:String>
+    <s:String x:Key="calendar_havdalah">Завершення дня відпочинку (авдала)</s:String>
+    <s:String x:Key="calendar_rest_begins">Початок: {0} (запалювання свічок)</s:String>
+    <s:String x:Key="calendar_rest_ends">Завершення: {0} (настання ночі)</s:String>
+    <s:String x:Key="calendar_settings_title">Налаштування календаря</s:String>
+    <s:String x:Key="calendar_settings_place">Місце часового поясу:</s:String>
+    <s:String x:Key="calendar_settings_zone">Часовий пояс для дати, зміни дня та часів дня:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (комп’ютера)</s:String>
+    <s:String x:Key="zones_heading">Часові пояси годинника</s:String>
+    <s:String x:Key="zone_main">Основний часовий пояс:</s:String>
+    <s:String x:Key="zone_second">Другий часовий пояс:</s:String>
+    <s:String x:Key="zone_third">Третій часовий пояс:</s:String>
+    <s:String x:Key="zone_show_name">Показувати назву</s:String>
+    <s:String x:Key="zone_label">Назва на годиннику</s:String>
+    <s:String x:Key="zone_label_hint">Назва, яку годинник показує для цього часового поясу замість його місця (наприклад, «Серце» для Єрусалима). Якщо залишити порожнім, показуватиметься місце.</s:String>
+    <s:String x:Key="zone_place">Місце:</s:String>
+    <s:String x:Key="zones_tab">Часові пояси</s:String>
+    <s:String x:Key="hebrew_date_tab">Єврейська дата</s:String>
+    <s:String x:Key="zone_computer">Комп’ютера ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">Єврейська дата відповідає місцю основного часового поясу, вибраному на вкладці «Часові пояси».</s:String>
+    <s:String x:Key="zone_none">(не показувати)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">Йорцайти для показу (усі, за категоріями, окремо):</s:String>
+    <s:String x:Key="calendar_all_figures">Усі</s:String>
+    <s:String x:Key="cancel_dialog">Скасувати</s:String>
+    <s:String x:Key="coordinate_result">Широта й довгота: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">Порядок указаний у тексті.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">Підходить лише один порядок: широта не перевищує 90 градусів.</s:String>
+    <s:String x:Key="coordinate_basis_country">Порядок визначено за країною: інший варіант указує на далеке від неї місце.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">Вважається, що спочатку вказано широту.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">Вважається, що спочатку вказано широту; порядок із довготою на першому місці так само добре відповідав би країні.</s:String>
+    <s:String x:Key="coordinate_warning_far">Відстань до найближчого міста цієї країни — {0:N0} км. Перевірте країну та координати.</s:String>
+    <s:String x:Key="coordinate_problem_empty">Введіть координати.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">Потрібні два числа: широта й довгота.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">Введено більше двох чисел. Введіть лише широту й довготу.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">Обидва числа позначено як широту.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">Обидва числа позначено як довготу.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">Широта має бути від -90 до 90 градусів.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">Довгота має бути від -180 до 180 градусів.</s:String>
+    <s:String x:Key="coordinate_problem_neither">За жодного порядку ці числа не утворюють широту (до 90) та довготу (до 180).</s:String>
+    <s:String x:Key="open_system_settings">Відкрити параметри системи</s:String>
+    <s:String x:Key="open_computer_management">Керування комп’ютером</s:String>
+    <s:String x:Key="open_drives">Відкрити диски</s:String>
+    <s:String x:Key="this_pc">Цей ПК</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">Намагатися залишати відкриті вікна на цьому робочому столі (експериментально)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Повторно використовувати вікна, показані на всіх робочих столах, не переміщуючи їх. Інакше значки робочого столу та закріплені засоби запуску відкривають браузери, папки Провідника й Notepad++ на поточному робочому столі; для інших програм і активації з області сповіщень вікна й надалі переміщуються.</s:String>
 </ResourceDictionary>

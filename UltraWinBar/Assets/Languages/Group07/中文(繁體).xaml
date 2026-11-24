@@ -7,11 +7,23 @@
     <s:String x:Key="advanced_tab">進階</s:String>
     <s:String x:Key="taskbar_appearance">工作列外觀</s:String>
     <s:String x:Key="notification_area">通知區域</s:String>
+    <s:String x:Key="general_heading">一般</s:String>
+    <s:String x:Key="clock_heading">時鐘</s:String>
     <s:String x:Key="autostart">開機時自動啟動(_L)</s:String>
     <s:String x:Key="language_text">語言(_G)：</s:String>
     <s:String x:Key="language_tip">選擇要使用的語言。</s:String>
     <s:String x:Key="theme_text">主題(_T)：</s:String>
     <s:String x:Key="theme_tip">在 Themes 資料夾中安裝主題。</s:String>
+    <s:String x:Key="accent_text">强調色(_C):</s:String>
+    <s:String x:Key="accent_tip">“Modern Glass”主題的霓虹色。</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>青色</s:String>
+        <s:String>紫罗兰色</s:String>
+        <s:String>品紅色</s:String>
+        <s:String>翠綠色</s:String>
+        <s:String>琥珀色</s:String>
+        <s:String>玫瑰色</s:String>
+    </x:Array>
     <s:String x:Key="location_text">位置(_I)：</s:String>
     <s:String x:Key="location_tip">更改螢幕上的工作列位置。</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -20,6 +32,9 @@
         <s:String>右</s:String>
         <s:String>下</s:String>
     </x:Array>
+    <s:String x:Key="rowcount_text">行數(_R): </s:String>
+    <s:String x:Key="rowcount_tip">任務欄位於顶部或底部時的行數。</s:String>
+    <s:String x:Key="taskbar_width">任務欄寬度(_W): </s:String>
     <s:String x:Key="allow_font_smoothing">允許字體平滑(_A)</s:String>
     <s:String x:Key="allow_font_smoothing_menu">允許選單中的字體平滑(_A)</s:String>
     <s:String x:Key="collapse_tray_icons">隱藏非使用中時圖示(_N)</s:String>
@@ -27,9 +42,11 @@
     <s:String x:Key="show_input_language">顯示語言列</s:String>
     <s:String x:Key="show_clock">顯示小時鐘(_C)</s:String>
     <s:String x:Key="show_multi_mon">在多個顯示器上顯示(_M)</s:String>
+    <s:String x:Key="show_start_button_multi_mon">在所有任務欄上顯示“開始”按鈕(_S)</s:String>
     <s:String x:Key="show_quick_launch">顯示快速啟動(_Q)</s:String>
     <s:String x:Key="select_location">選擇位置(_S)...</s:String>
     <s:String x:Key="quick_launch_folder">快速啟動 - 選擇一個資料夾</s:String>
+    <s:String x:Key="show_badges">顯示通知標記(_B)</s:String>
     <s:String x:Key="show_window_previews">顯示視窗縮圖(_W)</s:String>
     <s:String x:Key="use_software_rendering">使用軟體渲染(_U)</s:String>
     <s:String x:Key="add_show_desktop_button">啟用「顯示桌面」按鈕</s:String>
@@ -42,57 +59,244 @@
         <s:String>視窗所在螢幕</s:String>
         <s:String>主螢幕及視窗所在螢幕</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">反轉灰度颜色(_I):</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>按主題需要</s:String>
         <s:String>始終啟用</s:String>
         <s:String>從不</s:String>
     </x:Array>
+    <s:String x:Key="middle_mouse_task_action">中键单击後的行為(_M):</s:String>
+    <x:Array x:Key="middle_mouse_task_action_values" Type="s:String">
+        <s:String>什么也不做</s:String>
+        <s:String>打開一個新實例</s:String>
+        <s:String>關閉任務</s:String>
+    </x:Array>
+    <s:String x:Key="clock_click_action">单击時鐘後的行為(_C):</s:String>
+    <x:Array x:Key="clock_click_action_values" Type="s:String">
+        <s:String>什么也不做</s:String>
+        <s:String>打開 Aero 样式日曆</s:String>
+        <s:String>打開现代样式日曆</s:String>
+        <s:String>打開通知中心</s:String>
+    </x:Array>
+    <s:String x:Key="task_wheel_action">鼠標滾輪動作(_M):</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>什么也不做</s:String>
+        <s:String>顯示/隱藏窗口</s:String>
+    </x:Array>
+    <s:String x:Key="auto_hide_transparent">若此選項不被選中，则自動隱藏時保留一根细線(_T)</s:String>
     <s:String x:Key="version">版本 {0}</s:String>
     <s:String x:Key="visit_on_github">瀏覽GitHub上的UltraWinBar</s:String>
+    <s:String x:Key="multiple_taskbars_heading">多個任務欄</s:String>
+    <s:String x:Key="additional_taskbars_text">在這些邊緣顯示任務欄。右键单击任務欄可使其延伸至整個邊緣，並将其他任務欄推開。</s:String>
+    <s:String x:Key="location_left">左侧</s:String>
+    <s:String x:Key="location_top">顶部</s:String>
+    <s:String x:Key="location_right">右侧</s:String>
+    <s:String x:Key="location_bottom">底部</s:String>
+    <s:String x:Key="tray_location_text">通知區域位置(_N):</s:String>
+    <s:String x:Key="clock_location_text">時鐘位置(_C):</s:String>
+    <s:String x:Key="start_button_location_text">開始按鈕位置(_R):</s:String>
+    <s:String x:Key="language_location_text">語言指示器位置(_L):</s:String>
+    <s:String x:Key="task_assignment_hint">将任務按鈕拖到另一個任務欄可移動整個應用程序；拖動時按住 Ctrl 可僅移動該窗口。右键单击任務按鈕可重置其分配。</s:String>
+    <s:String x:Key="reset_task_assignments">重置所有任務欄分配</s:String>
+    <s:String x:Key="stretch">拉伸(_S)</s:String>
+    <s:String x:Key="make_main">設為主任務欄(_M)</s:String>
+    <s:String x:Key="reset_task_assignment">重置任務欄分配(_N)</s:String>
     <s:String x:Key="taskbar_scale">縮放工作列</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">目前設定: {0}%</s:String>
     <s:String x:Key="debug_logging">啟用除錯記錄</s:String>
+    <s:String x:Key="window_activity_logging">記錄窗口的打開和關閉</s:String>
+    <s:String x:Key="check_for_updates">检查更新(_U)</s:String>
+    <s:String x:Key="show_exit_menu_item">在右键菜单中顯示“退出”選項(_X)</s:String>
+    <s:String x:Key="show_end_task_button">在右键菜单中顯示“結束任務”選項(_T)</s:String>
+    <s:String x:Key="slide_taskbar_buttons">滑動任務欄按鈕(_E)</s:String>
+    <s:String x:Key="show_clock_seconds">顯示時鐘中的秒數(_H)</s:String>
+    <s:String x:Key="open_custom_themes_folder">打開自定义主題文件夹</s:String>
+    <s:String x:Key="win_num_hotkeys_action">Win+[0-9] 热键操作(_H)：</s:String>
+    <x:Array x:Key="win_num_hotkeys_action_values" Type="s:String">
+        <s:String>Windows 默认</s:String>
+        <s:String>切換任務</s:String>
+        <s:String>打開快速啟動項</s:String>
+    </x:Array>
+    <s:String x:Key="hotkey_warning_title">UltraWinBar 热键</s:String>
+    <s:String x:Key="hotkey_warning_text">UltraWinBar 會覆盖 Windows 任務欄热键。即使 UltraWinBar 關閉，這些热键也不會恢複到 Windows 係統，直到您注销並重新登錄。</s:String>
+    <s:String x:Key="allow_blur_behind">允许在透明任務欄後方添加模糊效果(_B)</s:String>
     <s:String x:Key="ok_dialog">確定</s:String>
-
+    <s:String x:Key="clock_format_help">查看可用的格式選項</s:String>
+    <s:String x:Key="clock_format_warning">注意: 如果您選擇的主題指定了自己的格式，自定义時鐘格式可能不會按預期工作。</s:String>
+    <s:String x:Key="override_clock_format">自定义時鐘格式(_F):</s:String>
+    <s:String x:Key="override_ampm_designators">自定义設計符(_E):</s:String>
+    <s:String x:Key="am_designator">上午:</s:String>
+    <s:String x:Key="pm_designator">下午:</s:String>
     <s:String x:Key="customize_notifications">自訂通知</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar 會顯示作用中和重要的通知，並隱藏非使用中的通知。您可以從以下清單中，改變項目的通知行為。</s:String>
     <s:String x:Key="customize_notifications_instruction">請選擇一個項目，再選擇其通知行為：</s:String>
     <s:String x:Key="hide_when_inactive">非使用中時隱藏</s:String>
     <s:String x:Key="always_show">永遠顯示</s:String>
+    <s:String x:Key="always_hide">总是隱藏</s:String>
+    <s:String x:Key="remove">移除</s:String>
     <s:String x:Key="name_heading">名稱</s:String>
     <s:String x:Key="behavior_heading">行為</s:String>
-
+    <s:String x:Key="invert_heading">反向</s:String>
     <s:String x:Key="start_text">開始</s:String>
     <s:String x:Key="start_text_xp">開始</s:String>
     <s:String x:Key="start_button_tip_98">請按這個地方，開始作業</s:String>
     <s:String x:Key="start_button_tip">請按這裡開始操作</s:String>
     <s:String x:Key="start_button_tip_vista">開始</s:String>
-
     <s:String x:Key="ultrawinbar_title">UltraWinBar 工作列</s:String>
     <s:String x:Key="toolbars">工具列(_T)</s:String>
     <s:String x:Key="quick_launch">快速啟動(_Q)</s:String>
     <s:String x:Key="new_toolbar">新增工具列(_N)...</s:String>
     <s:String x:Key="set_time">調整日期/時間(_A)</s:String>
+    <s:String x:Key="cascade">並排窗口(_S)</s:String>
+    <s:String x:Key="horiz_tile">水平铺窗口(_H)</s:String>
+    <s:String x:Key="vert_tile">垂直平铺窗口(_V)</s:String>
+    <s:String x:Key="toggle_desktop">顯示桌面(_S)</s:String>
+    <s:String x:Key="hide_desktop">顯示打開的窗口(_S)</s:String>
+    <s:String x:Key="undo_cascade">撤销並排(_U)</s:String>
+    <s:String x:Key="undo_tile">撤消平铺(_U)</s:String>
+    <s:String x:Key="undo_minimize_all">撤消最小化全部窗口(_U)</s:String>
     <s:String x:Key="show_taskman_2k">工作管理員(_K)...</s:String>
     <s:String x:Key="show_taskman">工作管理員(_K)</s:String>
     <s:String x:Key="tray_properties">內容(_R)</s:String>
     <s:String x:Key="update_available">有可用更新(_U)...</s:String>
     <s:String x:Key="exit_ultrawinbar">結束 UltraWinBar(_E)</s:String>
+    <s:String x:Key="restart_ultrawinbar">重新啟動 UltraWinBar(_A)</s:String>
     <s:String x:Key="customize_notifications_menu">自訂通知(_C)...</s:String>
-
+    <s:String x:Key="lock_taskbar_menu">鎖定任務欄(_L)</s:String>
+    <s:String x:Key="show_desktop_tip_95">浮出或還原桌面</s:String>
+    <s:String x:Key="show_desktop_tip">顯示桌面</s:String>
+    <s:String x:Key="show_desktop_95">桌面(_D)</s:String>
+    <s:String x:Key="show_desktop">顯示桌面(_S)</s:String>
+    <s:String x:Key="peek_at_desktop">窥视桌面(_P)</s:String>
     <s:String x:Key="restore">還原(_R)</s:String>
     <s:String x:Key="move">移動(_M)</s:String>
     <s:String x:Key="size">大小(_S)</s:String>
     <s:String x:Key="minimize">最小化(_N)</s:String>
     <s:String x:Key="maximize">最大化(_X)</s:String>
     <s:String x:Key="close">關閉(_C)</s:String>
-
+    <s:String x:Key="end_task">結束任務(_E)</s:String>
     <s:String x:Key="show_hidden">顯示隱藏的圖示</s:String>
     <s:String x:Key="hide">隱藏</s:String>
-
     <s:String x:Key="open_folder">&amp;開啟資料夾</s:String>
-
+    <s:String x:Key="move_to_taskbar_format">移動到任務欄 {0}</s:String>
+    <s:String x:Key="ime_input_tip_enabled">右键单击打開輸入法编辑器選項</s:String>
+    <s:String x:Key="ime_input_tip_disabled">輸入法编辑器已禁用</s:String>
+    <s:String x:Key="ime_input_full_shape_hiragana">平假名(_H)</s:String>
+    <s:String x:Key="ime_input_full_shape_katakana">全寬片假名(_K)</s:String>
+    <s:String x:Key="ime_input_full_shape_alphanumeric">全角字母數字(_W)</s:String>
+    <s:String x:Key="ime_input_katakana">半寬片假名(_N)</s:String>
+    <s:String x:Key="ime_input_alphanumeric">半角字母數字(_F)</s:String>
+    <s:String x:Key="ime_input_direct">直接輸入(_D)</s:String>
+    <s:String x:Key="ime_open_pad">輸入法编辑器辅助面板(_P)</s:String>
+    <s:String x:Key="ime_open_add_word_dictionary">添加单词(_O)</s:String>
+    <s:String x:Key="ime_open_dictionary_tool">用戶词典工具(_T)</s:String>
+    <s:String x:Key="ime_open_properties">属性(_R)</s:String>
+    <s:String x:Key="ime_input_key">輸入法(_M)</s:String>
+    <s:String x:Key="ime_input_key_roma">罗马音輸入(_R)</s:String>
+    <s:String x:Key="ime_input_key_kana">假名輸入(_T)</s:String>
+    <s:String x:Key="ime_conversion">轉換模式(_C)</s:String>
+    <s:String x:Key="ime_conversion_general">常规(_G)</s:String>
+    <s:String x:Key="ime_conversion_none">不轉換(_O)</s:String>
+    <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+    <s:String x:Key="pin_to_taskbar">固定到此任務欄</s:String>
+    <s:String x:Key="pinned_app_windows">打開的窗口</s:String>
+    <s:String x:Key="unpin_from_taskbar">從此任務欄取消固定</s:String>
+    <s:String x:Key="copy_executable_path">複製可執行文件路径</s:String>
+    <s:String x:Key="copy_executable_directory">複製可執行文件所在文件夹</s:String>
+    <s:String x:Key="app_all_desktops">在所有桌面上顯示此應用程式的視窗</s:String>
+    <s:String x:Key="move_window_desktop">將此視窗移至桌面</s:String>
+    <s:String x:Key="move_app_desktop">將此應用程式的所有視窗移至桌面</s:String>
+    <s:String x:Key="desktop_number">桌面 {0}</s:String>
+    <s:String x:Key="desktop_action_failed">Windows 無法對所有視窗完成作業。部分視窗可能已經移動。詳情請參閱記錄。</s:String>
+    <s:String x:Key="show_hebrew_date">顯示希伯來日期及編號星期</s:String>
+    <s:String x:Key="hebrew_date_midnight">使用當地日曆日期；於午夜變更，而非日落時變更。</s:String>
+    <s:String x:Key="hebrew_place">希伯來日期的地點：</s:String>
+    <s:String x:Key="hebrew_place_none">未選擇</s:String>
+    <s:String x:Key="hebrew_place_choose">選擇...</s:String>
+    <s:String x:Key="hebrew_place_clear">清除</s:String>
+    <s:String x:Key="zone_clear">移除</s:String>
+    <s:String x:Key="hebrew_place_hint">以其日落時間作為希伯來日結束時間的地點，日曆也會顯示該地點的哈拉卡時間。</s:String>
+    <s:String x:Key="hebrew_place_title">希伯來日期的地點</s:String>
+    <s:String x:Key="hebrew_place_city_tab">城市</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">座標</s:String>
+    <s:String x:Key="hebrew_place_search">城市名稱（英文）：</s:String>
+    <s:String x:Key="hebrew_place_search_hint">輸入至少兩個字母，例如：jerus、new york、paris texas。列出人口 10 000 人以上的城市。</s:String>
+    <s:String x:Key="hebrew_place_country">國家/地區：</s:String>
+    <s:String x:Key="hebrew_place_need_country">選擇國家/地區：這會指出哪個數字是緯度。</s:String>
+    <s:String x:Key="hebrew_place_coordinates">緯度和經度：</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">任何格式皆可：32.0853, 34.7818 或 34,7818 32,0853 或 32°05'07&quot;N 34°46'54&quot;E。小數部分可用句點或逗號；數字之間可用逗號、冒號或空格。</s:String>
+    <s:String x:Key="hebrew_place_zone">時區：</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">依城市選擇；若有誤請變更。時區規則（夏令時間及其變更）採用 Windows 中的設定。</s:String>
+    <s:String x:Key="calendar_title">猶太曆</s:String>
+    <s:String x:Key="calendar_today">今天</s:String>
+    <s:String x:Key="calendar_copy_name">複製名稱</s:String>
+    <s:String x:Key="calendar_search_name">在 Google 搜尋名稱</s:String>
+    <s:String x:Key="calendar_grid_hebrew">希伯來月份</s:String>
+    <s:String x:Key="calendar_grid_civil">公曆月份</s:String>
+    <s:String x:Key="calendar_shabbat">安息日</s:String>
+    <s:String x:Key="calendar_previous_month">上個月</s:String>
+    <s:String x:Key="calendar_next_month">下個月</s:String>
+    <s:String x:Key="calendar_settings">設定...</s:String>
+    <s:String x:Key="calendar_close">關閉</s:String>
+    <s:String x:Key="calendar_portion">每週妥拉段落：{0}</s:String>
+    <s:String x:Key="calendar_festival_reading">本安息日誦讀節日經文</s:String>
+    <s:String x:Key="calendar_day_of">{0}，{2}的第 {1} 日</s:String>
+    <s:String x:Key="calendar_molad">{0}的新月時刻：{1}，{2}及 {3} 個 chalakim</s:String>
+    <s:String x:Key="calendar_omer">數算俄梅珥</s:String>
+    <s:String x:Key="calendar_omer_day">俄梅珥第 {0} 天</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} 週又 {1} 天</s:String>
+    <s:String x:Key="calendar_place">地點：{0}</s:String>
+    <s:String x:Key="calendar_israel">以色列地</s:String>
+    <s:String x:Key="calendar_diaspora">散居地</s:String>
+    <s:String x:Key="calendar_no_place">請在行事曆設定中選擇地點，以查看每日時間。</s:String>
+    <s:String x:Key="calendar_times">每日時間</s:String>
+    <s:String x:Key="calendar_yahrzeits">逝世紀念日</s:String>
+    <s:String x:Key="calendar_candles_after_dark">點燃安息日蠟燭（入夜後）</s:String>
+    <s:String x:Key="calendar_havdalah">安息日結束（哈夫達拉）</s:String>
+    <s:String x:Key="calendar_rest_begins">開始：{0}（點燃蠟燭）</s:String>
+    <s:String x:Key="calendar_rest_ends">結束：{0}（入夜）</s:String>
+    <s:String x:Key="calendar_settings_title">行事曆設定</s:String>
+    <s:String x:Key="calendar_settings_place">時區地點：</s:String>
+    <s:String x:Key="calendar_settings_zone">日期、日期變更及每日時間所用時區：</s:String>
+    <s:String x:Key="calendar_zone_main">{0}（電腦時區）</s:String>
+    <s:String x:Key="zones_heading">時鐘時區</s:String>
+    <s:String x:Key="zone_main">主要時區：</s:String>
+    <s:String x:Key="zone_second">第二時區：</s:String>
+    <s:String x:Key="zone_third">第三時區：</s:String>
+    <s:String x:Key="zone_show_name">顯示名稱</s:String>
+    <s:String x:Key="zone_label">時鐘上顯示的名稱：</s:String>
+    <s:String x:Key="zone_label_hint">時鐘會以自訂名稱取代此時區的地點名稱（例如將 Jerusalem 顯示為 Heart）；留空則會顯示地點。</s:String>
+    <s:String x:Key="zone_place">地點：</s:String>
+    <s:String x:Key="zones_tab">時區</s:String>
+    <s:String x:Key="hebrew_date_tab">希伯來日期</s:String>
+    <s:String x:Key="zone_computer">電腦的時區（{0}）</s:String>
+    <s:String x:Key="hebrew_place_in_zones">希伯來日期採用主要時區的地點，請在「時區」索引標籤中選擇。</s:String>
+    <s:String x:Key="zone_none">（不顯示）</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">要顯示的逝世紀念日（全部、依類別或逐一選擇）：</s:String>
+    <s:String x:Key="calendar_all_figures">全部</s:String>
+    <s:String x:Key="cancel_dialog">取消</s:String>
+    <s:String x:Key="coordinate_result">緯度和經度：{0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">順序依文字中的標示判定。</s:String>
+    <s:String x:Key="coordinate_basis_only_one">只有一種順序符合：緯度最多為 90 度。</s:String>
+    <s:String x:Key="coordinate_basis_country">順序依國家/地區判定：另一種順序會落在距離很遠的位置。</s:String>
+    <s:String x:Key="coordinate_basis_assumed">假設緯度在前。</s:String>
+    <s:String x:Key="coordinate_warning_assumed">假設緯度在前；若經度在前，與國家/地區的符合程度也差不多。</s:String>
+    <s:String x:Key="coordinate_warning_far">此點距離該國家/地區最近的城市 {0:N0} 公里。請檢查國家/地區及數字。</s:String>
+    <s:String x:Key="coordinate_problem_empty">請輸入座標。</s:String>
+    <s:String x:Key="coordinate_problem_need_two">需要兩個數字：緯度和經度。</s:String>
+    <s:String x:Key="coordinate_problem_too_many">數字超過兩個。請只輸入緯度和經度。</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">兩個數字都標示為緯度。</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">兩個數字都標示為經度。</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">緯度必須介於 -90 到 90 度之間。</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">經度必須介於 -180 到 180 度之間。</s:String>
+    <s:String x:Key="coordinate_problem_neither">無論哪種順序，這些數字都無法構成緯度（最多 90）和經度（最多 180）。</s:String>
+    <s:String x:Key="open_system_settings">開啟系統設定</s:String>
+    <s:String x:Key="open_computer_management">電腦管理</s:String>
+    <s:String x:Key="open_drives">開啟磁碟機</s:String>
+    <s:String x:Key="this_pc">本機</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">嘗試讓已開啟的視窗留在此桌面（實驗性功能）</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">重複使用顯示於所有桌面的視窗，而不移動它們。否則，桌面圖示和釘選的啟動器會在本機開啟瀏覽器、檔案總管資料夾和 Notepad++；其他應用程式及通知區域啟用仍會移轉視窗。</s:String>
     <FontFamily x:Key="start_text_xp_font_family">PMingLiU</FontFamily>
 </ResourceDictionary>

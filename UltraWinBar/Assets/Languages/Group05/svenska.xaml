@@ -14,6 +14,16 @@
     <s:String x:Key="language_tip">Välj det språk som ska användas.</s:String>
     <s:String x:Key="theme_text">_Tema:</s:String>
     <s:String x:Key="theme_tip">Installera teman i mappen Teman.</s:String>
+    <s:String x:Key="accent_text">Accent_färg:</s:String>
+    <s:String x:Key="accent_tip">Neonfärgen i temat Modern Glass.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>Cyan</s:String>
+        <s:String>Violett</s:String>
+        <s:String>Fuchsia</s:String>
+        <s:String>Smaragd</s:String>
+        <s:String>Bärnsten</s:String>
+        <s:String>Ros</s:String>
+    </x:Array>
     <s:String x:Key="location_text">Pl_ats:</s:String>
     <s:String x:Key="location_tip">Ändra platsen för aktivitetsfältet på skärmen.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -49,6 +59,7 @@
         <s:String>Samma aktivitetsfält som fönster</s:String>
         <s:String>Samma aktivitetsfält som fönster och primärt aktivitetsfält</s:String>
     </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_Invertera gråskalefärger:</s:String>
     <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
         <s:String>När det behövs efter tema</s:String>
         <s:String>Alltid</s:String>
@@ -67,14 +78,35 @@
         <s:String>Öppna Modern-kalendern</s:String>
         <s:String>Öppna meddelandecentret</s:String>
     </x:Array>
+    <s:String x:Key="task_wheel_action">_Åtgärd med mushjulet:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>Gör ingenting</s:String>
+        <s:String>Visa/dölj fönster</s:String>
+    </x:Array>
     <s:String x:Key="auto_hide_transparent">Dölj aktivitetsfältet linje när det är dolt med automatisk döljning</s:String>
     <s:String x:Key="version">Version {0}</s:String>
     <s:String x:Key="visit_on_github">Besök UltraWinBar på GitHub</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Flera aktivitetsfält</s:String>
+    <s:String x:Key="additional_taskbars_text">Visa ett aktivitetsfält längs dessa kanter. Högerklicka på aktivitetsfältet för att låta det sträcka sig längs hela kanten och skjuta undan de andra.</s:String>
+    <s:String x:Key="location_left">Vänster</s:String>
+    <s:String x:Key="location_top">Överst</s:String>
+    <s:String x:Key="location_right">Höger</s:String>
+    <s:String x:Key="location_bottom">Nederst</s:String>
+    <s:String x:Key="tray_location_text">_Meddelandefält på:</s:String>
+    <s:String x:Key="clock_location_text">_Klocka på:</s:String>
+    <s:String x:Key="start_button_location_text">_Startknapp på:</s:String>
+    <s:String x:Key="language_location_text">_Språkindikator på:</s:String>
+    <s:String x:Key="task_assignment_hint">Dra en aktivitetsknapp till ett annat aktivitetsfält för att flytta hela programmet; håll Ctrl medan du drar för att bara flytta det fönstret. Högerklicka på en aktivitetsknapp för att återställa dess tilldelning.</s:String>
+    <s:String x:Key="reset_task_assignments">Återställ alla tilldelningar av aktivitetsfält</s:String>
+    <s:String x:Key="stretch">_Sträck ut</s:String>
+    <s:String x:Key="make_main">_Gör till huvudfält</s:String>
+    <s:String x:Key="reset_task_assignment">Återställ tilldelning av aktivitetsfält</s:String>
     <s:String x:Key="taskbar_scale">Aktivitetsfältets skala</s:String>
     <s:String x:Key="taskbar_scale_1x">100%</s:String>
     <s:String x:Key="taskbar_scale_2x">200%</s:String>
     <s:String x:Key="taskbar_scale_current">Aktuell inställning: {0}%</s:String>
     <s:String x:Key="debug_logging">Aktivera felsökningsloggning</s:String>
+    <s:String x:Key="window_activity_logging">Logga när fönster öppnas och stängs</s:String>
     <s:String x:Key="check_for_updates">Sök efter uppdateringar</s:String>
     <s:String x:Key="show_exit_menu_item">Visa alternativet Stäng i högerklickmenyn</s:String>
     <s:String x:Key="show_end_task_button">Visa alternativet Avsluta uppgift i högerklickmenyn</s:String>
@@ -91,7 +123,12 @@
     <s:String x:Key="hotkey_warning_text">UltraWinBar åsidosätter Windows aktivitetsfältets snabbtangenter. Även om UltraWinBar stängs återställs de inte till Windows förrän du loggar ut och loggar in igen.</s:String>
     <s:String x:Key="allow_blur_behind">Tillåt _oskärpa bakom transparent aktivitetsfält</s:String>
     <s:String x:Key="ok_dialog">OK</s:String>
-
+    <s:String x:Key="clock_format_help">Visa tillgängliga formateringsalternativ</s:String>
+    <s:String x:Key="clock_format_warning">Obs! Anpassat klockformat kanske inte fungerar som förväntat om det valda temat anger ett eget format.</s:String>
+    <s:String x:Key="override_clock_format">Anpassat klock_format:</s:String>
+    <s:String x:Key="override_ampm_designators">Anpassade _beteckningar:</s:String>
+    <s:String x:Key="am_designator">FM:</s:String>
+    <s:String x:Key="pm_designator">EM:</s:String>
     <s:String x:Key="customize_notifications">Anpassa meddelanden</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar visar ikoner för aktiva och brådskande meddelanden, men inaktiva meddelanden döljs. Du kan ange hur meddelanden som rör objekten i listan nedan ska visas.</s:String>
     <s:String x:Key="customize_notifications_instruction">Markera ett objekt och ange hur meddelanden som rör objektet ska visas:</s:String>
@@ -102,13 +139,11 @@
     <s:String x:Key="name_heading">Namn</s:String>
     <s:String x:Key="behavior_heading">Beteende</s:String>
     <s:String x:Key="invert_heading">Invertera</s:String>
-
     <s:String x:Key="start_text">Start</s:String>
     <s:String x:Key="start_text_xp">Start</s:String>
     <s:String x:Key="start_button_tip_98">Klicka här om du vill starta.</s:String>
     <s:String x:Key="start_button_tip">Klicka här om du vill starta</s:String>
     <s:String x:Key="start_button_tip_vista">Start</s:String>
-
     <s:String x:Key="ultrawinbar_title">UltraWinBar Aktivitetsfältet</s:String>
     <s:String x:Key="toolbars">Verk_tygsfält</s:String>
     <s:String x:Key="quick_launch">Sna_bbstart</s:String>
@@ -127,15 +162,14 @@
     <s:String x:Key="tray_properties">Egenskape_r</s:String>
     <s:String x:Key="update_available">_Uppdatering tillgänglig...</s:String>
     <s:String x:Key="exit_ultrawinbar">A_vsluta UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">_Starta om UltraWinBar</s:String>
     <s:String x:Key="customize_notifications_menu">A_npassa meddelanden...</s:String>
     <s:String x:Key="lock_taskbar_menu">_Lock the Taskbar</s:String>
-
     <s:String x:Key="show_desktop_tip_95">Yta/Återställ skrivbord</s:String>
     <s:String x:Key="show_desktop_tip">Visa skrivbordet</s:String>
     <s:String x:Key="show_desktop_95">_Skrivbord</s:String>
     <s:String x:Key="show_desktop">_Visa skrivbordet</s:String>
     <s:String x:Key="peek_at_desktop">_Titta på skrivbordet</s:String>
-
     <s:String x:Key="restore">_Återställ</s:String>
     <s:String x:Key="move">_Flytta</s:String>
     <s:String x:Key="size">Ändra _storlek</s:String>
@@ -143,12 +177,10 @@
     <s:String x:Key="maximize">Ma_ximera</s:String>
     <s:String x:Key="close">St_äng</s:String>
     <s:String x:Key="end_task">_Avsluta uppgift</s:String>
-
     <s:String x:Key="show_hidden">Visa dolda ikoner</s:String>
     <s:String x:Key="hide">Dölj</s:String>
-
     <s:String x:Key="open_folder">&amp;Öppna mappen</s:String>
-
+    <s:String x:Key="move_to_taskbar_format">Flytta till aktivitetsfält {0}</s:String>
     <s:String x:Key="ime_input_tip_enabled">Högerklicka för IME-alternativ</s:String>
     <s:String x:Key="ime_input_tip_disabled">IME inaktiverat</s:String>
     <s:String x:Key="ime_input_full_shape_hiragana">Hiragana</s:String>
@@ -168,4 +200,104 @@
     <s:String x:Key="ime_conversion_general">Allmänt</s:String>
     <s:String x:Key="ime_conversion_none">Ingen konvertering</s:String>
     <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+    <s:String x:Key="pin_to_taskbar">Fäst i det här aktivitetsfältet</s:String>
+    <s:String x:Key="pinned_app_windows">Öppna fönster</s:String>
+    <s:String x:Key="unpin_from_taskbar">Lossa från det här aktivitetsfältet</s:String>
+    <s:String x:Key="copy_executable_path">Kopiera sökvägen till programfilen</s:String>
+    <s:String x:Key="copy_executable_directory">Kopiera programmets mapp</s:String>
+    <s:String x:Key="app_all_desktops">Visa programmets fönster på alla skrivbord</s:String>
+    <s:String x:Key="move_window_desktop">Flytta det här fönstret till skrivbord</s:String>
+    <s:String x:Key="move_app_desktop">Flytta alla programmets fönster till skrivbord</s:String>
+    <s:String x:Key="desktop_number">Skrivbord {0}</s:String>
+    <s:String x:Key="desktop_action_failed">Windows kunde inte slutföra åtgärden för alla fönster. Vissa fönster kan redan ha flyttats. Se loggen för mer information.</s:String>
+    <s:String x:Key="show_hebrew_date">Visa hebreiskt datum och veckodagar med nummer</s:String>
+    <s:String x:Key="hebrew_date_midnight">Använder det lokala kalenderdatumet; ändras vid midnatt, inte vid solnedgången.</s:String>
+    <s:String x:Key="hebrew_place">Plats för det hebreiska datumet:</s:String>
+    <s:String x:Key="hebrew_place_none">inte vald</s:String>
+    <s:String x:Key="hebrew_place_choose">Välj...</s:String>
+    <s:String x:Key="hebrew_place_clear">Rensa</s:String>
+    <s:String x:Key="zone_clear">Ta bort</s:String>
+    <s:String x:Key="hebrew_place_hint">Platsen vars solnedgång avslutar den hebreiska dagen och vars halachiska tider kalendern visar.</s:String>
+    <s:String x:Key="hebrew_place_title">Plats för det hebreiska datumet</s:String>
+    <s:String x:Key="hebrew_place_city_tab">Stad</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">Koordinater</s:String>
+    <s:String x:Key="hebrew_place_search">Stadens namn (på engelska):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">Skriv minst två bokstäver, till exempel: jerus, new york, paris texas. Städer med minst 10 000 invånare visas.</s:String>
+    <s:String x:Key="hebrew_place_country">Land:</s:String>
+    <s:String x:Key="hebrew_place_need_country">Välj land: det avgör vilket av de två talen som är latitud.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">Latitud och longitud:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">Valfritt format går bra: 32.0853, 34.7818 eller 34,7818 32,0853 eller 32°05'07&quot;N 34°46'54&quot;E. Punkt eller komma i decimaldelen; komma, kolon eller mellanslag mellan talen.</s:String>
+    <s:String x:Key="hebrew_place_zone">Tidszon:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">Väljs tillsammans med staden; ändra den om den är fel. Windows tidszonsregler (sommartid och ändringar) används.</s:String>
+    <s:String x:Key="calendar_title">Judisk kalender</s:String>
+    <s:String x:Key="calendar_today">I dag</s:String>
+    <s:String x:Key="calendar_copy_name">Kopiera namnet</s:String>
+    <s:String x:Key="calendar_search_name">Sök efter namnet på Google</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Hebreisk månad</s:String>
+    <s:String x:Key="calendar_grid_civil">Borgerlig månad</s:String>
+    <s:String x:Key="calendar_shabbat">Shabbat</s:String>
+    <s:String x:Key="calendar_previous_month">Föregående månad</s:String>
+    <s:String x:Key="calendar_next_month">Nästa månad</s:String>
+    <s:String x:Key="calendar_settings">Inställningar...</s:String>
+    <s:String x:Key="calendar_close">Stäng</s:String>
+    <s:String x:Key="calendar_portion">Veckans parasha: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">En högtidsläsning läses denna Shabbat</s:String>
+    <s:String x:Key="calendar_day_of">{0}, dag {1} av {2}</s:String>
+    <s:String x:Key="calendar_molad">Molad för {0}: {1}, {2} och {3} chalakim</s:String>
+    <s:String x:Key="calendar_omer">Räkning av Omer</s:String>
+    <s:String x:Key="calendar_omer_day">Dag {0} av Omer</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} vecka(or) och {1} dag(ar)</s:String>
+    <s:String x:Key="calendar_place">Plats: {0}</s:String>
+    <s:String x:Key="calendar_israel">Israels land</s:String>
+    <s:String x:Key="calendar_diaspora">diasporan</s:String>
+    <s:String x:Key="calendar_no_place">Välj en plats i kalenderinställningarna för att se dagens tider.</s:String>
+    <s:String x:Key="calendar_times">Dagens tider</s:String>
+    <s:String x:Key="calendar_yahrzeits">Yahrzeit</s:String>
+    <s:String x:Key="calendar_candles_after_dark">Ljuständning (efter mörkrets inbrott)</s:String>
+    <s:String x:Key="calendar_havdalah">Vilodagens slut (havdalah)</s:String>
+    <s:String x:Key="calendar_rest_begins">Börjar: {0} (ljuständning)</s:String>
+    <s:String x:Key="calendar_rest_ends">Slutar: {0} (mörkrets inbrott)</s:String>
+    <s:String x:Key="calendar_settings_title">Kalenderinställningar</s:String>
+    <s:String x:Key="calendar_settings_place">Plats för zonen:</s:String>
+    <s:String x:Key="calendar_settings_zone">Tidszon för datumet, dygnsbytet och dagens tider:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (datorns)</s:String>
+    <s:String x:Key="zones_heading">Klockans tidszoner</s:String>
+    <s:String x:Key="zone_main">Primär tidszon:</s:String>
+    <s:String x:Key="zone_second">Sekundär tidszon:</s:String>
+    <s:String x:Key="zone_third">Tredje tidszon:</s:String>
+    <s:String x:Key="zone_show_name">Visa namnet</s:String>
+    <s:String x:Key="zone_label">Namn på klockan</s:String>
+    <s:String x:Key="zone_label_hint">Ett namn som klockan visar för den här zonen i stället för dess plats (till exempel Heart för Jerusalem). Tomt fält visar platsen.</s:String>
+    <s:String x:Key="zone_place">Plats:</s:String>
+    <s:String x:Key="zones_tab">Tidszoner</s:String>
+    <s:String x:Key="hebrew_date_tab">Hebreiskt datum</s:String>
+    <s:String x:Key="zone_computer">Datorns ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">Det hebreiska datumet gäller platsen för den primära tidszonen, som väljs på fliken Tidszoner.</s:String>
+    <s:String x:Key="zone_none">(visas inte)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">Yahrzeit att visa (alla, efter kategori, en och en):</s:String>
+    <s:String x:Key="calendar_all_figures">Alla</s:String>
+    <s:String x:Key="cancel_dialog">Avbryt</s:String>
+    <s:String x:Key="coordinate_result">Latitud och longitud: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">Ordningen anges i texten.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">Endast en ordning passar: latituden är högst 90 grader.</s:String>
+    <s:String x:Key="coordinate_basis_country">Ordningen avgörs av landet: den andra placeringen hamnar långt därifrån.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">Latitud först antas.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">Latitud först antas; longitud först skulle passa landet ungefär lika bra.</s:String>
+    <s:String x:Key="coordinate_warning_far">Punkten ligger {0:N0} km från närmaste stad i landet. Kontrollera landet och koordinaterna.</s:String>
+    <s:String x:Key="coordinate_problem_empty">Ange koordinaterna.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">Två tal behövs: latitud och longitud.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">Fler än två tal. Ange endast latitud och longitud.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">Båda talen är angivna som latitud.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">Båda talen är angivna som longitud.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">Latituden måste vara mellan -90 och 90 grader.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">Longituden måste vara mellan -180 och 180 grader.</s:String>
+    <s:String x:Key="coordinate_problem_neither">Ingen ordning ger en latitud (högst 90) och en longitud (högst 180).</s:String>
+    <s:String x:Key="open_system_settings">Öppna systeminställningar</s:String>
+    <s:String x:Key="open_computer_management">Datorhantering</s:String>
+    <s:String x:Key="open_drives">Öppna enheter</s:String>
+    <s:String x:Key="this_pc">Den här datorn</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">Försök behålla öppnade fönster på det här skrivbordet (experimentellt)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Återanvänd fönster som visas på alla skrivbord utan att flytta dem. Annars öppnar skrivbordsikoner och fästa genvägar webbläsare, Utforskar-mappar och Notepad++ lokalt; andra program och aktivering från meddelandefältet fortsätter att flytta fönster.</s:String>
+
+
 </ResourceDictionary>

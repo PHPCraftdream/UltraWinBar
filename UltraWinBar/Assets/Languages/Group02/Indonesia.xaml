@@ -7,11 +7,23 @@
     <s:String x:Key="advanced_tab">Tingkat Lanjut</s:String>
     <s:String x:Key="taskbar_appearance">Tampilan bilah tugas</s:String>
     <s:String x:Key="notification_area">Area notifikasi</s:String>
+    <s:String x:Key="general_heading">Umum</s:String>
+    <s:String x:Key="clock_heading">Jam</s:String>
     <s:String x:Key="autostart">Mulai secara otomatis saat masuk</s:String>
     <s:String x:Key="language_text">Bahasa:</s:String>
     <s:String x:Key="language_tip">Pilih bahasa yang akan digunakan.</s:String>
     <s:String x:Key="theme_text">_Tema:</s:String>
     <s:String x:Key="theme_tip">Instal tema di folder Themes.</s:String>
+    <s:String x:Key="accent_text">_Warna aksen:</s:String>
+    <s:String x:Key="accent_tip">Warna neon pada tema Modern Glass.</s:String>
+    <x:Array x:Key="accent_values" Type="s:String">
+        <s:String>Sian</s:String>
+        <s:String>Violet</s:String>
+        <s:String>Fuksia</s:String>
+        <s:String>Zamrud</s:String>
+        <s:String>Ambar</s:String>
+        <s:String>Merah muda</s:String>
+    </x:Array>
     <s:String x:Key="location_text">Lokasi:</s:String>
     <s:String x:Key="location_tip">Ubah lokasi bilah tugas di layar.</s:String>
     <x:Array x:Key="location_values" Type="s:String">
@@ -20,25 +32,115 @@
         <s:String>Kanan</s:String>
         <s:String>Bawah</s:String>
     </x:Array>
+    <s:String x:Key="rowcount_text">Jumlah _baris:</s:String>
+    <s:String x:Key="rowcount_tip">Jumlah baris pada bilah tugas saat berada di atas atau bawah.</s:String>
+    <s:String x:Key="taskbar_width">_Lebar bilah tugas:</s:String>
     <s:String x:Key="allow_font_smoothing">Izink_an penghalusan font</s:String>
     <s:String x:Key="allow_font_smoothing_menu">Izinkan penghalusan _font di menu</s:String>
     <s:String x:Key="collapse_tray_icons">Ciutkan ikon area _notifikasi</s:String>
     <s:String x:Key="customize">S_esuaikan...</s:String>
+    <s:String x:Key="show_input_language">Tampilkan _bahasa input</s:String>
     <s:String x:Key="show_clock">Tunjukkan jam</s:String>
     <s:String x:Key="show_multi_mon">Tampilkan di beberapa tampilan</s:String>
+    <s:String x:Key="show_start_button_multi_mon">Tampilkan tombol _Mulai di semua bilah tugas</s:String>
     <s:String x:Key="show_quick_launch">Tampilkan Luncur Cepat</s:String>
     <s:String x:Key="select_location">Pilih lokasi...</s:String>
     <s:String x:Key="quick_launch_folder">Luncur Cepat - Pilih folder</s:String>
+    <s:String x:Key="show_badges">Tampilkan _lencana</s:String>
+    <s:String x:Key="show_window_previews">Tampilkan pratinjau jendela (_gambar mini)</s:String>
     <s:String x:Key="use_software_rendering">Gunakan perenderan perangkat l_unak</s:String>
+    <s:String x:Key="add_show_desktop_button">Tambahkan tombol Tampilkan _Desktop</s:String>
+    <s:String x:Key="enable_auto_hide">_Sembunyikan bilah tugas otomatis</s:String>
+    <s:String x:Key="lock_taskbar">_Kunci bilah tugas</s:String>
+    <s:String x:Key="multiple_displays">Beberapa layar</s:String>
+    <s:String x:Key="show_tasks_on">_Tampilkan tugas di:</s:String>
+    <x:Array x:Key="show_tasks_on_values" Type="s:String">
+        <s:String>Semua bilah tugas</s:String>
+        <s:String>Bilah tugas yang sama dengan jendela</s:String>
+        <s:String>Bilah tugas yang sama dengan jendela dan bilah tugas utama</s:String>
+    </x:Array>
+    <s:String x:Key="invert_grayscale_colors">_Balik warna skala abu-abu:</s:String>
+    <x:Array x:Key="invert_grayscale_colors_values" Type="s:String">
+        <s:String>Saat diperlukan oleh tema</s:String>
+        <s:String>Selalu</s:String>
+        <s:String>Tidak pernah</s:String>
+    </x:Array>
+    <s:String x:Key="middle_mouse_task_action">_Tindakan klik tengah:</s:String>
+    <x:Array x:Key="middle_mouse_task_action_values" Type="s:String">
+        <s:String>Tidak melakukan apa pun</s:String>
+        <s:String>Buka instans baru</s:String>
+        <s:String>Tutup tugas</s:String>
+    </x:Array>
+    <s:String x:Key="clock_click_action">_Tindakan klik jam:</s:String>
+    <x:Array x:Key="clock_click_action_values" Type="s:String">
+        <s:String>Tidak melakukan apa pun</s:String>
+        <s:String>Buka kalender Aero</s:String>
+        <s:String>Buka kalender Modern</s:String>
+        <s:String>Buka Pusat Pemberitahuan</s:String>
+    </x:Array>
+    <s:String x:Key="task_wheel_action">_Tindakan roda mouse:</s:String>
+    <x:Array x:Key="task_wheel_action_values" Type="s:String">
+        <s:String>Tidak melakukan apa pun</s:String>
+        <s:String>Tampilkan/sembunyikan jendela</s:String>
+    </x:Array>
+    <s:String x:Key="auto_hide_transparent">Sembunyikan garis bilah _tugas saat disembunyikan otomatis</s:String>
+    <s:String x:Key="version">Versi {0}</s:String>
+    <s:String x:Key="visit_on_github">Kunjungi UltraWinBar di GitHub</s:String>
+    <s:String x:Key="multiple_taskbars_heading">Beberapa bilah tugas</s:String>
+    <s:String x:Key="additional_taskbars_text">Tampilkan bilah tugas pada tepi berikut. Klik kanan bilah tugas agar membentang di sepanjang tepi, menggeser bilah tugas lainnya.</s:String>
+    <s:String x:Key="location_left">Kiri</s:String>
+    <s:String x:Key="location_top">Atas</s:String>
+    <s:String x:Key="location_right">Kanan</s:String>
+    <s:String x:Key="location_bottom">Bawah</s:String>
+    <s:String x:Key="tray_location_text">_Area notifikasi di:</s:String>
+    <s:String x:Key="clock_location_text">_Jam di:</s:String>
+    <s:String x:Key="start_button_location_text">Tombol Mul_ai di:</s:String>
+    <s:String x:Key="language_location_text">_Indikator bahasa di:</s:String>
+    <s:String x:Key="task_assignment_hint">Seret tombol tugas ke bilah tugas lain untuk memindahkan seluruh aplikasinya; tahan Ctrl saat menyeret untuk memindahkan jendela itu saja. Klik kanan tombol tugas untuk mengatur ulang penempatannya.</s:String>
+    <s:String x:Key="reset_task_assignments">Atur ulang semua penempatan bilah tugas</s:String>
+    <s:String x:Key="stretch">_Bentangkan</s:String>
+    <s:String x:Key="make_main">_Jadikan utama</s:String>
+    <s:String x:Key="reset_task_assignment">Atur ulang pen_empatan bilah tugas</s:String>
+    <s:String x:Key="taskbar_scale">Skala bilah tugas</s:String>
+    <s:String x:Key="taskbar_scale_1x">100%</s:String>
+    <s:String x:Key="taskbar_scale_2x">200%</s:String>
+    <s:String x:Key="taskbar_scale_current">Pengaturan saat ini: {0}%</s:String>
+    <s:String x:Key="debug_logging">Aktifkan pencatatan _debug</s:String>
+    <s:String x:Key="window_activity_logging">Catat pembukaan dan penutupan jendela</s:String>
+    <s:String x:Key="check_for_updates">Periksa pemb_aruan</s:String>
+    <s:String x:Key="show_exit_menu_item">Tampilkan opsi K_eluar di menu klik kanan</s:String>
+    <s:String x:Key="show_end_task_button">Tampilkan opsi Akhiri _tugas di menu klik kanan</s:String>
+    <s:String x:Key="slide_taskbar_buttons">Geser tombol bilah _tugas</s:String>
+    <s:String x:Key="show_clock_seconds">Tampilkan _detik pada jam</s:String>
+    <s:String x:Key="open_custom_themes_folder">Buka folder tema kustom</s:String>
+    <s:String x:Key="win_num_hotkeys_action">Tindakan _hotkey Win+[0-9]:</s:String>
+    <x:Array x:Key="win_num_hotkeys_action_values" Type="s:String">
+        <s:String>Default Windows</s:String>
+        <s:String>Beralih tugas</s:String>
+        <s:String>Buka item Luncur Cepat</s:String>
+    </x:Array>
+    <s:String x:Key="hotkey_warning_title">Hotkey UltraWinBar</s:String>
+    <s:String x:Key="hotkey_warning_text">UltraWinBar akan mengambil alih hotkey bilah tugas Windows. Meskipun UltraWinBar ditutup, hotkey tersebut tidak akan dikembalikan ke Windows sampai Anda keluar lalu masuk kembali.</s:String>
+    <s:String x:Key="allow_blur_behind">Izinkan _efek buram di belakang bilah tugas transparan</s:String>
     <s:String x:Key="ok_dialog">Oke</s:String>
+
+    <s:String x:Key="clock_format_help">Lihat opsi pemformatan yang tersedia</s:String>
+    <s:String x:Key="clock_format_warning">Catatan: Format jam kustom mungkin tidak berfungsi seperti yang diharapkan jika tema yang dipilih menentukan formatnya sendiri.</s:String>
+    <s:String x:Key="override_clock_format">_Format jam kustom:</s:String>
+    <s:String x:Key="override_ampm_designators">_Penanda waktu kustom:</s:String>
+    <s:String x:Key="am_designator">AM:</s:String>
+    <s:String x:Key="pm_designator">PM:</s:String>
 
     <s:String x:Key="customize_notifications">Sesuaikan notifikasi</s:String>
     <s:String x:Key="customize_notifications_info">UltraWinBar menampilkan ikon untuk notifikasi aktif dan urgen, dan menyembunyikan yang tidak aktif. Anda dapat mengubah perilaku ini untuk item dalam daftar di bawah ini.</s:String>
     <s:String x:Key="customize_notifications_instruction">Pilih item, lalu pilih perilaku notifikasinya:</s:String>
     <s:String x:Key="hide_when_inactive">Sembunyikan saat tidak aktif</s:String>
     <s:String x:Key="always_show">Selalu tampilkan</s:String>
+    <s:String x:Key="always_hide">Selalu sembunyikan</s:String>
+    <s:String x:Key="remove">Hapus</s:String>
     <s:String x:Key="name_heading">Nama</s:String>
     <s:String x:Key="behavior_heading">Perilaku</s:String>
+    <s:String x:Key="invert_heading">Balik</s:String>
 
     <s:String x:Key="start_text">Mulai</s:String>
     <s:String x:Key="start_text_xp">mulai</s:String>
@@ -51,12 +153,28 @@
     <s:String x:Key="quick_launch">Luncur Cepat</s:String>
     <s:String x:Key="new_toolbar">Bilah tugas baru</s:String>
     <s:String x:Key="set_time">Sesuaikan tanggal/waktu</s:String>
+    <s:String x:Key="cascade">_Susun jendela bertingkat</s:String>
+    <s:String x:Key="horiz_tile">Susun jendela _horizontal</s:String>
+    <s:String x:Key="vert_tile">Susun jendela _vertikal</s:String>
+    <s:String x:Key="toggle_desktop">_Tampilkan Desktop</s:String>
+    <s:String x:Key="hide_desktop">_Tampilkan Jendela yang Terbuka</s:String>
+    <s:String x:Key="undo_cascade">_Batalkan susunan bertingkat</s:String>
+    <s:String x:Key="undo_tile">_Batalkan susunan ubin</s:String>
+    <s:String x:Key="undo_minimize_all">_Batalkan perkecil semua</s:String>
     <s:String x:Key="show_taskman_2k">Pengelola Tugas...</s:String>
     <s:String x:Key="show_taskman">Pengelola Tugas</s:String>
     <s:String x:Key="tray_properties">P_roperti</s:String>
     <s:String x:Key="update_available">Pembar_uan tersedia...</s:String>
     <s:String x:Key="exit_ultrawinbar">K_eluar dari UltraWinBar</s:String>
+    <s:String x:Key="restart_ultrawinbar">M_ulai ulang UltraWinBar</s:String>
     <s:String x:Key="customize_notifications_menu">Sesuaikan notifikasi</s:String>
+    <s:String x:Key="lock_taskbar_menu">_Kunci Bilah Tugas</s:String>
+
+    <s:String x:Key="show_desktop_tip_95">Tampilkan/Pulihkan Desktop</s:String>
+    <s:String x:Key="show_desktop_tip">Tampilkan Desktop</s:String>
+    <s:String x:Key="show_desktop_95">_Desktop</s:String>
+    <s:String x:Key="show_desktop">_Tampilkan Desktop</s:String>
+    <s:String x:Key="peek_at_desktop">_Intip desktop</s:String>
 
     <s:String x:Key="restore">Pulihkan</s:String>
     <s:String x:Key="move">Pindah</s:String>
@@ -64,9 +182,131 @@
     <s:String x:Key="minimize">Perkecil</s:String>
     <s:String x:Key="maximize">Perbesar</s:String>
     <s:String x:Key="close">Tutup</s:String>
+    <s:String x:Key="end_task">_Akhiri tugas</s:String>
 
     <s:String x:Key="show_hidden">Tampilkan ikon tersembunyi</s:String>
     <s:String x:Key="hide">Sembunyikan</s:String>
 
     <s:String x:Key="open_folder">&amp;Buka Folder</s:String>
+    <s:String x:Key="move_to_taskbar_format">Pindahkan ke bilah tugas {0}</s:String>
+
+    <s:String x:Key="ime_input_tip_enabled">Klik kanan untuk membuka opsi IME.</s:String>
+    <s:String x:Key="ime_input_tip_disabled">IME dinonaktifkan</s:String>
+    <s:String x:Key="ime_input_full_shape_hiragana">_Hiragana</s:String>
+    <s:String x:Key="ime_input_full_shape_katakana">_Katakana lebar penuh</s:String>
+    <s:String x:Key="ime_input_full_shape_alphanumeric">Alfanumerik _lebar penuh</s:String>
+    <s:String x:Key="ime_input_katakana">Katakana lebar _setengah</s:String>
+    <s:String x:Key="ime_input_alphanumeric">Alfanumerik le_bar setengah</s:String>
+    <s:String x:Key="ime_input_direct">Input _langsung</s:String>
+    <s:String x:Key="ime_open_pad">_Pad IME</s:String>
+    <s:String x:Key="ime_open_add_word_dictionary">Tambah _Kata</s:String>
+    <s:String x:Key="ime_open_dictionary_tool">_Alat Kamus Pengguna</s:String>
+    <s:String x:Key="ime_open_properties">P_roperti</s:String>
+    <s:String x:Key="ime_input_key">_Metode Input</s:String>
+    <s:String x:Key="ime_input_key_roma">Input _Romaji</s:String>
+    <s:String x:Key="ime_input_key_kana">Input _Kana</s:String>
+    <s:String x:Key="ime_conversion">Mode _konversi</s:String>
+    <s:String x:Key="ime_conversion_general">_Umum</s:String>
+    <s:String x:Key="ime_conversion_none">T_anpa Konversi</s:String>
+    <s:String x:Key="input_switcher_item_format">{0} — {1}</s:String>
+
+    <s:String x:Key="pin_to_taskbar">Sematkan ke bilah tugas ini</s:String>
+    <s:String x:Key="pinned_app_windows">Jendela yang terbuka</s:String>
+    <s:String x:Key="unpin_from_taskbar">Lepas sematan dari bilah tugas ini</s:String>
+    <s:String x:Key="copy_executable_path">Salin jalur file executable</s:String>
+    <s:String x:Key="copy_executable_directory">Salin direktori executable</s:String>
+
+    <s:String x:Key="app_all_desktops">Tampilkan jendela aplikasi ini di semua desktop</s:String>
+    <s:String x:Key="move_window_desktop">Pindahkan jendela ini ke desktop</s:String>
+    <s:String x:Key="move_app_desktop">Pindahkan semua jendela aplikasi ke desktop</s:String>
+    <s:String x:Key="desktop_number">Desktop {0}</s:String>
+    <s:String x:Key="desktop_action_failed">Windows tidak dapat menyelesaikan operasi untuk semua jendela. Beberapa jendela mungkin sudah dipindahkan. Lihat log untuk detailnya.</s:String>
+    <s:String x:Key="show_hebrew_date">Tampilkan tanggal Ibrani dan hari dalam minggu bernomor</s:String>
+    <s:String x:Key="hebrew_date_midnight">Menggunakan tanggal kalender setempat; berubah pada tengah malam, bukan saat matahari terbenam.</s:String>
+    <s:String x:Key="hebrew_place">Tempat untuk tanggal Ibrani:</s:String>
+    <s:String x:Key="hebrew_place_none">belum dipilih</s:String>
+    <s:String x:Key="hebrew_place_choose">Pilih...</s:String>
+    <s:String x:Key="hebrew_place_clear">Hapus</s:String>
+    <s:String x:Key="zone_clear">Hapus</s:String>
+    <s:String x:Key="hebrew_place_hint">Tempat yang waktu matahari terbenamnya mengakhiri hari Ibrani, dan waktu halakhiknya ditampilkan kalender.</s:String>
+    <s:String x:Key="hebrew_place_title">Tempat untuk tanggal Ibrani</s:String>
+    <s:String x:Key="hebrew_place_city_tab">Kota</s:String>
+    <s:String x:Key="hebrew_place_coordinates_tab">Koordinat</s:String>
+    <s:String x:Key="hebrew_place_search">Nama kota (dalam bahasa Inggris):</s:String>
+    <s:String x:Key="hebrew_place_search_hint">Ketik setidaknya dua huruf, misalnya: jerus, new york, paris texas. Kota berpenduduk 10 000 orang atau lebih akan tercantum.</s:String>
+    <s:String x:Key="hebrew_place_country">Negara:</s:String>
+    <s:String x:Key="hebrew_place_need_country">Pilih negara: ini menentukan angka mana yang merupakan garis lintang.</s:String>
+    <s:String x:Key="hebrew_place_coordinates">Garis lintang dan bujur:</s:String>
+    <s:String x:Key="hebrew_place_coordinates_hint">Format apa pun dapat digunakan: 32.0853, 34.7818 atau 34,7818 32,0853 atau 32°05'07&quot;N 34°46'54&quot;E. Gunakan titik atau koma pada pecahan; koma, titik dua, atau spasi di antara angka.</s:String>
+    <s:String x:Key="hebrew_place_zone">Zona waktu:</s:String>
+    <s:String x:Key="hebrew_place_zone_hint">Dipilih berdasarkan kota; ubah jika salah. Aturan zona (waktu musim panas dan perubahannya) mengikuti pengaturan Windows.</s:String>
+    <s:String x:Key="calendar_title">Kalender Yahudi</s:String>
+    <s:String x:Key="calendar_today">Hari ini</s:String>
+    <s:String x:Key="calendar_copy_name">Salin nama</s:String>
+    <s:String x:Key="calendar_search_name">Telusuri nama di Google</s:String>
+    <s:String x:Key="calendar_grid_hebrew">Bulan Ibrani</s:String>
+    <s:String x:Key="calendar_grid_civil">Bulan sipil</s:String>
+    <s:String x:Key="calendar_shabbat">Shabbat</s:String>
+    <s:String x:Key="calendar_previous_month">Bulan sebelumnya</s:String>
+    <s:String x:Key="calendar_next_month">Bulan berikutnya</s:String>
+    <s:String x:Key="calendar_settings">Pengaturan...</s:String>
+    <s:String x:Key="calendar_close">Tutup</s:String>
+    <s:String x:Key="calendar_portion">Parasha mingguan: {0}</s:String>
+    <s:String x:Key="calendar_festival_reading">Pada Shabbat ini dibacakan bacaan hari raya</s:String>
+    <s:String x:Key="calendar_day_of">{0}, hari ke-{1} dari {2}</s:String>
+    <s:String x:Key="calendar_molad">Molad {0}: {1}, {2} dan {3} chalakim</s:String>
+    <s:String x:Key="calendar_omer">Penghitungan Omer</s:String>
+    <s:String x:Key="calendar_omer_day">Hari ke-{0} Omer</s:String>
+    <s:String x:Key="calendar_omer_weeks">{0} minggu dan {1} hari</s:String>
+    <s:String x:Key="calendar_place">Tempat: {0}</s:String>
+    <s:String x:Key="calendar_israel">Tanah Israel</s:String>
+    <s:String x:Key="calendar_diaspora">diaspora</s:String>
+    <s:String x:Key="calendar_no_place">Pilih tempat di pengaturan kalender untuk melihat waktu-waktu hari.</s:String>
+    <s:String x:Key="calendar_times">Waktu-waktu hari</s:String>
+    <s:String x:Key="calendar_yahrzeits">Yahrzeit</s:String>
+    <s:String x:Key="calendar_candles_after_dark">Penyalaan lilin (setelah malam tiba)</s:String>
+    <s:String x:Key="calendar_havdalah">Akhir hari istirahat (havdalah)</s:String>
+    <s:String x:Key="calendar_rest_begins">Dimulai: {0} (penyalaan lilin)</s:String>
+    <s:String x:Key="calendar_rest_ends">Berakhir: {0} (malam tiba)</s:String>
+    <s:String x:Key="calendar_settings_title">Pengaturan kalender</s:String>
+    <s:String x:Key="calendar_settings_place">Tempat untuk zona:</s:String>
+    <s:String x:Key="calendar_settings_zone">Zona waktu untuk tanggal, pergantian hari, dan waktu-waktu hari:</s:String>
+    <s:String x:Key="calendar_zone_main">{0} (milik komputer)</s:String>
+    <s:String x:Key="zones_heading">Zona waktu jam</s:String>
+    <s:String x:Key="zone_main">Zona waktu utama:</s:String>
+    <s:String x:Key="zone_second">Zona waktu kedua:</s:String>
+    <s:String x:Key="zone_third">Zona waktu ketiga:</s:String>
+    <s:String x:Key="zone_show_name">Tampilkan nama</s:String>
+    <s:String x:Key="zone_label">Nama pada jam</s:String>
+    <s:String x:Key="zone_label_hint">Nama yang ditampilkan jam untuk zona ini sebagai pengganti tempatnya (misalnya, Heart untuk Jerusalem). Kosongkan untuk menampilkan tempat.</s:String>
+    <s:String x:Key="zone_place">Tempat:</s:String>
+    <s:String x:Key="zones_tab">Zona waktu</s:String>
+    <s:String x:Key="hebrew_date_tab">Tanggal Ibrani</s:String>
+    <s:String x:Key="zone_computer">Milik komputer ({0})</s:String>
+    <s:String x:Key="hebrew_place_in_zones">Tanggal Ibrani adalah tanggal untuk tempat zona waktu utama, yang dipilih pada tab Zona waktu.</s:String>
+    <s:String x:Key="zone_none">(tidak ditampilkan)</s:String>
+    <s:String x:Key="calendar_settings_yahrzeits">Yahrzeit yang ditampilkan (semua, berdasarkan kategori, satu per satu):</s:String>
+    <s:String x:Key="calendar_all_figures">Semua</s:String>
+    <s:String x:Key="cancel_dialog">Batal</s:String>
+    <s:String x:Key="coordinate_result">Garis lintang dan bujur: {0}</s:String>
+    <s:String x:Key="coordinate_basis_labeled">Urutannya sesuai dengan yang ditandai pada teks.</s:String>
+    <s:String x:Key="coordinate_basis_only_one">Hanya satu urutan yang sesuai: garis lintang maksimal 90 derajat.</s:String>
+    <s:String x:Key="coordinate_basis_country">Urutannya ditentukan berdasarkan negara: urutan lainnya jatuh jauh dari negara tersebut.</s:String>
+    <s:String x:Key="coordinate_basis_assumed">Garis lintang dianggap sebagai angka pertama.</s:String>
+    <s:String x:Key="coordinate_warning_assumed">Garis lintang dianggap sebagai angka pertama; urutan bujur lebih dahulu akan sama cocoknya dengan negara tersebut.</s:String>
+    <s:String x:Key="coordinate_warning_far">Titik ini berjarak {0:N0} km dari kota terdekat di negara tersebut. Periksa negara dan angkanya.</s:String>
+    <s:String x:Key="coordinate_problem_empty">Ketik koordinat.</s:String>
+    <s:String x:Key="coordinate_problem_need_two">Diperlukan dua angka: garis lintang dan garis bujur.</s:String>
+    <s:String x:Key="coordinate_problem_too_many">Lebih dari dua angka. Ketik hanya garis lintang dan garis bujur.</s:String>
+    <s:String x:Key="coordinate_problem_two_lat">Kedua angka ditandai sebagai garis lintang.</s:String>
+    <s:String x:Key="coordinate_problem_two_lng">Kedua angka ditandai sebagai garis bujur.</s:String>
+    <s:String x:Key="coordinate_problem_lat_range">Garis lintang harus antara -90 dan 90 derajat.</s:String>
+    <s:String x:Key="coordinate_problem_lng_range">Garis bujur harus antara -180 dan 180 derajat.</s:String>
+    <s:String x:Key="coordinate_problem_neither">Dalam kedua urutan, angka-angka ini tidak dapat menjadi garis lintang (maksimal 90) dan garis bujur (maksimal 180).</s:String>
+    <s:String x:Key="open_system_settings">Buka Pengaturan Sistem</s:String>
+    <s:String x:Key="open_computer_management">Manajemen Komputer</s:String>
+    <s:String x:Key="open_drives">Buka drive</s:String>
+    <s:String x:Key="this_pc">PC ini</s:String>
+    <s:String x:Key="move_activated_windows_to_current_desktop">Usahakan agar jendela yang dibuka tetap berada di desktop ini (eksperimental)</s:String>
+    <s:String x:Key="desktop_activation_experiment_hint">Gunakan kembali jendela yang ditampilkan di semua desktop tanpa memindahkannya. Jika tidak, ikon desktop dan peluncur yang disematkan akan membuka browser, folder Explorer, dan Notepad++ secara lokal; aktivasi aplikasi lain dan area notifikasi tetap memindahkan jendela.</s:String>
 </ResourceDictionary>
