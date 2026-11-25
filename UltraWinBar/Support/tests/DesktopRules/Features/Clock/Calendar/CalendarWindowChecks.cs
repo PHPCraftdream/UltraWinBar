@@ -175,24 +175,27 @@ internal static class CalendarWindowChecks
         var root = YahrzeitNode.Build("English", "All", null);
         Check(root.IsChecked == true && root.Children.Count == Yahrzeits.Categories.Count && root.Children.All(group => group.IsChecked == true) &&
             root.Children.Sum(group => group.Children.Count) == Yahrzeits.All.Count && !root.UncheckedKeys().Any(), "Everything is checked when nothing is hidden.");
-        Check(root.Children[2].Text == "Rishonim" && root.Children[2].Children[0].Text == "Rashi — 29 Tamuz" && root.Children[2].Children[0].Key == "rashi", "A figure is shown with its name and day.");
+        int r = Yahrzeits.Categories.ToList().IndexOf("Rishonim");
+        int rashi = root.Children[r].Children.FindIndex(person => person.Key == "rashi");
+        int other = rashi == 0 ? 1 : 0;
+        Check(root.Children[r].Text == "Rishonim" && rashi >= 0 && root.Children[r].Children[rashi].Text == "Rashi — 29 Tamuz", "A figure is shown with its name and day.");
 
         var partial = YahrzeitNode.Build("English", "All", new[] { "rashi" });
-        var rishonim = partial.Children[2];
-        Check(partial.IsChecked == null && rishonim.IsChecked == null && rishonim.Children[0].IsChecked == false && rishonim.Children[1].IsChecked == true && partial.Children[0].IsChecked == true &&
+        var rishonim = partial.Children[r];
+        Check(partial.IsChecked == null && rishonim.IsChecked == null && rishonim.Children[rashi].IsChecked == false && rishonim.Children[other].IsChecked == true && partial.Children[0].IsChecked == true &&
             partial.UncheckedKeys().SequenceEqual(new[] { "rashi" }), "Some hidden: the groups above them are partly checked, the others fully.");
 
         // A click on a figure, on a group, on everything; each announces the change once at the root, and the groups follow.
         int changes = 0;
         root.FigureChanged += (_, _) => changes++;
-        root.Children[2].Children[0].IsChecked = false;
-        Check(changes == 1 && root.Children[2].IsChecked == null && root.IsChecked == null && root.UncheckedKeys().SequenceEqual(new[] { "rashi" }), "Unchecking a figure.");
-        root.Children[2].IsChecked = false;
-        Check(changes == 2 && root.Children[2].Children.All(person => person.IsChecked == false) && root.UncheckedKeys().Count() == root.Children[2].Children.Count && root.IsChecked == null, "Unchecking a group unchecks its figures.");
-        root.Children[2].IsChecked = null;
-        Check(root.Children[2].IsChecked == false, "A group is never left in between by a click.");
-        root.Children[2].Children[1].IsChecked = true;
-        Check(root.Children[2].IsChecked == null && root.UncheckedKeys().Count() == root.Children[2].Children.Count - 1, "Checking one figure of an unchecked group leaves the group in between.");
+        root.Children[r].Children[rashi].IsChecked = false;
+        Check(changes == 1 && root.Children[r].IsChecked == null && root.IsChecked == null && root.UncheckedKeys().SequenceEqual(new[] { "rashi" }), "Unchecking a figure.");
+        root.Children[r].IsChecked = false;
+        Check(changes == 2 && root.Children[r].Children.All(person => person.IsChecked == false) && root.UncheckedKeys().Count() == root.Children[r].Children.Count && root.IsChecked == null, "Unchecking a group unchecks its figures.");
+        root.Children[r].IsChecked = null;
+        Check(root.Children[r].IsChecked == false, "A group is never left in between by a click.");
+        root.Children[r].Children[other].IsChecked = true;
+        Check(root.Children[r].IsChecked == null && root.UncheckedKeys().Count() == root.Children[r].Children.Count - 1, "Checking one figure of an unchecked group leaves the group in between.");
         root.IsChecked = true;
         Check(root.UncheckedKeys().Count() == 0 && root.Children.All(group => group.IsChecked == true && group.Children.All(person => person.IsChecked == true)), "Checking everything checks every figure.");
         root.IsChecked = false;
