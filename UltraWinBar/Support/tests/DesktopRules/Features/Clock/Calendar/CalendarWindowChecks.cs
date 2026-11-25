@@ -113,7 +113,8 @@ internal static class CalendarWindowChecks
         Check(kislev.HebrewLabel == "Kislev, 13" && kislev.GregorianLabel == "23, November", $"The labels of the cell: {kislev.HebrewLabel} / {kislev.GregorianLabel}.");
         var russian = DayDetailsBuilder.Cell(Day("2026-11-23"), Day("2026-11-01"), Day("2026-11-23"), false, "русский", null, text);
         Check(russian.GregorianLabel == "23, ноября" && russian.HebrewLabel.EndsWith(", 13"), $"In Russian the civil month is in the genitive: {russian.GregorianLabel} / {russian.HebrewLabel}.");
-        Check(pesach.Tooltip.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries).Length == 3 && pesach.Tooltip.Contains("15 Nisan 5786"), $"The tooltip: {pesach.Tooltip}.");
+        Check(pesach.Tooltip.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries).Length == 4 && pesach.Tooltip.Contains("15 Nisan 5786") &&
+              pesach.Tooltip.Contains("Shevet HaLevi"), $"The tooltip: {pesach.Tooltip}.");
         var shabbat = DayDetailsBuilder.Cell(Day("2026-04-04"), month, Day("2026-04-02"), false, "English", null, text);
         Check(shabbat.Marker == "Chol HaMoed Pesach, day 3 of 8" && shabbat.IsRest && !shabbat.IsToday, "A Shabbat of Chol HaMoed carries the festival, not a portion.");
         var portion = DayDetailsBuilder.Cell(Day("2026-04-18"), month, Day("2026-04-02"), false, "English", null, text);

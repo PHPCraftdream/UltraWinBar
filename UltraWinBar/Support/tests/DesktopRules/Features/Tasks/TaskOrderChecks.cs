@@ -126,6 +126,13 @@ internal static class TaskOrderChecks
         Console.WriteLine($"PASS: CLDR month names for {HebrewClockFormatter.SupportedLanguages.Count} UI languages in ordinary and leap years.");
         if (HebrewClockFormatter.FormatDate(new DateTime(2016, 12, 1), "беларуская") != "01 кіслеў 5777")
             throw new Exception("Belarusian month is not localized.");
+        // The Hebrew months keep their Hebrew names in every language: no numbered months, no names of other calendars.
+        if (HebrewClockFormatter.FormatDate(new DateTime(2016, 12, 1), "українська") != "01 кіслев 5777" ||
+            HebrewClockFormatter.FormatDate(new DateTime(2016, 12, 31), "українська") != "02 тевет 5777" ||
+            HebrewClockFormatter.FormatDate(new DateTime(2017, 1, 28), "български") != "01 шват 5777" ||
+            HebrewClockFormatter.FormatDate(new DateTime(2016, 12, 1), "中文(简体)") != "01 基斯流月 5777" ||
+            HebrewClockFormatter.FormatDate(new DateTime(2023, 2, 22), "فارسی") != "01 آذار 5783")
+            throw new Exception("A language shows a Hebrew month under a name that is not its Hebrew one.");
         foreach (int year in new[] { 5783, 5784 })
         for (int month = 1; month <= hebrewCalendar.GetMonthsInYear(year); month++)
         {
