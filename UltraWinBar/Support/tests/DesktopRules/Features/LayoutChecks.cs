@@ -169,6 +169,30 @@ internal static class LayoutChecks
             R(-32000, -32000, -31700, -31750), false, null, reservedArea);
         ExpectReachWhen("A window only shown at (0,0) with its title bar under the top panel", R(0, 0, 1414, 910), false, R(158, 41, 1572, 951), reservedArea);
         Console.WriteLine("PASS: a window moves into the work area only when no draggable part of its title bar is within the mouse's reach; its size is kept; full-screen windows, and windows merely shown off-screen, stay.");
+        // Regression: Telegram's media viewer draws its own title bar (no WS_CAPTION); opened with it under the top panel
+        // it was left there. An application's window without a system title bar is rescued too; tool windows, windows
+        // that cannot be activated, owned popups and child windows are not.
+        var hasTitleStrip = placementGuard.GetMethod("HasTitleStrip", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)
+            ?? throw new Exception("The title strip rule is missing.");
+        bool Strip(int style, int exStyle, bool owned) => (bool)hasTitleStrip.Invoke(null, new object[] { style, exStyle, owned });
+        if (!Strip(unchecked((int)0x16CF0000), 0, false) || !Strip(unchecked((int)0x96000000), 0, false) || !Strip(unchecked((int)0x96000000), 0x00040000, true) ||
+            !Strip(unchecked((int)0x16CF0000), 0, true) || Strip(unchecked((int)0x96000000), 0, true) || Strip(unchecked((int)0x96000000), 0x00000080, false) ||
+            Strip(unchecked((int)0x96000000), 0x08000000, false) || Strip(0x56000000, 0, false) || Strip(unchecked((int)0x16CF0000), 0x00000020, false))
+            throw new Exception("Windows with a title bar of their own must be rescued like those with the system's, popups and tool windows not.");
+        if (!guardSource.Contains("outer.Width >= MinFramelessWidth && outer.Height >= MinFramelessHeight") ||
+            System.Text.RegularExpressions.Regex.Matches(guardSource, @"HasTitleStrip\(").Count != 3)
+            throw new Exception("Both the watch and the rescue must use the title strip rule, and a small window without a title bar is left alone.");
+        Console.WriteLine("PASS: windows that draw their own title bar are brought into reach like those with the system's; popups, tool windows and small windows stay.");
+        // Regression: Telegram's media viewer is (0,0)-(1921,1080) on a 1920x1080 monitor; it was not taken for a full-screen
+        // window, so the panels stayed over it and hid its top. A window covering a monitor a few pixels past its edges is.
+        var monitor1080 = new System.Drawing.Rectangle(0, 0, 1920, 1080);
+        if (!FullScreenHelper.CoversScreen(R(0, 0, 1921, 1080), monitor1080, FullScreenHelper.FullScreenOverhang) ||
+            !FullScreenHelper.CoversScreen(R(0, 0, 1920, 1080), monitor1080, 0) || FullScreenHelper.CoversScreen(R(0, 0, 1921, 1080), monitor1080, 0) ||
+            FullScreenHelper.CoversScreen(R(0, 40, 1920, 1080), monitor1080, FullScreenHelper.FullScreenOverhang) ||
+            FullScreenHelper.CoversScreen(R(-100, 0, 1920, 1080), monitor1080, FullScreenHelper.FullScreenOverhang) ||
+            FullScreenHelper.CoversScreen(R(0, 0, 3840, 1080), monitor1080, FullScreenHelper.FullScreenOverhang))
+            throw new Exception("A window a few pixels larger than a monitor is full screen on it; one short of it, or spanning far past it, is not.");
+        Console.WriteLine("PASS: a window covering a monitor up to a few pixels past its edges (Telegram's media viewer) is full screen.");
         // Regression: Explorer recomputes the work area on unlock from registered AppBars only; manual
         // panels must publish their exact rect on their own callback, not ManagedShell's AppBar message.
         var reservation = PanelReservation.Build((IntPtr)0x1234, AppBarEdge.Left, R(0, 41, 158, 1080));

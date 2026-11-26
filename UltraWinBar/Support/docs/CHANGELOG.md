@@ -107,9 +107,16 @@
   The times of the day have a highlighted line with the hanukkiah, "Hanukkah candles: 3 + shamash", at nightfall; on a
   Friday before the Shabbat candles and at their time, after the Shabbat after the havdalah. In all 46 languages.
   The heading of the times shows the hanukkiah and the number too.
-- Calendar: the months before and after the one shown are made ahead in hidden grids, when the program is idle and when
-  the calendar is prepared, so an arrow (or PageUp/PageDown) only brings one into sight: a month took 140–220 ms to
-  make, nearly all of it the cells' templates and layout.
+- Telegram's media viewer is full screen again for the panels: it is one pixel wider than the monitor, and only a window
+  of exactly a monitor's bounds was taken for full screen, so the panels stayed over its top. A window covering a
+  monitor up to 8 pixels past its edges now counts.
+- A window that draws its own title bar (Telegram's media viewer and chats, and other apps without the system's title
+  bar) is brought into reach like the others when its top strip opens under a panel or off the screen; tool windows,
+  popups and small windows are left alone. The log line of a move names the window's styles.
+- Calendar: a year of months before and after the one shown is made ahead in hidden grids, nearest first, one at a time
+  when the program is idle (the two next ones already when the calendar is prepared), so an arrow (or PageUp/PageDown)
+  only brings one into sight; as the months go by, the grids that leave the year are reused for the ones that enter
+  it. A month took 140–220 ms to make, nearly all of it the cells' templates and layout.
 - Calendar: no names of the nations' days of the week. The start and end of a day of rest are one line,
   "16:16 (candle lighting) – 17:14 (nightfall)"; days of rest in a row name their days by number ("Day 4 … – Shabbat
   …"), as the molad does ("Molad of Tevet: Day 4, 11:11"); the tooltip and heading dates have no weekday. The rows of

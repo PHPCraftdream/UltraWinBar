@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
@@ -176,11 +177,13 @@ namespace UltraWinBar
                 Rebuild();
         }
 
-        // The grid of the month shown, and the months before and after it made ahead in hidden lists of their own, so the
-        // arrows only swap lists: making a month's cells (their templates and layout) is what takes the time.
-        private ListBox current, before, after;
-        private DateTime? beforeMonth, afterMonth;
-        private string beforeStamp, afterStamp;
+        // The grid of the month shown, and the months of a year before and after it made ahead in hidden lists of their
+        // own, so the arrows only bring a list into sight: making a month's cells (their templates and layout) is what
+        // takes the time. As the months go by, the lists that fall out of the year are filled with the ones that come in.
+        private const int MonthsAround = 12;
+        private ListBox current;
+        private readonly Dictionary<DateTime, (ListBox List, string Stamp)> made = new();
+        private readonly Stack<ListBox> spare = new();
         private int settingsVersion;
 
         // What a made month depends on besides its start: the kind of grid, the day, the evening and the settings shown.
@@ -235,13 +238,36 @@ namespace UltraWinBar
             }
         }
 
+        // The month into the list it had, or a free one; it is then made for the stamp.
+        private ListBox Make(DateTime start, HebrewDayNow now, string stamp)
+        {
+            ListBox list = made.TryGetValue(start, out var had) ? had.List : spare.Count > 0 ? spare.Pop() : NewMonthList();
+            Fill(list, start, now);
+            made[start] = (list, stamp);
+            return list;
+        }
+
+        // A list no month needs: emptied, kept for the next.
+        private void Free(ListBox list)
+        {
+            list.ItemsSource = null;
+            spare.Push(list);
+        }
+
         // The month with its cells and the details of the chosen day, from the settings as they are now; the months
         // around it are made again when the program is idle.
         private void Rebuild()
         {
-            current ??= MonthList;
+            if (current == null)
+            {
+                current = MonthList;
+                // Shown, the calendar makes the whole year around; before that only the months next to it.
+                IsVisibleChanged += (_, _) =>
+                {
+                    if (IsVisible) Dispatcher.BeginInvoke(new Action(MakeAround), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                };
+            }
             settingsVersion++;
-            beforeMonth = afterMonth = null;
             WeekdayHeader.Children.Clear();
             // The days of the week as the Jewish count has them: 1 (Sunday) to 6 (Friday), then Shabbat; no names of a language.
             foreach (string name in WeekdayHeaders(Text("calendar_shabbat")))
@@ -249,7 +275,11 @@ namespace UltraWinBar
             GridSwitch.Content = Text(HebrewGrid ? "calendar_grid_civil" : "calendar_grid_hebrew");
             HebrewDayNow now = HebrewDayClock.Now(DateTime.UtcNow, ClockZones.CalendarPlace());
             eveningShown = now.Civil;
-            Fill(current, month, now);
+            // The list in sight keeps showing the month (the kind of grid may have changed what that is).
+            foreach (var pair in made.Where(pair => pair.Value.List == current).ToList()) made.Remove(pair.Key);
+            if (made.TryGetValue(month, out var other)) Free(other.List);
+            made[month] = (current, null);
+            current = Make(month, now, Stamp(now));
             Present();
         }
 
@@ -259,9 +289,8 @@ namespace UltraWinBar
             rebuilding = true;
             try
             {
-                foreach (ListBox list in new[] { current, before, after })
+                foreach (ListBox list in made.Values.Select(entry => entry.List).Concat(spare))
                 {
-                    if (list == null) continue;
                     bool mine = list == current;
                     list.Visibility = mine ? Visibility.Visible : Visibility.Hidden;
                     list.IsHitTestVisible = list.Focusable = mine;
@@ -277,26 +306,36 @@ namespace UltraWinBar
             Dispatcher.BeginInvoke(new Action(MakeAround), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
         }
 
-        // The months after and before the one in sight, one at a time when the program is idle.
+        // The months around the one in sight, nearest first: the next, the previous, the one after the next and so on.
+        // A calendar not shown yet makes only the two next to it: hidden lists are laid out when it is shown.
+        private IEnumerable<DateTime> MonthsNear()
+        {
+            int reach = IsVisible ? MonthsAround : 1;
+            DateTime next = month, previous = month;
+            for (int i = 0; i < reach; i++)
+            {
+                yield return next = CalendarGrid.Next(next, HebrewGrid);
+                yield return previous = CalendarGrid.Previous(previous, HebrewGrid);
+            }
+        }
+
+        // One month around the one in sight, when the program is idle, then the next: those out of the year free their lists.
         private void MakeAround()
         {
             HebrewDayNow now = HebrewDayClock.Now(DateTime.UtcNow, ClockZones.CalendarPlace());
             string stamp = Stamp(now);
-            DateTime next = CalendarGrid.Next(month, HebrewGrid), previous = CalendarGrid.Previous(month, HebrewGrid);
-            if (afterMonth != next || afterStamp != stamp)
+            var near = MonthsNear().ToList();
+            foreach (var pair in made.Where(pair => pair.Value.List != current && !near.Contains(pair.Key)).ToList())
             {
-                after ??= NewMonthList();
-                Fill(after, next, now);
-                afterMonth = next;
-                afterStamp = stamp;
-                Dispatcher.BeginInvoke(new Action(MakeAround), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                made.Remove(pair.Key);
+                Free(pair.Value.List);
             }
-            else if (beforeMonth != previous || beforeStamp != stamp)
+            foreach (DateTime start in near)
             {
-                before ??= NewMonthList();
-                Fill(before, previous, now);
-                beforeMonth = previous;
-                beforeStamp = stamp;
+                if (made.TryGetValue(start, out var had) && had.Stamp == stamp) continue;
+                Make(start, now, stamp);
+                Dispatcher.BeginInvoke(new Action(MakeAround), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                return;
             }
         }
 
@@ -304,30 +343,14 @@ namespace UltraWinBar
         {
             DateTime start = CalendarGrid.MonthStart(anyDay, HebrewGrid);
             chosen = day.Date;
-            string stamp = Stamp(HebrewDayClock.Now(DateTime.UtcNow, ClockZones.CalendarPlace()));
-            if (start == month)
+            if (start != month)
             {
-                Present();
-                return;
-            }
-            // A month made ahead is only brought into sight; the one that was shown becomes its neighbor.
-            if (after != null && afterMonth == start && afterStamp == stamp)
-            {
-                (before, current, after) = (current, after, before);
-                (beforeMonth, beforeStamp, afterMonth, afterStamp) = (month, stamp, null, null);
-            }
-            else if (before != null && beforeMonth == start && beforeStamp == stamp)
-            {
-                (after, current, before) = (current, before, after);
-                (afterMonth, afterStamp, beforeMonth, beforeStamp) = (month, stamp, null, null);
-            }
-            else
-            {
+                // A month made ahead is only brought into sight; another is made into a free list.
+                HebrewDayNow now = HebrewDayClock.Now(DateTime.UtcNow, ClockZones.CalendarPlace());
+                string stamp = Stamp(now);
+                current = made.TryGetValue(start, out var had) && had.Stamp == stamp ? had.List : Make(start, now, stamp);
                 month = start;
-                Rebuild();
-                return;
             }
-            month = start;
             Present();
         }
 

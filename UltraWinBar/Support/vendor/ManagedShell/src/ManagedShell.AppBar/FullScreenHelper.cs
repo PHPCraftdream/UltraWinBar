@@ -231,15 +231,10 @@ namespace ManagedShell.AppBar
                 var allScreens = Screen.AllScreens.Select(ScreenInfo.Create).ToList();
                 if (allScreens.Count > 1) allScreens.Add(ScreenInfo.CreateVirtualScreen());
 
-                foreach (var screen in allScreens)
-                {
-                    if (rect.Top == screen.Bounds.Top && rect.Left == screen.Bounds.Left &&
-                        rect.Bottom == screen.Bounds.Bottom && rect.Right == screen.Bounds.Right)
-                    {
-                        screenInfo = screen;
-                        break;
-                    }
-                }
+                // The exact bounds first (the whole desktop of several monitors included), then a window a little larger
+                // than a monitor: Telegram's media viewer is one pixel wider than the screen.
+                screenInfo = allScreens.FirstOrDefault(screen => CoversScreen(rect, screen.Bounds, 0)) ??
+                             allScreens.FirstOrDefault(screen => CoversScreen(rect, screen.Bounds, FullScreenOverhang));
 
                 if (screenInfo == null)
                 {
@@ -262,6 +257,15 @@ namespace ManagedShell.AppBar
             // this is a full screen app
             return new FullScreenApp { hWnd = hWnd, screen = screenInfo, rect = rect, title = win.Title, fromTasksService = fromTasksService };
         }
+
+        // How far past a monitor's edges a window may reach and still be full screen on it.
+        public const int FullScreenOverhang = 8;
+
+        // The window covers the screen, reaching past each edge by no more than "overhang" pixels.
+        public static bool CoversScreen(Rect window, System.Drawing.Rectangle screen, int overhang) =>
+            window.Left <= screen.Left && window.Top <= screen.Top && window.Right >= screen.Right && window.Bottom >= screen.Bottom &&
+            screen.Left - window.Left <= overhang && screen.Top - window.Top <= overhang &&
+            window.Right - screen.Right <= overhang && window.Bottom - screen.Bottom <= overhang;
 
         private Rect GetEffectiveWindowRect(IntPtr hWnd)
 		{

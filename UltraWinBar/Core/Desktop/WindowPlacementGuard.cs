@@ -16,10 +16,12 @@ namespace UltraWinBar.Utilities
     // resized while its title bar can be grabbed: it may be dragged past the panels and off the work area. A window
     // whose title bar cannot be reached (under a panel, off every monitor) cannot be dragged back, so it is moved
     // into the work area, size kept, when it is activated (or shown partly on a monitor). Full-screen windows stay.
+    // A window that draws its own title bar (no WS_CAPTION) is treated the same, its top strip taken for the title bar.
     internal sealed class WindowPlacementGuard : IDisposable
     {
         [DllImport("user32.dll")] private static extern bool IsZoomed(IntPtr hwnd);
         [DllImport("user32.dll")] private static extern IntPtr GetAncestor(IntPtr hwnd, uint flags);
+        [DllImport("user32.dll")] private static extern IntPtr GetWindow(IntPtr hwnd, uint command);
         [DllImport("user32.dll")] private static extern uint GetDpiForWindow(IntPtr hwnd);
         [DllImport("user32.dll")] private static extern int GetSystemMetricsForDpi(int index, uint dpi);
         [DllImport("user32.dll")] private static extern bool EnumWindows(EnumWindowsProc callback, IntPtr lParam);
@@ -28,7 +30,10 @@ namespace UltraWinBar.Utilities
 
         // Part of the title bar that must be within the mouse's reach for the window to be draggable.
         private const int GrabWidth = 48, GrabHeight = 12;
-        private const int WsCaption = 0x00C00000, WsSysMenu = 0x00080000, WsMinMaxBox = 0x00030000;
+        private const int WsCaption = 0x00C00000, WsSysMenu = 0x00080000, WsMinMaxBox = 0x00030000, WsChild = 0x40000000;
+        private const int WsExToolWindow = 0x00000080, WsExAppWindow = 0x00040000, WsExNoActivate = 0x08000000, WsExTransparent = 0x00000020;
+        // Smallest window without a system title bar that is taken for an application's window (not a splash or a popup).
+        private const int MinFramelessWidth = 160, MinFramelessHeight = 100;
         private readonly Dispatcher dispatcher = Application.Current.Dispatcher;
         private readonly Action requestWorkAreaRecovery;
         // R9-H: single-event, UI-thread registrations shared via the hub with the other subscribers of the same event+flags.
@@ -152,10 +157,23 @@ namespace UltraWinBar.Utilities
             var className = new StringBuilder(64);
             NativeMethods.GetClassName(hwnd, className, className.Capacity);
             NativeMethods.GetWindowThreadProcessId(hwnd, out uint processId);
-            ShellLogger.Info($"WindowPlacementGuard: title bar of window 0x{(long)hwnd:X} (class '{className}', process {processId}) was out of reach at " +
+            ShellLogger.Info($"WindowPlacementGuard: title bar of window 0x{(long)hwnd:X} (class '{className}', process {processId}, style 0x{style:X8}/0x{exStyle:X8}) was out of reach at " +
                 $"({outer.Left},{outer.Top})-({outer.Right},{outer.Bottom}); moved to ({target.Value.Left},{target.Value.Top}){(queued ? "" : ", refused")}");
             return queued;
         }
+
+        // A window with a title bar to drag: the system's (WS_CAPTION), or its own on top of a window without one (Telegram's
+        // media viewer and chats, and other apps that draw their title bar) when it is an application's window (not owned,
+        // or shown on the taskbar; not a tool window, not one that cannot be activated).
+        internal static bool HasTitleStrip(int style, int exStyle, bool owned)
+        {
+            if ((style & WsChild) != 0 || (exStyle & WsExTransparent) != 0) return false;
+            if ((style & WsCaption) == WsCaption) return true;
+            if ((exStyle & (WsExToolWindow | WsExNoActivate)) != 0) return false;
+            return (exStyle & WsExAppWindow) != 0 || !owned;
+        }
+
+        private static bool IsOwned(IntPtr hwnd) => GetWindow(hwnd, 4) != IntPtr.Zero;
 
         private static bool IsMovable(IntPtr hwnd, out NativeMethods.Rect outer, out int style, out int exStyle)
         {
@@ -165,12 +183,13 @@ namespace UltraWinBar.Utilities
             if (!NativeMethods.IsWindowVisible(hwnd) || NativeMethods.IsIconic(hwnd) || IsZoomed(hwnd)) return false;
             style = NativeMethods.GetWindowLong(hwnd, NativeMethods.WindowLongFlags.GWL_STYLE);
             exStyle = NativeMethods.GetWindowLong(hwnd, NativeMethods.WindowLongFlags.GWL_EXSTYLE);
-            if ((style & WsCaption) != WsCaption || (exStyle & (int)NativeMethods.ExtendedWindowStyles.WS_EX_TRANSPARENT) != 0) return false;
+            if (!HasTitleStrip(style, exStyle, IsOwned(hwnd))) return false;
             NativeMethods.GetWindowThreadProcessId(hwnd, out uint processId);
             if (processId == Environment.ProcessId) return false;
             // Cloaked also means on another virtual desktop; no cross-process IVirtualDesktopManager call here.
             NativeMethods.DwmGetWindowAttribute(hwnd, NativeMethods.DWMWINDOWATTRIBUTE.DWMWA_CLOAKED, out uint cloaked, sizeof(uint));
-            return cloaked == 0 && NativeMethods.GetWindowRect(hwnd, out outer);
+            if (cloaked != 0 || !NativeMethods.GetWindowRect(hwnd, out outer)) return false;
+            return (style & WsCaption) == WsCaption || outer.Width >= MinFramelessWidth && outer.Height >= MinFramelessHeight;
         }
 
         // Height of the title bar and the widths of what cannot drag on its left (icon) and right (caption buttons).
@@ -181,11 +200,13 @@ namespace UltraWinBar.Utilities
             bool tool = (exStyle & (int)NativeMethods.ExtendedWindowStyles.WS_EX_TOOLWINDOW) != 0, menu = (style & WsSysMenu) != 0;
             // SM_CYCAPTION or SM_CYSMCAPTION, SM_CYSIZEFRAME, SM_CXPADDEDBORDER.
             int height = GetSystemMetricsForDpi(tool ? 51 : 4, dpi) + GetSystemMetricsForDpi(33, dpi) + GetSystemMetricsForDpi(92, dpi);
-            int left = menu && !tool ? height : 0;
+            // A title bar the window draws itself has no icon to skip, and usually three buttons at the right.
+            bool own = (style & WsCaption) != WsCaption;
+            int left = menu && !tool && !own ? height : 0;
             // DWMWA_CAPTION_BUTTON_BOUNDS, relative to the window; else the usual 46 px per button.
             int right = DwmGetWindowAttribute(hwnd, 5, out var buttons, Marshal.SizeOf<NativeMethods.Rect>()) == 0 && buttons.Right > buttons.Left
                 ? Math.Max(0, outer.Width - buttons.Left)
-                : !menu ? 0 : tool ? height : (int)(46L * dpi / 96) * ((style & WsMinMaxBox) != 0 ? 3 : 1);
+                : own ? (int)(46L * dpi / 96) * 3 : !menu ? 0 : tool ? height : (int)(46L * dpi / 96) * ((style & WsMinMaxBox) != 0 ? 3 : 1);
             return (height, left, right);
         }
 
@@ -246,7 +267,8 @@ namespace UltraWinBar.Utilities
 
         private void WatchReach(IntPtr hwnd, bool activated)
         {
-            if (GetAncestor(hwnd, 2) != hwnd || (NativeMethods.GetWindowLong(hwnd, NativeMethods.WindowLongFlags.GWL_STYLE) & WsCaption) != WsCaption) return;
+            if (GetAncestor(hwnd, 2) != hwnd || !HasTitleStrip(NativeMethods.GetWindowLong(hwnd, NativeMethods.WindowLongFlags.GWL_STYLE),
+                    NativeMethods.GetWindowLong(hwnd, NativeMethods.WindowLongFlags.GWL_EXSTYLE), IsOwned(hwnd))) return;
             bool added = !pendingReach.TryGetValue(hwnd, out bool wasActivated);
             pendingReach[hwnd] = activated || wasActivated;
             // Every newly seen window gets the full settling time.

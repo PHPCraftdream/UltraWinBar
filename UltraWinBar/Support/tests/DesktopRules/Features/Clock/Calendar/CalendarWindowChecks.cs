@@ -411,12 +411,14 @@ internal static class CalendarWindowChecks
               calendarCode.Contains("private FrameworkElement RestLine(string text, string time, bool hanukkiah = false)") &&
               calendarCode.Contains("TimesHeading(details.Place, details.Chanukah)") && !calendarCode.Contains("GetDayName") && !File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "UI", "Clock", "Calendar", "Days", "DayDetails.cs")).Contains("DayName("),
             "The candles, the havdalah and the start and end of a day of rest are highlighted lines with candles.");
-        // The months before and after are made ahead in hidden lists (when idle, and when the calendar is prepared); an
-        // arrow swaps lists, and a change of the settings, the day or the evening makes them again.
-        Check(calendarCode.Contains("(before, current, after) = (current, after, before);") && calendarCode.Contains("(after, current, before) = (current, before, after);") &&
-              calendarCode.Contains("DispatcherPriority.ApplicationIdle") && calendarCode.Contains("prepared.MakeAround();") &&
-              calendarCode.Contains("afterStamp == stamp") && calendarCode.Contains("settingsVersion++;"),
-            "The neighboring months are ready before an arrow is clicked.");
+        // A year of months before and after is made ahead in hidden lists (when idle; the two next ones when the calendar
+        // is prepared); an arrow brings a list into sight, the lists out of the year are reused, and a change of the
+        // settings, the day or the evening makes them again.
+        Check(calendarCode.Contains("private const int MonthsAround = 12;") && calendarCode.Contains("int reach = IsVisible ? MonthsAround : 1;") &&
+              calendarCode.Contains("current = made.TryGetValue(start, out var had) && had.Stamp == stamp ? had.List : Make(start, now, stamp);") &&
+              calendarCode.Contains("!near.Contains(pair.Key)") && calendarCode.Contains("spare.Count > 0 ? spare.Pop() : NewMonthList()") &&
+              calendarCode.Contains("DispatcherPriority.ApplicationIdle") && calendarCode.Contains("prepared.MakeAround();") && calendarCode.Contains("settingsVersion++;"),
+            "A year of months around the one shown is ready before an arrow is clicked.");
         // Window.Resources holds one dictionary: a resource after it set Resources twice and the window failed to load.
         int resourcesEnd = calendarXaml.IndexOf("</Window.Resources>", StringComparison.Ordinal);
         int dictionaryEnd = calendarXaml.LastIndexOf("</ResourceDictionary>", resourcesEnd, StringComparison.Ordinal);
