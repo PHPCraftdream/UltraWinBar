@@ -270,8 +270,9 @@
     <s:String x:Key="calendar_yahrzeits">Yahrzeits</s:String>
     <s:String x:Key="calendar_candles_after_dark">Käerzen uschalten (nom Antriede vun der Nuecht)</s:String>
     <s:String x:Key="calendar_havdalah">Enn vum Roudag (Havdalah)</s:String>
-    <s:String x:Key="calendar_rest_begins">Fänkt un: {0} (Käerzen uschalten)</s:String>
-    <s:String x:Key="calendar_rest_ends">Ennt: {0} (Antriede vun der Nuecht)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Chanukka-Liichter: {0} + Schamasch</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (Käerzen uschalten) – {1} (Antriede vun der Nuecht)</s:String>
+    <s:String x:Key="calendar_weekday">Dag {0}</s:String>
     <s:String x:Key="calendar_settings_title">Kalennerastellungen</s:String>
     <s:String x:Key="calendar_settings_place">Uertschaft vun der Zäitzon:</s:String>
     <s:String x:Key="calendar_settings_zone">Zäitzon fir den Datum, den Dagwiessel an d'Zäite vum Dag:</s:String>

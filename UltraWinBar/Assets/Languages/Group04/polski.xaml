@@ -263,8 +263,9 @@
     <s:String x:Key="calendar_yahrzeits">Jorcajty</s:String>
     <s:String x:Key="calendar_candles_after_dark">Zapalenie świec (po zmroku)</s:String>
     <s:String x:Key="calendar_havdalah">Koniec dnia odpoczynku (hawdala)</s:String>
-    <s:String x:Key="calendar_rest_begins">Początek: {0} (zapalenie świec)</s:String>
-    <s:String x:Key="calendar_rest_ends">Koniec: {0} (zmrok)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Świece chanukowe: {0} + szamasz</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (zapalenie świec) – {1} (zmrok)</s:String>
+    <s:String x:Key="calendar_weekday">Dzień {0}</s:String>
     <s:String x:Key="calendar_settings_title">Ustawienia kalendarza</s:String>
     <s:String x:Key="calendar_settings_place">Miejsce strefy:</s:String>
     <s:String x:Key="calendar_settings_zone">Strefa czasowa dla daty, zmiany dnia i pór dnia:</s:String>

@@ -226,8 +226,9 @@
     <s:String x:Key="calendar_yahrzeits">יארצייטים</s:String>
     <s:String x:Key="calendar_candles_after_dark">הדלקת נרות (לאחר צאת הכוכבים)</s:String>
     <s:String x:Key="calendar_havdalah">סיום יום המנוחה (הבדלה)</s:String>
-    <s:String x:Key="calendar_rest_begins">מתחיל: {0} (הדלקת נרות)</s:String>
-    <s:String x:Key="calendar_rest_ends">מסתיים: {0} (צאת הכוכבים)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">נרות חנוכה: {0} + שמש</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (הדלקת נרות) – {1} (צאת הכוכבים)</s:String>
+    <s:String x:Key="calendar_weekday">יום {0}</s:String>
     <s:String x:Key="calendar_settings_title">הגדרות לוח השנה</s:String>
     <s:String x:Key="calendar_settings_place">מקום של האזור:</s:String>
     <s:String x:Key="calendar_settings_zone">אזור הזמן עבור התאריך, שינוי היום וזמני היום:</s:String>

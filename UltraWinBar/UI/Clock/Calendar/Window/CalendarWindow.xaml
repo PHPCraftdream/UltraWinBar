@@ -72,9 +72,9 @@
                 <Setter Property="CornerRadius"
                         Value="6" />
                 <Setter Property="Padding"
-                        Value="10,6" />
+                        Value="10,3" />
                 <Setter Property="Margin"
-                        Value="0,1" />
+                        Value="0" />
                 <Style.Triggers>
                     <Trigger Property="IsMouseOver"
                              Value="True">
@@ -307,7 +307,7 @@
                                 Background="{DynamicResource ModernGlass}"
                                 BorderBrush="{DynamicResource ModernGlassBorder}"
                                 Padding="6,4">
-                            <!-- The tooltip: the day's lines, and during the Omer its day and sefira after the tree of the sefirot. -->
+                            <!-- The tooltip: the day's lines, during the Omer its day and sefira after the tree of the sefirot, during Hanukkah the candles of its evening after a hanukkiah. -->
                             <Border.ToolTip>
                                 <ToolTip>
                                     <StackPanel>
@@ -317,6 +317,12 @@
                                                 <ContentControl Focusable="False" Content="{DynamicResource OmerIcon}" />
                                             </Viewbox>
                                             <TextBlock Text="{Binding OmerText}" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0" Visibility="{Binding HasChanukah, Converter={StaticResource OmerVisibility}}">
+                                            <Viewbox Height="16" Margin="0,0,4,0" VerticalAlignment="Center">
+                                                <ContentControl Focusable="False" Content="{DynamicResource ChanukiahIcon}" />
+                                            </Viewbox>
+                                            <TextBlock Text="{Binding Chanukah}" FontWeight="Bold" VerticalAlignment="Center" />
                                         </StackPanel>
                                     </StackPanel>
                                 </ToolTip>
@@ -348,7 +354,7 @@
                                 <!-- The Hebrew date at the top right, the civil one at the bottom left (muted); between them the
                                      week's portion as an accent badge and the special days as blocks colored by their kind. -->
                                 <!-- At the top left: a memorial candle on a yahrzeit, and during the Omer the tree of the sefirot
-                                     with the day of the count, after the candle or in its place. -->
+                                     with the day of the count, during Hanukkah a hanukkiah with the candles lit on its evening, after the candle or in its place. -->
                                 <!-- In the top row only: the row grows to the icons, so they never run into the blocks below. -->
                                 <StackPanel Grid.Row="0"
                                             Orientation="Horizontal"
@@ -366,6 +372,19 @@
                                         <ContentControl Focusable="False"
                                                         Content="{DynamicResource OmerIcon}" />
                                         <TextBlock Text="{Binding Omer}"
+                                                   Margin="3,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource ModernTextStrong}"
+                                                   FontSize="14"
+                                                   FontWeight="Bold" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal"
+                                                Margin="3,0,0,0"
+                                                Visibility="{Binding HasChanukah, Converter={StaticResource OmerVisibility}}">
+                                        <ContentControl Focusable="False"
+                                                        VerticalAlignment="Center"
+                                                        Content="{DynamicResource ChanukiahIcon}" />
+                                        <TextBlock Text="{Binding Chanukah}"
                                                    Margin="3,0,0,0"
                                                    VerticalAlignment="Center"
                                                    Foreground="{DynamicResource ModernTextStrong}"

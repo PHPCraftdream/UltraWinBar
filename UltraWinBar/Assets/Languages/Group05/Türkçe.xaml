@@ -471,10 +471,11 @@
     <s:String x:Key="calendar_candles_after_dark">Mum yakma (gece olduktan sonra)</s:String>
 
     <s:String x:Key="calendar_havdalah">Dinlenme gününün sonu (havdala)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Hanuka mumları: {0} + şamaş</s:String>
 
-    <s:String x:Key="calendar_rest_begins">Başlangıç: {0} (mum yakma)</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (mum yakma) – {1} (gece)</s:String>
+    <s:String x:Key="calendar_weekday">{0}. gün</s:String>
 
-    <s:String x:Key="calendar_rest_ends">Bitiş: {0} (gece)</s:String>
 
     <s:String x:Key="calendar_settings_title">Takvim ayarları</s:String>
 

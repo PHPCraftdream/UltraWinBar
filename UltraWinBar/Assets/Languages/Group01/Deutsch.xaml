@@ -256,8 +256,9 @@
     <s:String x:Key="calendar_yahrzeits">Jahrzeit</s:String>
     <s:String x:Key="calendar_candles_after_dark">Kerzenanzünden (nach Einbruch der Dunkelheit)</s:String>
     <s:String x:Key="calendar_havdalah">Ende des Ruhetages (Hawdala)</s:String>
-    <s:String x:Key="calendar_rest_begins">Beginnt: {0} (Kerzenanzünden)</s:String>
-    <s:String x:Key="calendar_rest_ends">Endet: {0} (Einbruch der Dunkelheit)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Chanukka-Lichter: {0} + Schamasch</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (Kerzenanzünden) – {1} (Einbruch der Dunkelheit)</s:String>
+    <s:String x:Key="calendar_weekday">Tag {0}</s:String>
     <s:String x:Key="calendar_settings_title">Kalendereinstellungen</s:String>
     <s:String x:Key="calendar_settings_place">Zeitzone des Orts:</s:String>
     <s:String x:Key="calendar_settings_zone">Zeitzone für das Datum, den Tageswechsel und die Tageszeiten:</s:String>

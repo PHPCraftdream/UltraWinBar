@@ -99,6 +99,21 @@
   with the Hebrew date, and the civil date. There the whole Hebrew
   block (weekday and date) opens the calendar, shows the hand and runs the lights around it. Shorter labels of the place
   in the settings ("Place:", "Place of the zone:").
+- The times of the day in the calendar end with midnight (chatzot halayla): halfway from sunset to the next sunrise,
+  after the evening's candles or havdalah.
+- During Hanukkah the clock's weekday has a hanukkiah after it with the number of candles to light this evening besides
+  the shamash (1 from the evening of 24 Kislev, so on a Friday before the Shabbat; 8 on the evening of 1 or 2 Tevet).
+  Each cell of the calendar shows the hanukkiah and the candles of its evening at its top left, and its tooltip too.
+  The times of the day have a highlighted line with the hanukkiah, "Hanukkah candles: 3 + shamash", at nightfall; on a
+  Friday before the Shabbat candles and at their time, after the Shabbat after the havdalah. In all 46 languages.
+  The heading of the times shows the hanukkiah and the number too.
+- Calendar: the months before and after the one shown are made ahead in hidden grids, when the program is idle and when
+  the calendar is prepared, so an arrow (or PageUp/PageDown) only brings one into sight: a month took 140–220 ms to
+  make, nearly all of it the cells' templates and layout.
+- Calendar: no names of the nations' days of the week. The start and end of a day of rest are one line,
+  "16:16 (candle lighting) – 17:14 (nightfall)"; days of rest in a row name their days by number ("Day 4 … – Shabbat
+  …"), as the molad does ("Molad of Tevet: Day 4, 11:11"); the tooltip and heading dates have no weekday. The rows of
+  the times are a little closer.
 - The clock's weekday has a memorial candle before it when the Hebrew day has a yahrzeit that is shown, and during the
   Omer the tree of the sefirot with the day of the count after it. The calendar shows the counting of the Omer as a card of its
   own (the tree of the sefirot, the day, from the seventh the weeks and days, and the day's sefira within the week's,
@@ -112,8 +127,8 @@
 - Settings: the Advanced tab has sub-tabs (General, Behavior, Multiple displays), as the notification area tab has.
 - On a horizontal panel the task buttons fill its height (the list's height shared by its rows), not only their
   content's.
-- Jewish calendar: the window takes the whole width of the work area; the grid has five weeks at most (a month that
-  would need a sixth puts its last days in the first week, as a paper calendar does); each day is a card with its own
+- Jewish calendar: the window takes the whole width of the work area; the grid has five weeks, and a sixth only for a
+  month that reaches into it (the days always in order); each day is a card with its own
   fill and border.
 - Jewish calendar: the candle lighting, the havdalah and the start and end of a Shabbat or festival are highlighted
   lines with two candles (the accent's soft fill and edge, the time in bold) among the times of the day.

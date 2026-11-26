@@ -264,8 +264,9 @@
     <s:String x:Key="calendar_yahrzeits">วันยาห์รไซต์</s:String>
     <s:String x:Key="calendar_candles_after_dark">จุดเทียน (หลังพลบค่ำ)</s:String>
     <s:String x:Key="calendar_havdalah">สิ้นสุดวันพักผ่อน (ฮาฟดาลาห์)</s:String>
-    <s:String x:Key="calendar_rest_begins">เริ่ม: {0} (จุดเทียน)</s:String>
-    <s:String x:Key="calendar_rest_ends">สิ้นสุด: {0} (พลบค่ำ)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">เทียนฮานุกกะห์: {0} + ชามาช</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (จุดเทียน) – {1} (พลบค่ำ)</s:String>
+    <s:String x:Key="calendar_weekday">วันที่ {0}</s:String>
     <s:String x:Key="calendar_settings_title">การตั้งค่าปฏิทิน</s:String>
     <s:String x:Key="calendar_settings_place">สถานที่ของเขตเวลา:</s:String>
     <s:String x:Key="calendar_settings_zone">เขตเวลาสำหรับวันที่ การเปลี่ยนวัน และเวลาประจำวัน:</s:String>

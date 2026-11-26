@@ -260,8 +260,9 @@
     <s:String x:Key="calendar_yahrzeits">Yahrzeit-muistopäivät</s:String>
     <s:String x:Key="calendar_candles_after_dark">Kynttilöiden sytytys (pimeän tultua)</s:String>
     <s:String x:Key="calendar_havdalah">Lepopäivän päättyminen (havdala)</s:String>
-    <s:String x:Key="calendar_rest_begins">Alkaa: {0} (kynttilöiden sytytys)</s:String>
-    <s:String x:Key="calendar_rest_ends">Päättyy: {0} (pimeän tulo)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Hanukka-kynttilät: {0} + šamaš</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (kynttilöiden sytytys) – {1} (pimeän tulo)</s:String>
+    <s:String x:Key="calendar_weekday">Päivä {0}</s:String>
     <s:String x:Key="calendar_settings_title">Kalenterin asetukset</s:String>
     <s:String x:Key="calendar_settings_place">Vyöhykkeen paikka:</s:String>
     <s:String x:Key="calendar_settings_zone">Päivämäärän, vuorokauden vaihtumisen ja vuorokauden aikojen aikavyöhyke:</s:String>

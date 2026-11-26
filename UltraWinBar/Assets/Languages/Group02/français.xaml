@@ -254,8 +254,9 @@
     <s:String x:Key="calendar_yahrzeits">Yahrzeit</s:String>
     <s:String x:Key="calendar_candles_after_dark">Allumage des bougies (après la tombée de la nuit)</s:String>
     <s:String x:Key="calendar_havdalah">Fin du Chabbat (havdala)</s:String>
-    <s:String x:Key="calendar_rest_begins">Début : {0} (allumage des bougies)</s:String>
-    <s:String x:Key="calendar_rest_ends">Fin : {0} (tombée de la nuit)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Bougies de Hanoucca : {0} + chamach</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (allumage des bougies) – {1} (tombée de la nuit)</s:String>
+    <s:String x:Key="calendar_weekday">Jour {0}</s:String>
     <s:String x:Key="calendar_settings_title">Paramètres du calendrier</s:String>
     <s:String x:Key="calendar_settings_place">Lieu du fuseau :</s:String>
     <s:String x:Key="calendar_settings_zone">Fuseau horaire pour la date, le changement de jour et les horaires du jour :</s:String>

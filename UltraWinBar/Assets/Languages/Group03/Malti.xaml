@@ -266,8 +266,9 @@
 <s:String x:Key="calendar_yahrzeits">Yahrzeits</s:String>
 <s:String x:Key="calendar_candles_after_dark">Tixgħil tax-xemgħat (wara d-dlam)</s:String>
 <s:String x:Key="calendar_havdalah">Tmiem il-jum ta’ mistrieħ (havdalah)</s:String>
-<s:String x:Key="calendar_rest_begins">Jibda: {0} (tixgħil tax-xemgħat)</s:String>
-<s:String x:Key="calendar_rest_ends">Jispiċċa: {0} (inżul ix-xemx)</s:String>
+<s:String x:Key="calendar_chanukah_candles">Xemgħat ta’ Ħanukka: {0} + shamash</s:String>
+<s:String x:Key="calendar_rest_span">{0} (tixgħil tax-xemgħat) – {1} (inżul ix-xemx)</s:String>
+<s:String x:Key="calendar_weekday">Jum {0}</s:String>
 <s:String x:Key="calendar_settings_title">Settings tal-kalendarju</s:String>
 <s:String x:Key="calendar_settings_place">Post taż-żona:</s:String>
 <s:String x:Key="calendar_settings_zone">Żona tal-ħin għad-data, għall-bidla tal-jum u għall-ħinijiet tal-jum:</s:String>

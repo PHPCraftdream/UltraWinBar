@@ -270,8 +270,9 @@
     <s:String x:Key="calendar_yahrzeits">Yahrzeits</s:String>
     <s:String x:Key="calendar_candles_after_dark">Candle lighting (after nightfall)</s:String>
     <s:String x:Key="calendar_havdalah">End of the day of rest (havdalah)</s:String>
-    <s:String x:Key="calendar_rest_begins">Begins: {0} (candle lighting)</s:String>
-    <s:String x:Key="calendar_rest_ends">Ends: {0} (nightfall)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Hanukkah candles: {0} + shamash</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (candle lighting) – {1} (nightfall)</s:String>
+    <s:String x:Key="calendar_weekday">Day {0}</s:String>
     <s:String x:Key="calendar_settings_title">Calendar settings</s:String>
     <s:String x:Key="calendar_settings_place">Place of the zone:</s:String>
     <s:String x:Key="calendar_settings_zone">Time zone for the date, the change of the day and the times of the day:</s:String>

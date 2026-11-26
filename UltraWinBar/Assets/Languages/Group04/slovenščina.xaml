@@ -263,8 +263,9 @@
     <s:String x:Key="calendar_yahrzeits">Jahrcajti</s:String>
     <s:String x:Key="calendar_candles_after_dark">Prižiganje sveč (po noči)</s:String>
     <s:String x:Key="calendar_havdalah">Konec počitka (havdala)</s:String>
-    <s:String x:Key="calendar_rest_begins">Začetek: {0} (prižiganje sveč)</s:String>
-    <s:String x:Key="calendar_rest_ends">Konec: {0} (noč)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Hanukine sveče: {0} + šamaš</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (prižiganje sveč) – {1} (noč)</s:String>
+    <s:String x:Key="calendar_weekday">{0}. dan</s:String>
     <s:String x:Key="calendar_settings_title">Nastavitve koledarja</s:String>
     <s:String x:Key="calendar_settings_place">Kraj časovnega pasu:</s:String>
     <s:String x:Key="calendar_settings_zone">Časovni pas za datum, menjavo dneva in čase dneva:</s:String>

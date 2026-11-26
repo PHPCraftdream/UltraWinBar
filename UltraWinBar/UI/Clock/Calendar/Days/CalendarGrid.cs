@@ -30,18 +30,15 @@ namespace UltraWinBar.Utilities
         public static bool InMonth(DateTime day, DateTime start, bool hebrew) => MonthStart(day, hebrew) == start.Date;
 
         /// <summary>
-        /// The 35 days of the grid, five weeks from the Sunday of the month's first week. A month that would need a sixth week
-        /// puts its last days in the first week, in the places of the days before it began (as a paper calendar does).
+        /// The days of the grid in order from the Sunday of the month's first week: five weeks, six only when the month
+        /// reaches into a sixth.
         /// </summary>
         public static DateTime[] Days(DateTime start, bool hebrew)
         {
             DateTime first = start.AddDays(-(int)start.DayOfWeek);
-            var days = new DateTime[35];
-            for (int i = 0; i < days.Length; i++)
-            {
-                DateTime day = first.AddDays(i), wrapped = day.AddDays(35);
-                days[i] = day < start && InMonth(wrapped, start, hebrew) ? wrapped : day;
-            }
+            int weeks = (int)start.DayOfWeek + Length(start, hebrew) > 35 ? 6 : 5;
+            var days = new DateTime[weeks * 7];
+            for (int i = 0; i < days.Length; i++) days[i] = first.AddDays(i);
             return days;
         }
 

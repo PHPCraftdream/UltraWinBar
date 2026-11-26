@@ -276,7 +276,7 @@ internal static class ZmanimChecks
         var order = new[]
         {
             Zman.Alot, Zman.Misheyakir, Zman.Sunrise, Zman.ShemaMagenAvraham, Zman.ShemaGra, Zman.TefillaMagenAvraham, Zman.TefillaGra,
-            Zman.Chatzot, Zman.MinchaGedola, Zman.MinchaKetana, Zman.PlagHaMincha, Zman.CandleLighting, Zman.Sunset, Zman.Tzeit, Zman.RabbeinuTam,
+            Zman.Chatzot, Zman.MinchaGedola, Zman.MinchaKetana, Zman.PlagHaMincha, Zman.CandleLighting, Zman.Sunset, Zman.Tzeit, Zman.RabbeinuTam, Zman.ChatzotHaLayla,
         };
         for (int i = 1; i < order.Length; i++)
             Check(times[order[i - 1]].Value < times[order[i]].Value, $"{order[i - 1]} is not before {order[i]}");
@@ -293,6 +293,11 @@ internal static class ZmanimChecks
         Check(Math.Abs((times[Zman.Chatzot].Value - Sun.SolarNoon(day, longitude)).TotalMinutes) < 3, "Midday is at solar noon.");
         Check(Math.Abs((sunset - times[Zman.CandleLighting].Value).TotalMinutes - 18) < 1e-6 && Math.Abs((times[Zman.RabbeinuTam].Value - sunset).TotalMinutes - 72) < 1e-6, "Candles 18 minutes before sunset, Rabbeinu Tam 72 minutes after.");
         Check(Math.Abs((sunset - Zmanim.Of(day, latitude, longitude, 40)[Zman.CandleLighting].Value).TotalMinutes - 40) < 1e-6, "Candles can be lit 40 minutes before sunset, as in Jerusalem.");
+        // Midnight is halfway from sunset to the next sunrise, about solar noon and 12 hours.
+        DateTime nextSunrise = Zmanim.Of(day.AddDays(1), latitude, longitude)[Zman.Sunrise].Value;
+        Check(Math.Abs((times[Zman.ChatzotHaLayla].Value - sunset).TotalSeconds - (nextSunrise - sunset).TotalSeconds / 2) < 1 &&
+              Math.Abs((times[Zman.ChatzotHaLayla].Value - Sun.SolarNoon(day, longitude).AddHours(12)).TotalMinutes) < 3,
+            $"Midnight is halfway from sunset to sunrise: {times[Zman.ChatzotHaLayla]:u}.");
         // Nightfall at 8.5° under the horizon in Jerusalem in March is about 30 minutes after sunset.
         double dusk = (times[Zman.Tzeit].Value - sunset).TotalMinutes;
         Check(dusk > 25 && dusk < 40, $"Nightfall in Jerusalem is {dusk:0} minutes after sunset.");

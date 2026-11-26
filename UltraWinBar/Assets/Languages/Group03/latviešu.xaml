@@ -257,8 +257,9 @@
     <s:String x:Key="calendar_yahrzeits">Jahrzeiti</s:String>
     <s:String x:Key="calendar_candles_after_dark">Sveču iedegšana (pēc nakts iestāšanās)</s:String>
     <s:String x:Key="calendar_havdalah">Atpūtas dienas beigas (havdala)</s:String>
-    <s:String x:Key="calendar_rest_begins">Sākums: {0} (sveču iedegšana)</s:String>
-    <s:String x:Key="calendar_rest_ends">Beigas: {0} (nakts iestāšanās)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Hanukas sveces: {0} + šamašs</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (sveču iedegšana) – {1} (nakts iestāšanās)</s:String>
+    <s:String x:Key="calendar_weekday">{0}. diena</s:String>
     <s:String x:Key="calendar_settings_title">Kalendāra iestatījumi</s:String>
     <s:String x:Key="calendar_settings_place">Laika joslas vieta:</s:String>
     <s:String x:Key="calendar_settings_zone">Laika josla datumam, dienas maiņai un dienas laikiem:</s:String>

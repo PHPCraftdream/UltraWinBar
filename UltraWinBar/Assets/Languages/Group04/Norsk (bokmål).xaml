@@ -255,8 +255,9 @@
     <s:String x:Key="calendar_yahrzeits">Jahrzeiter</s:String>
     <s:String x:Key="calendar_candles_after_dark">Lystenning (etter mørkets frembrudd)</s:String>
     <s:String x:Key="calendar_havdalah">Hviledagens slutt (havdalah)</s:String>
-    <s:String x:Key="calendar_rest_begins">Begynner: {0} (lystenning)</s:String>
-    <s:String x:Key="calendar_rest_ends">Slutter: {0} (mørkets frembrudd)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Hanukka-lys: {0} + shamash</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (lystenning) – {1} (mørkets frembrudd)</s:String>
+    <s:String x:Key="calendar_weekday">Dag {0}</s:String>
     <s:String x:Key="calendar_settings_title">Kalenderinnstillinger</s:String>
     <s:String x:Key="calendar_settings_place">Sted for tidssonen:</s:String>
     <s:String x:Key="calendar_settings_zone">Tidssone for datoen, døgnskiftet og dagens tider:</s:String>

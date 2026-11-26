@@ -230,8 +230,9 @@
     <s:String x:Key="calendar_yahrzeits">Ярцайти</s:String>
     <s:String x:Key="calendar_candles_after_dark">Запалване на свещите (след свечеряване)</s:String>
     <s:String x:Key="calendar_havdalah">Край на почивния ден (хавдала)</s:String>
-    <s:String x:Key="calendar_rest_begins">Начало: {0} (запалване на свещите)</s:String>
-    <s:String x:Key="calendar_rest_ends">Край: {0} (нощно време)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Ханукални свещи: {0} + шамаш</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (запалване на свещите) – {1} (нощно време)</s:String>
+    <s:String x:Key="calendar_weekday">Ден {0}</s:String>
     <s:String x:Key="calendar_settings_title">Настройки на календара</s:String>
     <s:String x:Key="calendar_settings_place">Място на зоната:</s:String>
     <s:String x:Key="calendar_settings_zone">Часова зона за датата, смяната на деня и часовете за деня:</s:String>

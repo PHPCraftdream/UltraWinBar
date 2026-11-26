@@ -255,8 +255,9 @@
     <s:String x:Key="calendar_yahrzeits">Yahrzeit</s:String>
     <s:String x:Key="calendar_candles_after_dark">Thắp nến (sau khi trời tối)</s:String>
     <s:String x:Key="calendar_havdalah">Kết thúc ngày nghỉ (havdalah)</s:String>
-    <s:String x:Key="calendar_rest_begins">Bắt đầu: {0} (thắp nến)</s:String>
-    <s:String x:Key="calendar_rest_ends">Kết thúc: {0} (trời tối)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Nến Hanukkah: {0} + shamash</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (thắp nến) – {1} (trời tối)</s:String>
+    <s:String x:Key="calendar_weekday">Ngày {0}</s:String>
     <s:String x:Key="calendar_settings_title">Cài đặt lịch</s:String>
     <s:String x:Key="calendar_settings_place">Địa điểm của múi giờ:</s:String>
     <s:String x:Key="calendar_settings_zone">Múi giờ dùng cho ngày tháng, thời điểm đổi ngày và giờ trong ngày:</s:String>

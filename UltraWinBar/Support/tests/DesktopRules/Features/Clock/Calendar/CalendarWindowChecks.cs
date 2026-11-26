@@ -53,30 +53,47 @@ internal static class CalendarWindowChecks
 
         // A Shabbat in Jerusalem: its date, the portion, the times of the day with the end of the rest, and the molad of the coming month.
         var shabbat = DayDetailsBuilder.Describe(Day("2026-11-21"), Jerusalem, "English", null, text);
-        Check(shabbat.HebrewDate == "11 Kislev 5787" && shabbat.Heading == "Saturday, November 21, 2026", $"The Hebrew date of the day: {shabbat.HebrewDate}, {shabbat.Heading}.");
+        Check(shabbat.HebrewDate == "11 Kislev 5787" && shabbat.Heading == "21 November 2026", $"The Hebrew date of the day: {shabbat.HebrewDate}, {shabbat.Heading}.");
         Check(shabbat.Portion == "Weekly portion: Vayetze" && shabbat.Events.Count == 0 && shabbat.Yahrzeits.Count == 0, "A Shabbat has its portion and no festival.");
         string eleven = new DateTime(2000, 1, 1, 11, 11, 0).ToString("t", new CultureInfo("en-US"));
-        Check(shabbat.Molad == $"Molad of Tevet: Wednesday, {eleven} and 4 chalakim", $"The molad of the coming month: {shabbat.Molad}.");
+        Check(shabbat.Molad == $"Molad of Tevet: Day 4, {eleven} and 4 chalakim", $"The molad of the coming month: {shabbat.Molad}.");
         Check(shabbat.Place.StartsWith("Place: Jerusalem, Jerusalem, Israel · Asia/Jerusalem (UTC"), $"The place and its zone: {shabbat.Place}.");
         Check(shabbat.Place.EndsWith(" · Land of Israel"), $"The place says that the festivals and portions are those of the Land of Israel: {shabbat.Place}.");
-        Check(shabbat.Times.Count == 12 && shabbat.Times[2].Name == "Sunrise (Netz)" && shabbat.Times[9].Name == "Sunset (Shkiah)" && shabbat.Times[10].Name == "Nightfall (Tzeit HaKochavim)" &&
-            shabbat.Times[11].Name == "End of the day of rest (havdalah)" && shabbat.Times.All(time => Regex.IsMatch(time.Time, @"^\d{1,2}:\d\d\s[AP]M$")), $"The times of the day: {string.Join("; ", shabbat.Times)}.");
+        Check(shabbat.Times.Count == 13 && shabbat.Times[2].Name == "Sunrise (Netz)" && shabbat.Times[9].Name == "Sunset (Shkiah)" && shabbat.Times[10].Name == "Nightfall (Tzeit HaKochavim)" &&
+            shabbat.Times[11].Name == "End of the day of rest (havdalah)" && shabbat.Times[12].Name == "Midnight (Chatzot HaLayla)" && shabbat.Times.All(time => Regex.IsMatch(time.Time, @"^\d{1,2}:\d\d\s[AP]M$")), $"The times of the day: {string.Join("; ", shabbat.Times)}.");
         Check(shabbat.Times[11].Time == shabbat.Times[10].Time, "Havdalah is at nightfall.");
-        Check(shabbat.Times[11].Rest && shabbat.Times.Take(11).All(time => !time.Rest), "Only the havdalah is marked as a line of the day of rest.");
-        Check(shabbat.RestStarts != null && shabbat.RestStarts.StartsWith("Begins: Fri ") && shabbat.RestEnds != null && shabbat.RestEnds.StartsWith("Ends: Sat "), $"A day of rest begins on Friday and ends on Saturday: {shabbat.RestStarts}, {shabbat.RestEnds}.");
+        Check(shabbat.Times[11].Rest && shabbat.Times.Count(time => time.Rest) == 1, "Only the havdalah is marked as a line of the day of rest.");
+        // One line from the candles to nightfall, with no names of the nations' days of the week.
+        Check(shabbat.Rest != null && Regex.IsMatch(shabbat.Rest, @"^\d{1,2}:\d\d\s[AP]M \(candle lighting\) – \d{1,2}:\d\d\s[AP]M \(nightfall\)$"), $"A Shabbat runs from the candles to nightfall in one line: {shabbat.Rest}.");
+        Check(DayDetailsBuilder.WeekdayOf(Day("2026-11-22"), text) == "Day 1" && DayDetailsBuilder.WeekdayOf(Day("2026-11-27"), text) == "Day 6" && DayDetailsBuilder.WeekdayOf(Day("2026-11-28"), text) == "Shabbat",
+            "The days of the week are numbered, the Shabbat named.");
 
         // A weekday has the portion of the coming Shabbat, the evening's candles and no end of rest; a Friday has the candles.
         var thursday = DayDetailsBuilder.Describe(Day("2026-11-19"), Jerusalem, "English", null, text);
-        Check(thursday.Portion == "Weekly portion: Vayetze" && thursday.RestStarts == null && thursday.RestEnds == null && thursday.Times.Count == 11, "A weekday: the portion, no rest, no evening line.");
+        Check(thursday.Portion == "Weekly portion: Vayetze" && thursday.Rest == null && thursday.Times.Count == 12 && thursday.Times[11].Name == "Midnight (Chatzot HaLayla)", "A weekday: the portion, no rest, no evening line, midnight last.");
         var friday = DayDetailsBuilder.Describe(Day("2026-11-20"), Jerusalem, "English", null, text);
-        Check(friday.Times.Count == 12 && friday.Times[11].Name == "Candle lighting" && friday.Times[11].Time != friday.Times[9].Time, "A Friday has the candle lighting before sunset.");
+        Check(friday.Times.Count == 13 && friday.Times[11].Name == "Candle lighting" && friday.Times[11].Time != friday.Times[9].Time, "A Friday has the candle lighting before sunset.");
+        // Hanukkah 5787 in the times: Friday 4 December the first candle before the Shabbat's, at its time; Saturday the second
+        // after the havdalah; Sunday the third at nightfall; none on 12 December, its last day.
+        var chanukahFriday = DayDetailsBuilder.Describe(Day("2026-12-04"), Jerusalem, "English", null, text);
+        var chanukahShabbat = DayDetailsBuilder.Describe(Day("2026-12-05"), Jerusalem, "English", null, text);
+        var chanukahSunday = DayDetailsBuilder.Describe(Day("2026-12-06"), Jerusalem, "English", null, text);
+        var chanukahLast = DayDetailsBuilder.Describe(Day("2026-12-12"), Jerusalem, "English", null, text);
+        int TimeAt(DayDetails details, string name) => details.Times.ToList().FindIndex(time => time.Name == name);
+        Check(TimeAt(chanukahFriday, "Hanukkah candles: 1 + shamash") == 11 && chanukahFriday.Times[11].Chanukah && !chanukahFriday.Times[11].Rest &&
+              chanukahFriday.Times[12].Name == "Candle lighting" && chanukahFriday.Times[11].Time == chanukahFriday.Times[12].Time,
+            $"On a Friday of Hanukkah its candles come before the Shabbat's: {string.Join("; ", chanukahFriday.Times)}.");
+        Check(TimeAt(chanukahShabbat, "Hanukkah candles: 2 + shamash") == TimeAt(chanukahShabbat, "End of the day of rest (havdalah)") + 1 &&
+              TimeAt(chanukahSunday, "Hanukkah candles: 3 + shamash") == 11 && chanukahSunday.Times[11].Time == chanukahSunday.Times[10].Time &&
+              chanukahSunday.Times.Last().Name == "Midnight (Chatzot HaLayla)" && !chanukahLast.Times.Any(time => time.Chanukah),
+            $"After the Shabbat the candles follow the havdalah, on a weekday they are at nightfall: {string.Join("; ", chanukahSunday.Times)}.");
 
         // Festivals: the days of Pesach are one more in the diaspora than in Israel; the festival's days run from the candles to nightfall.
         var seder = DayDetailsBuilder.Describe(Day("2026-04-02"), London, "English", null, text);
         var sederIsrael = DayDetailsBuilder.Describe(Day("2026-04-02"), Jerusalem, "English", null, text);
         Check(seder.Events.Single() == "Pesach, day 1 of 8" && sederIsrael.Events.Single() == "Pesach, day 1 of 7", "Pesach has 8 days in London and 7 in Jerusalem.");
-        Check(seder.RestStarts.StartsWith("Begins: Wed ") && seder.RestEnds.StartsWith("Ends: Sat ") && sederIsrael.RestEnds.StartsWith("Ends: Thu "),
-            $"A festival begins on the evening before and ends at nightfall of its last day of rest: {seder.RestStarts} {seder.RestEnds}, Israel {sederIsrael.RestEnds}.");
+        Check(seder.Rest.StartsWith("Day 4 ") && seder.Rest.Contains(" – Shabbat ") && !sederIsrael.Rest.Contains("Day ") && !sederIsrael.Rest.Contains("Shabbat"),
+            $"Days of rest in a row name their days by number, one day only its times: {seder.Rest}, Israel {sederIsrael.Rest}.");
         Check(seder.Times.Any(time => time.Name == "Candle lighting (after nightfall)"), "The first night of a two-day festival has the candles after nightfall.");
         // No Rosh Chodesh word without the number of days: two days read "day 1 of 2".
         var roshChodesh = DayDetailsBuilder.Describe(Day("2025-12-20"), London, "English", null, text);
@@ -91,7 +108,7 @@ internal static class CalendarWindowChecks
 
         // With no place: no times, no place line, no start and end of the rest; the rest is the diaspora's.
         var bare = DayDetailsBuilder.Describe(Day("2026-11-21"), null, "English", null, text);
-        Check(bare.Place == null && bare.Times.Count == 0 && bare.RestStarts == null && bare.RestEnds == null && bare.Portion == "Weekly portion: Vayetze" && bare.Molad != null, "Without a place the calendar has no times.");
+        Check(bare.Place == null && bare.Times.Count == 0 && bare.Rest == null && bare.Portion == "Weekly portion: Vayetze" && bare.Molad != null, "Without a place the calendar has no times.");
         // A date outside the Hebrew calendar does not break the window.
         var far = DayDetailsBuilder.Describe(new DateTime(2300, 1, 1), Jerusalem, "English", null, text);
         Check(far.HebrewDate == "" && far.Molad == null && far.Portion == null && far.Events.Count == 0, "Far out of range, the details are empty, not a failure.");
@@ -140,14 +157,21 @@ internal static class CalendarWindowChecks
               CalendarGrid.InMonth(Day("2026-12-10"), kislevStart, true) && !CalendarGrid.InMonth(Day("2026-12-11"), kislevStart, true) &&
               CalendarGrid.SameDay(Day("2026-11-23"), Day("2026-12-11"), true) == Day("2026-12-23"),
             $"Hebrew months of the grid: Kislev from {kislevStart:d}.");
-        // Five weeks at most: August 2026 starts on a Saturday and has 31 days, so the 30th and 31st take the first week's Sunday and Monday.
+        // Six weeks only when needed: August 2026 starts on a Saturday and has 31 days, so the 30th and 31st make a sixth week, in order.
         var august = CalendarGrid.Days(Day("2026-08-01"), false);
-        Check(august.Length == 35 && august[0] == Day("2026-08-30") && august[1] == Day("2026-08-31") && august[6] == Day("2026-08-01") &&
-              august[34] == Day("2026-08-29") && august.Count(day => day.Month == 8) == 31 && august.Distinct().Count() == 35,
-            $"A month of six weeks fits in five: {string.Join(" ", august.Select(day => day.Day))}.");
+        Check(august.Length == 42 && august[0] == Day("2026-07-26") && august[6] == Day("2026-08-01") && august[36] == Day("2026-08-31") &&
+              august.Zip(august.Skip(1)).All(pair => pair.Second == pair.First.AddDays(1)) && august.Count(day => day.Month == 8) == 31,
+            $"A month that reaches a sixth week gets one: {string.Join(" ", august.Select(day => day.Day))}.");
         var november = CalendarGrid.Days(Day("2026-11-01"), false);
-        Check(november[0] == Day("2026-11-01") && november[34] == Day("2026-12-05"), "A month of five weeks starts on its own first week.");
-        Check(CalendarGrid.Days(kislevStart, true).Count(day => CalendarGrid.InMonth(day, kislevStart, true)) == 30, "A Hebrew month shows all its days in five weeks.");
+        Check(november.Length == 35 && november[0] == Day("2026-11-01") && november[34] == Day("2026-12-05"), "A month of five weeks shows five.");
+        // Shevat 5787 begins on Shabbat (9 January 2027) and has 30 days: its 30th (7 February) is in a sixth week, after the 29th.
+        DateTime shevatStart = CalendarGrid.MonthStart(Day("2027-01-09"), true);
+        var shevat = CalendarGrid.Days(shevatStart, true);
+        Check(shevatStart == Day("2027-01-09") && shevat.Length == 42 && shevat[6] == shevatStart && shevat[35] == Day("2027-02-07") &&
+              shevat.Count(day => CalendarGrid.InMonth(day, shevatStart, true)) == 30,
+            $"A Hebrew month in a sixth week keeps its days in order: {string.Join(" ", shevat.Select(day => day.Day))}.");
+        Check(CalendarGrid.Days(kislevStart, true).Length == 35 && CalendarGrid.Days(kislevStart, true).Count(day => CalendarGrid.InMonth(day, kislevStart, true)) == 30,
+            "A Hebrew month that fits shows all its days in five weeks.");
         Check(CalendarGrid.MonthStart(Day("2026-11-23"), false) == Day("2026-11-01") && CalendarGrid.Next(Day("2026-01-01"), false) == Day("2026-02-01") &&
               CalendarGrid.SameDay(Day("2026-01-31"), Day("2026-02-01"), false) == Day("2026-02-28") && CalendarGrid.Previous(Day("2026-01-01"), false) == Day("2025-12-01"),
             "Civil months of the grid, a shorter month ending on its last day.");
@@ -313,6 +337,31 @@ internal static class CalendarWindowChecks
             $"A cell of the Omer has its day, the tree of the sefirot by the candle's place, and the sefira in its tooltip: {lagBaomer.OmerText}.");
         Check(calendarCode.Contains("JewishCalendar.OmerDay(chosen)") && calendarCode.Contains("Text(\"calendar_omer\")") && clockCode.Contains("DayDetailsBuilder.MarksOf(hebrewDay.Day, Settings.Instance.HiddenYahrzeits)") && icons.Contains("x:Key=\"OmerIcon\""),
             "The calendar has an Omer card; the clock shows the Omer's day with the tree of the sefirot and a candle on a yahrzeit.");
+        // Hanukkah 5787: 25 Kislev is 5 December 2026 (a Shabbat), 2 Tevet (day 8) 12 December; a full Kislev of 30 days.
+        Check(JewishCalendar.ChanukahCandles(Day("2026-12-04")) == 0 && JewishCalendar.ChanukahCandles(Day("2026-12-05")) == 1 &&
+              JewishCalendar.ChanukahCandles(Day("2026-12-10")) == 6 && JewishCalendar.ChanukahCandles(Day("2026-12-11")) == 7 &&
+              JewishCalendar.ChanukahCandles(Day("2026-12-12")) == 8 && JewishCalendar.ChanukahCandles(Day("2026-12-13")) == 0 &&
+              JewishCalendar.ChanukahCandles(Day("2026-11-23")) == 0 && JewishCalendar.ChanukahCandles(Day("2027-01-10")) == 0,
+            "The days of Hanukkah have 1 to 8 candles from 25 Kislev.");
+        // 5790 has a Kislev of 29 days: 25 Kislev is 2 December 2029 and day 8 is 3 Tevet, 9 December.
+        var short5790 = Enumerable.Range(0, 12).Select(offset => JewishCalendar.ChanukahCandles(Day("2029-11-30").AddDays(offset))).ToList();
+        Check(short5790.SequenceEqual(new[] { 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 0 }), $"With a short Kislev Hanukkah ends on 3 Tevet: {string.Join(",", short5790)}.");
+        // The evening of a civil date: Friday 4 December 2026 has the first candle (lit before the Shabbat), the cell says so.
+        var friday = DayDetailsBuilder.Cell(Day("2026-12-04"), Day("2026-12-01"), Day("2026-12-04"), false, "English", new List<string>(), Text);
+        var lastDay = DayDetailsBuilder.Cell(Day("2026-12-12"), Day("2026-12-01"), Day("2026-12-04"), false, "English", new List<string>(), Text);
+        Check(DayDetailsBuilder.ChanukahTonight(Day("2026-12-04")) == 1 && DayDetailsBuilder.ChanukahTonight(Day("2026-12-11")) == 8 &&
+              DayDetailsBuilder.ChanukahTonight(Day("2026-12-12")) == 0 && friday.HasChanukah && friday.Chanukah == 1 && !lastDay.HasChanukah,
+            "A day shows the candles of its evening: the first on the evening of 24 Kislev, none on the last day.");
+        // The clock: by day and after sunset (before midnight) the same evening's candles, from the civil date.
+        HebrewDayNow candleNoon = HebrewDayClock.Now(new DateTime(2026, 12, 6, 9, 0, 0, DateTimeKind.Utc), Jerusalem);
+        HebrewDayNow candleEvening = HebrewDayClock.Now(new DateTime(2026, 12, 6, 18, 0, 0, DateTimeKind.Utc), Jerusalem);
+        Check(DayDetailsBuilder.ChanukahTonight(candleNoon.Civil ?? candleNoon.Day) == 3 && candleEvening.AfterSunset &&
+              DayDetailsBuilder.ChanukahTonight(candleEvening.Civil ?? candleEvening.Day) == 3,
+            "The clock shows the candles of this evening by day and after sunset.");
+        Check(clockCode.Contains("DayDetailsBuilder.ChanukahTonight(hebrewDay.Civil ?? hebrewDay.Day)") && icons.Contains("x:Key=\"ChanukiahIcon\"") &&
+              calendarXaml.Contains("Visibility=\"{Binding HasChanukah, Converter={StaticResource OmerVisibility}}\"") &&
+              File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "UI", "Clock", "Clock.xaml")).Split("{DynamicResource ChanukiahIcon}").Length == 3,
+            "The clock (both layouts) and the cells show a hanukkiah with the number of candles.");
         // The days of the week over the grid: 1 (Sunday) to 6 (Friday) and Shabbat, no day names of a language.
         Check(CalendarWindow.WeekdayHeaders("Shabbat").SequenceEqual(new[] { "1", "2", "3", "4", "5", "6", "Shabbat" }) &&
               calendarCode.Contains("WeekdayHeaders(Text(\"calendar_shabbat\"))") && !calendarCode.Contains("AbbreviatedDayNames"),
@@ -338,7 +387,7 @@ internal static class CalendarWindowChecks
         Check(!calendarXaml.Contains("SizeToContent") && calendarXaml.Contains("ResizeMode=\"NoResize\"") && calendarXaml.Contains("ResizeBorderThickness=\"0\"") &&
               calendarCode.Contains("shown.FillWorkArea(clock);") && calendarCode.Contains("Width = area.Width;") && calendarCode.Contains("Height = area.Height;") &&
               calendarCode.Contains("CalendarGrid.Days(month, hebrew)") && !calendarCode.Contains("Enumerable.Range(0, 42)"),
-            "The calendar fills the work area, cannot be resized or maximized, and shows five weeks.");
+            "The calendar fills the work area, cannot be resized or maximized, and shows the grid's weeks.");
         // The weeks are as high as their fullest day, within the height there is; the details are cards.
         // The weeks are all as high as the fullest; only when the month does not fit do the weeks with less in them give way.
         var roomy = WeekRowsPanel.Fit(new double[] { 70, 140, 70 }, 500);
@@ -358,9 +407,16 @@ internal static class CalendarWindowChecks
         Check(cell > 0 && calendarXaml.IndexOf("Background=\"{DynamicResource ModernGlass}\"", cell, StringComparison.Ordinal) - cell < 400 &&
               calendarXaml.IndexOf("BorderBrush=\"{DynamicResource ModernGlassBorder}\"", cell, StringComparison.Ordinal) - cell < 400,
             "Every day of the grid is a card with its own fill and border.");
-        Check(calendarCode.Contains("if (time.Rest)") && calendarCode.Contains("card.Children.Add(RestLine(details.RestStarts, null));") &&
-              calendarCode.Contains("private FrameworkElement RestLine(string text, string time)"),
+        Check(calendarCode.Contains("if (time.Rest || time.Chanukah)") && calendarCode.Contains("card.Children.Add(RestLine(details.Rest, null));") &&
+              calendarCode.Contains("private FrameworkElement RestLine(string text, string time, bool hanukkiah = false)") &&
+              calendarCode.Contains("TimesHeading(details.Place, details.Chanukah)") && !calendarCode.Contains("GetDayName") && !File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "UI", "Clock", "Calendar", "Days", "DayDetails.cs")).Contains("DayName("),
             "The candles, the havdalah and the start and end of a day of rest are highlighted lines with candles.");
+        // The months before and after are made ahead in hidden lists (when idle, and when the calendar is prepared); an
+        // arrow swaps lists, and a change of the settings, the day or the evening makes them again.
+        Check(calendarCode.Contains("(before, current, after) = (current, after, before);") && calendarCode.Contains("(after, current, before) = (current, before, after);") &&
+              calendarCode.Contains("DispatcherPriority.ApplicationIdle") && calendarCode.Contains("prepared.MakeAround();") &&
+              calendarCode.Contains("afterStamp == stamp") && calendarCode.Contains("settingsVersion++;"),
+            "The neighboring months are ready before an arrow is clicked.");
         // Window.Resources holds one dictionary: a resource after it set Resources twice and the window failed to load.
         int resourcesEnd = calendarXaml.IndexOf("</Window.Resources>", StringComparison.Ordinal);
         int dictionaryEnd = calendarXaml.LastIndexOf("</ResourceDictionary>", resourcesEnd, StringComparison.Ordinal);
@@ -368,7 +424,7 @@ internal static class CalendarWindowChecks
             "Every resource of the calendar window is inside its one ResourceDictionary.");
         Check(File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "UI", "Clock", "Clock.xaml")).Contains("x:Name=\"HebrewDateHost\" Grid.Row=\"2\" Background=\"Transparent\" Cursor=\"Hand\""),
             "The Hebrew date of the clock shows the hand cursor: it is a link to the calendar.");
-        foreach (string key in new[] { "calendar_day_of", "calendar_portion", "calendar_festival_reading", "calendar_molad", "calendar_place", "calendar_candles_after_dark", "calendar_havdalah", "calendar_rest_begins", "calendar_rest_ends" }) used.Add(key);
+        foreach (string key in new[] { "calendar_day_of", "calendar_portion", "calendar_festival_reading", "calendar_molad", "calendar_place", "calendar_candles_after_dark", "calendar_havdalah", "calendar_rest_span", "calendar_weekday", "calendar_chanukah_candles" }) used.Add(key);
         var missing = used.Where(key => !english.ContainsKey(key)).ToArray();
         Check(missing.Length == 0, $"English lacks strings the calendar uses: {string.Join(", ", missing)}.");
         string languages = Path.Combine(root.FullName, "UltraWinBar", "Assets", "Languages");

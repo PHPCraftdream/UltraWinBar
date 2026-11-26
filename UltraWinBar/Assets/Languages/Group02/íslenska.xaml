@@ -255,8 +255,9 @@
     <s:String x:Key="calendar_yahrzeits">Yahrzeit-afmæli</s:String>
     <s:String x:Key="calendar_candles_after_dark">Kveikt á kertum (eftir myrkur)</s:String>
     <s:String x:Key="calendar_havdalah">Lok hvíldardagsins (havdalah)</s:String>
-    <s:String x:Key="calendar_rest_begins">Hefst: {0} (kertakveiking)</s:String>
-    <s:String x:Key="calendar_rest_ends">Lýkur: {0} (að kvöldi)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Hanúkka-kerti: {0} + shamash</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (kertakveiking) – {1} (að kvöldi)</s:String>
+    <s:String x:Key="calendar_weekday">Dagur {0}</s:String>
     <s:String x:Key="calendar_settings_title">Stillingar dagatals</s:String>
     <s:String x:Key="calendar_settings_place">Staður tímabeltis:</s:String>
     <s:String x:Key="calendar_settings_zone">Tímabelti dagsetningar, dagskipta og tíma dagsins:</s:String>

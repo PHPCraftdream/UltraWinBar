@@ -58,6 +58,13 @@ namespace UltraWinBar.Controls
 
         public static readonly DependencyProperty OmerVisibilityProperty = DependencyProperty.Register(nameof(OmerVisibility), typeof(Visibility), typeof(Clock), new PropertyMetadata(Visibility.Collapsed));
         public Visibility OmerVisibility { get => (Visibility)GetValue(OmerVisibilityProperty); set => SetValue(OmerVisibilityProperty, value); }
+
+        // During Hanukkah: a hanukkiah and the candles of this evening besides the shamash (from the evening of 24 Kislev).
+        public static readonly DependencyProperty ChanukahTextProperty = DependencyProperty.Register(nameof(ChanukahText), typeof(string), typeof(Clock), new PropertyMetadata(""));
+        public string ChanukahText { get => (string)GetValue(ChanukahTextProperty); set => SetValue(ChanukahTextProperty, value); }
+
+        public static readonly DependencyProperty ChanukahVisibilityProperty = DependencyProperty.Register(nameof(ChanukahVisibility), typeof(Visibility), typeof(Clock), new PropertyMetadata(Visibility.Collapsed));
+        public Visibility ChanukahVisibility { get => (Visibility)GetValue(ChanukahVisibilityProperty); set => SetValue(ChanukahVisibilityProperty, value); }
         public static readonly DependencyProperty WeekdayTextProperty = DependencyProperty.Register(nameof(WeekdayText), typeof(string), typeof(Clock));
         public string WeekdayText { get => (string)GetValue(WeekdayTextProperty); set => SetValue(WeekdayTextProperty, value); }
         private CultureInfo clockCulture = CultureInfo.CurrentCulture;
@@ -398,6 +405,11 @@ namespace UltraWinBar.Controls
                 if (OmerText != omerText) OmerText = omerText;
                 Visibility omerVisibility = omer > 0 ? Visibility.Visible : Visibility.Collapsed;
                 if (OmerVisibility != omerVisibility) OmerVisibility = omerVisibility;
+                int candles = DayDetailsBuilder.ChanukahTonight(hebrewDay.Civil ?? hebrewDay.Day);
+                string chanukahText = candles > 0 ? candles.ToString(CultureInfo.InvariantCulture) : "";
+                if (ChanukahText != chanukahText) ChanukahText = chanukahText;
+                Visibility chanukahVisibility = candles > 0 ? Visibility.Visible : Visibility.Collapsed;
+                if (ChanukahVisibility != chanukahVisibility) ChanukahVisibility = chanukahVisibility;
             }
             else
             {

@@ -270,8 +270,9 @@
     <s:String x:Key="calendar_yahrzeits">یادبودهای سالگرد درگذشت</s:String>
     <s:String x:Key="calendar_candles_after_dark">روشن‌کردن شمع (پس از تاریک‌شدن)</s:String>
     <s:String x:Key="calendar_havdalah">پایان روز استراحت (هاودالا)</s:String>
-    <s:String x:Key="calendar_rest_begins">آغاز: {0} (روشن‌کردن شمع)</s:String>
-    <s:String x:Key="calendar_rest_ends">پایان: {0} (پس از فرارسیدن شب)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">شمع‌های حانوکا: {0} + شمش</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (روشن‌کردن شمع) – {1} (پس از فرارسیدن شب)</s:String>
+    <s:String x:Key="calendar_weekday">روز {0}</s:String>
     <s:String x:Key="calendar_settings_title">تنظیمات تقویم</s:String>
     <s:String x:Key="calendar_settings_place">مکان منطقه:</s:String>
     <s:String x:Key="calendar_settings_zone">منطقهٔ زمانی برای تاریخ، تغییر روز و اوقات روز:</s:String>

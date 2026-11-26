@@ -255,8 +255,9 @@
     <s:String x:Key="calendar_yahrzeits">Jarcajti</s:String>
     <s:String x:Key="calendar_candles_after_dark">Paljenje sveća (po noći)</s:String>
     <s:String x:Key="calendar_havdalah">Kraj dana odmora (havdala)</s:String>
-    <s:String x:Key="calendar_rest_begins">Počinje: {0} (paljenje sveća)</s:String>
-    <s:String x:Key="calendar_rest_ends">Završava se: {0} (noć)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Hanukine sveće: {0} + šamaš</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (paljenje sveća) – {1} (noć)</s:String>
+    <s:String x:Key="calendar_weekday">{0}. dan</s:String>
     <s:String x:Key="calendar_settings_title">Postavke kalendara</s:String>
     <s:String x:Key="calendar_settings_place">Mesto za zonu:</s:String>
     <s:String x:Key="calendar_settings_zone">Vremenska zona za datum, promenu dana i dnevna vremena:</s:String>

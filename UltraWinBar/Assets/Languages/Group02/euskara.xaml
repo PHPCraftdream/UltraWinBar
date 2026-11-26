@@ -266,8 +266,9 @@
     <s:String x:Key="calendar_yahrzeits">Yahrzeit-ak</s:String>
     <s:String x:Key="calendar_candles_after_dark">Kandelak piztea (ilundu ondoren)</s:String>
     <s:String x:Key="calendar_havdalah">Atseden-egunaren amaiera (havdalah)</s:String>
-    <s:String x:Key="calendar_rest_begins">Hasten da: {0} (kandelak piztea)</s:String>
-    <s:String x:Key="calendar_rest_ends">Amaitzen da: {0} (iluntzea)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Hanukkah kandelak: {0} + shamash</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (kandelak piztea) – {1} (iluntzea)</s:String>
+    <s:String x:Key="calendar_weekday">{0}. eguna</s:String>
     <s:String x:Key="calendar_settings_title">Egutegiaren ezarpenak</s:String>
     <s:String x:Key="calendar_settings_place">Eremuaren lekua:</s:String>
     <s:String x:Key="calendar_settings_zone">Dataren, egunaren aldaketaren eta eguneko orduen ordu-eremua:</s:String>

@@ -255,8 +255,9 @@
     <s:String x:Key="calendar_yahrzeits">야르차이트</s:String>
     <s:String x:Key="calendar_candles_after_dark">촛불 점화(밤이 된 후)</s:String>
     <s:String x:Key="calendar_havdalah">안식일 종료(하브달라)</s:String>
-    <s:String x:Key="calendar_rest_begins">시작: {0}(촛불 점화)</s:String>
-    <s:String x:Key="calendar_rest_ends">종료: {0}(밤)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">하누카 초: {0}개 + 샤마시</s:String>
+    <s:String x:Key="calendar_rest_span">{0}(촛불 점화) – {1}(밤)</s:String>
+    <s:String x:Key="calendar_weekday">{0}일째</s:String>
     <s:String x:Key="calendar_settings_title">달력 설정</s:String>
     <s:String x:Key="calendar_settings_place">시간대의 장소:</s:String>
     <s:String x:Key="calendar_settings_zone">날짜, 날짜 변경 및 하루의 시각에 사용할 시간대:</s:String>

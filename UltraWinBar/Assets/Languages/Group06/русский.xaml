@@ -265,8 +265,9 @@
     <s:String x:Key="calendar_yahrzeits">Йорцайты</s:String>
     <s:String x:Key="calendar_candles_after_dark">Зажигание свечей (после выхода звёзд)</s:String>
     <s:String x:Key="calendar_havdalah">Конец дня покоя (авдала)</s:String>
-    <s:String x:Key="calendar_rest_begins">Начало: {0} (зажигание свечей)</s:String>
-    <s:String x:Key="calendar_rest_ends">Конец: {0} (выход звёзд)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Ханукальные свечи: {0} + шамаш</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (зажигание свечей) – {1} (выход звёзд)</s:String>
+    <s:String x:Key="calendar_weekday">День {0}</s:String>
     <s:String x:Key="calendar_settings_title">Настройки календаря</s:String>
     <s:String x:Key="calendar_settings_place">Место пояса:</s:String>
     <s:String x:Key="calendar_settings_zone">Часовой пояс для даты, смены дня и времён дня:</s:String>

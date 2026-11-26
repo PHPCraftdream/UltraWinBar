@@ -258,8 +258,9 @@
     <s:String x:Key="calendar_yahrzeits">Jarcaitai</s:String>
     <s:String x:Key="calendar_candles_after_dark">Žvakių uždegimas (sutemus)</s:String>
     <s:String x:Key="calendar_havdalah">Poilsio dienos pabaiga (havdala)</s:String>
-    <s:String x:Key="calendar_rest_begins">Prasideda: {0} (žvakių uždegimas)</s:String>
-    <s:String x:Key="calendar_rest_ends">Baigiasi: {0} (sutemus)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Chanukos žvakės: {0} + šamašas</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (žvakių uždegimas) – {1} (sutemus)</s:String>
+    <s:String x:Key="calendar_weekday">{0}-oji diena</s:String>
     <s:String x:Key="calendar_settings_title">Kalendoriaus parametrai</s:String>
     <s:String x:Key="calendar_settings_place">Laiko juostos vietovė:</s:String>
     <s:String x:Key="calendar_settings_zone">Datos, dienos pasikeitimo ir dienos laikų laiko juosta:</s:String>

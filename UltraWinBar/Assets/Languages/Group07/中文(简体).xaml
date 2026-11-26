@@ -266,8 +266,9 @@
     <s:String x:Key="calendar_yahrzeits">逝世纪念日</s:String>
     <s:String x:Key="calendar_candles_after_dark">点燃安息日蜡烛（入夜后）</s:String>
     <s:String x:Key="calendar_havdalah">安息日结束（哈夫达拉）</s:String>
-    <s:String x:Key="calendar_rest_begins">开始: {0}（点燃蜡烛）</s:String>
-    <s:String x:Key="calendar_rest_ends">结束: {0}（入夜）</s:String>
+    <s:String x:Key="calendar_chanukah_candles">光明节蜡烛：{0} 支 + 引火烛</s:String>
+    <s:String x:Key="calendar_rest_span">{0}（点燃蜡烛） – {1}（入夜）</s:String>
+    <s:String x:Key="calendar_weekday">第{0}日</s:String>
     <s:String x:Key="calendar_settings_title">日历设置</s:String>
     <s:String x:Key="calendar_settings_place">地点时区:</s:String>
     <s:String x:Key="calendar_settings_zone">日期、日期变更和每日时刻所用时区:</s:String>

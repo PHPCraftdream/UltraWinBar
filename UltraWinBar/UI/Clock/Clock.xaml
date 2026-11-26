@@ -50,7 +50,7 @@
                                    Text="{Binding ThirdTimeText}" />
                         </Border>
                     </StackPanel>
-                    <!-- The weekday, after a candle when the Hebrew day has a yahrzeit, and during the Omer the tree of the sefirot with its day. -->
+                    <!-- The weekday, after a candle when the Hebrew day has a yahrzeit, during the Omer the tree of the sefirot with its day, during Hanukkah a hanukkiah with the candles of the evening. -->
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="1" Margin="4,0">
                         <Viewbox Height="15" Margin="0,0,3,0" VerticalAlignment="Center" Visibility="{Binding YahrzeitVisibility}">
                             <ContentControl Focusable="False" IsHitTestVisible="False" Content="{DynamicResource YahrzeitCandleIcon}" />
@@ -61,6 +61,12 @@
                                 <ContentControl Focusable="False" IsHitTestVisible="False" Content="{DynamicResource OmerIcon}" />
                             </Viewbox>
                             <TextBlock Style="{DynamicResource Clock}" Margin="0" Text="{Binding OmerText}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="4,0,0,0" Visibility="{Binding ChanukahVisibility}">
+                            <Viewbox Height="16" Margin="0,0,2,0" VerticalAlignment="Center">
+                                <ContentControl Focusable="False" IsHitTestVisible="False" Content="{DynamicResource ChanukiahIcon}" />
+                            </Viewbox>
+                            <TextBlock Style="{DynamicResource Clock}" Margin="0" Text="{Binding ChanukahText}" />
                         </StackPanel>
                     </StackPanel>
                     <!-- The pointer over the Hebrew date lights up a frame of running lights around it. -->
@@ -104,7 +110,7 @@
                     <Grid x:Name="HebrewDateHost" Background="Transparent" Cursor="Hand">
                         <Border Style="{DynamicResource ClockZoneFrame}">
                             <StackPanel>
-                                <!-- The weekday, after a candle when the Hebrew day has a yahrzeit, and during the Omer the tree of the sefirot with its day. -->
+                                <!-- The weekday, after a candle when the Hebrew day has a yahrzeit, during the Omer the tree of the sefirot with its day, during Hanukkah a hanukkiah with the candles of the evening. -->
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="4,0">
                                     <Viewbox Height="15" Margin="0,0,3,0" VerticalAlignment="Center" Visibility="{Binding YahrzeitVisibility}">
                                         <ContentControl Focusable="False" IsHitTestVisible="False" Content="{DynamicResource YahrzeitCandleIcon}" />
@@ -115,6 +121,12 @@
                                             <ContentControl Focusable="False" IsHitTestVisible="False" Content="{DynamicResource OmerIcon}" />
                                         </Viewbox>
                                         <TextBlock Style="{DynamicResource Clock}" Margin="0" Text="{Binding OmerText}" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="4,0,0,0" Visibility="{Binding ChanukahVisibility}">
+                                        <Viewbox Height="16" Margin="0,0,2,0" VerticalAlignment="Center">
+                                            <ContentControl Focusable="False" IsHitTestVisible="False" Content="{DynamicResource ChanukiahIcon}" />
+                                        </Viewbox>
+                                        <TextBlock Style="{DynamicResource Clock}" Margin="0" Text="{Binding ChanukahText}" />
                                     </StackPanel>
                                 </StackPanel>
                                 <TextBlock x:Name="HebrewDate" Style="{DynamicResource Clock}" Margin="4,0"

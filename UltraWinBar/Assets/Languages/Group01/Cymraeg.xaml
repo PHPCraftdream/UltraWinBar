@@ -256,8 +256,9 @@
     <s:String x:Key="calendar_yahrzeits">Yahrzeits</s:String>
     <s:String x:Key="calendar_candles_after_dark">Cynnau canhwyllau (ar ôl iddi nosi)</s:String>
     <s:String x:Key="calendar_havdalah">Diwedd y diwrnod o orffwys (havdalah)</s:String>
-    <s:String x:Key="calendar_rest_begins">Yn dechrau: {0} (cynnau canhwyllau)</s:String>
-    <s:String x:Key="calendar_rest_ends">Diwedd: {0} (cwymp y nos)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Canhwyllau Hanukkah: {0} + shamash</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (cynnau canhwyllau) – {1} (cwymp y nos)</s:String>
+    <s:String x:Key="calendar_weekday">Diwrnod {0}</s:String>
     <s:String x:Key="calendar_settings_title">Gosodiadau calendr</s:String>
     <s:String x:Key="calendar_settings_place">Lleoliad y parth:</s:String>
     <s:String x:Key="calendar_settings_zone">Cylchfa amser ar gyfer y dyddiad, newid y dydd ac amseroedd y dydd:</s:String>

@@ -6,7 +6,7 @@ namespace UltraWinBar.Utilities
     public enum Zman
     {
         Alot, Misheyakir, Sunrise, ShemaMagenAvraham, ShemaGra, TefillaMagenAvraham, TefillaGra, Chatzot, MinchaGedola,
-        MinchaKetana, PlagHaMincha, CandleLighting, Sunset, Tzeit, RabbeinuTam,
+        MinchaKetana, PlagHaMincha, CandleLighting, Sunset, Tzeit, RabbeinuTam, ChatzotHaLayla,
     }
 
     /// <summary>What happens at the turn of a day to a day of rest: candles are lit, or the rest ends (havdalah).</summary>
@@ -18,7 +18,8 @@ namespace UltraWinBar.Utilities
     /// kept ones: the hours of the day are the twelfths of the time from sunrise to sunset (the Gra), or from 72 minutes
     /// before sunrise to 72 minutes after sunset (the Magen Avraham); dawn is the sun 16.1° below the horizon, the earliest
     /// time for tallit and tefillin 11.5°, nightfall (tzeit) 8.5°; Rabbeinu Tam's nightfall is 72 minutes after sunset;
-    /// candles are lit 18 minutes before sunset (40 in Jerusalem is a custom of the place, passed as the argument).
+    /// candles are lit 18 minutes before sunset (40 in Jerusalem is a custom of the place, passed as the argument); midnight
+    /// (chatzot halayla) is halfway from sunset to the next sunrise.
     /// </summary>
     public static class Zmanim
     {
@@ -39,6 +40,7 @@ namespace UltraWinBar.Utilities
             [Zman.Sunset] = new[] { "Sunset (Shkiah)", "Закат (шкия)", "שקיעה" },
             [Zman.Tzeit] = new[] { "Nightfall (Tzeit HaKochavim)", "Выход звёзд (цет а-кохавим)", "צאת הכוכבים" },
             [Zman.RabbeinuTam] = new[] { "Nightfall (Rabbeinu Tam)", "Выход звёзд (раввейну Там)", "צאת רבינו תם" },
+            [Zman.ChatzotHaLayla] = new[] { "Midnight (Chatzot HaLayla)", "Полночь (хацот а-лайла)", "חצות הלילה" },
         };
 
         public static string NameOf(Zman zman, string language) => Names[zman][language == "עברית" ? 2 : language == "русский" ? 1 : 0];
@@ -55,6 +57,7 @@ namespace UltraWinBar.Utilities
             DateTime? sunrise = Sun.At(date, latitude, longitude, Sun.SunriseZenith, true);
             DateTime? sunset = Sun.At(date, latitude, longitude, Sun.SunriseZenith, false);
             DateTime? dayStart = Plus(sunrise, -72), dayEnd = Plus(sunset, 72);
+            DateTime? nextSunrise = Sun.At(date.Date.AddDays(1), latitude, longitude, Sun.SunriseZenith, true);
             return new Dictionary<Zman, DateTime?>
             {
                 [Zman.Alot] = Sun.At(date, latitude, longitude, 106.1, true),
@@ -72,6 +75,7 @@ namespace UltraWinBar.Utilities
                 [Zman.Sunset] = sunset,
                 [Zman.Tzeit] = Sun.At(date, latitude, longitude, 98.5, false),
                 [Zman.RabbeinuTam] = Plus(sunset, 72),
+                [Zman.ChatzotHaLayla] = Hour(sunset, nextSunrise, 6),
             };
         }
 

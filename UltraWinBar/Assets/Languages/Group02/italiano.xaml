@@ -265,8 +265,9 @@
     <s:String x:Key="calendar_yahrzeits">Yahrzeit</s:String>
     <s:String x:Key="calendar_candles_after_dark">Accensione delle candele (dopo il crepuscolo)</s:String>
     <s:String x:Key="calendar_havdalah">Fine del giorno di riposo (havdalah)</s:String>
-    <s:String x:Key="calendar_rest_begins">Inizio: {0} (accensione delle candele)</s:String>
-    <s:String x:Key="calendar_rest_ends">Fine: {0} (crepuscolo)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Candele di Chanukkà: {0} + shammash</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (accensione delle candele) – {1} (crepuscolo)</s:String>
+    <s:String x:Key="calendar_weekday">Giorno {0}</s:String>
     <s:String x:Key="calendar_settings_title">Impostazioni calendario</s:String>
     <s:String x:Key="calendar_settings_place">Luogo del fuso:</s:String>
     <s:String x:Key="calendar_settings_zone">Fuso orario per la data, il cambio del giorno e gli orari del giorno:</s:String>

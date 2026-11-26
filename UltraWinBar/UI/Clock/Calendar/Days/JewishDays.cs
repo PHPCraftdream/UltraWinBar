@@ -113,6 +113,20 @@ namespace UltraWinBar.Utilities
             return hebrew ? ofDay + " שב" + ofWeek : slavic ? ofDay + " ше-бе-" + ofWeek : ofDay + " she'b'" + ofWeek;
         }
 
+        /// <summary>
+        /// The candles of Hanukkah besides the shamash: 1 on 25 Kislev to 8 on 2 or 3 Tevet; 0 outside it or outside the
+        /// Hebrew calendar. They are lit on the evening that begins the day.
+        /// </summary>
+        public static int ChanukahCandles(DateTime date)
+        {
+            date = date.Date;
+            if (date < Calendar.MinSupportedDateTime.AddYears(1) || date > Calendar.MaxSupportedDateTime.AddYears(-1)) return 0;
+            int year = Calendar.GetYear(date), month = MonthNumber(date);
+            if (month != Kislev && month != Tevet) return 0;
+            int candles = (date - Day(year, Kislev, 25)).Days + 1;
+            return candles >= 1 && candles <= 8 ? candles : 0;
+        }
+
         // The .NET month of a month of the numbering above in a given year.
         private static int NetMonth(int year, int month) => !Calendar.IsLeapYear(year) && month >= 7 ? month - 1 : month;
 

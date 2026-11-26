@@ -6,20 +6,24 @@ using System.Linq;
 namespace UltraWinBar.Utilities
 {
     /// <summary>A line of the times of a day: what it is and when ("Sunrise (Netz)", "06:02").</summary>
-    /// <summary>A time of the day; Rest marks the lighting of the candles or the havdalah of a day of rest.</summary>
-    public sealed record TimeLine(string Name, string Time, bool Rest = false);
+    /// <summary>
+    /// A time of the day; Rest marks the lighting of the candles or the havdalah of a day of rest, Chanukah the lighting of
+    /// the candles of Hanukkah.
+    /// </summary>
+    public sealed record TimeLine(string Name, string Time, bool Rest = false, bool Chanukah = false);
 
     /// <summary>What the calendar says about a day, ready to show: every text is in the language of the settings.</summary>
     public sealed record DayDetails(string Heading, string HebrewDate, string Portion, IReadOnlyList<string> Events,
-        IReadOnlyList<string> Yahrzeits, string Molad, string Place, IReadOnlyList<TimeLine> Times, string RestStarts, string RestEnds);
+        IReadOnlyList<string> Yahrzeits, string Molad, string Place, IReadOnlyList<TimeLine> Times, string Rest, int Chanukah = 0);
 
     /// <summary>A day of the month grid: its numbers, the one thing worth showing in the cell, and what it says when pointed at.</summary>
     public sealed record DayCell(DateTime Date, string GregorianNumber, string HebrewNumber, string Marker, bool OutsideMonth,
         bool IsToday, bool IsRest, bool HasYahrzeit, string Tooltip, string HebrewLabel = "", string GregorianLabel = "",
         string Portion = null, IReadOnlyList<CellEvent> Events = null, bool EveningEnds = false, bool EveningBegins = false,
-        int Omer = 0, string OmerText = null)
+        int Omer = 0, string OmerText = null, int Chanukah = 0)
     {
         public bool HasOmer => Omer > 0;
+        public bool HasChanukah => Chanukah > 0;
     }
 
     /// <summary>A festival, fast, minor day or Rosh Chodesh in a cell, with its kind (the color of its block).</summary>
@@ -40,6 +44,12 @@ namespace UltraWinBar.Utilities
         /// </summary>
         public static (bool Yahrzeit, int Omer) MarksOf(DateTime hebrewDay, ICollection<string> hidden) =>
             (Yahrzeits.On(hebrewDay, hidden).Count > 0, JewishCalendar.OmerDay(hebrewDay));
+
+        /// <summary>
+        /// The candles of Hanukkah lit on the evening of a civil date, besides the shamash (0 when none): the evening of
+        /// 24 Kislev has 1, so a Friday has its candles before the Shabbat comes in.
+        /// </summary>
+        public static int ChanukahTonight(DateTime civilDate) => JewishCalendar.ChanukahCandles(civilDate.Date.AddDays(1));
 
         /// <summary>The day of the Omer as a line: "Day 23 of the Omer — Netzach she'b'Tiferet"; null outside it.</summary>
         public static string OmerLine(int day, string language, Func<string, string> text) =>
@@ -73,7 +83,7 @@ namespace UltraWinBar.Utilities
             if (reading != null) lines.Insert(0, string.Format(text("calendar_portion"), reading.Name(language)));
             lines.AddRange(people.Select(person => person.Name(language)));
             string hebrew = HebrewClockFormatter.FormatDate(date, language);
-            string tooltip = string.Join(Environment.NewLine, new[] { date.ToString("D", CultureOf(language)), hebrew }.Concat(lines));
+            string tooltip = string.Join(Environment.NewLine, new[] { date.ToString("d MMMM yyyy", CultureOf(language)), hebrew }.Concat(lines));
             int omer = JewishCalendar.OmerDay(date);
             string number = hebrew.Length >= 2 ? hebrew.Substring(0, 2) : "";
             // The cell shows the Hebrew date at its top right ("Kislev, 13") and the civil date at its bottom left ("23, November").
@@ -86,7 +96,7 @@ namespace UltraWinBar.Utilities
                 // The portion of a Shabbat, unless a festival's day is read instead; the days, festivals first.
                 reading != null && !events.Any(day => day.Kind == DayKind.YomTov || day.Kind == DayKind.CholHamoed) ? reading.Name(language) : null,
                 events.OrderBy(day => day.Kind == DayKind.RoshChodesh ? 1 : 0).Select(day => new CellEvent(EventName(day, language, text), day.Kind)).ToList(),
-                Omer: omer, OmerText: OmerLine(omer, language, text));
+                Omer: omer, OmerText: OmerLine(omer, language, text), Chanukah: ChanukahTonight(date));
         }
 
         // The time as the clocks of the place show it: in its zone, or the computer's when none was chosen.
@@ -98,8 +108,12 @@ namespace UltraWinBar.Utilities
 
         private static string Short(DateTime? moment, CultureInfo culture) => moment.HasValue ? moment.Value.ToString("t", culture) : "—";
 
-        private static string WithDay(DateTime? moment, CultureInfo culture) => moment.HasValue
-            ? culture.DateTimeFormat.GetAbbreviatedDayName(moment.Value.DayOfWeek) + " " + moment.Value.ToString("t", culture) : "—";
+        /// <summary>The day of the week by its number, "Day 4", and the Shabbat by its name: no names of the nations' days.</summary>
+        public static string WeekdayOf(DateTime date, Func<string, string> text) => date.DayOfWeek == DayOfWeek.Saturday
+            ? text("calendar_shabbat") : string.Format(text("calendar_weekday"), (int)date.DayOfWeek + 1);
+
+        private static string WithDay(DateTime? moment, CultureInfo culture, Func<string, string> text) => moment.HasValue
+            ? WeekdayOf(moment.Value, text) + " " + moment.Value.ToString("t", culture) : "—";
 
         public static DayDetails Describe(DateTime date, HebrewPlace place, string language, ICollection<string> hidden, Func<string, string> text)
         {
@@ -119,9 +133,9 @@ namespace UltraWinBar.Utilities
             try { molad = Molads.Next(date); }
             catch (ArgumentOutOfRangeException) { }
             string moladText = molad == null ? null : string.Format(text("calendar_molad"), molad.MonthName(language),
-                culture.DateTimeFormat.GetDayName(molad.MeanTime.DayOfWeek), molad.MeanTime.ToString("t", culture), molad.Parts);
+                WeekdayOf(molad.MeanTime, text), molad.MeanTime.ToString("t", culture), molad.Parts);
 
-            string placeText = null, starts = null, ends = null;
+            string placeText = null, rest = null;
             var times = new List<TimeLine>();
             if (place != null)
             {
@@ -135,7 +149,13 @@ namespace UltraWinBar.Utilities
                     Zman.PlagHaMincha, Zman.Sunset, Zman.Tzeit,
                 })
                     times.Add(new TimeLine(Zmanim.NameOf(zman, language), Short(OnClock(day[zman], place), culture)));
-                switch (Zmanim.EveningOf(date, israel))
+                // Hanukkah: on a Friday before the Shabbat candles, otherwise at nightfall (after the havdalah).
+                RestEvent evening = Zmanim.EveningOf(date, israel);
+                int candles = ChanukahTonight(date);
+                TimeLine chanukah = candles == 0 ? null : new TimeLine(string.Format(text("calendar_chanukah_candles"), candles),
+                    Short(OnClock(day[evening == RestEvent.CandleLighting ? Zman.CandleLighting : Zman.Tzeit], place), culture), Chanukah: true);
+                if (chanukah != null && evening == RestEvent.CandleLighting) times.Add(chanukah);
+                switch (evening)
                 {
                     case RestEvent.CandleLighting:
                         times.Add(new TimeLine(Zmanim.NameOf(Zman.CandleLighting, language), Short(OnClock(day[Zman.CandleLighting], place), culture), true));
@@ -147,6 +167,9 @@ namespace UltraWinBar.Utilities
                         times.Add(new TimeLine(text("calendar_havdalah"), Short(OnClock(day[Zman.Tzeit], place), culture), true));
                         break;
                 }
+                if (chanukah != null && evening != RestEvent.CandleLighting) times.Add(chanukah);
+                // Midnight last: after the evening's candles or havdalah.
+                times.Add(new TimeLine(Zmanim.NameOf(Zman.ChatzotHaLayla, language), Short(OnClock(day[Zman.ChatzotHaLayla], place), culture)));
 
                 // A day of rest begins at the candle lighting before it and ends at nightfall of the last day of a run of them.
                 if (Zmanim.IsRestDay(date, israel))
@@ -156,13 +179,15 @@ namespace UltraWinBar.Utilities
                     while (Zmanim.IsRestDay(last.AddDays(1), israel)) last = last.AddDays(1);
                     var before = Zmanim.Of(first.AddDays(-1), place.Latitude, place.Longitude);
                     var after = Zmanim.Of(last, place.Latitude, place.Longitude);
-                    starts = string.Format(text("calendar_rest_begins"), WithDay(OnClock(before[Zman.CandleLighting], place), culture));
-                    ends = string.Format(text("calendar_rest_ends"), WithDay(OnClock(after[Zman.Tzeit], place), culture));
+                    // One line; the days only when the rest lasts more than one day.
+                    DateTime? lit = OnClock(before[Zman.CandleLighting], place), dark = OnClock(after[Zman.Tzeit], place);
+                    rest = first == last ? string.Format(text("calendar_rest_span"), Short(lit, culture), Short(dark, culture))
+                        : string.Format(text("calendar_rest_span"), WithDay(lit, culture, text), WithDay(dark, culture, text));
                 }
             }
 
-            return new DayDetails(date.ToString("D", culture), HebrewClockFormatter.FormatDate(date, language), portion, events,
-                Yahrzeits.On(date, hidden).Select(person => person.Name(language)).ToArray(), moladText, placeText, times, starts, ends);
+            return new DayDetails(date.ToString("d MMMM yyyy", culture), HebrewClockFormatter.FormatDate(date, language), portion, events,
+                Yahrzeits.On(date, hidden).Select(person => person.Name(language)).ToArray(), moladText, placeText, times, rest, ChanukahTonight(date));
         }
 
         /// <summary>

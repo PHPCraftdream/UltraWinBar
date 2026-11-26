@@ -269,8 +269,9 @@
     <s:String x:Key="calendar_yahrzeits">Yahrzeits</s:String>
     <s:String x:Key="calendar_candles_after_dark">Acendimento das velas (após o anoitecer)</s:String>
     <s:String x:Key="calendar_havdalah">Fim do dia de descanso (havdalá)</s:String>
-    <s:String x:Key="calendar_rest_begins">Começa: {0} (acendimento das velas)</s:String>
-    <s:String x:Key="calendar_rest_ends">Termina: {0} (anoitecer)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Velas de Chanucá: {0} + shamash</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (acendimento das velas) – {1} (anoitecer)</s:String>
+    <s:String x:Key="calendar_weekday">Dia {0}</s:String>
     <s:String x:Key="calendar_settings_title">Configurações do calendário</s:String>
     <s:String x:Key="calendar_settings_place">Local do fuso:</s:String>
     <s:String x:Key="calendar_settings_zone">Fuso horário para a data, a mudança do dia e os horários do dia:</s:String>

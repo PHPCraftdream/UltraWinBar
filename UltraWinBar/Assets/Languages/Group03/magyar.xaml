@@ -264,8 +264,9 @@
     <s:String x:Key="calendar_yahrzeits">Jorcájtok</s:String>
     <s:String x:Key="calendar_candles_after_dark">Gyertyagyújtás (éjszaka beállta után)</s:String>
     <s:String x:Key="calendar_havdalah">A pihenőnap vége (havdala)</s:String>
-    <s:String x:Key="calendar_rest_begins">Kezdete: {0} (gyertyagyújtás)</s:String>
-    <s:String x:Key="calendar_rest_ends">Vége: {0} (éjszaka beállta)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Hanukai gyertyák: {0} + sámesz</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (gyertyagyújtás) – {1} (éjszaka beállta)</s:String>
+    <s:String x:Key="calendar_weekday">{0}. nap</s:String>
     <s:String x:Key="calendar_settings_title">Naptárbeállítások</s:String>
     <s:String x:Key="calendar_settings_place">Az időzóna helye:</s:String>
     <s:String x:Key="calendar_settings_zone">Időzóna a dátumhoz, a napváltáshoz és a napi időpontokhoz:</s:String>

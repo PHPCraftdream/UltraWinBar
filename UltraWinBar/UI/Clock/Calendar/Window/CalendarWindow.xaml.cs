@@ -69,6 +69,9 @@ namespace UltraWinBar
             try
             {
                 prepared = new CalendarWindow();
+                // The months before and after it too, so neither the click nor the first arrow has to make them.
+                prepared.MakeAround();
+                prepared.MakeAround();
                 // The month's cells are laid out now too, not on the click (the height follows the content).
                 prepared.Measure(new Size(prepared.Width, double.PositiveInfinity));
                 prepared.Arrange(new Rect(0, 0, prepared.Width, prepared.DesiredSize.Height));
@@ -173,48 +176,159 @@ namespace UltraWinBar
                 Rebuild();
         }
 
-        // The month with its cells and the details of the chosen day, from the settings as they are now.
+        // The grid of the month shown, and the months before and after it made ahead in hidden lists of their own, so the
+        // arrows only swap lists: making a month's cells (their templates and layout) is what takes the time.
+        private ListBox current, before, after;
+        private DateTime? beforeMonth, afterMonth;
+        private string beforeStamp, afterStamp;
+        private int settingsVersion;
+
+        // What a made month depends on besides its start: the kind of grid, the day, the evening and the settings shown.
+        private string Stamp(HebrewDayNow now) => string.Join("|", HebrewGrid, DateTime.Today.ToString("yyyyMMdd", CultureInfo.InvariantCulture),
+            now.Civil?.ToString("yyyyMMdd", CultureInfo.InvariantCulture), settingsVersion);
+
+        // A hidden list like the one of the window, in the same place.
+        private ListBox NewMonthList()
+        {
+            var list = new ListBox
+            {
+                SelectionMode = MonthList.SelectionMode,
+                Style = MonthList.Style,
+                ItemsPanel = MonthList.ItemsPanel,
+                ItemContainerStyle = MonthList.ItemContainerStyle,
+                ItemTemplate = MonthList.ItemTemplate,
+                Visibility = Visibility.Hidden,
+                IsHitTestVisible = false,
+                Focusable = false,
+            };
+            ScrollViewer.SetHorizontalScrollBarVisibility(list, ScrollBarVisibility.Disabled);
+            ScrollViewer.SetVerticalScrollBarVisibility(list, ScrollBarVisibility.Disabled);
+            list.SelectionChanged += MonthList_SelectionChanged;
+            list.PreviewKeyDown += MonthList_PreviewKeyDown;
+            ((Panel)MonthList.Parent).Children.Add(list);
+            return list;
+        }
+
+        // The cells of a month into a list. From sunset to midnight the Hebrew day has turned already: the civil day that
+        // is still on and the one whose Hebrew date has begun share a shade (two half cells that make a parallelogram).
+        // Five weeks, six only for a month that reaches into a sixth.
+        private void Fill(ListBox list, DateTime start, HebrewDayNow now)
+        {
+            bool israel = DayDetailsBuilder.IsLandOfIsrael(ClockZones.CalendarPlace());
+            bool hebrew = HebrewGrid;
+            bool was = rebuilding;
+            rebuilding = true;
+            try
+            {
+                list.ItemsSource = CalendarGrid.Days(start, hebrew)
+                    .Select(day => DayDetailsBuilder.Cell(day, start, DateTime.Today, israel, AppLanguage, Settings.Instance.HiddenYahrzeits, Text))
+                    .Select(cell => cell with
+                    {
+                        OutsideMonth = !CalendarGrid.InMonth(cell.Date, start, hebrew),
+                        EveningEnds = now.Civil == cell.Date,
+                        EveningBegins = now.AfterSunset && now.Day == cell.Date,
+                    }).ToList();
+            }
+            finally
+            {
+                rebuilding = was;
+            }
+        }
+
+        // The month with its cells and the details of the chosen day, from the settings as they are now; the months
+        // around it are made again when the program is idle.
         private void Rebuild()
+        {
+            current ??= MonthList;
+            settingsVersion++;
+            beforeMonth = afterMonth = null;
+            WeekdayHeader.Children.Clear();
+            // The days of the week as the Jewish count has them: 1 (Sunday) to 6 (Friday), then Shabbat; no names of a language.
+            foreach (string name in WeekdayHeaders(Text("calendar_shabbat")))
+                WeekdayHeader.Children.Add(new TextBlock { Text = name, TextAlignment = TextAlignment.Center, FontSize = 14, FontWeight = FontWeights.Bold, Opacity = 0.85, Margin = new Thickness(0, 0, 0, 4) });
+            GridSwitch.Content = Text(HebrewGrid ? "calendar_grid_civil" : "calendar_grid_hebrew");
+            HebrewDayNow now = HebrewDayClock.Now(DateTime.UtcNow, ClockZones.CalendarPlace());
+            eveningShown = now.Civil;
+            Fill(current, month, now);
+            Present();
+        }
+
+        // The list of the month in sight on the chosen day, with its details; the others hidden, made ahead when idle.
+        private void Present()
         {
             rebuilding = true;
             try
             {
-                WeekdayHeader.Children.Clear();
-                // The days of the week as the Jewish count has them: 1 (Sunday) to 6 (Friday), then Shabbat; no names of a language.
-                foreach (string name in WeekdayHeaders(Text("calendar_shabbat")))
-                    WeekdayHeader.Children.Add(new TextBlock { Text = name, TextAlignment = TextAlignment.Center, FontSize = 14, FontWeight = FontWeights.Bold, Opacity = 0.85, Margin = new Thickness(0, 0, 0, 4) });
-
-                bool israel = DayDetailsBuilder.IsLandOfIsrael(ClockZones.CalendarPlace());
-                bool hebrew = HebrewGrid;
-                // From sunset to midnight the Hebrew day has turned already: the civil day that is still on and the one
-                // whose Hebrew date has begun share a shade (two half cells that make a parallelogram).
-                HebrewDayNow now = HebrewDayClock.Now(DateTime.UtcNow, ClockZones.CalendarPlace());
-                eveningShown = now.Civil;
-                // Five weeks at most: a month that needs a sixth puts its last days in the first week.
-                var cells = CalendarGrid.Days(month, hebrew)
-                    .Select(day => DayDetailsBuilder.Cell(day, month, DateTime.Today, israel, AppLanguage, Settings.Instance.HiddenYahrzeits, Text))
-                    .Select(cell => cell with
-                    {
-                        OutsideMonth = !CalendarGrid.InMonth(cell.Date, month, hebrew),
-                        EveningEnds = now.Civil == cell.Date,
-                        EveningBegins = now.AfterSunset && now.Day == cell.Date,
-                    }).ToList();
-                GridSwitch.Content = Text(hebrew ? "calendar_grid_civil" : "calendar_grid_hebrew");
-                MonthList.ItemsSource = cells;
-                MonthList.SelectedItem = cells.FirstOrDefault(cell => cell.Date == chosen.Date) ?? cells.First(cell => cell.Date == month);
+                foreach (ListBox list in new[] { current, before, after })
+                {
+                    if (list == null) continue;
+                    bool mine = list == current;
+                    list.Visibility = mine ? Visibility.Visible : Visibility.Hidden;
+                    list.IsHitTestVisible = list.Focusable = mine;
+                }
+                var cells = current.Items.OfType<DayCell>().ToList();
+                current.SelectedItem = cells.FirstOrDefault(cell => cell.Date == chosen.Date) ?? cells.First(cell => cell.Date == month);
             }
             finally
             {
                 rebuilding = false;
             }
             ShowDetails();
+            Dispatcher.BeginInvoke(new Action(MakeAround), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+        }
+
+        // The months after and before the one in sight, one at a time when the program is idle.
+        private void MakeAround()
+        {
+            HebrewDayNow now = HebrewDayClock.Now(DateTime.UtcNow, ClockZones.CalendarPlace());
+            string stamp = Stamp(now);
+            DateTime next = CalendarGrid.Next(month, HebrewGrid), previous = CalendarGrid.Previous(month, HebrewGrid);
+            if (afterMonth != next || afterStamp != stamp)
+            {
+                after ??= NewMonthList();
+                Fill(after, next, now);
+                afterMonth = next;
+                afterStamp = stamp;
+                Dispatcher.BeginInvoke(new Action(MakeAround), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+            }
+            else if (beforeMonth != previous || beforeStamp != stamp)
+            {
+                before ??= NewMonthList();
+                Fill(before, previous, now);
+                beforeMonth = previous;
+                beforeStamp = stamp;
+            }
         }
 
         private void ShowMonth(DateTime anyDay, DateTime day)
         {
-            month = CalendarGrid.MonthStart(anyDay, HebrewGrid);
+            DateTime start = CalendarGrid.MonthStart(anyDay, HebrewGrid);
             chosen = day.Date;
-            Rebuild();
+            string stamp = Stamp(HebrewDayClock.Now(DateTime.UtcNow, ClockZones.CalendarPlace()));
+            if (start == month)
+            {
+                Present();
+                return;
+            }
+            // A month made ahead is only brought into sight; the one that was shown becomes its neighbor.
+            if (after != null && afterMonth == start && afterStamp == stamp)
+            {
+                (before, current, after) = (current, after, before);
+                (beforeMonth, beforeStamp, afterMonth, afterStamp) = (month, stamp, null, null);
+            }
+            else if (before != null && beforeMonth == start && beforeStamp == stamp)
+            {
+                (after, current, before) = (current, before, after);
+                (afterMonth, afterStamp, beforeMonth, beforeStamp) = (month, stamp, null, null);
+            }
+            else
+            {
+                month = start;
+                Rebuild();
+                return;
+            }
+            month = start;
+            Present();
         }
 
         private void Previous_Click(object sender, RoutedEventArgs e) => ShowOther(CalendarGrid.Previous(month, HebrewGrid));
@@ -228,14 +342,15 @@ namespace UltraWinBar
         private void GridSwitch_Click(object sender, RoutedEventArgs e)
         {
             Settings.Instance.CalendarHebrewGrid = !Settings.Instance.CalendarHebrewGrid;
-            ShowMonth(chosen, chosen);
+            month = CalendarGrid.MonthStart(chosen, HebrewGrid);
+            Rebuild();
         }
 
         private void Today_Click(object sender, RoutedEventArgs e) => ShowMonth(DateTime.Today, DateTime.Today);
 
         private void MonthList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (rebuilding || MonthList.SelectedItem is not DayCell cell) return;
+            if (rebuilding || sender != current || current.SelectedItem is not DayCell cell) return;
             chosen = cell.Date;
             ShowDetails();
         }
@@ -250,8 +365,8 @@ namespace UltraWinBar
             DateTime day = chosen.AddDays(step);
             if (CalendarGrid.InMonth(day, month, HebrewGrid))
             {
-                MonthList.SelectedItem = MonthList.Items.OfType<DayCell>().First(cell => cell.Date == day.Date);
-                (MonthList.ItemContainerGenerator.ContainerFromItem(MonthList.SelectedItem) as ListBoxItem)?.Focus();
+                current.SelectedItem = current.Items.OfType<DayCell>().First(cell => cell.Date == day.Date);
+                (current.ItemContainerGenerator.ContainerFromItem(current.SelectedItem) as ListBoxItem)?.Focus();
             }
             else
             {
@@ -283,13 +398,12 @@ namespace UltraWinBar
             // The details as cards: the day (its special days as colored blocks, the start and end of the rest), the
             // yahrzeits, the times of the day, the molad.
             var day = DayDetailsBuilder.Cell(chosen, chosen, DateTime.Today, DayDetailsBuilder.IsLandOfIsrael(place), AppLanguage, Settings.Instance.HiddenYahrzeits, Text);
-            if (day.Events.Count > 0 || details.RestStarts != null || details.RestEnds != null)
+            if (day.Events.Count > 0 || details.Rest != null)
             {
                 Panel card = Card(null);
                 foreach (CellEvent special in day.Events) card.Children.Add(Chip(special));
-                // The day of rest: when it begins and ends, as highlighted lines with candles.
-                if (details.RestStarts != null) card.Children.Add(RestLine(details.RestStarts, null));
-                if (details.RestEnds != null) card.Children.Add(RestLine(details.RestEnds, null));
+                // The day of rest: when it begins and ends, one highlighted line with candles.
+                if (details.Rest != null) card.Children.Add(RestLine(details.Rest, null));
             }
             // The counting of the Omer, a card of its own: the day, and from the seventh the weeks and days.
             int omer = JewishCalendar.OmerDay(chosen);
@@ -323,7 +437,7 @@ namespace UltraWinBar
                 }
             }
             {
-                Panel card = Card(TimesHeading(details.Place));
+                Panel card = Card(TimesHeading(details.Place, details.Chanukah));
                 if (details.Place == null)
                 {
                     Line(card, Text("calendar_no_place"), opacity: 0.8);
@@ -332,10 +446,10 @@ namespace UltraWinBar
                 {
                     foreach (TimeLine time in details.Times)
                     {
-                        // The candles and the havdalah of a day of rest stand out among the times.
-                        if (time.Rest)
+                        // The candles and the havdalah of a day of rest, and the candles of Hanukkah, stand out among the times.
+                        if (time.Rest || time.Chanukah)
                         {
-                            card.Children.Add(RestLine(time.Name, time.Time));
+                            card.Children.Add(RestLine(time.Name, time.Time, time.Chanukah));
                             continue;
                         }
                         // The whole row lights up under the pointer (the style takes the colors of the theme).
@@ -351,12 +465,14 @@ namespace UltraWinBar
             if (details.Molad != null) Line(Card(null), details.Molad, opacity: 0.8);
         }
 
-        // A line of the day of rest: the accent's soft fill with its edge, two candles, the text in bold and the time at the right.
-        private FrameworkElement RestLine(string text, string time)
+        // A line of the day of rest: the accent's soft fill with its edge, two candles (or a hanukkiah), the text in bold and the
+        // time at the right.
+        private FrameworkElement RestLine(string text, string time, bool hanukkiah = false)
         {
             var row = new DockPanel();
             var candles = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center };
-            for (int i = 0; i < 2; i++)
+            if (hanukkiah) candles.Children.Add(new Viewbox { Height = 18, Child = new ContentControl { Focusable = false, Content = FindResource("ChanukiahIcon") } });
+            for (int i = 0; i < (hanukkiah ? 0 : 2); i++)
             {
                 var candle = (FrameworkElement)FindResource("YahrzeitCandleIcon");
                 candle.LayoutTransform = new ScaleTransform(0.7, 0.7);
@@ -374,8 +490,8 @@ namespace UltraWinBar
             return new Border
             {
                 Child = row,
-                Margin = new Thickness(0, 4, 0, 4),
-                Padding = new Thickness(8, 4, 10, 4),
+                Margin = new Thickness(0, 2, 0, 2),
+                Padding = new Thickness(8, 2, 10, 2),
                 CornerRadius = new CornerRadius(6),
                 BorderThickness = new Thickness(3, 0, 0, 0),
                 Background = (Brush)(TryFindResource("ModernAccentSoft") ?? Brushes.Transparent),
@@ -484,9 +600,18 @@ namespace UltraWinBar
         // "Times of the day", with a globe at the right whose popup tells the place they are for. The popup stands above the
         // globe, right-aligned to it (so over the calendar, not beyond its edge); it shows while the pointer is on the globe,
         // and a click pins it until the next click.
-        private FrameworkElement TimesHeading(string place)
+        private FrameworkElement TimesHeading(string place, int candles)
         {
             var heading = new DockPanel();
+            // During Hanukkah the candles of the evening by the heading: a hanukkiah and their number.
+            if (candles > 0)
+            {
+                var chanukah = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(8, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+                chanukah.Children.Add(new Viewbox { Height = 20, Margin = new Thickness(0, 0, 4, 0), Child = new ContentControl { Focusable = false, Content = FindResource("ChanukiahIcon") } });
+                chanukah.Children.Add(new TextBlock { Text = candles.ToString(CultureInfo.InvariantCulture), FontWeight = FontWeights.Bold, VerticalAlignment = VerticalAlignment.Center });
+                DockPanel.SetDock(chanukah, Dock.Right);
+                heading.Children.Add(chanukah);
+            }
             if (place != null)
             {
                 var text = new TextBlock { Text = place, TextWrapping = TextWrapping.Wrap, MaxWidth = 360, Margin = new Thickness(10, 6, 10, 6) };

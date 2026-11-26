@@ -265,8 +265,9 @@
     <s:String x:Key="calendar_yahrzeits">ヤールツァイト</s:String>
     <s:String x:Key="calendar_candles_after_dark">燭火の点灯（日没後）</s:String>
     <s:String x:Key="calendar_havdalah">安息日の終わり（ハヴダラー）</s:String>
-    <s:String x:Key="calendar_rest_begins">開始: {0}（燭火の点灯）</s:String>
-    <s:String x:Key="calendar_rest_ends">終了: {0}（日没後）</s:String>
+    <s:String x:Key="calendar_chanukah_candles">ハヌカのろうそく：{0}本 + シャマシュ</s:String>
+    <s:String x:Key="calendar_rest_span">{0}（燭火の点灯） – {1}（日没後）</s:String>
+    <s:String x:Key="calendar_weekday">第{0}日</s:String>
     <s:String x:Key="calendar_settings_title">カレンダーの設定</s:String>
     <s:String x:Key="calendar_settings_place">タイムゾーンの場所:</s:String>
     <s:String x:Key="calendar_settings_zone">日付、日付の切り替わり、および一日の時刻に使用するタイムゾーン:</s:String>

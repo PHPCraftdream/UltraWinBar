@@ -255,8 +255,9 @@
     <s:String x:Key="calendar_yahrzeits">Γιαρτσάιτ</s:String>
     <s:String x:Key="calendar_candles_after_dark">Άναμμα κεριών (μετά το βράδυ)</s:String>
     <s:String x:Key="calendar_havdalah">Λήξη της ημέρας ανάπαυσης (χαβνταλά)</s:String>
-    <s:String x:Key="calendar_rest_begins">Έναρξη: {0} (άναμμα κεριών)</s:String>
-    <s:String x:Key="calendar_rest_ends">Λήξη: {0} (νύχτα)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Κεριά Χανουκά: {0} + σαμάς</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (άναμμα κεριών) – {1} (νύχτα)</s:String>
+    <s:String x:Key="calendar_weekday">Ημέρα {0}</s:String>
     <s:String x:Key="calendar_settings_title">Ρυθμίσεις ημερολογίου</s:String>
     <s:String x:Key="calendar_settings_place">Τοποθεσία της ζώνης:</s:String>
     <s:String x:Key="calendar_settings_zone">Ζώνη ώρας για την ημερομηνία, την αλλαγή της ημέρας και τις ώρες της ημέρας:</s:String>

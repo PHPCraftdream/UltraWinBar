@@ -256,8 +256,9 @@
     <s:String x:Key="calendar_yahrzeits">Jarctajty</s:String>
     <s:String x:Key="calendar_candles_after_dark">Zapálení svíček (po setmění)</s:String>
     <s:String x:Key="calendar_havdalah">Konec dne odpočinku (havdalah)</s:String>
-    <s:String x:Key="calendar_rest_begins">Začíná: {0} (zapálení svíček)</s:String>
-    <s:String x:Key="calendar_rest_ends">Končí: {0} (po setmění)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Chanukové svíčky: {0} + šamaš</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (zapálení svíček) – {1} (po setmění)</s:String>
+    <s:String x:Key="calendar_weekday">{0}. den</s:String>
     <s:String x:Key="calendar_settings_title">Nastavení kalendáře</s:String>
     <s:String x:Key="calendar_settings_place">Místo zóny:</s:String>
     <s:String x:Key="calendar_settings_zone">Časové pásmo pro datum, změnu dne a denní doby:</s:String>

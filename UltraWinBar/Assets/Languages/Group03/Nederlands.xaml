@@ -259,8 +259,9 @@
     <s:String x:Key="calendar_yahrzeits">Jahrzeiten</s:String>
     <s:String x:Key="calendar_candles_after_dark">Kaarsen aansteken (na het vallen van de avond)</s:String>
     <s:String x:Key="calendar_havdalah">Einde van de rustdag (havdala)</s:String>
-    <s:String x:Key="calendar_rest_begins">Begint: {0} (kaarsen aansteken)</s:String>
-    <s:String x:Key="calendar_rest_ends">Eindigt: {0} (nacht)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Chanoeka-lichtjes: {0} + sjamasj</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (kaarsen aansteken) – {1} (nacht)</s:String>
+    <s:String x:Key="calendar_weekday">Dag {0}</s:String>
     <s:String x:Key="calendar_settings_title">Kalenderinstellingen</s:String>
     <s:String x:Key="calendar_settings_place">Plaats van de zone:</s:String>
     <s:String x:Key="calendar_settings_zone">Tijdzone voor de datum, de dagwisseling en de tijden van de dag:</s:String>

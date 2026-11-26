@@ -270,8 +270,9 @@
     <s:String x:Key="calendar_yahrzeits">ذكرى الوفاة السنوية (يورتسايت)</s:String>
     <s:String x:Key="calendar_candles_after_dark">إشعال الشموع (بعد حلول الليل)</s:String>
     <s:String x:Key="calendar_havdalah">نهاية يوم الراحة (هفدالا)</s:String>
-    <s:String x:Key="calendar_rest_begins">يبدأ: {0} (إشعال الشموع)</s:String>
-    <s:String x:Key="calendar_rest_ends">ينتهي: {0} (حلول الليل)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">شموع حانوكا: {0} + الشمّاش</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (إشعال الشموع) – {1} (حلول الليل)</s:String>
+    <s:String x:Key="calendar_weekday">اليوم {0}</s:String>
     <s:String x:Key="calendar_settings_title">إعدادات التقويم</s:String>
     <s:String x:Key="calendar_settings_place">مكان المنطقة الزمنية:</s:String>
     <s:String x:Key="calendar_settings_zone">المنطقة الزمنية للتاريخ وتغيير اليوم ومواقيت اليوم:</s:String>

@@ -254,8 +254,9 @@
     <s:String x:Key="calendar_yahrzeits">Yahrzeituri</s:String>
     <s:String x:Key="calendar_candles_after_dark">Aprinderea lumânărilor (după lăsarea nopții)</s:String>
     <s:String x:Key="calendar_havdalah">Încheierea zilei de odihnă (havdala)</s:String>
-    <s:String x:Key="calendar_rest_begins">Începe: {0} (aprinderea lumânărilor)</s:String>
-    <s:String x:Key="calendar_rest_ends">Se încheie: {0} (lăsarea nopții)</s:String>
+    <s:String x:Key="calendar_chanukah_candles">Lumânări de Hanuka: {0} + șamaș</s:String>
+    <s:String x:Key="calendar_rest_span">{0} (aprinderea lumânărilor) – {1} (lăsarea nopții)</s:String>
+    <s:String x:Key="calendar_weekday">Ziua {0}</s:String>
     <s:String x:Key="calendar_settings_title">Setările calendarului</s:String>
     <s:String x:Key="calendar_settings_place">Locul fusului orar:</s:String>
     <s:String x:Key="calendar_settings_zone">Fusul orar folosit pentru dată, schimbarea zilei și orele zilei:</s:String>
