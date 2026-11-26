@@ -368,7 +368,7 @@ internal static class CalendarWindowChecks
             "The days of the week are numbered 1 to 6, then Shabbat.");
         // The grid switches between civil and Hebrew months; the arrows, PageUp/PageDown and the keys follow the kind shown.
         Check(calendarXaml.Contains("Click=\"GridSwitch_Click\"") && calendarCode.Contains("Settings.Instance.CalendarHebrewGrid = !Settings.Instance.CalendarHebrewGrid;") &&
-              calendarCode.Contains("CalendarGrid.InMonth(cell.Date, month, hebrew)") && !calendarCode.Contains("AddMonths("),
+              calendarCode.Contains("CalendarGrid.InMonth(cell.Date, start, hebrew)") && !calendarCode.Contains("AddMonths("),
             "The calendar's grid can show civil or Hebrew months, and moves by the kind shown.");
         // A name of the day: on hover, copy it, or look it up with Google in the system's browser (a one-color Chrome mark).
         Check(CalendarWindow.SearchAddress("Rabbi Akiva Eiger") == "https://www.google.com/search?q=Rabbi%20Akiva%20Eiger" &&
@@ -386,7 +386,7 @@ internal static class CalendarWindowChecks
         // The calendar fills the work area of the clock's screen and is neither resized nor maximized.
         Check(!calendarXaml.Contains("SizeToContent") && calendarXaml.Contains("ResizeMode=\"NoResize\"") && calendarXaml.Contains("ResizeBorderThickness=\"0\"") &&
               calendarCode.Contains("shown.FillWorkArea(clock);") && calendarCode.Contains("Width = area.Width;") && calendarCode.Contains("Height = area.Height;") &&
-              calendarCode.Contains("CalendarGrid.Days(month, hebrew)") && !calendarCode.Contains("Enumerable.Range(0, 42)"),
+              calendarCode.Contains("CalendarGrid.Days(start, hebrew)") && !calendarCode.Contains("Enumerable.Range(0, 42)"),
             "The calendar fills the work area, cannot be resized or maximized, and shows the grid's weeks.");
         // The weeks are as high as their fullest day, within the height there is; the details are cards.
         // The weeks are all as high as the fullest; only when the month does not fit do the weeks with less in them give way.
