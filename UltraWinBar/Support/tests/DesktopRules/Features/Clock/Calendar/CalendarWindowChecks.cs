@@ -263,7 +263,7 @@ internal static class CalendarWindowChecks
         // The month row is over the whole width and holds the chosen day's Hebrew date; the place is behind a globe.
         Check(calendarCode.Contains("MonthTitle.Text = chosen.ToString(\"d MMMM yyyy\"") && calendarCode.Contains("HebrewMonthTitle.Text = details.HebrewDate") &&
               calendarXaml.IndexOf("Grid.ColumnSpan=\"2\"", StringComparison.Ordinal) < civil &&
-              calendarCode.Contains("TimesHeading(details.Place)") && calendarCode.Contains("\"\\uE774\"") && !calendarCode.Contains("Line(details.Place"),
+              calendarCode.Contains("TimesHeading(details.Place, details.Chanukah)") && calendarCode.Contains("\"\\uE774\"") && !calendarCode.Contains("Line(details.Place"),
             "The month row spans the window with the chosen day's civil and Hebrew dates, and the place of the times is in the globe's popup.");
         Check(calendarXaml.Contains("Content=\"&#xE713;\"") && !calendarXaml.Contains("Content=\"{DynamicResource calendar_close}\"") && !calendarXaml.Contains("IsCancel=\"True\""),
             "The calendar's settings are a gear in the title bar and it has no Close button below.");
