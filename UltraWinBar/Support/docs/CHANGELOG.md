@@ -107,6 +107,10 @@
   The times of the day have a highlighted line with the hanukkiah, "Hanukkah candles: 3 + shamash", at nightfall; on a
   Friday before the Shabbat candles and at their time, after the Shabbat after the havdalah. In all 46 languages.
   The heading of the times shows the hanukkiah and the number too.
+- Jewish calendar: the eclipses of 1900 to 2300 by their Hebrew names, Likui Chama (of the sun) and Likui Levana (of the
+  moon), computed by Meeus' method (within about two minutes of NASA's catalogue). A day of an eclipse has its sign in
+  its cell and its name in the tooltip; the details give its kind (total, annular, hybrid, partial, penumbral) and its
+  greatest moment by the place's clocks, and for the moon's whether it is up at the place then. In all 46 languages.
 - Telegram's media viewer is full screen again for the panels: it is one pixel wider than the monitor, and only a window
   of exactly a monitor's bounds was taken for full screen, so the panels stayed over its top. A window covering a
   monitor up to 8 pixels past its edges now counts.

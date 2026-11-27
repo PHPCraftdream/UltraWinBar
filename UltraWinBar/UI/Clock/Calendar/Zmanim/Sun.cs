@@ -55,6 +55,16 @@ namespace UltraWinBar.Utilities
             return midnight.AddMinutes(minutes);
         }
 
+        /// <summary>The height of the sun's centre over the horizon at the instant, in degrees (negative below it).</summary>
+        public static double Altitude(DateTime utc, double latitude, double longitude)
+        {
+            var (declination, equation) = Position(utc);
+            double minutes = utc.TimeOfDay.TotalMinutes + 4.0 * longitude + equation;
+            double hourAngle = (minutes / 4.0 - 180.0) * ToRad;
+            double sine = Math.Sin(latitude * ToRad) * Math.Sin(declination) + Math.Cos(latitude * ToRad) * Math.Cos(declination) * Math.Cos(hourAngle);
+            return Math.Asin(Math.Max(-1.0, Math.Min(1.0, sine))) * ToDeg;
+        }
+
         /// <summary>
         /// The moment on the solar day of the date at which the centre of the sun is at the zenith distance (90° is the
         /// horizon, more is below it), rising in the morning or setting in the evening; null where the sun does not

@@ -14,13 +14,17 @@ namespace UltraWinBar.Utilities
 
     /// <summary>What the calendar says about a day, ready to show: every text is in the language of the settings.</summary>
     public sealed record DayDetails(string Heading, string HebrewDate, string Portion, IReadOnlyList<string> Events,
-        IReadOnlyList<string> Yahrzeits, string Molad, string Place, IReadOnlyList<TimeLine> Times, string Rest, int Chanukah = 0);
+        IReadOnlyList<string> Yahrzeits, string Molad, string Place, IReadOnlyList<TimeLine> Times, string Rest, int Chanukah = 0,
+        IReadOnlyList<EclipseLine> Eclipses = null);
+
+    /// <summary>An eclipse of the day: its Hebrew name, what it is, and when it is greatest (and whether the place sees it).</summary>
+    public sealed record EclipseLine(bool Solar, string Name, string Text);
 
     /// <summary>A day of the month grid: its numbers, the one thing worth showing in the cell, and what it says when pointed at.</summary>
     public sealed record DayCell(DateTime Date, string GregorianNumber, string HebrewNumber, string Marker, bool OutsideMonth,
         bool IsToday, bool IsRest, bool HasYahrzeit, string Tooltip, string HebrewLabel = "", string GregorianLabel = "",
         string Portion = null, IReadOnlyList<CellEvent> Events = null, bool EveningEnds = false, bool EveningBegins = false,
-        int Omer = 0, string OmerText = null, int Chanukah = 0)
+        int Omer = 0, string OmerText = null, int Chanukah = 0, bool SolarEclipse = false, bool LunarEclipse = false)
     {
         public bool HasOmer => Omer > 0;
         public bool HasChanukah => Chanukah > 0;
@@ -72,7 +76,18 @@ namespace UltraWinBar.Utilities
         private static string EventName(JewishDay day, string language, Func<string, string> text) =>
             day.Count > 1 ? string.Format(text("calendar_day_of"), day.Name(language), day.Number, day.Count) : day.Name(language);
 
-        public static DayCell Cell(DateTime date, DateTime month, DateTime today, bool israel, string language, ICollection<string> hidden, Func<string, string> text)
+        // An eclipse as "Likui Levana — total lunar eclipse".
+        private static string EclipseName(Eclipse eclipse, Func<string, string> text) =>
+            text(eclipse.Solar ? "calendar_likui_chama" : "calendar_likui_levana") + " — " +
+            string.Format(text(eclipse.Solar ? "calendar_eclipse_solar" : "calendar_eclipse_lunar"),
+                text("calendar_eclipse_" + eclipse.Kind.ToString().ToLowerInvariant()));
+
+        // The eclipses of a date by the clocks of the place (the computer's without one).
+        private static IReadOnlyList<Eclipse> EclipsesOn(DateTime date, HebrewPlace place) =>
+            Eclipses.On(date, utc => place != null ? OnClock(utc, place).Value : TimeZoneInfo.ConvertTimeFromUtc(utc, TimeZoneInfo.Local));
+
+        public static DayCell Cell(DateTime date, DateTime month, DateTime today, bool israel, string language, ICollection<string> hidden,
+            Func<string, string> text, HebrewPlace place = null)
         {
             var events = JewishCalendar.Days(date.Date, israel);
             var people = Yahrzeits.On(date, hidden);
@@ -82,6 +97,8 @@ namespace UltraWinBar.Utilities
             var lines = events.Select(day => EventName(day, language, text)).ToList();
             if (reading != null) lines.Insert(0, string.Format(text("calendar_portion"), reading.Name(language)));
             lines.AddRange(people.Select(person => person.Name(language)));
+            var eclipses = EclipsesOn(date, place);
+            lines.AddRange(eclipses.Select(eclipse => EclipseName(eclipse, text)));
             string hebrew = HebrewClockFormatter.FormatDate(date, language);
             string tooltip = string.Join(Environment.NewLine, new[] { date.ToString("d MMMM yyyy", CultureOf(language)), hebrew }.Concat(lines));
             int omer = JewishCalendar.OmerDay(date);
@@ -96,7 +113,8 @@ namespace UltraWinBar.Utilities
                 // The portion of a Shabbat, unless a festival's day is read instead; the days, festivals first.
                 reading != null && !events.Any(day => day.Kind == DayKind.YomTov || day.Kind == DayKind.CholHamoed) ? reading.Name(language) : null,
                 events.OrderBy(day => day.Kind == DayKind.RoshChodesh ? 1 : 0).Select(day => new CellEvent(EventName(day, language, text), day.Kind)).ToList(),
-                Omer: omer, OmerText: OmerLine(omer, language, text), Chanukah: ChanukahTonight(date));
+                Omer: omer, OmerText: OmerLine(omer, language, text), Chanukah: ChanukahTonight(date),
+                SolarEclipse: eclipses.Any(eclipse => eclipse.Solar), LunarEclipse: eclipses.Any(eclipse => !eclipse.Solar));
         }
 
         // The time as the clocks of the place show it: in its zone, or the computer's when none was chosen.
@@ -186,8 +204,20 @@ namespace UltraWinBar.Utilities
                 }
             }
 
+            // An eclipse: what it is, when it is greatest by the place's clocks; for the moon's, whether it is up there then.
+            var eclipseLines = EclipsesOn(date, place).Select(eclipse =>
+            {
+                DateTime local = place != null ? OnClock(eclipse.Utc, place).Value : TimeZoneInfo.ConvertTimeFromUtc(eclipse.Utc, TimeZoneInfo.Local);
+                string line = string.Format(text(eclipse.Solar ? "calendar_eclipse_solar" : "calendar_eclipse_lunar"),
+                    text("calendar_eclipse_" + eclipse.Kind.ToString().ToLowerInvariant())) + " · " + string.Format(text("calendar_eclipse_at"), local.ToString("t", culture));
+                if (!eclipse.Solar && place != null)
+                    line += " · " + text(Eclipses.MoonUp(eclipse, place.Latitude, place.Longitude) ? "calendar_eclipse_visible" : "calendar_eclipse_hidden");
+                return new EclipseLine(eclipse.Solar, text(eclipse.Solar ? "calendar_likui_chama" : "calendar_likui_levana"), line);
+            }).ToArray();
+
             return new DayDetails(date.ToString("d MMMM yyyy", culture), HebrewClockFormatter.FormatDate(date, language), portion, events,
-                Yahrzeits.On(date, hidden).Select(person => person.Name(language)).ToArray(), moladText, placeText, times, rest, ChanukahTonight(date));
+                Yahrzeits.On(date, hidden).Select(person => person.Name(language)).ToArray(), moladText, placeText, times, rest, ChanukahTonight(date),
+                eclipseLines);
         }
 
         /// <summary>

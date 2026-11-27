@@ -472,6 +472,18 @@
 
     <s:String x:Key="calendar_havdalah">Dinlenme gününün sonu (havdala)</s:String>
     <s:String x:Key="calendar_chanukah_candles">Hanuka mumları: {0} + şamaş</s:String>
+    <s:String x:Key="calendar_likui_chama">Likuy Hama</s:String>
+    <s:String x:Key="calendar_likui_levana">Likuy Levana</s:String>
+    <s:String x:Key="calendar_eclipse_solar">{0} Güneş tutulması</s:String>
+    <s:String x:Key="calendar_eclipse_lunar">{0} Ay tutulması</s:String>
+    <s:String x:Key="calendar_eclipse_total">tam</s:String>
+    <s:String x:Key="calendar_eclipse_annular">halkalı</s:String>
+    <s:String x:Key="calendar_eclipse_hybrid">melez</s:String>
+    <s:String x:Key="calendar_eclipse_partial">parçalı</s:String>
+    <s:String x:Key="calendar_eclipse_penumbral">yarı gölgeli</s:String>
+    <s:String x:Key="calendar_eclipse_at">en büyük evre {0}</s:String>
+    <s:String x:Key="calendar_eclipse_visible">burada görünür</s:String>
+    <s:String x:Key="calendar_eclipse_hidden">burada görünmez</s:String>
 
     <s:String x:Key="calendar_rest_span">{0} (mum yakma) – {1} (gece)</s:String>
     <s:String x:Key="calendar_weekday">{0}. gün</s:String>

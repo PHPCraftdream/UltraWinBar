@@ -217,14 +217,15 @@ namespace UltraWinBar
         // Five weeks, six only for a month that reaches into a sixth.
         private void Fill(ListBox list, DateTime start, HebrewDayNow now)
         {
-            bool israel = DayDetailsBuilder.IsLandOfIsrael(ClockZones.CalendarPlace());
+            HebrewPlace place = ClockZones.CalendarPlace();
+            bool israel = DayDetailsBuilder.IsLandOfIsrael(place);
             bool hebrew = HebrewGrid;
             bool was = rebuilding;
             rebuilding = true;
             try
             {
                 list.ItemsSource = CalendarGrid.Days(start, hebrew)
-                    .Select(day => DayDetailsBuilder.Cell(day, start, DateTime.Today, israel, AppLanguage, Settings.Instance.HiddenYahrzeits, Text))
+                    .Select(day => DayDetailsBuilder.Cell(day, start, DateTime.Today, israel, AppLanguage, Settings.Instance.HiddenYahrzeits, Text, place))
                     .Select(cell => cell with
                     {
                         OutsideMonth = !CalendarGrid.InMonth(cell.Date, start, hebrew),
@@ -420,7 +421,7 @@ namespace UltraWinBar
             PortionTitle.Text = details.Portion ?? "";
             // The details as cards: the day (its special days as colored blocks, the start and end of the rest), the
             // yahrzeits, the times of the day, the molad.
-            var day = DayDetailsBuilder.Cell(chosen, chosen, DateTime.Today, DayDetailsBuilder.IsLandOfIsrael(place), AppLanguage, Settings.Instance.HiddenYahrzeits, Text);
+            var day = DayDetailsBuilder.Cell(chosen, chosen, DateTime.Today, DayDetailsBuilder.IsLandOfIsrael(place), AppLanguage, Settings.Instance.HiddenYahrzeits, Text, place);
             if (day.Events.Count > 0 || details.Rest != null)
             {
                 Panel card = Card(null);
@@ -440,6 +441,15 @@ namespace UltraWinBar
                 Line(card, string.Format(Text("calendar_omer_day"), omer), bold: true);
                 if (omer >= 7) Line(card, string.Format(Text("calendar_omer_weeks"), omer / 7, omer % 7), opacity: 0.85);
                 Line(card, JewishCalendar.OmerSefira(omer, AppLanguage), opacity: 0.85);
+            }
+            // An eclipse, a card of its own: its Hebrew name after its sign, then what it is and when.
+            foreach (EclipseLine eclipse in details.Eclipses ?? Array.Empty<EclipseLine>())
+            {
+                var heading = new StackPanel { Orientation = Orientation.Horizontal };
+                heading.Children.Add(new Viewbox { Height = 22, Margin = new Thickness(0, 0, 6, 0), VerticalAlignment = VerticalAlignment.Center,
+                    Child = new ContentControl { Focusable = false, Content = FindResource(eclipse.Solar ? "SolarEclipseIcon" : "LunarEclipseIcon") } });
+                heading.Children.Add(Heading(eclipse.Name));
+                Line(Card(heading), eclipse.Text, opacity: 0.85);
             }
             if (details.Yahrzeits.Count > 0)
             {

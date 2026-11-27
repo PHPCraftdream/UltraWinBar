@@ -103,4 +103,31 @@
         <Rectangle Canvas.Left="12.3" Canvas.Top="4" Width="1.4" Height="4.5" Fill="#FFF5F5F4" Stroke="{DynamicResource ClockForeground}" StrokeThickness="0.3" />
         <Path Canvas.Left="12" Canvas.Top="0.2" Data="M1,0 C1.7,1.1 2,1.8 2,2.5 C2,3.2 1.5,3.6 1,3.6 C0.5,3.6 0,3.2 0,2.5 C0,1.8 0.3,1.1 1,0 Z" Fill="{StaticResource ChanukiahFlame}" />
     </Canvas>
+    <!-- An eclipse of the sun (likui chama): the dark moon over the sun, a ring of light and rays around it. -->
+    <Canvas x:Key="SolarEclipseIcon" x:Shared="False" Width="22" Height="22" IsHitTestVisible="False">
+        <Ellipse Canvas.Left="0" Canvas.Top="0" Width="22" Height="22">
+            <Ellipse.Fill>
+                <RadialGradientBrush>
+                    <GradientStop Color="#00FBBF24" Offset="0.45" />
+                    <GradientStop Color="#C0FBBF24" Offset="0.62" />
+                    <GradientStop Color="#00F59E0B" Offset="1" />
+                </RadialGradientBrush>
+            </Ellipse.Fill>
+        </Ellipse>
+        <Ellipse Canvas.Left="4" Canvas.Top="4" Width="14" Height="14" Fill="#FFF59E0B" />
+        <Ellipse Canvas.Left="5.5" Canvas.Top="4.8" Width="12.6" Height="12.6" Fill="#FF1C1917" Stroke="#FF44403C" StrokeThickness="0.5" />
+    </Canvas>
+    <!-- An eclipse of the moon (likui levana): the full moon reddened in the earth's shadow, its edge still lit. -->
+    <Canvas x:Key="LunarEclipseIcon" x:Shared="False" Width="22" Height="22" IsHitTestVisible="False">
+        <Ellipse Canvas.Left="2" Canvas.Top="2" Width="18" Height="18" Stroke="{DynamicResource ClockForeground}" StrokeThickness="0.6">
+            <Ellipse.Fill>
+                <RadialGradientBrush GradientOrigin="0.35,0.35">
+                    <GradientStop Color="#FFF87171" Offset="0" />
+                    <GradientStop Color="#FFB91C1C" Offset="0.6" />
+                    <GradientStop Color="#FF7F1D1D" Offset="1" />
+                </RadialGradientBrush>
+            </Ellipse.Fill>
+        </Ellipse>
+        <Path Data="M14.5,2.6 A9,9 0 0 1 14.5,19.4 A10.5,10.5 0 0 0 14.5,2.6 Z" Fill="#FFF5F5F4" Opacity="0.9" />
+    </Canvas>
 </ResourceDictionary>

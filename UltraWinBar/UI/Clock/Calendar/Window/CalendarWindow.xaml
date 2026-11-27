@@ -324,6 +324,14 @@
                                             </Viewbox>
                                             <TextBlock Text="{Binding Chanukah}" FontWeight="Bold" VerticalAlignment="Center" />
                                         </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                            <Viewbox Height="16" Margin="0,0,4,0" Visibility="{Binding SolarEclipse, Converter={StaticResource OmerVisibility}}">
+                                                <ContentControl Focusable="False" Content="{DynamicResource SolarEclipseIcon}" />
+                                            </Viewbox>
+                                            <Viewbox Height="16" Margin="0,0,4,0" Visibility="{Binding LunarEclipse, Converter={StaticResource OmerVisibility}}">
+                                                <ContentControl Focusable="False" Content="{DynamicResource LunarEclipseIcon}" />
+                                            </Viewbox>
+                                        </StackPanel>
                                     </StackPanel>
                                 </ToolTip>
                             </Border.ToolTip>
@@ -391,6 +399,17 @@
                                                    FontSize="14"
                                                    FontWeight="Bold" />
                                     </StackPanel>
+                                    <!-- An eclipse of the sun or the moon on the day. -->
+                                    <ContentControl Focusable="False"
+                                                    Margin="3,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Content="{DynamicResource SolarEclipseIcon}"
+                                                    Visibility="{Binding SolarEclipse, Converter={StaticResource OmerVisibility}}" />
+                                    <ContentControl Focusable="False"
+                                                    Margin="3,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Content="{DynamicResource LunarEclipseIcon}"
+                                                    Visibility="{Binding LunarEclipse, Converter={StaticResource OmerVisibility}}" />
                                 </StackPanel>
                                 <TextBlock Grid.Row="0"
                                            HorizontalAlignment="Right"

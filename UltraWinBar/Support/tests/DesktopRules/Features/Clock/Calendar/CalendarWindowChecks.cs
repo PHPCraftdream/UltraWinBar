@@ -362,6 +362,42 @@ internal static class CalendarWindowChecks
               calendarXaml.Contains("Visibility=\"{Binding HasChanukah, Converter={StaticResource OmerVisibility}}\"") &&
               File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "UI", "Clock", "Clock.xaml")).Split("{DynamicResource ChanukiahIcon}").Length == 3,
             "The clock (both layouts) and the cells show a hanukkiah with the number of candles.");
+        // Eclipses 1900-2300 by Meeus, against NASA's catalogue: the moment of the greatest eclipse (UTC) and the kind.
+        foreach (var (when, solar, kind) in new[]
+        {
+            ("1900-05-28 14:53", true, EclipseKind.Total), ("1900-11-22 07:20", true, EclipseKind.Annular), ("1999-08-11 11:03", true, EclipseKind.Total),
+            ("2017-08-21 18:25", true, EclipseKind.Total), ("2023-04-20 04:17", true, EclipseKind.Hybrid), ("2023-10-14 18:00", true, EclipseKind.Annular),
+            ("2025-03-29 10:47", true, EclipseKind.Partial), ("2022-11-08 10:59", false, EclipseKind.Total), ("2023-10-28 20:14", false, EclipseKind.Partial),
+            ("2023-05-05 17:23", false, EclipseKind.Penumbral), ("2299-06-28 13:16", true, EclipseKind.Total),
+        })
+        {
+            DateTime moment = DateTime.ParseExact(when, "yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
+            var match = Eclipses.All.FirstOrDefault(eclipse => eclipse.Solar == solar && Math.Abs((eclipse.Utc - moment).TotalMinutes) <= 3);
+            Check(match != null && match.Kind == kind, $"The eclipse of {when} UTC ({(solar ? "solar" : "lunar")}, {kind}): {(match == null ? "not found" : match.Kind + " at " + match.Utc.ToString("HH:mm", CultureInfo.InvariantCulture))}.");
+        }
+        // 2001-2100: NASA counts 224 eclipses of the sun and 228 of the moon (Meeus misses a few marginal penumbral ones).
+        var century = Eclipses.All.Where(eclipse => eclipse.Utc.Year >= 2001 && eclipse.Utc.Year <= 2100).ToList();
+        int solarCount = century.Count(eclipse => eclipse.Solar), lunarCount = century.Count(eclipse => !eclipse.Solar);
+        Check(solarCount == 224 && lunarCount >= 224 && lunarCount <= 228 && Eclipses.All.First().Utc.Year == 1900 && Eclipses.All.Last().Utc.Year == 2300,
+            $"Eclipses of the 21st century: {solarCount} solar, {lunarCount} lunar; 1900 to 2300 covered.");
+        // A day with an eclipse by the place's clocks: the cell shows its sign, the tooltip and the details name it.
+        var bloodMoon = DayDetailsBuilder.Cell(Day("2022-11-08"), Day("2022-11-01"), Day("2022-11-08"), false, "English", new List<string>(), Text, Jerusalem);
+        var sunDay = DayDetailsBuilder.Cell(Day("2017-08-21"), Day("2017-08-01"), Day("2017-08-21"), false, "English", new List<string>(), Text, Jerusalem);
+        Check(bloodMoon.LunarEclipse && !bloodMoon.SolarEclipse && bloodMoon.Tooltip.Contains("Likui Levana — total lunar eclipse") &&
+              sunDay.SolarEclipse && sunDay.Tooltip.Contains("Likui Chama — total solar eclipse") &&
+              !DayDetailsBuilder.Cell(Day("2022-11-09"), Day("2022-11-01"), Day("2022-11-08"), false, "English", new List<string>(), Text, Jerusalem).LunarEclipse,
+            $"A day of an eclipse is marked in its cell and named in its tooltip: {bloodMoon.Tooltip.Replace(Environment.NewLine, " / ")}.");
+        // The total eclipse of the moon of 8 November 2022 (10:59 UTC): midday in Jerusalem, before sunrise in New York.
+        var newYork = new HebrewPlace { Name = "New York", Country = "United States", CountryCode = "US", Latitude = 40.7128, Longitude = -74.006, TimeZoneId = "America/New_York" };
+        var seen = DayDetailsBuilder.Describe(Day("2022-11-08"), newYork, "English", null, Text).Eclipses;
+        var unseen = DayDetailsBuilder.Describe(Day("2022-11-08"), Jerusalem, "English", null, Text).Eclipses;
+        Check(seen.Count == 1 && seen[0].Name == "Likui Levana" && seen[0].Text.Contains("total lunar eclipse") && seen[0].Text.EndsWith("visible here") &&
+              unseen.Count == 1 && unseen[0].Text.EndsWith("not visible here") && Sun.Altitude(new DateTime(2022, 11, 8, 10, 59, 0, DateTimeKind.Utc), 31.778, 35.235) > 30,
+            $"An eclipse of the moon is seen where the moon is up: New York {seen.FirstOrDefault()?.Text}; Jerusalem {unseen.FirstOrDefault()?.Text}.");
+        Check(icons.Contains("x:Key=\"SolarEclipseIcon\"") && icons.Contains("x:Key=\"LunarEclipseIcon\"") &&
+              calendarXaml.Contains("Visibility=\"{Binding SolarEclipse, Converter={StaticResource OmerVisibility}}\"") &&
+              calendarCode.Contains("foreach (EclipseLine eclipse in details.Eclipses ?? Array.Empty<EclipseLine>())"),
+            "The cells and the details show the eclipses with their signs.");
         // The days of the week over the grid: 1 (Sunday) to 6 (Friday) and Shabbat, no day names of a language.
         Check(CalendarWindow.WeekdayHeaders("Shabbat").SequenceEqual(new[] { "1", "2", "3", "4", "5", "6", "Shabbat" }) &&
               calendarCode.Contains("WeekdayHeaders(Text(\"calendar_shabbat\"))") && !calendarCode.Contains("AbbreviatedDayNames"),
@@ -426,7 +462,9 @@ internal static class CalendarWindowChecks
             "Every resource of the calendar window is inside its one ResourceDictionary.");
         Check(File.ReadAllText(Path.Combine(root.FullName, "UltraWinBar", "UI", "Clock", "Clock.xaml")).Contains("x:Name=\"HebrewDateHost\" Grid.Row=\"2\" Background=\"Transparent\" Cursor=\"Hand\""),
             "The Hebrew date of the clock shows the hand cursor: it is a link to the calendar.");
-        foreach (string key in new[] { "calendar_day_of", "calendar_portion", "calendar_festival_reading", "calendar_molad", "calendar_place", "calendar_candles_after_dark", "calendar_havdalah", "calendar_rest_span", "calendar_weekday", "calendar_chanukah_candles" }) used.Add(key);
+        foreach (string key in new[] { "calendar_day_of", "calendar_portion", "calendar_festival_reading", "calendar_molad", "calendar_place", "calendar_candles_after_dark", "calendar_havdalah", "calendar_rest_span", "calendar_weekday", "calendar_chanukah_candles",
+            "calendar_likui_chama", "calendar_likui_levana", "calendar_eclipse_solar", "calendar_eclipse_lunar", "calendar_eclipse_total", "calendar_eclipse_annular",
+            "calendar_eclipse_hybrid", "calendar_eclipse_partial", "calendar_eclipse_penumbral", "calendar_eclipse_at", "calendar_eclipse_visible", "calendar_eclipse_hidden" }) used.Add(key);
         var missing = used.Where(key => !english.ContainsKey(key)).ToArray();
         Check(missing.Length == 0, $"English lacks strings the calendar uses: {string.Join(", ", missing)}.");
         string languages = Path.Combine(root.FullName, "UltraWinBar", "Assets", "Languages");
