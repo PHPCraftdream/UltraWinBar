@@ -531,16 +531,16 @@ internal static class CalendarWindowChecks
         var fridayTimes = DayDetailsBuilder.Describe(Day("2026-11-20"), Jerusalem, "English", null, Text).Times;
         var usCulture = System.Globalization.CultureInfo.GetCultureInfo("en-US");
         IReadOnlyList<TimeLine> At(int hour, int minute) => DayDetailsBuilder.WithNow(fridayTimes, Day("2026-11-20"), Jerusalem, new DateTime(2026, 11, 20, hour, minute, 0, DateTimeKind.Utc), "Now", usCulture);
-        var noon = At(10, 0);
-        int nowAt = noon.ToList().FindIndex(line => line.Now);
-        var night = At(1, 0);
-        var late = At(21, 50);
-        Check(noon.Count == fridayTimes.Count + 1 && noon.Count(line => line.Now) == 1 && noon[nowAt].Name == "Now" && noon[nowAt].Time == "12:00 PM" &&
-              noon.Take(nowAt).All(line => !line.At.HasValue || line.At.Value <= new DateTime(2026, 11, 20, 12, 0, 0)) &&
-              noon.Skip(nowAt + 1).First(line => line.At.HasValue).At.Value > new DateTime(2026, 11, 20, 12, 0, 0) &&
-              night.First().Now && night.First().Time == "3:00 AM" && late.Last().Now && late.Last().Time == "11:50 PM" &&
+        var timesAtNoon = At(10, 0);
+        int nowIndex = timesAtNoon.ToList().FindIndex(line => line.Now);
+        var timesAtNight = At(1, 0);
+        var timesLate = At(21, 50);
+        Check(timesAtNoon.Count == fridayTimes.Count + 1 && timesAtNoon.Count(line => line.Now) == 1 && timesAtNoon[nowIndex].Name == "Now" && timesAtNoon[nowIndex].Time == "12:00 PM" &&
+              timesAtNoon.Take(nowIndex).All(line => !line.At.HasValue || line.At.Value <= new DateTime(2026, 11, 20, 12, 0, 0)) &&
+              timesAtNoon.Skip(nowIndex + 1).First(line => line.At.HasValue).At.Value > new DateTime(2026, 11, 20, 12, 0, 0) &&
+              timesAtNight.First().Now && timesAtNight.First().Time == "3:00 AM" && timesLate.Last().Now && timesLate.Last().Time == "11:50 PM" &&
               !fridayTimes.Any(line => line.Now) && fridayTimes.All(line => line.At.HasValue),
-            $"Today's times have the line of the present moment in its place: {string.Join(" | ", noon.Select(line => line.Time + " " + line.Name))}.");
+            $"Today's times have the line of the present moment in its place: {string.Join(" | ", timesAtNoon.Select(line => line.Time + " " + line.Name))}.");
         // Not on another day or without a place; the next minute moves the line.
         Check(ReferenceEquals(DayDetailsBuilder.WithNow(fridayTimes, Day("2026-11-21"), Jerusalem, new DateTime(2026, 11, 20, 10, 0, 0, DateTimeKind.Utc), "Now", usCulture), fridayTimes) &&
               ReferenceEquals(DayDetailsBuilder.WithNow(fridayTimes, Day("2026-11-20"), null, new DateTime(2026, 11, 20, 10, 0, 0, DateTimeKind.Utc), "Now", usCulture), fridayTimes) &&
