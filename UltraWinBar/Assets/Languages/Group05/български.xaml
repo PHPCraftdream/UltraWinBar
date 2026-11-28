@@ -226,6 +226,7 @@
     <s:String x:Key="calendar_israel">Земя Израилева</s:String>
     <s:String x:Key="calendar_diaspora">диаспора</s:String>
     <s:String x:Key="calendar_no_place">Избери място в настройките на календара, за да виждаш часовете за деня.</s:String>
+    <s:String x:Key="calendar_now">Сега</s:String>
     <s:String x:Key="calendar_times">Часове за деня</s:String>
     <s:String x:Key="calendar_yahrzeits">Ярцайти</s:String>
     <s:String x:Key="calendar_candles_after_dark">Запалване на свещите (след свечеряване)</s:String>
@@ -243,6 +244,17 @@
     <s:String x:Key="calendar_eclipse_at">максимум в {0}</s:String>
     <s:String x:Key="calendar_eclipse_visible">видимо тук</s:String>
     <s:String x:Key="calendar_eclipse_hidden">не се вижда тук</s:String>
+    <s:String x:Key="calendar_moon_new">Молад емет (новолуние)</s:String>
+    <s:String x:Key="calendar_moon_full">Милуй ха-левана (пълнолуние)</s:String>
+    <s:String x:Key="calendar_prayer_mashiv">Машив ха-руах у-морид ха-гешем</s:String>
+    <s:String x:Key="calendar_prayer_veten_tal">Ве-тен тал у-матар</s:String>
+    <s:String x:Key="calendar_prayer_veten_bracha">Ве-тен браха</s:String>
+    <s:String x:Key="calendar_prayer_morid_hatal">Морид ха-тал</s:String>
+    <s:String x:Key="calendar_prayer_to_winter">Преминаване към зимните молитви: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_to_summer">Преминаване към летните молитви: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_from_musaf">от Мусаф</s:String>
+    <s:String x:Key="calendar_prayer_from_maariv">от тази вечер (Маарив)</s:String>
+    <s:String x:Key="calendar_prayer_ashkenaz_none">в ашкеназкия ритуал извън Израел не се казва нищо</s:String>
     <s:String x:Key="calendar_rest_span">{0} (запалване на свещите) – {1} (нощно време)</s:String>
     <s:String x:Key="calendar_weekday">Ден {0}</s:String>
     <s:String x:Key="calendar_settings_title">Настройки на календара</s:String>

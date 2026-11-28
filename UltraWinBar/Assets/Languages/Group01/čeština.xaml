@@ -252,6 +252,7 @@
     <s:String x:Key="calendar_israel">Země Izrael</s:String>
     <s:String x:Key="calendar_diaspora">Diaspora</s:String>
     <s:String x:Key="calendar_no_place">Vyberte místo v nastavení kalendáře, abyste viděli denní dobu.</s:String>
+    <s:String x:Key="calendar_now">Nyní</s:String>
     <s:String x:Key="calendar_times">Zmanim</s:String>
     <s:String x:Key="calendar_yahrzeits">Jarctajty</s:String>
     <s:String x:Key="calendar_candles_after_dark">Zapálení svíček (po setmění)</s:String>
@@ -269,6 +270,17 @@
     <s:String x:Key="calendar_eclipse_at">maximum v {0}</s:String>
     <s:String x:Key="calendar_eclipse_visible">viditelné zde</s:String>
     <s:String x:Key="calendar_eclipse_hidden">zde neviditelné</s:String>
+    <s:String x:Key="calendar_moon_new">Molad Emet (nov)</s:String>
+    <s:String x:Key="calendar_moon_full">Milui HaLevana (úplněk)</s:String>
+    <s:String x:Key="calendar_prayer_mashiv">Mashiv HaRuach UMorid HaGeshem</s:String>
+    <s:String x:Key="calendar_prayer_veten_tal">V'ten Tal U'Matar</s:String>
+    <s:String x:Key="calendar_prayer_veten_bracha">V'ten Bracha</s:String>
+    <s:String x:Key="calendar_prayer_morid_hatal">Morid HaTal</s:String>
+    <s:String x:Key="calendar_prayer_to_winter">Přechod na zimní modlitby: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_to_summer">Přechod na letní modlitby: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_from_musaf">od Musafu</s:String>
+    <s:String x:Key="calendar_prayer_from_maariv">od dnešního Maarivu</s:String>
+    <s:String x:Key="calendar_prayer_ashkenaz_none">v aškenázském ritu mimo Izrael se nic neříká</s:String>
     <s:String x:Key="calendar_rest_span">{0} (zapálení svíček) – {1} (po setmění)</s:String>
     <s:String x:Key="calendar_weekday">{0}. den</s:String>
     <s:String x:Key="calendar_settings_title">Nastavení kalendáře</s:String>

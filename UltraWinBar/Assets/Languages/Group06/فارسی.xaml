@@ -266,6 +266,7 @@
     <s:String x:Key="calendar_israel">سرزمین اسرائیل</s:String>
     <s:String x:Key="calendar_diaspora">جوامع خارج از اسرائیل</s:String>
     <s:String x:Key="calendar_no_place">برای دیدن اوقات روز، در تنظیمات تقویم مکانی انتخاب کنید.</s:String>
+    <s:String x:Key="calendar_now">اکنون</s:String>
     <s:String x:Key="calendar_times">اوقات روز</s:String>
     <s:String x:Key="calendar_yahrzeits">یادبودهای سالگرد درگذشت</s:String>
     <s:String x:Key="calendar_candles_after_dark">روشن‌کردن شمع (پس از تاریک‌شدن)</s:String>
@@ -283,6 +284,17 @@
     <s:String x:Key="calendar_eclipse_at">اوج در {0}</s:String>
     <s:String x:Key="calendar_eclipse_visible">اینجا دیده می‌شود</s:String>
     <s:String x:Key="calendar_eclipse_hidden">اینجا دیده نمی‌شود</s:String>
+    <s:String x:Key="calendar_moon_new">مولاد امت (ماه نو)</s:String>
+    <s:String x:Key="calendar_moon_full">میلوی هالوانا (ماه کامل)</s:String>
+    <s:String x:Key="calendar_prayer_mashiv">ماشیو هاروآخ اومورید هاگشم</s:String>
+    <s:String x:Key="calendar_prayer_veten_tal">وتن طل اوماطار</s:String>
+    <s:String x:Key="calendar_prayer_veten_bracha">وتن براخا</s:String>
+    <s:String x:Key="calendar_prayer_morid_hatal">مورید هاطل</s:String>
+    <s:String x:Key="calendar_prayer_to_winter">گذر به دعاهای زمستانی: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_to_summer">گذر به دعاهای تابستانی: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_from_musaf">از موساف</s:String>
+    <s:String x:Key="calendar_prayer_from_maariv">از معاریو امشب</s:String>
+    <s:String x:Key="calendar_prayer_ashkenaz_none">در آیین اشکنازی بیرون از اسرائیل چیزی گفته نمی‌شود</s:String>
     <s:String x:Key="calendar_rest_span">{0} (روشن‌کردن شمع) – {1} (پس از فرارسیدن شب)</s:String>
     <s:String x:Key="calendar_weekday">روز {0}</s:String>
     <s:String x:Key="calendar_settings_title">تنظیمات تقویم</s:String>

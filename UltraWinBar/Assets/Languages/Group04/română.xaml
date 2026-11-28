@@ -250,6 +250,7 @@
     <s:String x:Key="calendar_israel">Țara Israelului</s:String>
     <s:String x:Key="calendar_diaspora">diaspora</s:String>
     <s:String x:Key="calendar_no_place">Alegeți un loc din setările calendarului pentru a vedea orele zilei.</s:String>
+    <s:String x:Key="calendar_now">Acum</s:String>
     <s:String x:Key="calendar_times">Orele zilei</s:String>
     <s:String x:Key="calendar_yahrzeits">Yahrzeituri</s:String>
     <s:String x:Key="calendar_candles_after_dark">Aprinderea lumânărilor (după lăsarea nopții)</s:String>
@@ -267,6 +268,17 @@
     <s:String x:Key="calendar_eclipse_at">maximum la {0}</s:String>
     <s:String x:Key="calendar_eclipse_visible">vizibilă aici</s:String>
     <s:String x:Key="calendar_eclipse_hidden">nu este vizibilă aici</s:String>
+    <s:String x:Key="calendar_moon_new">Molad Emet (lună nouă)</s:String>
+    <s:String x:Key="calendar_moon_full">Milui HaLevana (lună plină)</s:String>
+    <s:String x:Key="calendar_prayer_mashiv">Mashiv HaRuach UMorid HaGeshem</s:String>
+    <s:String x:Key="calendar_prayer_veten_tal">V'ten Tal U'Matar</s:String>
+    <s:String x:Key="calendar_prayer_veten_bracha">V'ten Bracha</s:String>
+    <s:String x:Key="calendar_prayer_morid_hatal">Morid HaTal</s:String>
+    <s:String x:Key="calendar_prayer_to_winter">La rugăciunile de iarnă: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_to_summer">La rugăciunile de vară: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_from_musaf">de la Musaf</s:String>
+    <s:String x:Key="calendar_prayer_from_maariv">de la Maariv în această seară</s:String>
+    <s:String x:Key="calendar_prayer_ashkenaz_none">în ritul așkenaz din afara Israelului nu se spune nimic</s:String>
     <s:String x:Key="calendar_rest_span">{0} (aprinderea lumânărilor) – {1} (lăsarea nopții)</s:String>
     <s:String x:Key="calendar_weekday">Ziua {0}</s:String>
     <s:String x:Key="calendar_settings_title">Setările calendarului</s:String>

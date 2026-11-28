@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.5.2-alpha (2026-11-28)
 
 ### Added
 
@@ -57,6 +57,9 @@
 
 ### Changed
 
+- Jewish calendar: the civil date is written dd.mm.yyyy everywhere, with no name of a month, in every language: in the
+  grid's cells, their tooltips, the details of a day and over the calendar ("23.11.2026" instead of "23, November" and
+  "23 November 2026"). The Hebrew months keep their names.
 - Themes: only Modern Glass ships, in two variants; the classic themes (Windows 9x/2000/Me, XP, Vista, Longhorn,
   Watercolor) are gone. The new Modern Glass Light (slate-200 surfaces with the blur, not white; dark text; the accent
   one shade deeper) is the main theme: a new install starts with it, the dark one moves to it once, and a theme that is
@@ -111,6 +114,29 @@
   moon), computed by Meeus' method (within about two minutes of NASA's catalogue). A day of an eclipse has its sign in
   its cell and its name in the tooltip; the details give its kind (total, annular, hybrid, partial, penumbral) and its
   greatest moment by the place's clocks, and for the moon's whether it is up at the place then. In all 46 languages.
+- Jewish calendar: the actual (astronomical) new moon and full moon, not the molad's mean moment, by Meeus' method
+  (within a minute of the published moments), for 1900 to 2300. A day of one has a new-moon or full-moon sign in its
+  cell and the moment in its tooltip; the times of the day have a line for it, with the sign, where it falls among
+  them, by the place's clocks. They are named in Hebrew: the new moon Molad Emet (the true molad) and the full moon
+  Milui HaLevana, with the plain word beside the name. The signs of the moons and of the eclipses stand at the bottom
+  right of the cell, beside the civil date, so they never run into the Hebrew month at the top. In all 46 languages.
+- Jewish calendar: the changes between the summer and the winter prayers: Mashiv HaRuach UMorid HaGeshem (22 Tishrei,
+  from Musaf), V'ten Tal U'Matar (in Israel from the evening before 7 Cheshvan; elsewhere from the evening of 4 December,
+  5 December before a leap year, as the 60th day after the autumn equinox of Shmuel), V'ten Bracha (from the first
+  weekday Ma'ariv after the first day of Pesach: the evening of 15 Nisan in Israel, of 16 Nisan elsewhere; the last
+  Mincha that asks for rain is the eve of Pesach's) and Morid HaTal (15 Nisan, from Musaf; the Ashkenazi rite outside
+  Israel says nothing, and the sentence says so). When the first Ma'ariv would be a Friday evening's, with no blessing of
+  the years, the change is told on Saturday, for Motzei Shabbat (4 December 2026 is a Friday, so V'ten Tal U'Matar is
+  5 December). A block in the cell (blue for the winter, orange for the summer), the sentence in the tooltip and in the
+  day's card. In all 46 languages.
+- Jewish calendar: the fast of the firstborn (14 Nisan, the Thursday 12 Nisan when the eve of Pesach is Shabbat), and the
+  Shabbatot with names of their own, as a block beside the portion: the four before Pesach (Shekalim, Zachor, Parah,
+  HaChodesh), HaGadol, Shuva, Chazon (before Tisha B'Av), Nachamu (after it) and Shirah (Beshalach); in English, Russian
+  and Hebrew, the other languages have the English name, as the festivals do. The dates agree with an independent
+  calendar (pyluach) over four centuries.
+- Jewish calendar: for today (by the place's clocks) the times of the day have a line "Now" with the time, between the
+  times it falls among; it moves by itself when the minute changes, while the calendar is in sight (a timer to the next
+  minute; the window is not rebuilt). In all 46 languages.
 - Telegram's media viewer is full screen again for the panels: it is one pixel wider than the monitor, and only a window
   of exactly a monitor's bounds was taken for full screen, so the panels stayed over its top. A window covering a
   monitor up to 8 pixels past its edges now counts.
@@ -238,6 +264,14 @@
 
 ### Fixed
 
+- Jewish calendar: Yom HaAtzmaut and Yom HaZikaron are shown from 5709 (1949), Yom HaShoah from 5711 (1951) and Yom
+  Yerushalayim from 5727 (1967), not in the years before the State of Israel; the move of Yom HaAtzmaut from a Monday to
+  the Tuesday is of 5764 (2004), before it the day stayed on the Monday.
+- Jewish calendar: candles are lit 40 minutes before sunset in Jerusalem and its neighbourhood (within 10 km of its
+  centre), as the custom of the city has it, in the day's times and in the start of the rest; 18 minutes elsewhere.
+- Hebrew months: in Japanese Heshvan is written with the katakana ヘ (it began with the hiragana へ); in Korean Tammuz is
+  담무스 and Av is 아브, as the Korean Wikipedia has them. Russian: Rabbeinu Tam's nightfall is spelled as his yahrzeit
+  is, "рабейну Там".
 - A restart no longer lets the windows grow over the whole screen and shrink again when the panels are ready: the work
   area of the last layout is remembered with its screen and put back at the start of the next run, before the panels are
   made (with the watchdog that gives the original one back already running).

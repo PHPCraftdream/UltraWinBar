@@ -53,7 +53,7 @@ internal static class CalendarWindowChecks
 
         // A Shabbat in Jerusalem: its date, the portion, the times of the day with the end of the rest, and the molad of the coming month.
         var shabbat = DayDetailsBuilder.Describe(Day("2026-11-21"), Jerusalem, "English", null, text);
-        Check(shabbat.HebrewDate == "11 Kislev 5787" && shabbat.Heading == "21 November 2026", $"The Hebrew date of the day: {shabbat.HebrewDate}, {shabbat.Heading}.");
+        Check(shabbat.HebrewDate == "11 Kislev 5787" && shabbat.Heading == "21.11.2026", $"The Hebrew date of the day: {shabbat.HebrewDate}, {shabbat.Heading}.");
         Check(shabbat.Portion == "Weekly portion: Vayetze" && shabbat.Events.Count == 0 && shabbat.Yahrzeits.Count == 0, "A Shabbat has its portion and no festival.");
         string eleven = new DateTime(2000, 1, 1, 11, 11, 0).ToString("t", new CultureInfo("en-US"));
         Check(shabbat.Molad == $"Molad of Tevet: Day 4, {eleven} and 4 chalakim", $"The molad of the coming month: {shabbat.Molad}.");
@@ -125,13 +125,15 @@ internal static class CalendarWindowChecks
         var pesach = DayDetailsBuilder.Cell(Day("2026-04-02"), month, Day("2026-04-02"), false, "English", null, text);
         Check(pesach.GregorianNumber == "2" && pesach.HebrewNumber == "15" && pesach.Marker == "Pesach, day 1 of 8" && !pesach.OutsideMonth && pesach.IsToday && pesach.IsRest && pesach.HasYahrzeit == Yahrzeits.On(Day("2026-04-02")).Count > 0,
             $"The cell of the first day of Pesach: {pesach}.");
-        Check(pesach.HebrewLabel == "Nisan, 15" && pesach.GregorianLabel == "2, April", $"The labels of the cell: {pesach.HebrewLabel} / {pesach.GregorianLabel}.");
+        Check(pesach.HebrewLabel == "Nisan, 15" && pesach.GregorianLabel == "02.04.2026", $"The labels of the cell: {pesach.HebrewLabel} / {pesach.GregorianLabel}.");
         var kislev = DayDetailsBuilder.Cell(Day("2026-11-23"), Day("2026-11-01"), Day("2026-11-23"), false, "English", null, text);
-        Check(kislev.HebrewLabel == "Kislev, 13" && kislev.GregorianLabel == "23, November", $"The labels of the cell: {kislev.HebrewLabel} / {kislev.GregorianLabel}.");
+        Check(kislev.HebrewLabel == "Kislev, 13" && kislev.GregorianLabel == "23.11.2026", $"The labels of the cell: {kislev.HebrewLabel} / {kislev.GregorianLabel}.");
         var russian = DayDetailsBuilder.Cell(Day("2026-11-23"), Day("2026-11-01"), Day("2026-11-23"), false, "русский", null, text);
-        Check(russian.GregorianLabel == "23, ноября" && russian.HebrewLabel.EndsWith(", 13"), $"In Russian the civil month is in the genitive: {russian.GregorianLabel} / {russian.HebrewLabel}.");
-        Check(pesach.Tooltip.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries).Length == 4 && pesach.Tooltip.Contains("15 Nisan 5786") &&
-              pesach.Tooltip.Contains("Shevet HaLevi"), $"The tooltip: {pesach.Tooltip}.");
+        Check(russian.GregorianLabel == "23.11.2026" && russian.HebrewLabel.EndsWith(", 13"), $"In Russian the civil date has no month name either: {russian.GregorianLabel} / {russian.HebrewLabel}.");
+        // Its lines: the dates, the festival, the change to the summer prayers, the yahrzeit. The full moon of that day (02:11 UTC) is a
+        // line of the tooltip too on a computer whose clock puts it on 2 April: not counted.
+        Check(pesach.Tooltip.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries).Count(line => !line.StartsWith("Milui HaLevana")) == 5 && pesach.Tooltip.Contains("15 Nisan 5786") &&
+              pesach.Tooltip.Contains("To summer prayers: Morid HaTal (from Musaf)") && pesach.Tooltip.Contains("Shevet HaLevi"), $"The tooltip: {pesach.Tooltip}.");
         var shabbat = DayDetailsBuilder.Cell(Day("2026-04-04"), month, Day("2026-04-02"), false, "English", null, text);
         Check(shabbat.Marker == "Chol HaMoed Pesach, day 3 of 8" && shabbat.IsRest && !shabbat.IsToday, "A Shabbat of Chol HaMoed carries the festival, not a portion.");
         var portion = DayDetailsBuilder.Cell(Day("2026-04-18"), month, Day("2026-04-02"), false, "English", null, text);
@@ -141,6 +143,19 @@ internal static class CalendarWindowChecks
         Check(portion.Portion != null && portion.Events.All(day => day.Kind == DayKind.RoshChodesh) && shabbat.Portion == null && shabbat.Events.Count == 1 && shabbat.Events[0].Kind == DayKind.CholHamoed &&
               pesach.Events.Count == 1 && pesach.Events[0].Kind == DayKind.YomTov && pesach.Events[0].Name == pesach.Marker,
             $"The blocks of the cells: {portion.Portion} / {shabbat.Events.Count} / {pesach.Events.Count}.");
+        // A special Shabbat has its name as a block besides its portion (28 March 2026 is Shabbat HaGadol, 14 February Shekalim, with
+        // Rosh Chodesh after it on a day it falls on), in the languages with names, in the tooltip and in the details.
+        var hagadol = DayDetailsBuilder.Cell(Day("2026-03-28"), month, Day("2026-04-02"), false, "English", null, text);
+        var hagadolRussian = DayDetailsBuilder.Cell(Day("2026-03-28"), month, Day("2026-04-02"), false, "русский", null, text);
+        var hagadolHebrew = DayDetailsBuilder.Cell(Day("2026-03-28"), month, Day("2026-04-02"), false, "עברית", null, text);
+        var shekalim = DayDetailsBuilder.Cell(Day("2026-02-14"), Day("2026-02-01"), Day("2026-04-02"), false, "English", null, text);
+        Check(hagadol.Portion != null && hagadol.Events.Count == 1 && hagadol.Events[0].Name == "Shabbat HaGadol" && hagadol.Events[0].Kind == DayKind.Minor &&
+              hagadol.Tooltip.Contains("Shabbat HaGadol") && hagadolRussian.Events.Single().Name == "Шаббат а-Гадоль" && hagadolHebrew.Events.Single().Name == "שבת הגדול" &&
+              shekalim.Events.Single().Name == "Shabbat Shekalim" && DayDetailsBuilder.Describe(Day("2026-03-28"), null, "English", null, text).Events.Contains("Shabbat HaGadol") &&
+              DayDetailsBuilder.Cell(Day("2026-03-27"), month, Day("2026-04-02"), false, "English", null, text).Events.Count == 0,
+            $"A special Shabbat is a block of its cell, in its language: {string.Join("; ", hagadol.Events.Select(day => day.Name))}.");
+        var firstborn = DayDetailsBuilder.Cell(Day("2026-04-01"), month, Day("2026-04-02"), false, "English", null, text);
+        Check(firstborn.Events.Count == 1 && firstborn.Events[0].Name == "Fast of the Firstborn" && firstborn.Events[0].Kind == DayKind.Fast, "The eve of Pesach carries the fast of the firstborn.");
         // The names as they are usually written (a search engine does not correct them).
         var names = Yahrzeits.All.ToDictionary(person => person.Key);
         Check(names["mittler"].English == "Mitteler Rebbe" && names["mittler"].Russian == "Мителер Ребе" && names["chasam_sofer"].English == "Chatam Sofer" &&
@@ -261,7 +276,7 @@ internal static class CalendarWindowChecks
               !calendarCode.Contains("Line(details.Heading") && !calendarCode.Contains("Line(details.HebrewDate") && !calendarCode.Contains("Line(details.Portion"),
             "The month row holds the civil month, the portion and the Hebrew months; the details do not repeat the day's dates.");
         // The month row is over the whole width and holds the chosen day's Hebrew date; the place is behind a globe.
-        Check(calendarCode.Contains("MonthTitle.Text = chosen.ToString(\"d MMMM yyyy\"") && calendarCode.Contains("HebrewMonthTitle.Text = details.HebrewDate") &&
+        Check(calendarCode.Contains("MonthTitle.Text = DayDetailsBuilder.CivilDate(chosen)") && calendarCode.Contains("HebrewMonthTitle.Text = details.HebrewDate") &&
               calendarXaml.IndexOf("Grid.ColumnSpan=\"2\"", StringComparison.Ordinal) < civil &&
               calendarCode.Contains("TimesHeading(details.Place, details.Chanukah)") && calendarCode.Contains("\"\\uE774\"") && !calendarCode.Contains("Line(details.Place"),
             "The month row spans the window with the chosen day's civil and Hebrew dates, and the place of the times is in the globe's popup.");
@@ -398,6 +413,151 @@ internal static class CalendarWindowChecks
               calendarXaml.Contains("Visibility=\"{Binding SolarEclipse, Converter={StaticResource OmerVisibility}}\"") &&
               calendarCode.Contains("foreach (EclipseLine eclipse in details.Eclipses ?? Array.Empty<EclipseLine>())"),
             "The cells and the details show the eclipses with their signs.");
+        // The actual new and full moons (Meeus ch. 49) against published moments (UTC, to the minute): within two minutes.
+        foreach (var (when, full) in new[]
+        {
+            ("2000-01-06 18:14", false), ("2000-01-21 04:40", true), ("2017-08-21 18:30", false), ("2018-01-31 13:27", true),
+            ("2022-11-08 11:02", true), ("2024-04-08 18:21", false),
+        })
+        {
+            DateTime moment = DateTime.ParseExact(when, "yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
+            var near = MoonPhases.All.Where(phase => phase.Full == full).OrderBy(phase => Math.Abs((phase.Utc - moment).TotalSeconds)).First();
+            Check(Math.Abs((near.Utc - moment).TotalMinutes) <= 2, $"The {(full ? "full" : "new")} moon of {when} UTC: computed {near.Utc:yyyy-MM-dd HH:mm:ss}.");
+        }
+        var phasesOfCentury = MoonPhases.All.Where(phase => phase.Utc.Year >= 2001 && phase.Utc.Year <= 2100).ToList();
+        int newMoons = phasesOfCentury.Count(phase => !phase.Full), fullMoons = phasesOfCentury.Count(phase => phase.Full);
+        Check(newMoons >= 1236 && newMoons <= 1238 && fullMoons >= 1236 && fullMoons <= 1238 && MoonPhases.All.First().Utc.Year == 1900 && MoonPhases.All.Last().Utc.Year == 2300 &&
+              MoonPhases.All.Zip(MoonPhases.All.Skip(1)).All(pair => pair.First.Full != pair.Second.Full && (pair.Second.Utc - pair.First.Utc).TotalDays > 13.5 && (pair.Second.Utc - pair.First.Utc).TotalDays < 16.0),
+            $"A century has about 1237 new and 1237 full moons, alternating about a fortnight apart: {newMoons} and {fullMoons}.");
+        // An eclipse of the sun is at a new moon and one of the moon's at a full moon: within the hour, for all 1900-2300.
+        var apart = Eclipses.All.Select(eclipse => MoonPhases.All.Where(phase => phase.Full == !eclipse.Solar).Min(phase => Math.Abs((phase.Utc - eclipse.Utc).TotalHours))).Max();
+        Check(apart < 1.0, $"Every eclipse is within an hour of its new or full moon: the widest gap is {apart:0.00} hours.");
+        // The cell and the times of the day: 8 November 2022 was a full moon at 11:02 UTC (13:02 in Jerusalem, between the
+        // earliest and the latest time for the afternoon prayer); 8 April 2024 a new moon at 18:21 UTC (21:21 in Jerusalem, after nightfall).
+        var fullMoonDay = DayDetailsBuilder.Cell(Day("2022-11-08"), Day("2022-11-01"), Day("2022-11-08"), false, "English", new List<string>(), Text, Jerusalem);
+        var newMoonDay = DayDetailsBuilder.Cell(Day("2024-04-08"), Day("2024-04-01"), Day("2024-04-08"), false, "English", new List<string>(), Text, Jerusalem);
+        var plainDay = DayDetailsBuilder.Cell(Day("2022-11-09"), Day("2022-11-01"), Day("2022-11-08"), false, "English", new List<string>(), Text, Jerusalem);
+        Check(fullMoonDay.FullMoon && !fullMoonDay.NewMoon && fullMoonDay.Tooltip.Contains("Milui HaLevana (full moon) — ") && newMoonDay.NewMoon && !newMoonDay.FullMoon &&
+              newMoonDay.Tooltip.Contains("Molad Emet (new moon) — ") && !plainDay.NewMoon && !plainDay.FullMoon,
+            $"A day of a new or full moon is marked in its cell and tooltip: {fullMoonDay.Tooltip.Replace(Environment.NewLine, " / ")}.");
+        var fullTimes = DayDetailsBuilder.Describe(Day("2022-11-08"), Jerusalem, "English", null, Text).Times;
+        int fullAt = fullTimes.ToList().FindIndex(time => time.Moon == 2);
+        Check(fullAt > 0 && fullTimes[fullAt].Name == "Milui HaLevana (full moon)" && fullTimes[fullAt - 1].Name == Zmanim.NameOf(Zman.MinchaGedola, "English") &&
+              fullTimes[fullAt + 1].Name == Zmanim.NameOf(Zman.MinchaKetana, "English") && fullTimes.Count(time => time.Moon != 0) == 1,
+            $"The full moon stands among the times of the day where it falls: {string.Join(" | ", fullTimes.Select(time => time.Name + " " + time.Time))}.");
+        var newTimes = DayDetailsBuilder.Describe(Day("2024-04-08"), Jerusalem, "English", null, Text).Times;
+        int newAt = newTimes.ToList().FindIndex(time => time.Moon == 1);
+        Check(newAt > 0 && newTimes[newAt].Name == "Molad Emet (new moon)" && newTimes[newAt + 1].Name == Zmanim.NameOf(Zman.ChatzotHaLayla, "English") &&
+              newTimes.ToList().FindIndex(time => time.Name == Zmanim.NameOf(Zman.Tzeit, "English")) < newAt &&
+              !DayDetailsBuilder.Describe(Day("2022-11-09"), Jerusalem, "English", null, Text).Times.Any(time => time.Moon != 0),
+            $"The new moon of the evening comes after nightfall and before midnight: {string.Join(" | ", newTimes.Select(time => time.Name + " " + time.Time))}.");
+        Check(icons.Contains("x:Key=\"NewMoonIcon\"") && icons.Contains("x:Key=\"FullMoonIcon\"") &&
+              calendarXaml.Contains("Visibility=\"{Binding NewMoon, Converter={StaticResource OmerVisibility}}\"") &&
+              calendarXaml.Contains("Visibility=\"{Binding FullMoon, Converter={StaticResource OmerVisibility}}\"") &&
+              calendarCode.Contains("time.Moon == 2 ? \"FullMoonIcon\" : \"NewMoonIcon\""),
+            "The cells and the times of the day show the new and full moon with their signs.");
+        // The signs of the eclipses and of the new and full moon are in the bottom row, at the right of the civil date; the top
+        // row (the candle, the Omer, Hanukkah) and the Hebrew month at its right have none, so they never run into each other.
+        int bottomRow = calendarXaml.IndexOf("<DockPanel Grid.Row=\"2\">", StringComparison.Ordinal), bottomEnd = calendarXaml.IndexOf("</DockPanel>", bottomRow, StringComparison.Ordinal);
+        int topRow = calendarXaml.IndexOf("x:Name=\"YahrzeitCandle\"", StringComparison.Ordinal), topEnd = calendarXaml.IndexOf("Text=\"{Binding HebrewLabel}\"", topRow, StringComparison.Ordinal);
+        string bottomXaml = calendarXaml.Substring(bottomRow, bottomEnd - bottomRow), topXaml = calendarXaml.Substring(topRow, topEnd - topRow);
+        string[] phaseIcons = { "SolarEclipseIcon", "LunarEclipseIcon", "NewMoonIcon", "FullMoonIcon" };
+        Check(bottomRow > 0 && phaseIcons.All(icon => bottomXaml.Contains("{DynamicResource " + icon + "}") && !topXaml.Contains(icon)) &&
+              bottomXaml.IndexOf("DockPanel.Dock=\"Right\"", StringComparison.Ordinal) < bottomXaml.IndexOf("Text=\"{Binding GregorianLabel}\"", StringComparison.Ordinal),
+            "The eclipse and moon signs stand at the bottom right of a cell, beside the civil date, not in the top row.");
+        // The Hebrew names of the new and full moon: in the language files in Hebrew (and Cyrillic) letters too.
+        var russianStrings = Strings(Path.Combine(root.FullName, "UltraWinBar", "Assets", "Languages", "Group06", "русский.xaml"));
+        var hebrewStrings = Strings(Path.Combine(root.FullName, "UltraWinBar", "Assets", "Languages", "Group06", "עברית.xaml"));
+        Check(Text("calendar_moon_new") == "Molad Emet (new moon)" && Text("calendar_moon_full") == "Milui HaLevana (full moon)" &&
+              russianStrings["calendar_moon_new"] == "Молад эмет (новолуние)" && russianStrings["calendar_moon_full"] == "Милуй ха-левана (полнолуние)" &&
+              hebrewStrings["calendar_moon_new"] == "מולד אמיתי" && hebrewStrings["calendar_moon_full"] == "מילוי הלבנה",
+            "The new moon is the true molad and the full moon the milui halevana, in the languages' own letters.");
+        // The changes between the summer and the winter prayers. Shemini Atzeret 5787 is 3 October 2026, Pesach 2 April 2026 (a Thursday).
+        bool Changes(string date, bool israel, params PrayerChange[] expected) => JewishCalendar.PrayerChangesOn(Day(date), israel).SequenceEqual(expected);
+        Check(Changes("2026-10-03", false, PrayerChange.MashivHaruach) && Changes("2026-10-03", true, PrayerChange.MashivHaruach) &&
+              Changes("2026-10-02", false) && Changes("2026-10-04", false) && Changes("2026-04-01", false) && Changes("2026-04-01", true) &&
+              Changes("2026-04-02", false, PrayerChange.MoridHatal),
+            "Mashiv HaRuach from Shemini Atzeret, Morid HaTal from Pesach; nothing on the eve of Pesach (its Mincha still asks for rain).");
+        // V'ten Bracha: from the first weekday Ma'ariv after the first day of Pesach: in Israel that of 15 Nisan's evening (told on the
+        // 15th, with Morid HaTal), elsewhere that of the 16th's, and when the 16th is a Friday the Shabbat has no blessing of the years,
+        // so Motzei Shabbat (2026: Friday 3 April, so Saturday 4 April; 2025: Pesach on Sunday 13 April, so Monday 14 April).
+        Check(Changes("2026-04-02", true, PrayerChange.MoridHatal, PrayerChange.VetenBracha) && Changes("2026-04-03", true) && Changes("2026-04-04", true) &&
+              Changes("2026-04-03", false) && Changes("2026-04-04", false, PrayerChange.VetenBracha) && Changes("2026-04-05", false) &&
+              Changes("2025-04-13", true, PrayerChange.MoridHatal, PrayerChange.VetenBracha) && Changes("2025-04-14", false, PrayerChange.VetenBracha) &&
+              Changes("2025-04-13", false, PrayerChange.MoridHatal) && Changes("2025-04-14", true),
+            "V'ten Bracha begins at the Ma'ariv that ends the first day of Pesach in Israel and the second elsewhere, not on a Friday evening.");
+        // V'ten Tal U'Matar: in Israel from the evening that begins 7 Cheshvan (7 Cheshvan 5787 is 18 October 2026).
+        Check(Changes("2026-10-17", true, PrayerChange.VetenTal) && Changes("2026-10-18", true) && Changes("2026-10-17", false),
+            "In Israel V'ten Tal U'Matar begins on the evening before 7 Cheshvan, not elsewhere.");
+        // Outside Israel: the evening of 4 December, of 5 December in the year before a leap year (2023 and 2027), a day later after 2100;
+        // 4 December 2026 is a Friday, so the first weekday Ma'ariv is Saturday's.
+        var vetenTal = new[] { 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2099, 2100, 2103 }.Select(year => JewishCalendar.VetenTalInDiaspora(year).ToString("MM-dd")).ToArray();
+        Check(vetenTal.SequenceEqual(new[] { "12-04", "12-05", "12-04", "12-04", "12-04", "12-05", "12-04", "12-05", "12-05", "12-06" }) &&
+              Changes("2025-12-04", false, PrayerChange.VetenTal) && Changes("2025-12-04", true) && Changes("2026-12-04", false) && Changes("2026-12-05", false, PrayerChange.VetenTal) &&
+              Changes("2026-12-05", true) && Changes("2027-12-05", false, PrayerChange.VetenTal) && Changes("2027-12-04", false),
+            $"Outside Israel V'ten Tal U'Matar begins on the evening of 4 December, of the 5th before a leap year, later when it is a Friday: {string.Join(" ", vetenTal)}.");
+        var morid = DayDetailsBuilder.Cell(Day("2026-04-02"), Day("2026-04-01"), Day("2026-04-02"), false, "English", new List<string>(), Text, Jerusalem);
+        var moridIsrael = DayDetailsBuilder.Cell(Day("2026-04-02"), Day("2026-04-01"), Day("2026-04-02"), true, "English", new List<string>(), Text, Jerusalem);
+        var mashiv = DayDetailsBuilder.Cell(Day("2026-10-03"), Day("2026-10-01"), Day("2026-10-03"), false, "English", new List<string>(), Text, Jerusalem);
+        var winterDetails = DayDetailsBuilder.Describe(Day("2026-12-05"), London, "English", null, Text).Prayer;
+        var summerDetails = DayDetailsBuilder.Describe(Day("2026-04-04"), London, "English", null, Text).Prayer;
+        var moridDetails = DayDetailsBuilder.Describe(Day("2026-04-02"), London, "English", null, Text).Prayer;
+        var moridIsraelDetails = DayDetailsBuilder.Describe(Day("2026-04-02"), Jerusalem, "English", null, Text).Prayer;
+        Check(morid.Prayer == "Morid HaTal" && !morid.PrayerWinter && morid.HasPrayer && moridIsrael.Prayer == "Morid HaTal · V'ten Bracha" && !moridIsrael.PrayerWinter &&
+              mashiv.Prayer == "Mashiv HaRuach UMorid HaGeshem" && mashiv.PrayerWinter &&
+              !DayDetailsBuilder.Cell(Day("2026-04-03"), Day("2026-04-01"), Day("2026-04-02"), false, "English", new List<string>(), Text, Jerusalem).HasPrayer &&
+              winterDetails != null && winterDetails.Winter && winterDetails.Text == "To winter prayers: V'ten Tal U'Matar (from Ma'ariv tonight)" &&
+              summerDetails != null && !summerDetails.Winter && summerDetails.Text == "To summer prayers: V'ten Bracha (from Ma'ariv tonight)" &&
+              moridDetails != null && moridDetails.Text == "To summer prayers: Morid HaTal (from Musaf) — in the Ashkenazi rite outside Israel nothing is said" &&
+              moridIsraelDetails != null && moridIsraelDetails.Text == "To summer prayers: Morid HaTal (from Musaf)" + Environment.NewLine + "To summer prayers: V'ten Bracha (from Ma'ariv tonight)" &&
+              DayDetailsBuilder.Describe(Day("2026-12-04"), London, "English", null, Text).Prayer == null,
+            $"A day of a change of prayers names it in its cell and its details: {winterDetails?.Text} / {summerDetails?.Text} / {moridDetails?.Text} / {moridIsraelDetails?.Text}.");
+        Check(calendarXaml.Contains("x:Name=\"PrayerChip\"") && calendarXaml.Contains("Visibility=\"{Binding HasPrayer, Converter={StaticResource OmerVisibility}}\"") &&
+              calendarXaml.Contains("<DataTrigger Binding=\"{Binding PrayerWinter}\" Value=\"False\">") && calendarCode.Contains("details.Prayer.Winter ?") &&
+              calendarCode.Contains("if (day.Events.Count > 0 || details.Rest != null || details.Prayer != null)"),
+            "A change of prayers is a block of its own in the cell and in the day's card: blue for the winter, orange for the summer.");
+        // Candles: 40 minutes before sunset in Jerusalem and its neighbourhood (Bethlehem is 8 km away), 18 elsewhere (Tel Aviv, London).
+        TimeSpan CandleBeforeSunset(HebrewPlace place)
+        {
+            var times = DayDetailsBuilder.Describe(Day("2026-11-20"), place, "English", null, Text).Times;
+            var us = System.Globalization.CultureInfo.GetCultureInfo("en-US");
+            return DateTime.Parse(times.First(line => line.Name == "Sunset (Shkiah)").Time, us) - DateTime.Parse(times.First(line => line.Rest).Time, us);
+        }
+        Check(Zmanim.CandleLightingMinutesAt(31.778, 35.235) == 40 && Zmanim.CandleLightingMinutesAt(31.7054, 35.2024) == 40 &&
+              Zmanim.CandleLightingMinutesAt(32.0853, 34.7818) == 18 && Zmanim.CandleLightingMinutesAt(51.5074, -0.1278) == 18 &&
+              Math.Abs(CandleBeforeSunset(Jerusalem).TotalMinutes - 40) <= 1 && Math.Abs(CandleBeforeSunset(London).TotalMinutes - 18) <= 1,
+            "Candles are lit 40 minutes before sunset in Jerusalem and nearby, 18 minutes elsewhere, in the day's times too.");
+        // The present moment among the times of today (by the place's clocks): Friday 20 November 2026 in Jerusalem, UTC+2.
+        var fridayTimes = DayDetailsBuilder.Describe(Day("2026-11-20"), Jerusalem, "English", null, Text).Times;
+        var usCulture = System.Globalization.CultureInfo.GetCultureInfo("en-US");
+        IReadOnlyList<TimeLine> At(int hour, int minute) => DayDetailsBuilder.WithNow(fridayTimes, Day("2026-11-20"), Jerusalem, new DateTime(2026, 11, 20, hour, minute, 0, DateTimeKind.Utc), "Now", usCulture);
+        var noon = At(10, 0);
+        int nowAt = noon.ToList().FindIndex(line => line.Now);
+        var night = At(1, 0);
+        var late = At(21, 50);
+        Check(noon.Count == fridayTimes.Count + 1 && noon.Count(line => line.Now) == 1 && noon[nowAt].Name == "Now" && noon[nowAt].Time == "12:00 PM" &&
+              noon.Take(nowAt).All(line => !line.At.HasValue || line.At.Value <= new DateTime(2026, 11, 20, 12, 0, 0)) &&
+              noon.Skip(nowAt + 1).First(line => line.At.HasValue).At.Value > new DateTime(2026, 11, 20, 12, 0, 0) &&
+              night.First().Now && night.First().Time == "3:00 AM" && late.Last().Now && late.Last().Time == "11:50 PM" &&
+              !fridayTimes.Any(line => line.Now) && fridayTimes.All(line => line.At.HasValue),
+            $"Today's times have the line of the present moment in its place: {string.Join(" | ", noon.Select(line => line.Time + " " + line.Name))}.");
+        // Not on another day or without a place; the next minute moves the line.
+        Check(ReferenceEquals(DayDetailsBuilder.WithNow(fridayTimes, Day("2026-11-21"), Jerusalem, new DateTime(2026, 11, 20, 10, 0, 0, DateTimeKind.Utc), "Now", usCulture), fridayTimes) &&
+              ReferenceEquals(DayDetailsBuilder.WithNow(fridayTimes, Day("2026-11-20"), null, new DateTime(2026, 11, 20, 10, 0, 0, DateTimeKind.Utc), "Now", usCulture), fridayTimes) &&
+              At(10, 1).Single(line => line.Now).Time == "12:01 PM" &&
+              DayDetailsBuilder.WithNow(fridayTimes, Day("2026-11-21"), Jerusalem, new DateTime(2026, 11, 20, 22, 30, 0, DateTimeKind.Utc), "Now", usCulture).Count == fridayTimes.Count + 1,
+            "The line of the present moment is only on today by the place's clock (22:30 UTC is already the next day in Jerusalem), and moves with the minute.");
+        Check(calendarCode.Contains("DayDetailsBuilder.WithNow(timesShown.Times, chosen, timesPlace, DateTime.UtcNow, Text(\"calendar_now\")") && calendarCode.Contains("private FrameworkElement NowLine(") &&
+              calendarCode.Contains("minuteTimer.Interval = TimeSpan.FromMilliseconds(60000 - DateTime.UtcNow.TimeOfDay.TotalMilliseconds % 60000 + 100)") &&
+              calendarCode.Contains("Closed += (_, _) => minuteTimer.Stop();") && calendarCode.Contains("StartMinuteTimer();"),
+            "The window moves the present moment's line when the minute turns, while it is in sight.");
+        // The civil date is dd.mm.yyyy, with no name of a month, in every language.
+        var civilCells = new[] { "English", "русский", "עברית", "العربية", "日本語" }
+            .Select(language => DayDetailsBuilder.Cell(Day("2026-03-05"), Day("2026-03-01"), Day("2026-03-02"), false, language, null, Text)).ToArray();
+        Check(DayDetailsBuilder.CivilDate(Day("2026-03-05")) == "05.03.2026" && civilCells.All(cell => cell.GregorianLabel == "05.03.2026" && cell.Tooltip.StartsWith("05.03.2026" + Environment.NewLine)) &&
+              DayDetailsBuilder.Describe(Day("2026-03-05"), null, "русский", null, Text).Heading == "05.03.2026" &&
+              calendarCode.Contains("MonthTitle.Text = DayDetailsBuilder.CivilDate(chosen)"),
+            $"The civil date is written dd.mm.yyyy in the cell, its tooltip, the details and over the calendar: {string.Join(" ", civilCells.Select(cell => cell.GregorianLabel))}.");
         // The days of the week over the grid: 1 (Sunday) to 6 (Friday) and Shabbat, no day names of a language.
         Check(CalendarWindow.WeekdayHeaders("Shabbat").SequenceEqual(new[] { "1", "2", "3", "4", "5", "6", "Shabbat" }) &&
               calendarCode.Contains("WeekdayHeaders(Text(\"calendar_shabbat\"))") && !calendarCode.Contains("AbbreviatedDayNames"),
@@ -464,7 +624,9 @@ internal static class CalendarWindowChecks
             "The Hebrew date of the clock shows the hand cursor: it is a link to the calendar.");
         foreach (string key in new[] { "calendar_day_of", "calendar_portion", "calendar_festival_reading", "calendar_molad", "calendar_place", "calendar_candles_after_dark", "calendar_havdalah", "calendar_rest_span", "calendar_weekday", "calendar_chanukah_candles",
             "calendar_likui_chama", "calendar_likui_levana", "calendar_eclipse_solar", "calendar_eclipse_lunar", "calendar_eclipse_total", "calendar_eclipse_annular",
-            "calendar_eclipse_hybrid", "calendar_eclipse_partial", "calendar_eclipse_penumbral", "calendar_eclipse_at", "calendar_eclipse_visible", "calendar_eclipse_hidden" }) used.Add(key);
+            "calendar_eclipse_hybrid", "calendar_eclipse_partial", "calendar_eclipse_penumbral", "calendar_eclipse_at", "calendar_eclipse_visible", "calendar_eclipse_hidden",
+            "calendar_moon_new", "calendar_moon_full", "calendar_prayer_mashiv", "calendar_prayer_veten_tal", "calendar_prayer_veten_bracha", "calendar_prayer_morid_hatal",
+            "calendar_prayer_to_winter", "calendar_prayer_to_summer", "calendar_prayer_from_musaf", "calendar_prayer_from_maariv", "calendar_prayer_ashkenaz_none" }) used.Add(key);
         var missing = used.Where(key => !english.ContainsKey(key)).ToArray();
         Check(missing.Length == 0, $"English lacks strings the calendar uses: {string.Join(", ", missing)}.");
         string languages = Path.Combine(root.FullName, "UltraWinBar", "Assets", "Languages");

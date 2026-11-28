@@ -251,6 +251,7 @@
     <s:String x:Key="calendar_israel">Γη του Ισραήλ</s:String>
     <s:String x:Key="calendar_diaspora">Διασπορά</s:String>
     <s:String x:Key="calendar_no_place">Επιλέξτε τοποθεσία στις ρυθμίσεις του ημερολογίου για να δείτε τις ώρες της ημέρας.</s:String>
+    <s:String x:Key="calendar_now">Τώρα</s:String>
     <s:String x:Key="calendar_times">Ώρες της ημέρας</s:String>
     <s:String x:Key="calendar_yahrzeits">Γιαρτσάιτ</s:String>
     <s:String x:Key="calendar_candles_after_dark">Άναμμα κεριών (μετά το βράδυ)</s:String>
@@ -268,6 +269,17 @@
     <s:String x:Key="calendar_eclipse_at">μέγιστο στις {0}</s:String>
     <s:String x:Key="calendar_eclipse_visible">ορατή εδώ</s:String>
     <s:String x:Key="calendar_eclipse_hidden">μη ορατή εδώ</s:String>
+    <s:String x:Key="calendar_moon_new">Μολάντ Έμετ (νέα σελήνη)</s:String>
+    <s:String x:Key="calendar_moon_full">Μιλούι Χαλεβανά (πανσέληνος)</s:String>
+    <s:String x:Key="calendar_prayer_mashiv">Μασίβ Χαρουάχ Ουμορίντ Χαγκέσεμ</s:String>
+    <s:String x:Key="calendar_prayer_veten_tal">Βετέν Ταλ Ουματάρ</s:String>
+    <s:String x:Key="calendar_prayer_veten_bracha">Βετέν Μπρακά</s:String>
+    <s:String x:Key="calendar_prayer_morid_hatal">Μορίντ Χατάλ</s:String>
+    <s:String x:Key="calendar_prayer_to_winter">Στις χειμερινές προσευχές: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_to_summer">Στις θερινές προσευχές: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_from_musaf">από το Μουσάφ</s:String>
+    <s:String x:Key="calendar_prayer_from_maariv">από το αποψινό Μααρίβ</s:String>
+    <s:String x:Key="calendar_prayer_ashkenaz_none">στο ασκεναζικό τυπικό εκτός Ισραήλ δεν λέγεται τίποτα</s:String>
     <s:String x:Key="calendar_rest_span">{0} (άναμμα κεριών) – {1} (νύχτα)</s:String>
     <s:String x:Key="calendar_weekday">Ημέρα {0}</s:String>
     <s:String x:Key="calendar_settings_title">Ρυθμίσεις ημερολογίου</s:String>

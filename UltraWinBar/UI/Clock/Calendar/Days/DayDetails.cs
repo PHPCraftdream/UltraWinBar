@@ -5,17 +5,21 @@ using System.Linq;
 
 namespace UltraWinBar.Utilities
 {
-    /// <summary>A line of the times of a day: what it is and when ("Sunrise (Netz)", "06:02").</summary>
     /// <summary>
-    /// A time of the day; Rest marks the lighting of the candles or the havdalah of a day of rest, Chanukah the lighting of
-    /// the candles of Hanukkah.
+    /// A line of the times of a day: what it is and when ("Sunrise (Netz)", "06:02"). Rest marks the lighting of the candles or
+    /// the havdalah of a day of rest, Chanukah the lighting of the candles of Hanukkah, Moon the moment of an actual new moon (1)
+    /// or full moon (2), Now the present moment (see <see cref="DayDetailsBuilder.WithNow"/>); At is the moment by the place's
+    /// clocks, null when there is none (the sun does not reach the angle).
     /// </summary>
-    public sealed record TimeLine(string Name, string Time, bool Rest = false, bool Chanukah = false);
+    public sealed record TimeLine(string Name, string Time, bool Rest = false, bool Chanukah = false, int Moon = 0, bool Now = false, DateTime? At = null);
 
     /// <summary>What the calendar says about a day, ready to show: every text is in the language of the settings.</summary>
     public sealed record DayDetails(string Heading, string HebrewDate, string Portion, IReadOnlyList<string> Events,
         IReadOnlyList<string> Yahrzeits, string Molad, string Place, IReadOnlyList<TimeLine> Times, string Rest, int Chanukah = 0,
-        IReadOnlyList<EclipseLine> Eclipses = null);
+        IReadOnlyList<EclipseLine> Eclipses = null, PrayerLine Prayer = null);
+
+    /// <summary>A change between the summer and the winter prayers, in a sentence, and whether it is to the winter ones.</summary>
+    public sealed record PrayerLine(string Text, bool Winter);
 
     /// <summary>An eclipse of the day: its Hebrew name, what it is, and when it is greatest (and whether the place sees it).</summary>
     public sealed record EclipseLine(bool Solar, string Name, string Text);
@@ -24,8 +28,10 @@ namespace UltraWinBar.Utilities
     public sealed record DayCell(DateTime Date, string GregorianNumber, string HebrewNumber, string Marker, bool OutsideMonth,
         bool IsToday, bool IsRest, bool HasYahrzeit, string Tooltip, string HebrewLabel = "", string GregorianLabel = "",
         string Portion = null, IReadOnlyList<CellEvent> Events = null, bool EveningEnds = false, bool EveningBegins = false,
-        int Omer = 0, string OmerText = null, int Chanukah = 0, bool SolarEclipse = false, bool LunarEclipse = false)
+        int Omer = 0, string OmerText = null, int Chanukah = 0, bool SolarEclipse = false, bool LunarEclipse = false,
+        bool NewMoon = false, bool FullMoon = false, string Prayer = null, bool PrayerWinter = false)
     {
+        public bool HasPrayer => Prayer != null;
         public bool HasOmer => Omer > 0;
         public bool HasChanukah => Chanukah > 0;
     }
@@ -59,6 +65,9 @@ namespace UltraWinBar.Utilities
         public static string OmerLine(int day, string language, Func<string, string> text) =>
             day > 0 ? string.Format(text("calendar_omer_day"), day) + " — " + JewishCalendar.OmerSefira(day, language) : null;
 
+        /// <summary>A civil date as dd.mm.yyyy, with no name of a month, the same in every language ("23.11.2026").</summary>
+        public static string CivilDate(DateTime date) => date.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture);
+
         public static CultureInfo CultureOf(string language)
         {
             try
@@ -82,9 +91,46 @@ namespace UltraWinBar.Utilities
             string.Format(text(eclipse.Solar ? "calendar_eclipse_solar" : "calendar_eclipse_lunar"),
                 text("calendar_eclipse_" + eclipse.Kind.ToString().ToLowerInvariant()));
 
-        // The eclipses of a date by the clocks of the place (the computer's without one).
-        private static IReadOnlyList<Eclipse> EclipsesOn(DateTime date, HebrewPlace place) =>
-            Eclipses.On(date, utc => place != null ? OnClock(utc, place).Value : TimeZoneInfo.ConvertTimeFromUtc(utc, TimeZoneInfo.Local));
+        // A moment as the clocks of the place show it (the computer's without a place).
+        private static DateTime LocalOf(DateTime utc, HebrewPlace place) =>
+            place != null ? OnClock(utc, place).Value : TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), TimeZoneInfo.Local);
+
+        // The eclipses and the actual new and full moons of a date by the clocks of the place.
+        private static IReadOnlyList<Eclipse> EclipsesOn(DateTime date, HebrewPlace place) => Eclipses.On(date, utc => LocalOf(utc, place));
+
+        private static IReadOnlyList<LunarPhase> PhasesOn(DateTime date, HebrewPlace place) => MoonPhases.On(date, utc => LocalOf(utc, place));
+
+        // The changes of the prayers of the date: their names, the sentences about them ("To summer prayers: Morid HaTal (from
+        // Musaf)", a line each) and the season; the changes of one day are of one season (Pesach in Israel: Morid HaTal and V'ten Bracha).
+        private static (string Name, string Sentence, bool Winter)? PrayerOf(DateTime date, bool israel, Func<string, string> text)
+        {
+            var changes = JewishCalendar.PrayerChangesOn(date, israel);
+            if (changes.Count == 0) return null;
+            var names = new List<string>();
+            var sentences = new List<string>();
+            bool winter = false;
+            foreach (PrayerChange change in changes)
+            {
+                string key, when;
+                (key, when, winter) = change switch
+                {
+                    PrayerChange.MashivHaruach => ("calendar_prayer_mashiv", "calendar_prayer_from_musaf", true),
+                    PrayerChange.VetenTal => ("calendar_prayer_veten_tal", "calendar_prayer_from_maariv", true),
+                    PrayerChange.VetenBracha => ("calendar_prayer_veten_bracha", "calendar_prayer_from_maariv", false),
+                    _ => ("calendar_prayer_morid_hatal", "calendar_prayer_from_musaf", false),
+                };
+                string name = text(key);
+                string sentence = string.Format(text(winter ? "calendar_prayer_to_winter" : "calendar_prayer_to_summer"), name, text(when));
+                // Outside Israel the Ashkenazi rite does not say Morid HaTal (the Sephardi one does).
+                if (change == PrayerChange.MoridHatal && !israel) sentence += " — " + text("calendar_prayer_ashkenaz_none");
+                names.Add(name);
+                sentences.Add(sentence);
+            }
+            return (string.Join(" · ", names), string.Join(Environment.NewLine, sentences), winter);
+        }
+
+        // A phase as "New moon (astronomical)" and the time of it.
+        private static string PhaseName(LunarPhase phase, Func<string, string> text) => text(phase.Full ? "calendar_moon_full" : "calendar_moon_new");
 
         public static DayCell Cell(DateTime date, DateTime month, DateTime today, bool israel, string language, ICollection<string> hidden,
             Func<string, string> text, HebrewPlace place = null)
@@ -95,26 +141,36 @@ namespace UltraWinBar.Utilities
             string marker = events.Count > 0 ? EventName(events.OrderBy(day => day.Kind == DayKind.RoshChodesh ? 1 : 0).First(), language, text)
                 : reading != null ? reading.Name(language) : "";
             var lines = events.Select(day => EventName(day, language, text)).ToList();
+            // A Shabbat with a name of its own (HaGadol, Zachor...): after the portion, before the festivals.
+            string specialKey = JewishCalendar.SpecialShabbat(date, israel);
+            string special = specialKey == null ? null : JewishCalendar.SpecialShabbatName(specialKey, language);
+            if (special != null) lines.Insert(0, special);
             if (reading != null) lines.Insert(0, string.Format(text("calendar_portion"), reading.Name(language)));
             lines.AddRange(people.Select(person => person.Name(language)));
             var eclipses = EclipsesOn(date, place);
             lines.AddRange(eclipses.Select(eclipse => EclipseName(eclipse, text)));
+            var prayer = PrayerOf(date, israel, text);
+            if (prayer != null) lines.Add(prayer.Value.Sentence);
+            var phases = PhasesOn(date, place);
+            lines.AddRange(phases.Select(phase => PhaseName(phase, text) + " — " + LocalOf(phase.Utc, place).ToString("t", CultureOf(language))));
             string hebrew = HebrewClockFormatter.FormatDate(date, language);
-            string tooltip = string.Join(Environment.NewLine, new[] { date.ToString("d MMMM yyyy", CultureOf(language)), hebrew }.Concat(lines));
+            string tooltip = string.Join(Environment.NewLine, new[] { CivilDate(date), hebrew }.Concat(lines));
             int omer = JewishCalendar.OmerDay(date);
             string number = hebrew.Length >= 2 ? hebrew.Substring(0, 2) : "";
-            // The cell shows the Hebrew date at its top right ("Kislev, 13") and the civil date at its bottom left ("23, November").
-            CultureInfo culture = CultureOf(language);
-            string civilMonth = culture.DateTimeFormat.MonthGenitiveNames[date.Month - 1];
-            string civil = date.Day.ToString(CultureInfo.InvariantCulture) + ", " + (string.IsNullOrEmpty(civilMonth) ? culture.DateTimeFormat.GetMonthName(date.Month) : civilMonth);
+            var blocks = events.OrderBy(day => day.Kind == DayKind.RoshChodesh ? 1 : 0).Select(day => new CellEvent(EventName(day, language, text), day.Kind)).ToList();
+            if (special != null) blocks.Insert(0, new CellEvent(special, DayKind.Minor));
+            // The cell shows the Hebrew date at its top right ("Kislev, 13") and the civil date at its bottom left ("23.11.2026").
+            string civil = CivilDate(date);
             return new DayCell(date.Date, date.Day.ToString(CultureInfo.InvariantCulture), number, marker,
                 date.Month != month.Month, date.Date == today.Date, Zmanim.IsRestDay(date, israel), people.Count > 0, tooltip,
                 HebrewClockFormatter.FormatMonthDay(date, language), civil,
                 // The portion of a Shabbat, unless a festival's day is read instead; the days, festivals first.
                 reading != null && !events.Any(day => day.Kind == DayKind.YomTov || day.Kind == DayKind.CholHamoed) ? reading.Name(language) : null,
-                events.OrderBy(day => day.Kind == DayKind.RoshChodesh ? 1 : 0).Select(day => new CellEvent(EventName(day, language, text), day.Kind)).ToList(),
+                blocks,
                 Omer: omer, OmerText: OmerLine(omer, language, text), Chanukah: ChanukahTonight(date),
-                SolarEclipse: eclipses.Any(eclipse => eclipse.Solar), LunarEclipse: eclipses.Any(eclipse => !eclipse.Solar));
+                SolarEclipse: eclipses.Any(eclipse => eclipse.Solar), LunarEclipse: eclipses.Any(eclipse => !eclipse.Solar),
+                NewMoon: phases.Any(phase => !phase.Full), FullMoon: phases.Any(phase => phase.Full),
+                Prayer: prayer?.Name, PrayerWinter: prayer?.Winter ?? false);
         }
 
         // The time as the clocks of the place show it: in its zone, or the computer's when none was chosen.
@@ -125,6 +181,22 @@ namespace UltraWinBar.Utilities
         }
 
         private static string Short(DateTime? moment, CultureInfo culture) => moment.HasValue ? moment.Value.ToString("t", culture) : "—";
+
+        /// <summary>
+        /// The times of a day with the line of the present moment put where it falls among them, when the day is today by the
+        /// clocks of the place; the times as they are for another day or no place. The line is named <paramref name="name"/>
+        /// and shows the time to the minute.
+        /// </summary>
+        public static IReadOnlyList<TimeLine> WithNow(IReadOnlyList<TimeLine> times, DateTime date, HebrewPlace place, DateTime utcNow, string name, CultureInfo culture)
+        {
+            if (place == null) return times;
+            DateTime now = LocalOf(utcNow, place);
+            if (now.Date != date.Date) return times;
+            var result = times.ToList();
+            int index = result.FindIndex(line => line.At.HasValue && line.At.Value > now);
+            result.Insert(index < 0 ? result.Count : index, new TimeLine(name, now.ToString("t", culture), Now: true, At: now));
+            return result;
+        }
 
         /// <summary>The day of the week by its number, "Day 4", and the Shabbat by its name: no names of the nations' days.</summary>
         public static string WeekdayOf(DateTime date, Func<string, string> text) => date.DayOfWeek == DayOfWeek.Saturday
@@ -138,7 +210,9 @@ namespace UltraWinBar.Utilities
             date = date.Date;
             bool israel = IsLandOfIsrael(place);
             CultureInfo culture = CultureOf(language);
-            var events = JewishCalendar.Days(date, israel).Select(day => EventName(day, language, text)).ToArray();
+            var events = JewishCalendar.Days(date, israel).Select(day => EventName(day, language, text)).ToList();
+            string specialKey = JewishCalendar.SpecialShabbat(date, israel);
+            if (specialKey != null) events.Insert(0, JewishCalendar.SpecialShabbatName(specialKey, language));
 
             // The portion of the Shabbat of the week; on the Shabbat itself it may be a festival's reading instead.
             DateTime shabbat = date;
@@ -160,34 +234,52 @@ namespace UltraWinBar.Utilities
                 string zone = string.IsNullOrEmpty(place.TimeZoneId) ? null : ZoneClock.Describe(place.TimeZoneId, DateTime.UtcNow);
                 // The festivals, Rosh Chodesh and portions go by the Land of Israel or the diaspora, by the place's country.
                 placeText = string.Format(text("calendar_place"), (zone == null ? place.Display : place.Display + " · " + zone) + " · " + text(israel ? "calendar_israel" : "calendar_diaspora"));
-                var day = Zmanim.Of(date, place.Latitude, place.Longitude);
+                int candleMinutes = Zmanim.CandleLightingMinutesAt(place.Latitude, place.Longitude);
+                var day = Zmanim.Of(date, place.Latitude, place.Longitude, candleMinutes);
+                // The moments of the lines, to put the new or full moon among them where it falls.
+                var moments = new List<DateTime?>();
+                void Add(TimeLine line, DateTime? moment)
+                {
+                    times.Add(line with { At = moment });
+                    moments.Add(moment);
+                }
                 foreach (Zman zman in new[]
                 {
                     Zman.Alot, Zman.Misheyakir, Zman.Sunrise, Zman.ShemaGra, Zman.TefillaGra, Zman.Chatzot, Zman.MinchaGedola, Zman.MinchaKetana,
                     Zman.PlagHaMincha, Zman.Sunset, Zman.Tzeit,
                 })
-                    times.Add(new TimeLine(Zmanim.NameOf(zman, language), Short(OnClock(day[zman], place), culture)));
+                    Add(new TimeLine(Zmanim.NameOf(zman, language), Short(OnClock(day[zman], place), culture)), OnClock(day[zman], place));
                 // Hanukkah: on a Friday before the Shabbat candles, otherwise at nightfall (after the havdalah).
                 RestEvent evening = Zmanim.EveningOf(date, israel);
                 int candles = ChanukahTonight(date);
                 TimeLine chanukah = candles == 0 ? null : new TimeLine(string.Format(text("calendar_chanukah_candles"), candles),
                     Short(OnClock(day[evening == RestEvent.CandleLighting ? Zman.CandleLighting : Zman.Tzeit], place), culture), Chanukah: true);
-                if (chanukah != null && evening == RestEvent.CandleLighting) times.Add(chanukah);
+                DateTime? chanukahAt = OnClock(day[evening == RestEvent.CandleLighting ? Zman.CandleLighting : Zman.Tzeit], place);
+                if (chanukah != null && evening == RestEvent.CandleLighting) Add(chanukah, chanukahAt);
                 switch (evening)
                 {
                     case RestEvent.CandleLighting:
-                        times.Add(new TimeLine(Zmanim.NameOf(Zman.CandleLighting, language), Short(OnClock(day[Zman.CandleLighting], place), culture), true));
+                        Add(new TimeLine(Zmanim.NameOf(Zman.CandleLighting, language), Short(OnClock(day[Zman.CandleLighting], place), culture), true), OnClock(day[Zman.CandleLighting], place));
                         break;
                     case RestEvent.CandleLightingAfterNightfall:
-                        times.Add(new TimeLine(text("calendar_candles_after_dark"), Short(OnClock(day[Zman.Tzeit], place), culture), true));
+                        Add(new TimeLine(text("calendar_candles_after_dark"), Short(OnClock(day[Zman.Tzeit], place), culture), true), OnClock(day[Zman.Tzeit], place));
                         break;
                     case RestEvent.Havdalah:
-                        times.Add(new TimeLine(text("calendar_havdalah"), Short(OnClock(day[Zman.Tzeit], place), culture), true));
+                        Add(new TimeLine(text("calendar_havdalah"), Short(OnClock(day[Zman.Tzeit], place), culture), true), OnClock(day[Zman.Tzeit], place));
                         break;
                 }
-                if (chanukah != null && evening != RestEvent.CandleLighting) times.Add(chanukah);
+                if (chanukah != null && evening != RestEvent.CandleLighting) Add(chanukah, chanukahAt);
                 // Midnight last: after the evening's candles or havdalah.
-                times.Add(new TimeLine(Zmanim.NameOf(Zman.ChatzotHaLayla, language), Short(OnClock(day[Zman.ChatzotHaLayla], place), culture)));
+                Add(new TimeLine(Zmanim.NameOf(Zman.ChatzotHaLayla, language), Short(OnClock(day[Zman.ChatzotHaLayla], place), culture)), OnClock(day[Zman.ChatzotHaLayla], place));
+                // The actual new or full moon of the day, before the first time that is later than it.
+                foreach (LunarPhase phase in PhasesOn(date, place))
+                {
+                    DateTime at = LocalOf(phase.Utc, place);
+                    int index = moments.FindIndex(moment => moment.HasValue && moment.Value > at);
+                    if (index < 0) index = times.Count;
+                    times.Insert(index, new TimeLine(PhaseName(phase, text), at.ToString("t", culture), Moon: phase.Full ? 2 : 1, At: at));
+                    moments.Insert(index, at);
+                }
 
                 // A day of rest begins at the candle lighting before it and ends at nightfall of the last day of a run of them.
                 if (Zmanim.IsRestDay(date, israel))
@@ -195,7 +287,7 @@ namespace UltraWinBar.Utilities
                     DateTime first = date, last = date;
                     while (Zmanim.IsRestDay(first.AddDays(-1), israel)) first = first.AddDays(-1);
                     while (Zmanim.IsRestDay(last.AddDays(1), israel)) last = last.AddDays(1);
-                    var before = Zmanim.Of(first.AddDays(-1), place.Latitude, place.Longitude);
+                    var before = Zmanim.Of(first.AddDays(-1), place.Latitude, place.Longitude, candleMinutes);
                     var after = Zmanim.Of(last, place.Latitude, place.Longitude);
                     // One line; the days only when the rest lasts more than one day.
                     DateTime? lit = OnClock(before[Zman.CandleLighting], place), dark = OnClock(after[Zman.Tzeit], place);
@@ -207,7 +299,7 @@ namespace UltraWinBar.Utilities
             // An eclipse: what it is, when it is greatest by the place's clocks; for the moon's, whether it is up there then.
             var eclipseLines = EclipsesOn(date, place).Select(eclipse =>
             {
-                DateTime local = place != null ? OnClock(eclipse.Utc, place).Value : TimeZoneInfo.ConvertTimeFromUtc(eclipse.Utc, TimeZoneInfo.Local);
+                DateTime local = LocalOf(eclipse.Utc, place);
                 string line = string.Format(text(eclipse.Solar ? "calendar_eclipse_solar" : "calendar_eclipse_lunar"),
                     text("calendar_eclipse_" + eclipse.Kind.ToString().ToLowerInvariant())) + " · " + string.Format(text("calendar_eclipse_at"), local.ToString("t", culture));
                 if (!eclipse.Solar && place != null)
@@ -215,9 +307,9 @@ namespace UltraWinBar.Utilities
                 return new EclipseLine(eclipse.Solar, text(eclipse.Solar ? "calendar_likui_chama" : "calendar_likui_levana"), line);
             }).ToArray();
 
-            return new DayDetails(date.ToString("d MMMM yyyy", culture), HebrewClockFormatter.FormatDate(date, language), portion, events,
+            return new DayDetails(CivilDate(date), HebrewClockFormatter.FormatDate(date, language), portion, events,
                 Yahrzeits.On(date, hidden).Select(person => person.Name(language)).ToArray(), moladText, placeText, times, rest, ChanukahTonight(date),
-                eclipseLines);
+                eclipseLines, PrayerOf(date, israel, text) is { } change ? new PrayerLine(change.Sentence, change.Winter) : null);
         }
 
         /// <summary>

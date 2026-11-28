@@ -260,6 +260,7 @@
     <s:String x:Key="calendar_israel">ดินแดนอิสราเอล</s:String>
     <s:String x:Key="calendar_diaspora">ดินแดนนอกอิสราเอล</s:String>
     <s:String x:Key="calendar_no_place">เลือกสถานที่ในการตั้งค่าปฏิทินเพื่อดูเวลาประจำวัน</s:String>
+    <s:String x:Key="calendar_now">ตอนนี้</s:String>
     <s:String x:Key="calendar_times">เวลาประจำวัน</s:String>
     <s:String x:Key="calendar_yahrzeits">วันยาห์รไซต์</s:String>
     <s:String x:Key="calendar_candles_after_dark">จุดเทียน (หลังพลบค่ำ)</s:String>
@@ -277,6 +278,17 @@
     <s:String x:Key="calendar_eclipse_at">มากที่สุดเวลา {0}</s:String>
     <s:String x:Key="calendar_eclipse_visible">มองเห็นได้ที่นี่</s:String>
     <s:String x:Key="calendar_eclipse_hidden">มองไม่เห็นที่นี่</s:String>
+    <s:String x:Key="calendar_moon_new">โมลาด เอเมต (จันทร์ดับ)</s:String>
+    <s:String x:Key="calendar_moon_full">มิลุย ฮาเลวานา (จันทร์เพ็ญ)</s:String>
+    <s:String x:Key="calendar_prayer_mashiv">มาชีฟ ฮารูอัค อุโมริด ฮาเกเชม</s:String>
+    <s:String x:Key="calendar_prayer_veten_tal">เวเทน ทัล อุมาทาร์</s:String>
+    <s:String x:Key="calendar_prayer_veten_bracha">เวเทน บราคา</s:String>
+    <s:String x:Key="calendar_prayer_morid_hatal">โมริด ฮาทัล</s:String>
+    <s:String x:Key="calendar_prayer_to_winter">เปลี่ยนเป็นคำอธิษฐานฤดูหนาว: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_to_summer">เปลี่ยนเป็นคำอธิษฐานฤดูร้อน: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_from_musaf">ตั้งแต่มูซาฟ</s:String>
+    <s:String x:Key="calendar_prayer_from_maariv">ตั้งแต่มาอาริฟคืนนี้</s:String>
+    <s:String x:Key="calendar_prayer_ashkenaz_none">ในพิธีกรรมแอชเคนาซีนอกประเทศอิสราเอลไม่กล่าวสิ่งใด</s:String>
     <s:String x:Key="calendar_rest_span">{0} (จุดเทียน) – {1} (พลบค่ำ)</s:String>
     <s:String x:Key="calendar_weekday">วันที่ {0}</s:String>
     <s:String x:Key="calendar_settings_title">การตั้งค่าปฏิทิน</s:String>

@@ -251,6 +251,7 @@
     <s:String x:Key="calendar_israel">이스라엘 땅</s:String>
     <s:String x:Key="calendar_diaspora">디아스포라</s:String>
     <s:String x:Key="calendar_no_place">하루의 시각을 보려면 달력 설정에서 장소를 선택하십시오.</s:String>
+    <s:String x:Key="calendar_now">지금</s:String>
     <s:String x:Key="calendar_times">하루의 시각</s:String>
     <s:String x:Key="calendar_yahrzeits">야르차이트</s:String>
     <s:String x:Key="calendar_candles_after_dark">촛불 점화(밤이 된 후)</s:String>
@@ -268,6 +269,17 @@
     <s:String x:Key="calendar_eclipse_at">최대 {0}</s:String>
     <s:String x:Key="calendar_eclipse_visible">이곳에서 보임</s:String>
     <s:String x:Key="calendar_eclipse_hidden">이곳에서 보이지 않음</s:String>
+    <s:String x:Key="calendar_moon_new">몰라드 에메트 (신월)</s:String>
+    <s:String x:Key="calendar_moon_full">밀루이 할레바나 (보름달)</s:String>
+    <s:String x:Key="calendar_prayer_mashiv">마시브 하루아흐 우모리드 하게솀</s:String>
+    <s:String x:Key="calendar_prayer_veten_tal">베텐 탈 우마타르</s:String>
+    <s:String x:Key="calendar_prayer_veten_bracha">베텐 브라하</s:String>
+    <s:String x:Key="calendar_prayer_morid_hatal">모리드 하탈</s:String>
+    <s:String x:Key="calendar_prayer_to_winter">겨울 기도로 전환: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_to_summer">여름 기도로 전환: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_from_musaf">무사프부터</s:String>
+    <s:String x:Key="calendar_prayer_from_maariv">오늘 저녁 마아리브부터</s:String>
+    <s:String x:Key="calendar_prayer_ashkenaz_none">이스라엘 밖의 아슈케나지 전례에서는 아무것도 말하지 않습니다</s:String>
     <s:String x:Key="calendar_rest_span">{0}(촛불 점화) – {1}(밤)</s:String>
     <s:String x:Key="calendar_weekday">{0}일째</s:String>
     <s:String x:Key="calendar_settings_title">달력 설정</s:String>

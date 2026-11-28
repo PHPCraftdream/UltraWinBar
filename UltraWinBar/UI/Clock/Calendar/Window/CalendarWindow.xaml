@@ -331,6 +331,12 @@
                                             <Viewbox Height="16" Margin="0,0,4,0" Visibility="{Binding LunarEclipse, Converter={StaticResource OmerVisibility}}">
                                                 <ContentControl Focusable="False" Content="{DynamicResource LunarEclipseIcon}" />
                                             </Viewbox>
+                                            <Viewbox Height="16" Margin="0,0,4,0" Visibility="{Binding NewMoon, Converter={StaticResource OmerVisibility}}">
+                                                <ContentControl Focusable="False" Content="{DynamicResource NewMoonIcon}" />
+                                            </Viewbox>
+                                            <Viewbox Height="16" Margin="0,0,4,0" Visibility="{Binding FullMoon, Converter={StaticResource OmerVisibility}}">
+                                                <ContentControl Focusable="False" Content="{DynamicResource FullMoonIcon}" />
+                                            </Viewbox>
                                         </StackPanel>
                                     </StackPanel>
                                 </ToolTip>
@@ -399,17 +405,6 @@
                                                    FontSize="14"
                                                    FontWeight="Bold" />
                                     </StackPanel>
-                                    <!-- An eclipse of the sun or the moon on the day. -->
-                                    <ContentControl Focusable="False"
-                                                    Margin="3,0,0,0"
-                                                    VerticalAlignment="Center"
-                                                    Content="{DynamicResource SolarEclipseIcon}"
-                                                    Visibility="{Binding SolarEclipse, Converter={StaticResource OmerVisibility}}" />
-                                    <ContentControl Focusable="False"
-                                                    Margin="3,0,0,0"
-                                                    VerticalAlignment="Center"
-                                                    Content="{DynamicResource LunarEclipseIcon}"
-                                                    Visibility="{Binding LunarEclipse, Converter={StaticResource OmerVisibility}}" />
                                 </StackPanel>
                                 <TextBlock Grid.Row="0"
                                            HorizontalAlignment="Right"
@@ -474,9 +469,45 @@
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
+                                    <!-- A change between the summer and the winter prayers: blue for the winter, orange for the summer. -->
+                                    <Border x:Name="PrayerChip"
+                                            Margin="0,0,0,2"
+                                            Padding="6,1"
+                                            CornerRadius="4"
+                                            Background="#2E60A5FA"
+                                            BorderBrush="#B360A5FA"
+                                            BorderThickness="2,0,0,0"
+                                            Visibility="{Binding HasPrayer, Converter={StaticResource OmerVisibility}}">
+                                        <TextBlock Text="{Binding Prayer}"
+                                                   Foreground="{DynamicResource ModernTextStrong}"
+                                                   FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   TextWrapping="Wrap"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </Border>
                                 </StackPanel>
                                 <DockPanel Grid.Row="2">
+                                    <!-- At the bottom right, beside the civil date: an eclipse of the sun or the moon, the actual new moon
+                                         or full moon of the day (not at the top, where the Hebrew month is). -->
+                                    <StackPanel DockPanel.Dock="Right"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center"
+                                                IsHitTestVisible="False">
+                                        <Viewbox Height="18" Margin="3,0,0,0" Visibility="{Binding SolarEclipse, Converter={StaticResource OmerVisibility}}">
+                                            <ContentControl Focusable="False" Content="{DynamicResource SolarEclipseIcon}" />
+                                        </Viewbox>
+                                        <Viewbox Height="18" Margin="3,0,0,0" Visibility="{Binding LunarEclipse, Converter={StaticResource OmerVisibility}}">
+                                            <ContentControl Focusable="False" Content="{DynamicResource LunarEclipseIcon}" />
+                                        </Viewbox>
+                                        <Viewbox Height="18" Margin="3,0,0,0" Visibility="{Binding NewMoon, Converter={StaticResource OmerVisibility}}">
+                                            <ContentControl Focusable="False" Content="{DynamicResource NewMoonIcon}" />
+                                        </Viewbox>
+                                        <Viewbox Height="18" Margin="3,0,0,0" Visibility="{Binding FullMoon, Converter={StaticResource OmerVisibility}}">
+                                            <ContentControl Focusable="False" Content="{DynamicResource FullMoonIcon}" />
+                                        </Viewbox>
+                                    </StackPanel>
                                     <TextBlock HorizontalAlignment="Left"
+                                               VerticalAlignment="Center"
                                                Text="{Binding GregorianLabel}"
                                                Foreground="{DynamicResource ModernText}"
                                                FontSize="13"
@@ -485,6 +516,10 @@
                             </Grid>
                         </Border>
                         <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding PrayerWinter}" Value="False">
+                                <Setter TargetName="PrayerChip" Property="Background" Value="#2EFB923C" />
+                                <Setter TargetName="PrayerChip" Property="BorderBrush" Value="#B3FB923C" />
+                            </DataTrigger>
                             <!-- The day under the pointer stands out clearly, low weeks included. -->
                             <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}}}"
                                          Value="True">

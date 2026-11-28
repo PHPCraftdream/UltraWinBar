@@ -16,6 +16,8 @@ internal static class HolidayChecks
     {
         CheckWholeYears();
         CheckModernDays();
+        CheckFirstborn();
+        CheckSpecialShabbatot();
         CheckNames();
         CheckMolad();
     }
@@ -94,7 +96,7 @@ internal static class HolidayChecks
                 foreach (var item in JewishCalendar.Days(day, israel))
                 {
                     string group = Group(item.Key);
-                    if (Modern.Contains(group) || israel && group == "SimchatTorah") continue;
+                    if (Modern.Contains(group) || group == "FastOfFirstborn" || israel && group == "SimchatTorah") continue;
                     if (!offsets.TryGetValue(group, out var set)) offsets[group] = set = new SortedSet<int>();
                     set.Add((day - start).Days);
                 }
@@ -137,7 +139,7 @@ internal static class HolidayChecks
 
     // The modern days and their moves, from the law of Israel: Yom HaShoah is on the Thursday before when the 27th of Nisan is
     // a Friday and on the Monday after when it is a Sunday; Yom HaAtzmaut is the 5th of Iyar, on the Thursday before when
-    // that is Friday or Shabbat and on the Tuesday after when that is a Monday; Yom HaZikaron is the day before it.
+    // that is Friday or Shabbat and (from 5764) on the Tuesday after when that is a Monday; Yom HaZikaron is the day before it.
     private static void CheckModernDays()
     {
         var modern = new (string Date, string Key)[]
@@ -153,9 +155,21 @@ internal static class HolidayChecks
             var found = JewishCalendar.Days(DateTime.ParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture), true).Where(item => item.Key == key).ToArray();
             if (found.Length != 1 || found[0].Kind != DayKind.Minor) throw new Exception($"{date} is {key}.");
         }
-        // Each of them comes once a year, from 5700 to 5900. Yom HaShoah is never on a Friday, Shabbat or Sunday, Yom
-        // HaAtzmaut never on a Friday, Shabbat or Monday, Yom HaZikaron never on a Friday or Shabbat.
-        for (int year = 5700; year <= 5900; year++)
+        // They begin in the years of the law: Yom HaAtzmaut and Yom HaZikaron in 5709 (1949; 5 Iyar 5708 was the Declaration itself,
+        // Friday 14 May 1948), Yom HaShoah in 5711 (1951), Yom Yerushalayim in 5727 (7 June 1967); and the move of Yom HaAtzmaut from a
+        // Monday to the Tuesday is of 5764 (2004), before it the day stayed on the Monday (12 May 1997).
+        bool Has(string date, string key) =>
+            JewishCalendar.Days(DateTime.ParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture), true).Any(item => item.Key == key);
+        if (Has("1948-05-13", "YomHazikaron") || Has("1948-05-13", "YomHaatzmaut") || Has("1948-05-14", "YomHaatzmaut") ||
+            !Has("1949-05-03", "YomHazikaron") || !Has("1949-05-04", "YomHaatzmaut") ||
+            Has("1950-04-14", "YomHashoah") || Has("1950-04-13", "YomHashoah") || !Has("1951-05-03", "YomHashoah") ||
+            Has("1966-05-18", "YomYerushalayim") || !Has("1967-06-07", "YomYerushalayim") ||
+            !Has("1997-05-11", "YomHazikaron") || !Has("1997-05-12", "YomHaatzmaut") || Has("1997-05-13", "YomHaatzmaut") ||
+            !Has("2004-04-26", "YomHazikaron") || !Has("2004-04-27", "YomHaatzmaut") || Has("2004-04-26", "YomHaatzmaut"))
+            throw new Exception("The modern days begin in the years of the law, and the Monday move of Yom HaAtzmaut in 5764.");
+        // Each of them comes once a year, from 5727 to 5900. Yom HaShoah is never on a Friday, Shabbat or Sunday, Yom
+        // HaAtzmaut never on a Friday or Shabbat (nor on a Monday from 5764), Yom HaZikaron never on a Friday or Shabbat.
+        for (int year = 5727; year <= 5900; year++)
         {
             var counts = new Dictionary<string, List<DateTime>>();
             for (DateTime day = Calendar.ToDateTime(year, 1, 1, 0, 0, 0, 0); day < Calendar.ToDateTime(year + 1, 1, 1, 0, 0, 0, 0); day = day.AddDays(1))
@@ -171,12 +185,82 @@ internal static class HolidayChecks
             }
             DayOfWeek Of(string key) => counts[key][0].DayOfWeek;
             if (Of("YomHashoah") == DayOfWeek.Friday || Of("YomHashoah") == DayOfWeek.Saturday || Of("YomHashoah") == DayOfWeek.Sunday ||
-                Of("YomHaatzmaut") == DayOfWeek.Friday || Of("YomHaatzmaut") == DayOfWeek.Saturday || Of("YomHaatzmaut") == DayOfWeek.Monday ||
+                Of("YomHaatzmaut") == DayOfWeek.Friday || Of("YomHaatzmaut") == DayOfWeek.Saturday || Of("YomHaatzmaut") == DayOfWeek.Monday && year >= 5764 ||
                 Of("YomHazikaron") == DayOfWeek.Friday || Of("YomHazikaron") == DayOfWeek.Saturday ||
                 (counts["YomHaatzmaut"][0] - counts["YomHazikaron"][0]).Days != 1)
                 throw new Exception($"{year}: the modern days are on days the law does not allow.");
         }
-        Console.WriteLine($"PASS: {modern.Length} modern days by date, and in 201 years each comes once, on a weekday the law allows, Yom HaZikaron the day before Yom HaAtzmaut.");
+        Console.WriteLine($"PASS: {modern.Length} modern days by date, the years they begin in, and in 174 years each comes once, on a weekday the law allows, Yom HaZikaron the day before Yom HaAtzmaut.");
+    }
+
+    // The fast of the firstborn (the reference calendar does not know it): 14 Nisan, the Thursday before (12 Nisan) when that is Shabbat.
+    private static void CheckFirstborn()
+    {
+        DateTime Gregorian(string text) => DateTime.ParseExact(text, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+        bool Fasts(string date, bool israel) => JewishCalendar.Days(Gregorian(date), israel).Any(item => item.Key == "FastOfFirstborn" && item.Kind == DayKind.Fast);
+        // Pesach 5786 began on Thursday 2 April 2026 (the eve, Wednesday 1 April); 5785 on Sunday 13 April 2025 (the eve was Shabbat).
+        if (!Fasts("2026-04-01", false) || !Fasts("2026-04-01", true) || Fasts("2026-03-31", false) || Fasts("2025-04-12", false) || !Fasts("2025-04-10", false) || Fasts("2025-04-11", false))
+            throw new Exception("The fast of the firstborn is on the eve of Pesach, on the Thursday before when the eve is Shabbat.");
+        for (int year = 5700; year <= 5900; year++)
+        {
+            var fasts = new List<DateTime>();
+            for (DateTime day = Calendar.ToDateTime(year, 1, 1, 0, 0, 0, 0); day < Calendar.ToDateTime(year + 1, 1, 1, 0, 0, 0, 0); day = day.AddDays(1))
+                if (JewishCalendar.Days(day, false).Any(item => item.Key == "FastOfFirstborn")) fasts.Add(day);
+            // Nisan is the 7th month of a plain year of the .NET calendar and the 8th of a leap one.
+            DateTime eve = Calendar.ToDateTime(year, Calendar.IsLeapYear(year) ? 8 : 7, 14, 0, 0, 0, 0);
+            DateTime expected = eve.DayOfWeek == DayOfWeek.Saturday ? eve.AddDays(-2) : eve;
+            if (fasts.Count != 1 || fasts[0] != expected || expected.DayOfWeek == DayOfWeek.Saturday)
+                throw new Exception($"{year}: the fast of the firstborn must come once, on {expected:yyyy-MM-dd}, not {string.Join(", ", fasts.Select(day => day.ToString("yyyy-MM-dd")))}.");
+        }
+        Console.WriteLine("PASS: the fast of the firstborn comes once in each of 201 years, on the eve of Pesach or the Thursday before it.");
+    }
+
+    // The Shabbatot with names of their own. The reference values are what an independent calendar (pyluach) gives for the four
+    // before Pesach and for Beshalach, and the dates of the others follow from the rules (the one before Tisha B'Av, and so on).
+    private static void CheckSpecialShabbatot()
+    {
+        DateTime Gregorian(string text) => DateTime.ParseExact(text, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+        var expected = new (int Year, string Expected)[]
+        {
+            (5786, "2025-09-27 ShabbatShuva 2026-01-31 ShabbatShirah 2026-02-14 ShabbatShekalim 2026-02-28 ShabbatZachor 2026-03-07 ShabbatParah 2026-03-14 ShabbatHachodesh 2026-03-28 ShabbatHagadol 2026-07-18 ShabbatChazon 2026-07-25 ShabbatNachamu"),
+            (5787, "2026-09-19 ShabbatShuva 2027-01-23 ShabbatShirah 2027-03-06 ShabbatShekalim 2027-03-20 ShabbatZachor 2027-03-27 ShabbatParah 2027-04-03 ShabbatHachodesh 2027-04-17 ShabbatHagadol 2027-08-07 ShabbatChazon 2027-08-14 ShabbatNachamu"),
+        };
+        foreach (var (year, text) in expected)
+        {
+            foreach (bool israel in new[] { false, true })
+            {
+                var found = new List<string>();
+                for (DateTime day = Calendar.ToDateTime(year, 1, 1, 0, 0, 0, 0); day < Calendar.ToDateTime(year + 1, 1, 1, 0, 0, 0, 0); day = day.AddDays(1))
+                {
+                    string key = JewishCalendar.SpecialShabbat(day, israel);
+                    if (key != null) found.Add($"{day:yyyy-MM-dd} {key}");
+                }
+                if (string.Join(" ", found) != text) throw new Exception($"{year} ({(israel ? "Israel" : "diaspora")}): expected\n{text}\ngot\n{string.Join(" ", found)}");
+            }
+        }
+        // In 201 years each of the nine comes once a year, on a Shabbat, and only a Shabbat has one.
+        for (int year = 5700; year <= 5900; year++)
+        {
+            var keys = new List<string>();
+            for (DateTime day = Calendar.ToDateTime(year, 1, 1, 0, 0, 0, 0); day < Calendar.ToDateTime(year + 1, 1, 1, 0, 0, 0, 0); day = day.AddDays(1))
+            {
+                string key = JewishCalendar.SpecialShabbat(day, false);
+                if (key == null) continue;
+                if (day.DayOfWeek != DayOfWeek.Saturday) throw new Exception($"{day:yyyy-MM-dd}: {key} is not on a Shabbat.");
+                keys.Add(key);
+            }
+            if (keys.Count != 9 || keys.Distinct().Count() != 9 || !keys.OrderBy(key => key).SequenceEqual(JewishCalendar.SpecialShabbatKeys.OrderBy(key => key)))
+                throw new Exception($"{year}: the nine special Shabbatot must come once each, came {string.Join(", ", keys)}.");
+        }
+        if (JewishCalendar.SpecialShabbat(Gregorian("2026-03-27"), false) != null || JewishCalendar.SpecialShabbat(Gregorian("2300-03-27"), false) != null)
+            throw new Exception("Only a Shabbat in the range of the Hebrew calendar is a special one.");
+        foreach (string key in JewishCalendar.SpecialShabbatKeys)
+        {
+            var names = new[] { "English", "русский", "עברית" }.Select(language => JewishCalendar.SpecialShabbatName(key, language)).ToArray();
+            if (names.Any(string.IsNullOrWhiteSpace) || names.Distinct().Count() != 3 || JewishCalendar.SpecialShabbatName(key, "Deutsch") != names[0])
+                throw new Exception($"{key} needs three different names, English for the other languages.");
+        }
+        Console.WriteLine("PASS: the nine special Shabbatot come once a year, on a Shabbat, in Israel and the diaspora, as the reference calendar has the four before Pesach and Beshalach, and have names in three languages.");
     }
 
     private static void CheckNames()

@@ -262,6 +262,7 @@
     <s:String x:Key="calendar_israel">Israelgo lurra</s:String>
     <s:String x:Key="calendar_diaspora">diaspora</s:String>
     <s:String x:Key="calendar_no_place">Aukeratu leku bat egutegiaren ezarpenetan eguneko orduak ikusteko.</s:String>
+    <s:String x:Key="calendar_now">Orain</s:String>
     <s:String x:Key="calendar_times">Eguneko orduak</s:String>
     <s:String x:Key="calendar_yahrzeits">Yahrzeit-ak</s:String>
     <s:String x:Key="calendar_candles_after_dark">Kandelak piztea (ilundu ondoren)</s:String>
@@ -279,6 +280,17 @@
     <s:String x:Key="calendar_eclipse_at">gehienez {0}etan</s:String>
     <s:String x:Key="calendar_eclipse_visible">hemen ikusgai</s:String>
     <s:String x:Key="calendar_eclipse_hidden">hemen ez da ikusten</s:String>
+    <s:String x:Key="calendar_moon_new">Molad Emet (ilberria)</s:String>
+    <s:String x:Key="calendar_moon_full">Milui HaLevana (ilbetea)</s:String>
+    <s:String x:Key="calendar_prayer_mashiv">Mashiv HaRuach UMorid HaGeshem</s:String>
+    <s:String x:Key="calendar_prayer_veten_tal">V'ten Tal U'Matar</s:String>
+    <s:String x:Key="calendar_prayer_veten_bracha">V'ten Bracha</s:String>
+    <s:String x:Key="calendar_prayer_morid_hatal">Morid HaTal</s:String>
+    <s:String x:Key="calendar_prayer_to_winter">Neguko otoitzetara: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_to_summer">Udako otoitzetara: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_from_musaf">Musaftik aurrera</s:String>
+    <s:String x:Key="calendar_prayer_from_maariv">gaurko Maarivetik aurrera</s:String>
+    <s:String x:Key="calendar_prayer_ashkenaz_none">Israeletik kanpo errito askenaziarrean ez da ezer esaten</s:String>
     <s:String x:Key="calendar_rest_span">{0} (kandelak piztea) – {1} (iluntzea)</s:String>
     <s:String x:Key="calendar_weekday">{0}. eguna</s:String>
     <s:String x:Key="calendar_settings_title">Egutegiaren ezarpenak</s:String>

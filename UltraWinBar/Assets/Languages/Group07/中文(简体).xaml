@@ -262,6 +262,7 @@
     <s:String x:Key="calendar_israel">以色列地</s:String>
     <s:String x:Key="calendar_diaspora">散居地</s:String>
     <s:String x:Key="calendar_no_place">请在日历设置中选择地点，以查看每日时刻。</s:String>
+    <s:String x:Key="calendar_now">现在</s:String>
     <s:String x:Key="calendar_times">每日时刻</s:String>
     <s:String x:Key="calendar_yahrzeits">逝世纪念日</s:String>
     <s:String x:Key="calendar_candles_after_dark">点燃安息日蜡烛（入夜后）</s:String>
@@ -279,6 +280,17 @@
     <s:String x:Key="calendar_eclipse_at">食甚 {0}</s:String>
     <s:String x:Key="calendar_eclipse_visible">此地可见</s:String>
     <s:String x:Key="calendar_eclipse_hidden">此地不可见</s:String>
+    <s:String x:Key="calendar_moon_new">摩拉德·埃梅特（新月）</s:String>
+    <s:String x:Key="calendar_moon_full">米卢伊·哈莱瓦纳（满月）</s:String>
+    <s:String x:Key="calendar_prayer_mashiv">马希夫·哈鲁阿赫·乌莫里德·哈格舍姆</s:String>
+    <s:String x:Key="calendar_prayer_veten_tal">韦滕·塔尔·乌马塔尔</s:String>
+    <s:String x:Key="calendar_prayer_veten_bracha">韦滕·布拉哈</s:String>
+    <s:String x:Key="calendar_prayer_morid_hatal">莫里德·哈塔尔</s:String>
+    <s:String x:Key="calendar_prayer_to_winter">转入冬季祷词：{0}（{1}）</s:String>
+    <s:String x:Key="calendar_prayer_to_summer">转入夏季祷词：{0}（{1}）</s:String>
+    <s:String x:Key="calendar_prayer_from_musaf">自穆萨夫起</s:String>
+    <s:String x:Key="calendar_prayer_from_maariv">自今晚的晚祷（马阿里夫）起</s:String>
+    <s:String x:Key="calendar_prayer_ashkenaz_none">以色列境外的阿什肯纳兹礼仪中不念任何词句</s:String>
     <s:String x:Key="calendar_rest_span">{0}（点燃蜡烛） – {1}（入夜）</s:String>
     <s:String x:Key="calendar_weekday">第{0}日</s:String>
     <s:String x:Key="calendar_settings_title">日历设置</s:String>

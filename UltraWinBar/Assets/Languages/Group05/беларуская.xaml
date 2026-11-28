@@ -251,6 +251,7 @@
     <s:String x:Key="calendar_israel">Зямля Ізраіля</s:String>
     <s:String x:Key="calendar_diaspora">дыяспара</s:String>
     <s:String x:Key="calendar_no_place">Абярыце месца ў наладах календара, каб убачыць часы дня.</s:String>
+    <s:String x:Key="calendar_now">Цяпер</s:String>
     <s:String x:Key="calendar_times">Часы дня</s:String>
     <s:String x:Key="calendar_yahrzeits">Ёрцайты</s:String>
     <s:String x:Key="calendar_candles_after_dark">Запальванне свечак (пасля выхаду зорак)</s:String>
@@ -268,6 +269,17 @@
     <s:String x:Key="calendar_eclipse_at">максімум у {0}</s:String>
     <s:String x:Key="calendar_eclipse_visible">бачна тут</s:String>
     <s:String x:Key="calendar_eclipse_hidden">тут не бачна</s:String>
+    <s:String x:Key="calendar_moon_new">Молад эмет (маладзік)</s:String>
+    <s:String x:Key="calendar_moon_full">Мілуй ха-левана (поўня)</s:String>
+    <s:String x:Key="calendar_prayer_mashiv">Машыў ха-руах у-морыд ха-гешэм</s:String>
+    <s:String x:Key="calendar_prayer_veten_tal">Ве-тэн таль у-матар</s:String>
+    <s:String x:Key="calendar_prayer_veten_bracha">Ве-тэн браха</s:String>
+    <s:String x:Key="calendar_prayer_morid_hatal">Морыд ха-таль</s:String>
+    <s:String x:Key="calendar_prayer_to_winter">Пераход на зімовыя малітвы: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_to_summer">Пераход на летнія малітвы: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_from_musaf">з Мусафа</s:String>
+    <s:String x:Key="calendar_prayer_from_maariv">з сённяшняга Маарыва</s:String>
+    <s:String x:Key="calendar_prayer_ashkenaz_none">у ашкеназскім рыце па-за Ізраілем нічога не кажуць</s:String>
     <s:String x:Key="calendar_rest_span">{0} (запальванне свечак) – {1} (выхад зорак)</s:String>
     <s:String x:Key="calendar_weekday">Дзень {0}</s:String>
     <s:String x:Key="calendar_settings_title">Налады календара</s:String>

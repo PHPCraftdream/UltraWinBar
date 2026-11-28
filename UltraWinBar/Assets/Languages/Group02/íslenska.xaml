@@ -251,6 +251,7 @@
     <s:String x:Key="calendar_israel">Ísraelsland</s:String>
     <s:String x:Key="calendar_diaspora">útlegð</s:String>
     <s:String x:Key="calendar_no_place">Veldu stað í stillingum dagatalsins til að sjá tíma dagsins.</s:String>
+    <s:String x:Key="calendar_now">Núna</s:String>
     <s:String x:Key="calendar_times">Tímar dagsins</s:String>
     <s:String x:Key="calendar_yahrzeits">Yahrzeit-afmæli</s:String>
     <s:String x:Key="calendar_candles_after_dark">Kveikt á kertum (eftir myrkur)</s:String>
@@ -268,6 +269,17 @@
     <s:String x:Key="calendar_eclipse_at">hámark kl. {0}</s:String>
     <s:String x:Key="calendar_eclipse_visible">sjáanlegur hér</s:String>
     <s:String x:Key="calendar_eclipse_hidden">ekki sjáanlegur hér</s:String>
+    <s:String x:Key="calendar_moon_new">Molad Emet (nýtt tungl)</s:String>
+    <s:String x:Key="calendar_moon_full">Milui HaLevana (fullt tungl)</s:String>
+    <s:String x:Key="calendar_prayer_mashiv">Mashiv HaRuach UMorid HaGeshem</s:String>
+    <s:String x:Key="calendar_prayer_veten_tal">V'ten Tal U'Matar</s:String>
+    <s:String x:Key="calendar_prayer_veten_bracha">V'ten Bracha</s:String>
+    <s:String x:Key="calendar_prayer_morid_hatal">Morid HaTal</s:String>
+    <s:String x:Key="calendar_prayer_to_winter">Yfir í vetrarbænir: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_to_summer">Yfir í sumarbænir: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_from_musaf">frá Musaf</s:String>
+    <s:String x:Key="calendar_prayer_from_maariv">frá Maariv í kvöld</s:String>
+    <s:String x:Key="calendar_prayer_ashkenaz_none">í ashkenasískum sið utan Ísraels er ekkert sagt</s:String>
     <s:String x:Key="calendar_rest_span">{0} (kertakveiking) – {1} (að kvöldi)</s:String>
     <s:String x:Key="calendar_weekday">Dagur {0}</s:String>
     <s:String x:Key="calendar_settings_title">Stillingar dagatals</s:String>

@@ -7,6 +7,13 @@ namespace UltraWinBar.Utilities
     public enum DayKind { YomTov, CholHamoed, Fast, Minor, RoshChodesh }
 
     /// <summary>
+    /// The changes between the summer and the winter prayers: Mashiv HaRuach UMorid HaGeshem (from the Musaf of Shemini
+    /// Atzeret), V'ten Tal U'Matar (asking for rain in the blessing of the years), V'ten Bracha (not asking for it any
+    /// more, from the first weekday's Ma'ariv after the first day of Pesach) and Morid HaTal (from the Musaf of Pesach).
+    /// </summary>
+    public enum PrayerChange { MashivHaruach, VetenTal, VetenBracha, MoridHatal }
+
+    /// <summary>
     /// What makes a day special in the Jewish calendar: a festival or a day of it, a fast, a minor or a modern day, Rosh
     /// Chodesh. Number is the day within the festival (Hanukkah: 1 to 8), Count the days it lasts here (Pesach: 7 in
     /// Israel, 8 elsewhere); for Rosh Chodesh Month and LeapYear name the month that begins.
@@ -37,7 +44,7 @@ namespace UltraWinBar.Utilities
     {
         private static readonly HebrewCalendar Calendar = new HebrewCalendar();
 
-        private const int Tishrei = 1, Kislev = 3, Tevet = 4, Shevat = 5, AdarI = 6, Adar = 7, Nisan = 8, Iyar = 9, Sivan = 10, Tammuz = 11, Av = 12;
+        private const int Tishrei = 1, Cheshvan = 2, Kislev = 3, Tevet = 4, Shevat = 5, AdarI = 6, Adar = 7, Nisan = 8, Iyar = 9, Sivan = 10, Tammuz = 11, Av = 12;
 
         private static readonly Dictionary<string, string[]> Names = new Dictionary<string, string[]>
         {
@@ -56,6 +63,7 @@ namespace UltraWinBar.Utilities
             ["FastOfEsther"] = new[] { "Fast of Esther", "Пост Эстер", "תענית אסתר" },
             ["Purim"] = new[] { "Purim", "Пурим", "פורים" },
             ["ShushanPurim"] = new[] { "Shushan Purim", "Шушан Пурим", "שושן פורים" },
+            ["FastOfFirstborn"] = new[] { "Fast of the Firstborn", "Пост первенцев", "תענית בכורות" },
             ["Pesach"] = new[] { "Pesach", "Песах", "פסח" },
             ["CholHamoedPesach"] = new[] { "Chol HaMoed Pesach", "Холь а-моэд Песах", "חול המועד פסח" },
             ["YomHashoah"] = new[] { "Yom HaShoah", "Йом а-Шоа", "יום השואה" },
@@ -75,6 +83,60 @@ namespace UltraWinBar.Utilities
 
         public static string NameOf(string key, string language) =>
             Names[key][language == "עברית" ? 2 : language == "русский" ? 1 : 0];
+
+        // The Shabbatot with a name of their own, besides their portion: the four before Pesach, Shabbat HaGadol, Shuva, Chazon,
+        // Nachamu and Shirah. They are no festivals (no day of rest of their own), so they are not among the days above.
+        private static readonly Dictionary<string, string[]> SpecialShabbatNames = new Dictionary<string, string[]>
+        {
+            ["ShabbatShuva"] = new[] { "Shabbat Shuva", "Шаббат Шува", "שבת שובה" },
+            ["ShabbatShirah"] = new[] { "Shabbat Shirah", "Шаббат Шира", "שבת שירה" },
+            ["ShabbatShekalim"] = new[] { "Shabbat Shekalim", "Шаббат Шекалим", "שבת שקלים" },
+            ["ShabbatZachor"] = new[] { "Shabbat Zachor", "Шаббат Захор", "שבת זכור" },
+            ["ShabbatParah"] = new[] { "Shabbat Parah", "Шаббат Пара", "שבת פרה" },
+            ["ShabbatHachodesh"] = new[] { "Shabbat HaChodesh", "Шаббат а-Ходеш", "שבת החודש" },
+            ["ShabbatHagadol"] = new[] { "Shabbat HaGadol", "Шаббат а-Гадоль", "שבת הגדול" },
+            ["ShabbatChazon"] = new[] { "Shabbat Chazon", "Шаббат Хазон", "שבת חזון" },
+            ["ShabbatNachamu"] = new[] { "Shabbat Nachamu", "Шаббат Нахаму", "שבת נחמו" },
+        };
+
+        public static IReadOnlyCollection<string> SpecialShabbatKeys => SpecialShabbatNames.Keys;
+
+        public static string SpecialShabbatName(string key, string language) =>
+            SpecialShabbatNames[key][language == "עברית" ? 2 : language == "русский" ? 1 : 0];
+
+        private static DateTime SaturdayOnOrBefore(DateTime day)
+        {
+            while (day.DayOfWeek != DayOfWeek.Saturday) day = day.AddDays(-1);
+            return day;
+        }
+
+        /// <summary>
+        /// The key of the special Shabbat the date is (see <see cref="SpecialShabbatKeys"/>), or null. Shabbat Shuva is the one
+        /// between Rosh Hashana and Yom Kippur; Shekalim is the Shabbat on or before 1 Adar (Adar II in a leap year), Zachor on or
+        /// before Purim, HaChodesh on or before 1 Nisan, Parah the one before it, HaGadol on or before 14 Nisan; Chazon is the one
+        /// before Tisha B'Av (on it when it falls on Shabbat), Nachamu the one after; Shirah is the Shabbat of Beshalach.
+        /// None for a date outside the range of the Hebrew calendar.
+        /// </summary>
+        public static string SpecialShabbat(DateTime date, bool israel)
+        {
+            date = date.Date;
+            if (date.DayOfWeek != DayOfWeek.Saturday || date < Calendar.MinSupportedDateTime.AddYears(2) || date > Calendar.MaxSupportedDateTime.AddYears(-2)) return null;
+            int year = Calendar.GetYear(date), month = MonthNumber(date), day = Calendar.GetDayOfMonth(date);
+            if (month == Tishrei && day >= 3 && day <= 9) return "ShabbatShuva";
+            if (month == Av && day >= 3 && day <= 9) return "ShabbatChazon";
+            if (month == Av && day >= 10 && day <= 16) return "ShabbatNachamu";
+            if (date == SaturdayOnOrBefore(Day(year, Adar, 1))) return "ShabbatShekalim";
+            if (date == SaturdayOnOrBefore(Day(year, Adar, 14))) return "ShabbatZachor";
+            DateTime hachodesh = SaturdayOnOrBefore(Day(year, Nisan, 1));
+            if (date == hachodesh.AddDays(-7)) return "ShabbatParah";
+            if (date == hachodesh) return "ShabbatHachodesh";
+            if (date == SaturdayOnOrBefore(Day(year, Nisan, 14))) return "ShabbatHagadol";
+            TorahReading reading = TorahReadings.ForShabbat(date, israel);
+            return reading != null && !reading.IsDouble && reading.First == BeshalachPortion ? "ShabbatShirah" : null;
+        }
+
+        // The number of Beshalach among the portions (see TorahReadings).
+        private const int BeshalachPortion = 15;
 
         /// <summary>The number of the month in the numbering above (Tishrei = 1, Adar I = 6, Adar = 7, Nisan = 8, Elul = 13).</summary>
         public static int MonthNumber(DateTime date)
@@ -125,6 +187,42 @@ namespace UltraWinBar.Utilities
             if (month != Kislev && month != Tevet) return 0;
             int candles = (date - Day(year, Kislev, 25)).Days + 1;
             return candles >= 1 && candles <= 8 ? candles : 0;
+        }
+
+        /// <summary>
+        /// The changes of the prayers that fall on the civil date (usually none): Mashiv HaRuach on 22 Tishrei (Shemini
+        /// Atzeret, at Musaf), Morid HaTal on 15 Nisan (at Musaf). The others begin with a Ma'ariv that has the blessing of the
+        /// years (a weekday's, so one that is not Friday night): V'ten Tal U'Matar in the evening that begins 7 Cheshvan in
+        /// Israel and at <see cref="VetenTalInDiaspora"/> elsewhere, V'ten Bracha in the evening after the first day of Pesach
+        /// (15 Nisan; in the diaspora after the second, 16 Nisan), the last Mincha with "V'ten Tal U'Matar" being that of the
+        /// eve of Pesach. Both are told on the civil day whose evening they begin. None outside the range of the Hebrew calendar.
+        /// </summary>
+        public static IReadOnlyList<PrayerChange> PrayerChangesOn(DateTime date, bool israel)
+        {
+            date = date.Date;
+            if (date < Calendar.MinSupportedDateTime.AddYears(2) || date > Calendar.MaxSupportedDateTime.AddYears(-2)) return Array.Empty<PrayerChange>();
+            int year = Calendar.GetYear(date), month = MonthNumber(date), day = Calendar.GetDayOfMonth(date);
+            var changes = new List<PrayerChange>();
+            if (month == Tishrei && day == 22) changes.Add(PrayerChange.MashivHaruach);
+            if (month == Nisan && day == 15) changes.Add(PrayerChange.MoridHatal);
+            if (date == AfterFriday(Day(year, Nisan, israel ? 15 : 16))) changes.Add(PrayerChange.VetenBracha);
+            if (date == AfterFriday(israel ? Day(year, Cheshvan, 6) : VetenTalInDiaspora(date.Year))) changes.Add(PrayerChange.VetenTal);
+            return changes;
+        }
+
+        // The Ma'ariv of a Friday evening is the Shabbat's, with no blessing of the years: the change waits for the end of Shabbat.
+        private static DateTime AfterFriday(DateTime evening) => evening.DayOfWeek == DayOfWeek.Friday ? evening.AddDays(1) : evening;
+
+        /// <summary>
+        /// The civil day whose evening begins V'ten Tal U'Matar outside Israel: 60 days after the autumn equinox of Shmuel
+        /// (the year of exactly 365 days and 6 hours), which is the same day of the Julian calendar every year, 21 November,
+        /// and the 22nd in the year before a Julian leap year. In the civil calendar that is 4 December (5 December before a
+        /// leap year) from 1900 to 2099, then a day later each century that has no leap day.
+        /// </summary>
+        public static DateTime VetenTalInDiaspora(int year)
+        {
+            int julianToCivil = year / 100 - year / 400 - 2;
+            return new DateTime(year, 11, (year + 1) % 4 == 0 ? 22 : 21).AddDays(julianToCivil);
         }
 
         // The .NET month of a month of the numbering above in a given year.
@@ -181,20 +279,23 @@ namespace UltraWinBar.Utilities
                     if (day == 15) days.Add(new JewishDay("ShushanPurim", DayKind.Minor, 1, 1));
                     break;
                 case Nisan:
+                    // The fast of the firstborn is on the eve of Pesach, the Thursday before it when the eve is Shabbat.
+                    if (day == 14 && weekday != DayOfWeek.Saturday || day == 12 && weekday == DayOfWeek.Thursday)
+                        days.Add(new JewishDay("FastOfFirstborn", DayKind.Fast, 1, 1));
                     if (day >= 15 && day <= (israel ? 21 : 22))
                     {
                         bool yomTov = day == 15 || day == 21 || !israel && (day == 16 || day == 22);
                         days.Add(new JewishDay(yomTov ? "Pesach" : "CholHamoedPesach", yomTov ? DayKind.YomTov : DayKind.CholHamoed, day - 14, israel ? 7 : 8));
                     }
-                    if (day == YomHashoahDay(year)) days.Add(new JewishDay("YomHashoah", DayKind.Minor, 1, 1));
+                    if (year >= FirstYomHashoah && day == YomHashoahDay(year)) days.Add(new JewishDay("YomHashoah", DayKind.Minor, 1, 1));
                     break;
                 case Iyar:
                     int independence = YomHaatzmautDay(year);
-                    if (day == independence - 1) days.Add(new JewishDay("YomHazikaron", DayKind.Minor, 1, 1));
-                    if (day == independence) days.Add(new JewishDay("YomHaatzmaut", DayKind.Minor, 1, 1));
+                    if (year >= FirstYomHaatzmaut && day == independence - 1) days.Add(new JewishDay("YomHazikaron", DayKind.Minor, 1, 1));
+                    if (year >= FirstYomHaatzmaut && day == independence) days.Add(new JewishDay("YomHaatzmaut", DayKind.Minor, 1, 1));
                     if (day == 14) days.Add(new JewishDay("PesachSheni", DayKind.Minor, 1, 1));
                     if (day == 18) days.Add(new JewishDay("LagBaomer", DayKind.Minor, 1, 1));
-                    if (day == 28) days.Add(new JewishDay("YomYerushalayim", DayKind.Minor, 1, 1));
+                    if (year >= FirstYomYerushalayim && day == 28) days.Add(new JewishDay("YomYerushalayim", DayKind.Minor, 1, 1));
                     break;
                 case Sivan:
                     if (day == 6 || day == 7 && !israel) days.Add(new JewishDay("Shavuot", DayKind.YomTov, day - 5, israel ? 1 : 2));
@@ -232,14 +333,19 @@ namespace UltraWinBar.Utilities
             _ => 27,
         };
 
-        // Yom HaAtzmaut is the 5th of Iyar, moved to Thursday when it falls on a Friday or Saturday, to Tuesday when on
-        // a Monday; Yom HaZikaron is the day before.
+        // Yom HaAtzmaut is the 5th of Iyar, moved to Thursday when it falls on a Friday or Saturday, and from 5764 (2004) to
+        // Tuesday when on a Monday; Yom HaZikaron is the day before.
         private static int YomHaatzmautDay(int year) => Day(year, Iyar, 5).DayOfWeek switch
         {
             DayOfWeek.Friday => 4,
             DayOfWeek.Saturday => 3,
-            DayOfWeek.Monday => 6,
+            DayOfWeek.Monday when year >= MondayMoveFrom => 6,
             _ => 5,
         };
+
+        // The first Hebrew years of the days of the State of Israel, from the years of the events and of the laws: the first
+        // Yom HaAtzmaut was kept on 5 Iyar 5709 (1949), Yom HaShoah is of 5711 (1951), Yom Yerushalayim of 5727 (1967, the
+        // war itself); the move of Yom HaAtzmaut off a Monday is of 5764 (2004).
+        private const int FirstYomHaatzmaut = 5709, FirstYomHashoah = 5711, FirstYomYerushalayim = 5727, MondayMoveFrom = 5764;
     }
 }

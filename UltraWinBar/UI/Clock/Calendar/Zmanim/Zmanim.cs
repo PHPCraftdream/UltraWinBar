@@ -18,7 +18,7 @@ namespace UltraWinBar.Utilities
     /// kept ones: the hours of the day are the twelfths of the time from sunrise to sunset (the Gra), or from 72 minutes
     /// before sunrise to 72 minutes after sunset (the Magen Avraham); dawn is the sun 16.1° below the horizon, the earliest
     /// time for tallit and tefillin 11.5°, nightfall (tzeit) 8.5°; Rabbeinu Tam's nightfall is 72 minutes after sunset;
-    /// candles are lit 18 minutes before sunset (40 in Jerusalem is a custom of the place, passed as the argument); midnight
+    /// candles are lit 18 minutes before sunset (40 in Jerusalem, a custom of the place: see <see cref="CandleLightingMinutesAt"/>, passed as the argument); midnight
     /// (chatzot halayla) is halfway from sunset to the next sunrise.
     /// </summary>
     public static class Zmanim
@@ -39,7 +39,7 @@ namespace UltraWinBar.Utilities
             [Zman.CandleLighting] = new[] { "Candle lighting", "Зажигание свечей", "הדלקת נרות" },
             [Zman.Sunset] = new[] { "Sunset (Shkiah)", "Закат (шкия)", "שקיעה" },
             [Zman.Tzeit] = new[] { "Nightfall (Tzeit HaKochavim)", "Выход звёзд (цет а-кохавим)", "צאת הכוכבים" },
-            [Zman.RabbeinuTam] = new[] { "Nightfall (Rabbeinu Tam)", "Выход звёзд (раввейну Там)", "צאת רבינו תם" },
+            [Zman.RabbeinuTam] = new[] { "Nightfall (Rabbeinu Tam)", "Выход звёзд (рабейну Там)", "צאת רבינו תם" },
             [Zman.ChatzotHaLayla] = new[] { "Midnight (Chatzot HaLayla)", "Полночь (хацот а-лайла)", "חצות הלילה" },
         };
 
@@ -77,6 +77,17 @@ namespace UltraWinBar.Utilities
                 [Zman.RabbeinuTam] = Plus(sunset, 72),
                 [Zman.ChatzotHaLayla] = Hour(sunset, nextSunrise, 6),
             };
+        }
+
+        // The custom of Jerusalem: candles 40 minutes before sunset, for the city and its neighbourhood (within 10 km of its centre).
+        private const double JerusalemLatitude = 31.778, JerusalemLongitude = 35.235, JerusalemRadiusKm = 10.0;
+
+        /// <summary>The minutes before sunset at which candles are lit at the place: 40 in Jerusalem, 18 elsewhere.</summary>
+        public static int CandleLightingMinutesAt(double latitude, double longitude)
+        {
+            double north = (latitude - JerusalemLatitude) * 111.2;
+            double east = (longitude - JerusalemLongitude) * 111.2 * Math.Cos(JerusalemLatitude * Math.PI / 180.0);
+            return north * north + east * east <= JerusalemRadiusKm * JerusalemRadiusKm ? 40 : 18;
         }
 
         /// <summary>

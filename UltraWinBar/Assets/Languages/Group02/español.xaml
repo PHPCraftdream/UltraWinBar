@@ -242,6 +242,7 @@
     <s:String x:Key="calendar_israel">Tierra de Israel</s:String>
     <s:String x:Key="calendar_diaspora">diáspora</s:String>
     <s:String x:Key="calendar_no_place">Elija un lugar en la configuración del calendario para ver los horarios del día.</s:String>
+    <s:String x:Key="calendar_now">Ahora</s:String>
     <s:String x:Key="calendar_times">Horarios del día</s:String>
     <s:String x:Key="calendar_yahrzeits">Yahrzeits</s:String>
     <s:String x:Key="calendar_candles_after_dark">Encendido de velas (después del anochecer)</s:String>
@@ -259,6 +260,17 @@
     <s:String x:Key="calendar_eclipse_at">máximo a las {0}</s:String>
     <s:String x:Key="calendar_eclipse_visible">visible aquí</s:String>
     <s:String x:Key="calendar_eclipse_hidden">no visible aquí</s:String>
+    <s:String x:Key="calendar_moon_new">Molad Emet (luna nueva)</s:String>
+    <s:String x:Key="calendar_moon_full">Milui HaLevana (luna llena)</s:String>
+    <s:String x:Key="calendar_prayer_mashiv">Mashiv HaRuach UMorid HaGeshem</s:String>
+    <s:String x:Key="calendar_prayer_veten_tal">V'ten Tal U'Matar</s:String>
+    <s:String x:Key="calendar_prayer_veten_bracha">V'ten Bracha</s:String>
+    <s:String x:Key="calendar_prayer_morid_hatal">Morid HaTal</s:String>
+    <s:String x:Key="calendar_prayer_to_winter">A las oraciones de invierno: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_to_summer">A las oraciones de verano: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_from_musaf">desde Musaf</s:String>
+    <s:String x:Key="calendar_prayer_from_maariv">desde Maariv de esta noche</s:String>
+    <s:String x:Key="calendar_prayer_ashkenaz_none">en el rito asquenazí fuera de Israel no se dice nada</s:String>
     <s:String x:Key="calendar_rest_span">{0} (encendido de velas) – {1} (anochecer)</s:String>
     <s:String x:Key="calendar_weekday">Día {0}</s:String>
     <s:String x:Key="calendar_settings_title">Configuración del calendario</s:String>

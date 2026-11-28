@@ -261,6 +261,7 @@
     <s:String x:Key="calendar_israel">イスラエルの地</s:String>
     <s:String x:Key="calendar_diaspora">ディアスポラ</s:String>
     <s:String x:Key="calendar_no_place">時刻を表示するには、カレンダーの設定で場所を選択してください。</s:String>
+    <s:String x:Key="calendar_now">現在</s:String>
     <s:String x:Key="calendar_times">一日の時刻</s:String>
     <s:String x:Key="calendar_yahrzeits">ヤールツァイト</s:String>
     <s:String x:Key="calendar_candles_after_dark">燭火の点灯（日没後）</s:String>
@@ -278,6 +279,17 @@
     <s:String x:Key="calendar_eclipse_at">食の最大 {0}</s:String>
     <s:String x:Key="calendar_eclipse_visible">ここで見える</s:String>
     <s:String x:Key="calendar_eclipse_hidden">ここでは見えない</s:String>
+    <s:String x:Key="calendar_moon_new">モラド・エメト（新月）</s:String>
+    <s:String x:Key="calendar_moon_full">ミルイ・ハレヴァナ（満月）</s:String>
+    <s:String x:Key="calendar_prayer_mashiv">マシヴ・ハルアハ・ウモリド・ハゲシェム</s:String>
+    <s:String x:Key="calendar_prayer_veten_tal">ヴェテン・タル・ウマタル</s:String>
+    <s:String x:Key="calendar_prayer_veten_bracha">ヴェテン・ブラハ</s:String>
+    <s:String x:Key="calendar_prayer_morid_hatal">モリド・ハタル</s:String>
+    <s:String x:Key="calendar_prayer_to_winter">冬の祈りへの切り替え：{0}（{1}）</s:String>
+    <s:String x:Key="calendar_prayer_to_summer">夏の祈りへの切り替え：{0}（{1}）</s:String>
+    <s:String x:Key="calendar_prayer_from_musaf">ムサフから</s:String>
+    <s:String x:Key="calendar_prayer_from_maariv">今夜のマアリヴから</s:String>
+    <s:String x:Key="calendar_prayer_ashkenaz_none">イスラエル国外のアシュケナジの典礼では何も唱えません</s:String>
     <s:String x:Key="calendar_rest_span">{0}（燭火の点灯） – {1}（日没後）</s:String>
     <s:String x:Key="calendar_weekday">第{0}日</s:String>
     <s:String x:Key="calendar_settings_title">カレンダーの設定</s:String>

@@ -463,6 +463,7 @@
     <s:String x:Key="calendar_diaspora">Diaspora</s:String>
 
     <s:String x:Key="calendar_no_place">Günün saatlerini görmek için takvim ayarlarından bir yer seçin.</s:String>
+    <s:String x:Key="calendar_now">Şimdi</s:String>
 
     <s:String x:Key="calendar_times">Günün saatleri</s:String>
 
@@ -484,6 +485,17 @@
     <s:String x:Key="calendar_eclipse_at">en büyük evre {0}</s:String>
     <s:String x:Key="calendar_eclipse_visible">burada görünür</s:String>
     <s:String x:Key="calendar_eclipse_hidden">burada görünmez</s:String>
+    <s:String x:Key="calendar_moon_new">Molad Emet (yeni ay)</s:String>
+    <s:String x:Key="calendar_moon_full">Milui HaLevana (dolunay)</s:String>
+    <s:String x:Key="calendar_prayer_mashiv">Mashiv HaRuach UMorid HaGeshem</s:String>
+    <s:String x:Key="calendar_prayer_veten_tal">V'ten Tal U'Matar</s:String>
+    <s:String x:Key="calendar_prayer_veten_bracha">V'ten Bracha</s:String>
+    <s:String x:Key="calendar_prayer_morid_hatal">Morid HaTal</s:String>
+    <s:String x:Key="calendar_prayer_to_winter">Kış dualarına geçiş: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_to_summer">Yaz dualarına geçiş: {0} ({1})</s:String>
+    <s:String x:Key="calendar_prayer_from_musaf">Musaf'tan itibaren</s:String>
+    <s:String x:Key="calendar_prayer_from_maariv">bu akşamki Maariv'den itibaren</s:String>
+    <s:String x:Key="calendar_prayer_ashkenaz_none">İsrail dışında Aşkenaz ayininde hiçbir şey söylenmez</s:String>
 
     <s:String x:Key="calendar_rest_span">{0} (mum yakma) – {1} (gece)</s:String>
     <s:String x:Key="calendar_weekday">{0}. gün</s:String>

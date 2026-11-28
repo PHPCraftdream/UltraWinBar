@@ -160,6 +160,7 @@ namespace UltraWinBar
             ModernTheme.Track(this);
             WeakSubscriptions.SubscribeSettings(Settings_PropertyChanged);
             Closed += (_, _) => WeakSubscriptions.UnsubscribeSettings(Settings_PropertyChanged);
+            StartMinuteTimer();
             Rebuild();
         }
 
@@ -416,16 +417,20 @@ namespace UltraWinBar
             Details.Children.Clear();
             // The chosen day's dates are in its cell (and its tooltip); its week's portion is above the month.
             // The chosen day over the month: its civil date at the left, its Hebrew date at the right, its week's portion between.
-            MonthTitle.Text = chosen.ToString("d MMMM yyyy", DayDetailsBuilder.CultureOf(AppLanguage));
+            MonthTitle.Text = DayDetailsBuilder.CivilDate(chosen);
             HebrewMonthTitle.Text = details.HebrewDate;
             PortionTitle.Text = details.Portion ?? "";
             // The details as cards: the day (its special days as colored blocks, the start and end of the rest), the
             // yahrzeits, the times of the day, the molad.
             var day = DayDetailsBuilder.Cell(chosen, chosen, DateTime.Today, DayDetailsBuilder.IsLandOfIsrael(place), AppLanguage, Settings.Instance.HiddenYahrzeits, Text, place);
-            if (day.Events.Count > 0 || details.Rest != null)
+            if (day.Events.Count > 0 || details.Rest != null || details.Prayer != null)
             {
                 Panel card = Card(null);
                 foreach (CellEvent special in day.Events) card.Children.Add(Chip(special));
+                // A change between the summer and the winter prayers: a block of its own, blue for the winter, orange for the summer.
+                if (details.Prayer != null)
+                    card.Children.Add(Chip(details.Prayer.Text, details.Prayer.Winter ? Color.FromArgb(0x2E, 0x60, 0xA5, 0xFA) : Color.FromArgb(0x2E, 0xFB, 0x92, 0x3C),
+                        details.Prayer.Winter ? Color.FromArgb(0xB3, 0x60, 0xA5, 0xFA) : Color.FromArgb(0xB3, 0xFB, 0x92, 0x3C), FontWeights.SemiBold));
                 // The day of rest: when it begins and ends, one highlighted line with candles.
                 if (details.Rest != null) card.Children.Add(RestLine(details.Rest, null));
             }
@@ -473,29 +478,116 @@ namespace UltraWinBar
                 Panel card = Card(TimesHeading(details.Place, details.Chanukah));
                 if (details.Place == null)
                 {
+                    timesRows = null;
                     Line(card, Text("calendar_no_place"), opacity: 0.8);
                 }
                 else
                 {
-                    foreach (TimeLine time in details.Times)
-                    {
-                        // The candles and the havdalah of a day of rest, and the candles of Hanukkah, stand out among the times.
-                        if (time.Rest || time.Chanukah)
-                        {
-                            card.Children.Add(RestLine(time.Name, time.Time, time.Chanukah));
-                            continue;
-                        }
-                        // The whole row lights up under the pointer (the style takes the colors of the theme).
-                        var row = new DockPanel();
-                        var when = new TextBlock { Text = time.Time, Margin = new Thickness(12, 0, 0, 0), FontWeight = FontWeights.SemiBold, FlowDirection = FlowDirection.LeftToRight };
-                        DockPanel.SetDock(when, Dock.Right);
-                        row.Children.Add(when);
-                        row.Children.Add(new TextBlock { Text = time.Name, TextTrimming = TextTrimming.CharacterEllipsis });
-                        card.Children.Add(new Border { Style = (Style)FindResource("DetailRow"), Child = row });
-                    }
+                    // The rows in a panel of their own, made again as the minute turns (see FillTimes).
+                    timesRows = new StackPanel();
+                    card.Children.Add(timesRows);
+                    timesShown = details;
+                    timesPlace = place;
+                    FillTimes(force: true);
                 }
             }
             if (details.Molad != null) Line(Card(null), details.Molad, opacity: 0.8);
+        }
+
+        // The rows of the times of the chosen day, and their details and place; for today by the place's clock the line of the
+        // present moment stands among them where it falls.
+        private Panel timesRows;
+        private DayDetails timesShown;
+        private HebrewPlace timesPlace;
+
+        private bool nowShown;
+
+        // The rows made again; without force only when the line of the present moment is or was among them (another day's rows stay).
+        private void FillTimes(bool force = false)
+        {
+            if (timesRows == null) return;
+            var lines = DayDetailsBuilder.WithNow(timesShown.Times, chosen, timesPlace, DateTime.UtcNow, Text("calendar_now"), DayDetailsBuilder.CultureOf(AppLanguage));
+            bool now = lines.Any(line => line.Now);
+            if (!force && !now && !nowShown) return;
+            nowShown = now;
+            timesRows.Children.Clear();
+            foreach (TimeLine time in lines)
+            {
+                if (time.Now)
+                {
+                    timesRows.Children.Add(NowLine(time.Name, time.Time));
+                    continue;
+                }
+                // The candles and the havdalah of a day of rest, and the candles of Hanukkah, stand out among the times.
+                if (time.Rest || time.Chanukah)
+                {
+                    timesRows.Children.Add(RestLine(time.Name, time.Time, time.Chanukah));
+                    continue;
+                }
+                // The whole row lights up under the pointer (the style takes the colors of the theme).
+                var row = new DockPanel();
+                var when = new TextBlock { Text = time.Time, Margin = new Thickness(12, 0, 0, 0), FontWeight = FontWeights.SemiBold, FlowDirection = FlowDirection.LeftToRight };
+                DockPanel.SetDock(when, Dock.Right);
+                row.Children.Add(when);
+                // The actual new or full moon after its sign.
+                if (time.Moon != 0)
+                {
+                    var moon = new Viewbox { Height = 16, Margin = new Thickness(0, 0, 6, 0), VerticalAlignment = VerticalAlignment.Center,
+                        Child = new ContentControl { Focusable = false, Content = FindResource(time.Moon == 2 ? "FullMoonIcon" : "NewMoonIcon") } };
+                    DockPanel.SetDock(moon, Dock.Left);
+                    row.Children.Add(moon);
+                }
+                row.Children.Add(new TextBlock { Text = time.Name, TextTrimming = TextTrimming.CharacterEllipsis });
+                timesRows.Children.Add(new Border { Style = (Style)FindResource("DetailRow"), Child = row });
+            }
+        }
+
+        // The present moment among the times: a dot of the accent and the name between two lines of it, the time at the right.
+        private FrameworkElement NowLine(string name, string time)
+        {
+            Brush accent = (Brush)(TryFindResource("ModernAccent") ?? SystemColors.HighlightBrush);
+            var row = new DockPanel();
+            var dot = new System.Windows.Shapes.Ellipse { Width = 8, Height = 8, Fill = accent, Margin = new Thickness(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center };
+            DockPanel.SetDock(dot, Dock.Left);
+            row.Children.Add(dot);
+            var when = new TextBlock { Text = time, Margin = new Thickness(12, 0, 0, 0), FontWeight = FontWeights.Bold, FlowDirection = FlowDirection.LeftToRight };
+            DockPanel.SetDock(when, Dock.Right);
+            row.Children.Add(when);
+            row.Children.Add(new TextBlock { Text = name, FontWeight = FontWeights.Bold, TextTrimming = TextTrimming.CharacterEllipsis });
+            return new Border { Child = row, Margin = new Thickness(0, 2, 0, 2), Padding = new Thickness(8, 2, 10, 2), BorderThickness = new Thickness(0, 1, 0, 1), BorderBrush = accent };
+        }
+
+        // The line of the present moment moves on when the minute changes: a timer to the next change of it, while the window is in sight.
+        private readonly System.Windows.Threading.DispatcherTimer minuteTimer = new(System.Windows.Threading.DispatcherPriority.Background);
+
+        private void StartMinuteTimer()
+        {
+            minuteTimer.Tick += (_, _) =>
+            {
+                ScheduleMinute();
+                FillTimes();
+            };
+            IsVisibleChanged += (_, _) =>
+            {
+                if (IsVisible)
+                {
+                    FillTimes();
+                    ScheduleMinute();
+                }
+                else
+                {
+                    minuteTimer.Stop();
+                }
+            };
+            Closed += (_, _) => minuteTimer.Stop();
+        }
+
+        // The minute turns at the same moment everywhere (zones differ by whole minutes), a little after it is safe.
+        private void ScheduleMinute()
+        {
+            minuteTimer.Stop();
+            minuteTimer.Interval = TimeSpan.FromMilliseconds(60000 - DateTime.UtcNow.TimeOfDay.TotalMilliseconds % 60000 + 100);
+            minuteTimer.Start();
         }
 
         // A line of the day of rest: the accent's soft fill with its edge, two candles (or a hanukkiah), the text in bold and the
@@ -575,6 +667,11 @@ namespace UltraWinBar
         private static Border Chip(CellEvent special)
         {
             var (back, edge) = ChipColors(special.Kind);
+            return Chip(special.Name, back, edge, special.Kind == DayKind.YomTov ? FontWeights.Bold : FontWeights.SemiBold);
+        }
+
+        private static Border Chip(string text, Color back, Color edge, FontWeight weight)
+        {
             return new Border
             {
                 Margin = new Thickness(0, 0, 0, 4),
@@ -585,9 +682,9 @@ namespace UltraWinBar
                 BorderBrush = new SolidColorBrush(edge),
                 Child = new TextBlock
                 {
-                    Text = special.Name,
+                    Text = text,
                     TextWrapping = TextWrapping.Wrap,
-                    FontWeight = special.Kind == DayKind.YomTov ? FontWeights.Bold : FontWeights.SemiBold,
+                    FontWeight = weight,
                 },
             };
         }

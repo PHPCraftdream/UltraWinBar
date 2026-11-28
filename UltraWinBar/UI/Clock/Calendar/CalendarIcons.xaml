@@ -130,4 +130,32 @@
         </Ellipse>
         <Path Data="M14.5,2.6 A9,9 0 0 1 14.5,19.4 A10.5,10.5 0 0 0 14.5,2.6 Z" Fill="#FFF5F5F4" Opacity="0.9" />
     </Canvas>
+    <!-- The actual new moon: a dark disc with a thin lit rim (the moon's far side is not seen). -->
+    <Canvas x:Key="NewMoonIcon" x:Shared="False" Width="22" Height="22" IsHitTestVisible="False">
+        <Ellipse Canvas.Left="3" Canvas.Top="3" Width="16" Height="16" Fill="#FF1C1917" Stroke="{DynamicResource ClockForeground}" StrokeThickness="1.1" />
+        <Path Data="M16.6,5.2 A8.2,8.2 0 0 1 16.6,16.8" Stroke="#FFD6D3D1" StrokeThickness="0.9" Opacity="0.55" />
+    </Canvas>
+    <!-- The actual full moon: a bright disc with its seas. -->
+    <Canvas x:Key="FullMoonIcon" x:Shared="False" Width="22" Height="22" IsHitTestVisible="False">
+        <Ellipse Canvas.Left="0" Canvas.Top="0" Width="22" Height="22">
+            <Ellipse.Fill>
+                <RadialGradientBrush>
+                    <GradientStop Color="#00FEF3C7" Offset="0.5" />
+                    <GradientStop Color="#80FEF3C7" Offset="0.72" />
+                    <GradientStop Color="#00FEF3C7" Offset="1" />
+                </RadialGradientBrush>
+            </Ellipse.Fill>
+        </Ellipse>
+        <Ellipse Canvas.Left="3" Canvas.Top="3" Width="16" Height="16" Stroke="#FFA8A29E" StrokeThickness="0.6">
+            <Ellipse.Fill>
+                <RadialGradientBrush GradientOrigin="0.38,0.35">
+                    <GradientStop Color="#FFFFFBEB" Offset="0" />
+                    <GradientStop Color="#FFFDE68A" Offset="1" />
+                </RadialGradientBrush>
+            </Ellipse.Fill>
+        </Ellipse>
+        <Ellipse Canvas.Left="6.5" Canvas.Top="6.5" Width="4" Height="3.4" Fill="#40A16207" />
+        <Ellipse Canvas.Left="11.5" Canvas.Top="10" Width="3.2" Height="3.8" Fill="#40A16207" />
+        <Ellipse Canvas.Left="8" Canvas.Top="12.8" Width="2.6" Height="2.2" Fill="#38A16207" />
+    </Canvas>
 </ResourceDictionary>

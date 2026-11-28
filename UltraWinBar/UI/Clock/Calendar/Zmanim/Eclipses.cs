@@ -34,18 +34,23 @@ namespace UltraWinBar.Utilities
         {
             date = date.Date;
             if (date.Year < FirstYear - 1 || date.Year > LastYear + 1) return Array.Empty<Eclipse>();
-            var list = all.Value;
-            // The first eclipse a day before the date (UTC), then those within a day after it.
-            int low = 0, high = list.Length;
+            return Within(all.Value, eclipse => eclipse.Utc, date, toLocal);
+        }
+
+        /// <summary>The items of a list in order of their UTC moments that fall on the date by the clock "toLocal".</summary>
+        internal static IReadOnlyList<T> Within<T>(T[] sorted, Func<T, DateTime> utc, DateTime date, Func<DateTime, DateTime> toLocal)
+        {
+            // The first one a day before the date (UTC), then those within a day after it.
+            int low = 0, high = sorted.Length;
             DateTime from = date.AddDays(-1);
             while (low < high)
             {
                 int middle = (low + high) / 2;
-                if (list[middle].Utc < from) low = middle + 1; else high = middle;
+                if (utc(sorted[middle]) < from) low = middle + 1; else high = middle;
             }
-            var found = new List<Eclipse>();
-            for (int i = low; i < list.Length && list[i].Utc < date.AddDays(2); i++)
-                if (toLocal(list[i].Utc).Date == date) found.Add(list[i]);
+            var found = new List<T>();
+            for (int i = low; i < sorted.Length && utc(sorted[i]) < date.AddDays(2); i++)
+                if (toLocal(utc(sorted[i])).Date == date) found.Add(sorted[i]);
             return found;
         }
 
